@@ -25,11 +25,11 @@ var app    = require('express').createServer()
 app.get('/v1/', function(req, res){
   
   //sanitize input
-  var sql       = _.trim(req.query.sql);
-  var database  = _.trim(req.query.database); // needed if the user fails the auth to specify public access
+  var sql       = req.query.sql;
+  var database  = req.query.database; 
   sql      = (sql == "")      ? null : sql;
-  database = (database == "") ? null : database;
-  
+  database = (database == "") ? null : database;  
+    
   try {
     if (!_.isString(sql)) throw new Error("You must indicate a sql query");
     var pg;
@@ -49,13 +49,18 @@ app.get('/v1/', function(req, res){
         res.send(result.rows);
       },
       function exceptionHandle(err, result){
-        res.send({error:[err.message]}, 400);
+        handleException(res,err);      
       }
     );  
   } catch (err) {
-    res.send({error:[err.message]}, 400);
+    handleException(res,err);
   }  
 });
+
+function handleException(res, err){
+  var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
+  res.send(msg, 400);  
+}
 
 app.listen(global.settings.node_port);
 //module.exports = app;
