@@ -3,8 +3,13 @@ test-tmp:
 	@mkdir -p test/tmp
 
 test: 
-	expresso -I lib test/unit/*.js  
-#test/acceptance/*.js	
+	expresso -I lib test/unit/*.js test/acceptance/*.js
+	
+test-acceptance:
+	expresso -I lib test/acceptance/*.js	
+
+test-unit: 
+	expresso -I lib test/unit/*.js
 
 test-cov: 
 	expresso -I lib --cov test/unit/*.js test/acceptance/*.js
