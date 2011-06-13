@@ -86,10 +86,6 @@ exports['authorize returns user_id if valid header oauth_token set'] = function(
     oAuth.authorize(req, function(err,user_id){
       assert.equal(user_id, 9999);
       redisClient.quit();
-    });              
-  });      
+    }); 
+  }); 
 }
-
-
-
-

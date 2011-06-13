@@ -26,9 +26,3 @@ _.extend(global.settings, env);
  
 // kick off controller
 require(global.settings.app_root + '/app/controllers/app');
-
-
-
-
-
-

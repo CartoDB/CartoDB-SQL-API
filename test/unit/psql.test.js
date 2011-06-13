@@ -107,6 +107,3 @@ exports['test publicuser cannot execute INSERT on db'] = function(){
     });
   });
 }
-
-
-

@@ -37,7 +37,7 @@ var PSQL = function(user_id, db){
   // memoizes connection in object. move to proper pool.
   me.connect = function(callback){
     var that = this
-    var conString = "tcp://" + this.username() + "@" + global.settings.db_host + "/" + this.database();
+    var conString = "tcp://" + this.username() + ":" + global.settings.db_port + "@" + global.settings.db_host + "/" + this.database();
     if (that.client) {
       return callback(null, that.client);
     } else {
@@ -64,4 +64,4 @@ var PSQL = function(user_id, db){
   return me;
 };
 
-module.exports = PSQL;  
+module.exports = PSQL;
