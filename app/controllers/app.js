@@ -45,7 +45,7 @@ app.get('/v1/', function(req, res){
       },
       function packageResults(err, result){
         if (err) throw err;
-        pg.end();
+        //pg.end(); TODO: Fix this - we should use a proper pool?
         res.send(result.rows);
       },
       function exceptionHandle(err, result){
