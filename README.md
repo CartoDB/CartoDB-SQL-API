@@ -5,8 +5,12 @@ Provides a concurrent event driven interface for running SQL queries against the
 
 usage
 ------
+``` bash
 node app.js [developement,test,production]
+```
 
 tests
 ------
+``` bash
 make test
+```
