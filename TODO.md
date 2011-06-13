@@ -1,7 +1,10 @@
+Prioritized todo
+-----------------
+
+Acceptance tests
 SSL
 pg_bouncer/postgres pooling (test with Ab to get the errors below)
 redis-pool
-acceptance tests
 
 psql solve: 
 * postgres "could not create socket"
