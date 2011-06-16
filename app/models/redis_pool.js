@@ -43,10 +43,10 @@ var RedisPool = {
         destroy: function(client) { 
           return client.quit(); 
         },
-        max: 50,
-        idleTimeoutMillis: 10000, //60000,　//100 in dev
-        reapIntervalMillis: 1000, //10 in dev
-        log: false
+        max: global.settings.redisPool, 
+        idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+        reapIntervalMillis: global.settings.redisReapIntervalMillis,
+        log: global.settings.redisLog
     });
   }
 }
