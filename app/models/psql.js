@@ -9,7 +9,7 @@ var _      = require('underscore')
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
 var PSQL = function(user_id, db){  
-  if (!_.isString(user_id) && !_.isString(db)) throw new Error("database user or name must be specified") 
+  if (!_.isString(user_id) && !_.isString(db)) throw new Error("database user or database name must be specified") 
 
   var me = {
       public_user: "publicuser"
@@ -37,7 +37,8 @@ var PSQL = function(user_id, db){
   // memoizes connection in object. move to proper pool.
   me.connect = function(callback){
     var that = this
-    var conString = "tcp://" + this.username() + ":" + global.settings.db_port + "@" + global.settings.db_host + "/" + this.database();
+    var conString = "tcp://" + this.username() + "@" + global.settings.db_host + ":" + global.settings.db_port + "/" + this.database();
+    
     if (that.client) {
       return callback(null, that.client);
     } else {

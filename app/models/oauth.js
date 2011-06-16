@@ -1,6 +1,6 @@
 // too bound to the request object, but ok for now
-var redis  = require("redis")
-  , _      = require('underscore');
+var RedisPool = require("./redis_pool")
+  , _         = require('underscore');
   _.mixin(require('underscore.string'));  
 
 var oAuth = function(){
@@ -26,11 +26,13 @@ var oAuth = function(){
 
   // find user from redis oauth token DB
   me.getUserId = function(oauth_token, callback){
-    var redisClient = redis.createClient();       // TODO: move this to a redis pool
-    redisClient.select(this.oauth_database);      // select redis oauth database          
-    redisClient.hget(_.template(this.oauth_user_key, {oauth_token: oauth_token}), "user_id", function(err, user_id){
-      redisClient.quit();
-      return callback(err, user_id)      
+    var that = this;
+    RedisPool.acquire(this.oauth_database, function(client){
+      var redisClient = client;
+      redisClient.hget(_.template(that.oauth_user_key, {oauth_token: oauth_token}), "user_id", function(err, user_id){
+        RedisPool.release(that.oauth_database, redisClient);
+        return callback(err, user_id)      
+      });      
     });
   }
   

@@ -36,7 +36,7 @@ app.get('/v1/', function(req, res){
     
     Step(
       function getUser() {
-        oAuth.authorize(req, this);
+        oAuth.authorize(req, this);        
       },
       function querySql(err, user_id){
         if (err) throw err;

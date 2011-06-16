@@ -8,7 +8,7 @@ exports['test throws error if no args passed to constructor'] = function(){
   try{
     var pg = new PSQL();    
   } catch (err){
-    assert.equal(err.message, "database user or name must be specified");
+    assert.equal(err.message, "database user or database name must be specified");
   }  
 };
 
