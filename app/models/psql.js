@@ -56,9 +56,16 @@ var PSQL = function(user_id, db){
       });
     });
   };  
-  
+
+  //https://github.com/brianc/node-postgres/issues/15  
   me.end = function(){
-    if (this.client) this.client.end();
+    this.client.end();
+    // var that = this;
+    // if (this.client) {
+    //   (this.client.readyForQuery && this.client.queryQueue.length === 0) ? this.client.end() : this.client.on('drain', function(){  
+    //    that.client.end();
+    //   });
+    // }
   }
   
   return me;
