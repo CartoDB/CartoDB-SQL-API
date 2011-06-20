@@ -1,8 +1,8 @@
 Prioritized todo
 -----------------
 
-Acceptance tests
-SSL
+Acceptance tests - DONE
+SSL - Do in NGINX
 pg_bouncer/postgres pooling (test with Ab to get the errors below)
 redis-pool
 

@@ -39,6 +39,13 @@ module.exports = {
     },{
       status: 200
     });
+  },
+  'GET /v1/ with SQL parameter on INSERT only. oAuth not used, so public user - should fail': function(){
+    assert.response(app, {
+      url: "/v1/?sql=INSERT%20INTO%20test_table%20(id)%20VALUES%20(1)&database=cartodb_test_user_1_db",
+      method: 'GET'
+    },{
+      status: 400
+    });
   }
-
 };
