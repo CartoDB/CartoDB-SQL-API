@@ -47,5 +47,14 @@ module.exports = {
     },{
       status: 400
     });
+  },
+  'GET /v1/ with SQL parameter on DROP DATABASE nly. oAuth not used, so public user - should fail': function(){
+    assert.response(app, {
+      url: "/v1/?sql=DROP%20TABLE%20cartodb_test_user_1_db&database=cartodb_test_user_1_db",
+      method: 'GET'
+    },{
+      status: 400
+    });
   }
+
 };
