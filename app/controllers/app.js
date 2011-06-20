@@ -1,4 +1,8 @@
-var app    = require('express').createServer()
+var express= require('express')
+  , app    = express.createServer(
+      //TODO: make logs async background + 1min or so
+      //express.logger('\033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-timems -> :res[Content-Type]\033[0m')
+    )
   , Step   = require(global.settings.app_root + '/lib/step')
   , oAuth  = require(global.settings.app_root + '/app/models/oauth')
   , PSQL   = require(global.settings.app_root + '/app/models/psql')  
@@ -35,7 +39,7 @@ app.get('/v1/', function(req, res){
     var pg;
     
     Step(
-      function getUser() {
+      function getUser() {   
         oAuth.authorize(req, this);        
       },
       function querySql(err, user_id){
@@ -45,7 +49,6 @@ app.get('/v1/', function(req, res){
       },
       function packageResults(err, result){
         if (err) throw err;
-        //pg.end(); //TODO: Fix this - we should use a proper generic pool
         res.send(result.rows);
       },
       function exceptionHandle(err, result){
@@ -62,5 +65,7 @@ function handleException(res, err){
   res.send(msg, 400);  
 }
 
-app.listen(global.settings.node_port);
-//module.exports = app;
+//app.listen(global.settings.node_port);
+
+// Think of putting it behind a cluster in production
+module.exports = app;

@@ -25,4 +25,5 @@ var env          = require(__dirname + '/config/environments/' + ENV)
 _.extend(global.settings, env);
  
 // kick off controller
-require(global.settings.app_root + '/app/controllers/app');
+var app = require(global.settings.app_root + '/app/controllers/app');
+app.listen(global.settings.node_port);
