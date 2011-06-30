@@ -38,4 +38,7 @@ To install dependencies from Gemfile:
 
 ```bundle install``` 
 
+ensure after first code deploy to run the dependencies task:
+
+```cap production node:npm_dependencies```
 

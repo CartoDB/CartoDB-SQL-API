@@ -31,5 +31,4 @@ cluster('./app/controllers/app')
   .use(cluster.pidfiles('pids'))
   .use(cluster.cli())
   .use(cluster.repl(8888))
-  .use(cluster.debug())
   .listen(global.settings.node_port);
