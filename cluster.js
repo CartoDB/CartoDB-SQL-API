@@ -27,10 +27,9 @@ _.extend(global.settings, env);
  
 cluster('./app/controllers/app')
   .use(cluster.logger('logs'))
-  .set('workers', 2)
   .use(cluster.stats())
   .use(cluster.pidfiles('pids'))
   .use(cluster.cli())
   .use(cluster.repl(8888))
   .use(cluster.debug())
-  .listen(4000);
+  .listen(global.settings.node_port);

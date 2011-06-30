@@ -2,3 +2,4 @@ logs/
 pids/
 *.sock
 test/tmp/*
+node_modules/
