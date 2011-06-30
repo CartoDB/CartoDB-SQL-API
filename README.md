@@ -15,7 +15,6 @@ tests
 make test
 ```
 
-
 core requirements
 -------------
 * pg_bouncer
@@ -27,8 +26,16 @@ node.js dependencies
 ---------------------
 * npm
 
-then to install dependencies from package.json:
+To install dependencies from package.json:
 
-``` npm install .```
+``` npm install```
+
+deployment
+----------
+* capistrano on ruby 1.9.2. 
+
+To install dependencies from Gemfile:
+
+```bundle install``` 
 
 
