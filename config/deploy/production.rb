@@ -32,8 +32,10 @@ default_run_options[:pty] = true
 after "deploy", "node:link_directories"
 
 # ensures ssh-agent is always running
+before 'deploy:setup', 'deploy:create_deploy_to_with_sudo'
 after "deploy:setup", "deploy:setup_deploy_keys"
 after "deploy:setup", "deploy:setup_node_directories"
+after 'deploy:setup', 'deploy:write_upstart_script'
 
 namespace :deploy do
   desc "setup ssh-agent"
@@ -46,12 +48,46 @@ namespace :deploy do
     run "mkdir -p #{shared_path}/logs"
     run "mkdir -p #{shared_path}/pids"
   end  
-  
-  desc "restart server"
-  task :restart, :roles => :app, :except => { :no_release => true } do
-    #run "touch #{File.join(current_path,'tmp','restart.txt')}"
+    
+  task :start, :roles => :app, :except => { :no_release => true } do
+    sudo "start #{application}"
   end
+
+  task :stop, :roles => :app, :except => { :no_release => true } do
+    sudo "stop #{application}"
+  end
+
+  task :restart, :roles => :app, :except => { :no_release => true } do
+    sudo "restart #{application} || sudo start #{application}"
+  end
+
+  task :create_deploy_to_with_sudo, :roles => :app do
+    sudo "mkdir -p #{deploy_to}"
+    sudo "chown #{user}:#{user} #{deploy_to}"
+  end
+
+  task :write_upstart_script, :roles => :app do
+    upstart_script = <<-UPSTART
+      description "#{application}"
+
+      start on startup
+      stop on shutdown
+
+      script
+          # We found $HOME is needed. Without it, we ran into problems
+          export HOME="/home/#{user}"
+
+          cd #{current_path}
+          exec sudo -u #{user} sh -c "/home/ubuntu/local/node/bin/node #{current_path}/#{node_file} production >> #{shared_path}/logs/#{application}.log 2>&1"
+      end script
+      respawn
+    UPSTART
+    
+    put upstart_script, "/tmp/#{application}_upstart.conf"
+    sudo "mv /tmp/#{application}_upstart.conf /etc/init/#{application}.conf"
+  end  
 end  
+
 
 namespace :node do
   desc "recreates symbolic links to shared directories"
