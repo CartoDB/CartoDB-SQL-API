@@ -1,4 +1,4 @@
-module.exports.node_port    = 4000;
+module.exports.node_port    = 8080;
 module.exports.environment  = 'test';
 module.exports.db_base_name = 'cartodb_test_user_<%= user_id %>_db';
 module.exports.db_user      = 'test_cartodb_user_<%= user_id %>';
