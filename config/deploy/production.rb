@@ -4,12 +4,12 @@
 # cap production deploy:setup
 # cap production deploy
 # cap production node:npm_dependencies
-# cap production restart  #<-- not made yet
+# cap production restart
 
 
 
 # somehow we'll have to update this dynamically
-set :host_1, "174.129.61.69"
+set :host_1, "50.16.114.42" #"174.129.61.69"
 role :app, host_1
 
 ssh_options[:forward_agent] = true
@@ -101,6 +101,7 @@ namespace :node do
   
   desc "install dependencies"
   task :npm_dependencies, :roles => :app do
+    run "rm -rf #{current_path}/node_modules"
     run "cd #{current_path} && npm install"
     run "mv -f #{current_path}/node_modules #{shared_path}/node_modules"
     run "ln -s #{shared_path}/node_modules #{current_path}/node_modules"
