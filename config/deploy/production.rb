@@ -66,6 +66,7 @@ namespace :deploy do
     sudo "chown #{user}:#{user} #{deploy_to}"
   end
 
+  # creates daemon to manage node. Also respawns if dies
   task :write_upstart_script, :roles => :app do
     upstart_script = <<-UPSTART
       description "#{application}"
