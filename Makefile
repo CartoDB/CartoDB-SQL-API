@@ -3,15 +3,15 @@ test-tmp:
 	@mkdir -p test/tmp
 
 test: 
-	expresso -I lib test/unit/*.js test/acceptance/*.js
+	./node_modules/expresso/bin/expresso -I lib test/unit/*.js test/acceptance/*.js
 	
 test-acceptance:
-	expresso -I lib test/acceptance/*.js	
+	./node_modules/expresso/bin/expresso -I lib test/acceptance/*.js	
 
 test-unit: 
-	expresso -I lib test/unit/*.js
+	./node_modules/expresso/bin/expresso -I lib test/unit/*.js
 
 test-cov: 
-	expresso -I lib --cov test/unit/*.js test/acceptance/*.js
+	./node_modules/expresso/bin/expresso -I lib --cov test/unit/*.js test/acceptance/*.js
 
 .PHONY: test test-cov

@@ -33,6 +33,7 @@ app.get('/v1/', function(req, res){
   var database  = req.query.database; 
   sql      = (sql == "")      ? null : sql;
   database = (database == "") ? null : database;  
+  var start = new Date().getTime();
     
   try {
     if (!_.isString(sql)) throw new Error("You must indicate a sql query");
@@ -49,7 +50,10 @@ app.get('/v1/', function(req, res){
       },
       function packageResults(err, result){
         if (err) throw err;
-        res.send(result.rows);
+        var end = new Date().getTime();
+        res.send({'time'      : ((end - start)/1000),
+                  'total_rows': result.rows.length, 
+                  'rows'      : result.rows});
       },
       function exceptionHandle(err, result){
         handleException(res,err);      
