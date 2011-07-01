@@ -4,7 +4,7 @@
 # cap production deploy:setup
 # cap production deploy
 # cap production node:npm_dependencies
-# cap production restart
+# cap production deploy:restart
 
 
 
