@@ -18,16 +18,16 @@ var express= require('express')
 // for private (read/write) queries:
 // - `auth_token` {String} oAuth API token from CartoDB. In URL or request header.
 //
-// eg. /v1/?sql=SELECT 1 as one&auth_token=my_token
+// eg. /api/v1/?sql=SELECT 1 as one&auth_token=my_token
 //
 // for public (read only) queries:
 // - `database` {String} The database to execute queries on
 //
-// eg. /v1/?sql=SELECT 1 as one&database=my_public_db
+// eg. /api/v1/?sql=SELECT 1 as one&database=my_public_db
 //
-// NOTE: private queries can only be ran on databases the oAuth key gives access to. 
-app.get('/v1/', function(req, res){
-  
+// NOTE: private queries can only be ran on databases the oAuth key gives access to.
+app.get('/api/v1/', function(req, res){
+
   //sanitize input
   var sql       = req.query.sql;
   var database  = req.query.database; 
