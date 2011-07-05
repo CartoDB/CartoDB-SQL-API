@@ -67,7 +67,7 @@ var PSQL = function(user_id, db, limit, offset){
   
   // little hack for UI
   me.window_sql = function(sql){
-    if (this.limit && this.offset){
+    if (_.isNumber(this.limit) && _.isNumber(this.offset)){
       return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + this.limit + " OFFSET " + this.offset;
     } else {
       return sql;

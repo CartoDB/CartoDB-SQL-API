@@ -33,13 +33,13 @@ app.get('/api/v1/', function(req, res){
   //sanitize input
   var sql       = req.query.sql;
   var database  = req.query.database;
-  var limit     = req.query.rows_per_page;
-  var offset    = req.query.page;
+  var limit     = parseInt(req.query.rows_per_page);
+  var offset    = parseInt(req.query.page);
    
   sql       = (sql == "")      ? null : sql;
   database  = (database == "") ? null : database;  
-  limit     = (limit == "")    ? null : limit;  
-  offset    = (offset == "")   ? null : (offset * limit);  
+  limit     = (_.isNumber(limit))  ? limit : null;  
+  offset    = (_.isNumber(offset)) ? offset * limit : null;  
   
   var start = new Date().getTime();
     
