@@ -8,13 +8,15 @@ var _      = require('underscore')
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db){  
+var PSQL = function(user_id, db, limit, offset){  
   if (!_.isString(user_id) && !_.isString(db)) throw new Error("database user or database name must be specified") 
 
   var me = {
       public_user: "publicuser"
     , user_id: user_id
     , db: db
+    , limit: limit
+    , offset: offset
     , client: null
   };      
   
@@ -50,23 +52,26 @@ var PSQL = function(user_id, db){
   }
     
   me.query = function(sql, callback){
+    var that = this;
     this.connect(function(err, client){      
       if (err) return callback(err, null);      
-      client.query(sql, function(err, result){
+      client.query(that.window_sql(sql), function(err, result){
         return callback(err, result)
       });
     });
   };  
 
-  //https://github.com/brianc/node-postgres/issues/15  
   me.end = function(){
     this.client.end();
-    // var that = this;
-    // if (this.client) {
-    //   (this.client.readyForQuery && this.client.queryQueue.length === 0) ? this.client.end() : this.client.on('drain', function(){  
-    //    that.client.end();
-    //   });
-    // }
+  }
+  
+  // little hack for UI
+  me.window_sql = function(sql){
+    if (this.limit && this.offset){
+      return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + this.limit + " OFFSET " + this.offset;
+    } else {
+      return sql;
+    }    
   }
   
   return me;

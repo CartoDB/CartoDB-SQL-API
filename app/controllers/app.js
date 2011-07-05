@@ -32,9 +32,15 @@ app.get('/api/v1/', function(req, res){
 
   //sanitize input
   var sql       = req.query.sql;
-  var database  = req.query.database; 
-  sql      = (sql == "")      ? null : sql;
-  database = (database == "") ? null : database;  
+  var database  = req.query.database;
+  var limit     = req.query.rows_per_page;
+  var offset    = req.query.page;
+   
+  sql       = (sql == "")      ? null : sql;
+  database  = (database == "") ? null : database;  
+  limit     = (limit == "")    ? null : limit;  
+  offset    = (offset == "")   ? null : (offset * limit);  
+  
   var start = new Date().getTime();
     
   try {
@@ -47,7 +53,7 @@ app.get('/api/v1/', function(req, res){
       },
       function querySql(err, user_id){
         if (err) throw err;
-        pg = new PSQL(user_id, database);
+        pg = new PSQL(user_id, database, limit, offset);
         pg.query(sql, this);
       },
       function packageResults(err, result){
