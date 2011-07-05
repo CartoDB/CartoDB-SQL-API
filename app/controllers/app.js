@@ -1,8 +1,10 @@
 var express= require('express')
   , app    = express.createServer(
       //TODO: make logs async background + 1min or so
-      //express.logger('\033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-timems -> :res[Content-Type]\033[0m')
+    express.logger({buffer:true, 
+                    format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-timems -> :res[Content-Type]\033[0m'})
     )
+    
   , Step   = require(global.settings.app_root + '/lib/step')
   , oAuth  = require(global.settings.app_root + '/app/models/oauth')
   , PSQL   = require(global.settings.app_root + '/app/models/psql')  
