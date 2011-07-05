@@ -58,7 +58,8 @@ namespace :deploy do
   end
 
   task :restart, :roles => :app, :except => { :no_release => true } do
-    sudo "restart #{application} || sudo start #{application}"
+    sudo "stop #{application}"
+    sudo "start #{application}"
   end
 
   task :create_deploy_to_with_sudo, :roles => :app do
