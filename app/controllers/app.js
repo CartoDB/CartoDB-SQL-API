@@ -2,7 +2,7 @@ var express= require('express')
   , app    = express.createServer(
       //TODO: make logs async background + 1min or so
     express.logger({buffer:true, 
-                    format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-timems -> :res[Content-Type]\033[0m'})
+                    format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'})
     )
     
   , Step   = require(global.settings.app_root + '/lib/step')
@@ -58,8 +58,8 @@ app.get('/api/v1/', function(req, res){
       },
       function packageResults(err, result){
         if (err) throw err;
-        var end = new Date().getTime();
-        res.send({'time'      : ((end - start)/1000),
+        var end = new Date().getTime();                        
+        res.send({'time' : ((end - start)/1000),
                   'total_rows': result.rows.length, 
                   'rows'      : result.rows});
       },
