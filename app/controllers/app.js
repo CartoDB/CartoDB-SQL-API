@@ -42,7 +42,7 @@ app.get('/api/v1/', function(req, res){
   offset    = (_.isNumber(offset)) ? offset * limit : null;  
   
   var start = new Date().getTime();
-    
+  
   try {
     if (!_.isString(sql)) throw new Error("You must indicate a sql query");
     var pg;
