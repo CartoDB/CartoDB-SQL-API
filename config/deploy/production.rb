@@ -9,14 +9,14 @@
 
 
 # somehow we'll have to update this dynamically
-set :host_1, "50.16.114.42" #"174.129.61.69"
+set :host_1, "laneveraroja.cartodb.com" #"50.16.114.42" #"174.129.61.69"
 role :app, host_1
 
 ssh_options[:forward_agent] = true
 
 # repository
 set :application, "node-sql-api"
-set :repository, "git@github.com:tokumine/cartodb-sql-api.git"
+set :repository, "git@github.com:Vizzuality/CartoDB-SQL-API.git"
 set :scm, :git
 set :deploy_via, :remote_cache
 
