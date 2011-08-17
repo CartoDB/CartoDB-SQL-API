@@ -1,16 +1,18 @@
 var express= require('express')
-  , app    = express.createServer();    
+  , app    = express.createServer(
+      //TODO: make logs async background + 1min or so
+    express.logger({buffer:true, 
+                    format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'})
+            )                            
   , Step   = require('step')
   , oAuth  = require(global.settings.app_root + '/app/models/oauth')
   , PSQL   = require(global.settings.app_root + '/app/models/psql')  
   , _      = require('underscore');
   _.mixin(require('underscore.string'));
 
-// configure ExpressJS
-app.use(express.logger({buffer:true, format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}));
-app.enable('jsonp callback');
-
-
+    app.enable('jsonp callback');
+    
+    
 // CartoDB v1 SQL API
 //
 // all requests expect the following URL args:
