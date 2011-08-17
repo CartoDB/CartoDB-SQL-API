@@ -200,13 +200,15 @@ tests['returns null user for unverified signatures'] = function(){
 }
 
 tests['returns null user for no oauth'] = function(){
-  var req = {query:{}, 
-         method: 'GET',
-         route: {path: '/api/v1/tables'}
-         }
-         
-  oAuth.verifyRequest(req, function(err, data){
-    assert.eql(data, null);
-  }, true)             
+  var req = {
+             query:{}, 
+             headers:{},
+             method: 'GET',
+             route: {path: '/api/v1/tables'}
+            }
+  
+  assert.throws(function(){
+    oAuth.verifyRequest(req, function(err, data){}, true);    
+  }, /incomplete oauth tokens in request/)       
 }
 

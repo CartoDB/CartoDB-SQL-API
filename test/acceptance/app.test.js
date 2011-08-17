@@ -27,23 +27,23 @@ module.exports = {
           status: 200
         });
       },
-  'GET /api/v1/ with SQL parameter on SELECT only. oAuth used ': function(){
-    assert.response(app, {
-      headers: {}
-      url: '/api/v1/?sql=SELECT%20*%20FROM%20test_table&oauth_token=1',
-      method: 'GET'
-    },{
-      status: 200
-    });
-  },
-  'GET /api/v1/ with SQL parameter on INSERT only. oAuth used ': function(){
-    assert.response(app, {
-      url: "/api/v1/?sql=INSERT%20INTO%20test_table%20(id)%20VALUES%20(1)&oauth_token=1",
-      method: 'GET'
-    },{
-      status: 200
-    });
-  },
+  // 'GET /api/v1/ with SQL parameter on SELECT only. oAuth used ': function(){
+  //   assert.response(app, {
+  //     headers: {}
+  //     url: '/api/v1/?sql=SELECT%20*%20FROM%20test_table&oauth_token=1',
+  //     method: 'GET'
+  //   },{
+  //     status: 200
+  //   });
+  // },
+  // 'GET /api/v1/ with SQL parameter on INSERT only. oAuth used ': function(){
+  //   assert.response(app, {
+  //     url: "/api/v1/?sql=INSERT%20INTO%20test_table%20(id)%20VALUES%20(1)&oauth_token=1",
+  //     method: 'GET'
+  //   },{
+  //     status: 200
+  //   });
+  // },
   'GET /api/v1/ with SQL parameter on INSERT only. oAuth not used, so public user - should fail': function(){
     assert.response(app, {
       url: "/api/v1/?sql=INSERT%20INTO%20test_table%20(id)%20VALUES%20(1)&database=cartodb_test_user_1_db",

@@ -28,7 +28,7 @@ var oAuth = function(){
 
     // pull only oauth tokens out of query                   
     var non_oauth  = _.difference(_.keys(query_oauth), oauth_variables);    
-    _.each(non_oauth, function(key){ delete query[key]; });        
+    _.each(non_oauth, function(key){ delete query_oauth[key]; });        
 
     // pull oauth tokens out of header
     var header_string = req.headers.authorization;
@@ -42,8 +42,8 @@ var oAuth = function(){
          
     //merge header and query oauth tokens. preference given to header oauth
     var oauth = _.defaults(header_oauth, query_oauth);
-    if (_.keys(oauth).length !== oauth_variables.length) {
-      throw Error('incomplete oauth tokens in request');
+    if (_.keys(oauth).length !== oauth_variables.length) {      
+      throw new Error('incomplete oauth tokens in request');
     } else {
       return oauth;
     }    
@@ -136,8 +136,8 @@ var oAuth = function(){
         
       	return signer.sign(method, path, joined);
       },
-      function checkSignature(err, data){        
-        if (err) callback(err, null);
+      function checkSignature(err, data){  
+        if (err) throw err;                
         callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
       }
     );

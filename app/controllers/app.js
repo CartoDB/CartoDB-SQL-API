@@ -30,14 +30,12 @@ var express= require('express')
 // NOTE: private queries can only be ran on databases the oAuth key gives access to.
 app.get('/api/v1/', function(req, res){
 
-  console.log(req)
-
   //sanitize input
   var sql       = req.query.sql;
   var database  = req.query.database;
   var limit     = parseInt(req.query.rows_per_page);
   var offset    = parseInt(req.query.page);
-   
+  var that      = this;
   sql       = (sql == "")      ? null : sql;
   database  = (database == "") ? null : database;  
   limit     = (_.isNumber(limit))  ? limit : null;  
@@ -54,7 +52,7 @@ app.get('/api/v1/', function(req, res){
         oAuth.verifyRequest(req, this);        
       },
       function querySql(err, user_id){
-        if (err) throw err;
+        if (err.message !== 'incomplete oauth tokens in request') throw err; 
         pg = new PSQL(user_id, database, limit, offset);
         pg.query(sql, this);
       },
@@ -65,8 +63,8 @@ app.get('/api/v1/', function(req, res){
                   'total_rows': result.rows.length, 
                   'rows'      : result.rows});
       },
-      function exceptionHandle(err, result){
-        handleException(err, res);      
+      function errorHandle(err, result){
+        handleException(err, res);
       }
     );  
   } catch (err) {
