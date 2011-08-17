@@ -12,8 +12,12 @@ node cluster.js [developement,test,production]
 tests
 ------
 ``` bash
-make test
+npm test-unit
+npm test-acceptance
 ```
+
+make sure you have setup your database connections in /config, and have the correct databases and keys setup in redis (hint, for redis, you'll need a `HSET rails:oauth_tokens:1 user_id 1` for the acceptance tests)
+
 
 core requirements
 -------------

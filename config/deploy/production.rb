@@ -9,7 +9,7 @@
 
 
 # somehow we'll have to update this dynamically
-set :host_1, "laneveraroja.cartodb.com" #"50.16.114.42" #"174.129.61.69"
+set :host_1, "shared01.cartodb.com" #{}"laneveraroja.cartodb.com" #"50.16.114.42" #"174.129.61.69"
 role :app, host_1
 
 ssh_options[:forward_agent] = true
@@ -30,12 +30,13 @@ set :use_sudo, false
 default_run_options[:pty] = true
 
 after "deploy", "node:link_directories"
+after "deploy", "node:update_dependencies"
 
 # ensures ssh-agent is always running
 before 'deploy:setup', 'deploy:create_deploy_to_with_sudo'
-after "deploy:setup", "deploy:setup_deploy_keys"
-after "deploy:setup", "deploy:setup_node_directories"
-after 'deploy:setup', 'deploy:write_upstart_script'
+after  "deploy:setup", "deploy:setup_deploy_keys"
+after  "deploy:setup", "deploy:setup_node_directories"
+after  'deploy:setup', 'deploy:write_upstart_script'
 
 namespace :deploy do
   desc "setup ssh-agent"
@@ -106,5 +107,10 @@ namespace :node do
     run "cd #{current_path} && npm install"
     run "mv -f #{current_path}/node_modules #{shared_path}/node_modules"
     run "ln -s #{shared_path}/node_modules #{current_path}/node_modules"
+  end  
+  
+  desc "update dependencies"
+  task :update_dependencies, :roles => :app do
+    run "cd #{current_path} && npm install"
   end  
 end

@@ -1,19 +1,25 @@
 {
 	"private": true,
   "name": "cartodb_api",
-  "description": "high speed api for cartodb",
+  "description": "high speed SQL api for cartodb",
   "version": "0.0.1",
   "dependencies": {
 		"cluster": "0.6.4",
-    "express": "2.4.0",
-		"underscore": "1.1.6",
+    "express": "2.4.3",
+		"underscore"  : "1.1.x",
 		"underscore.string": "1.1.5",
 		"pg": "0.5.0",
-		"generic-pool": "1.0.6",
-		"redis": "0.6.1"
+    "generic-pool": "1.0.x",
+		"redis": "0.6.1",
+		"step": "0.0.x",
+		"oauth-client": "0.2.0"
   },
   "devDependencies": {
-    "expresso": "0.7.2"
+      "expresso": "0.8.x"
+  },
+  "scripts": {
+      "unit": "expresso ./test/unit/* | sh",
+      "acceptance": "expresso ./test/acceptance/* | sh"
   },
   "engines": { "node": ">= 0.4.1 < 0.5.0" }
 }

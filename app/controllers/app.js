@@ -5,7 +5,7 @@ var express= require('express')
                     format:'[:remote-addr :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'})
     )
     
-  , Step   = require(global.settings.app_root + '/lib/step')
+  , Step   = require('step')
   , oAuth  = require(global.settings.app_root + '/app/models/oauth')
   , PSQL   = require(global.settings.app_root + '/app/models/psql')  
   , _      = require('underscore');
@@ -30,6 +30,8 @@ var express= require('express')
 // NOTE: private queries can only be ran on databases the oAuth key gives access to.
 app.get('/api/v1/', function(req, res){
 
+  console.log(req)
+
   //sanitize input
   var sql       = req.query.sql;
   var database  = req.query.database;
@@ -49,7 +51,7 @@ app.get('/api/v1/', function(req, res){
     
     Step(
       function getUser() {   
-        oAuth.authorize(req, this);        
+        oAuth.verifyRequest(req, this);        
       },
       function querySql(err, user_id){
         if (err) throw err;
@@ -64,15 +66,15 @@ app.get('/api/v1/', function(req, res){
                   'rows'      : result.rows});
       },
       function exceptionHandle(err, result){
-        handleException(res,err);      
+        handleException(err, res);      
       }
     );  
   } catch (err) {
-    handleException(res,err);
+    handleException(err, res);
   }  
 });
 
-function handleException(res, err){
+function handleException(err, res){
   var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
   res.send(msg, 400);  
 }
