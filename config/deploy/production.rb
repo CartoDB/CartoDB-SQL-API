@@ -30,7 +30,6 @@ set :use_sudo, false
 default_run_options[:pty] = true
 
 after "deploy", "node:link_directories"
-after "deploy", "node:update_dependencies"
 
 # ensures ssh-agent is always running
 before 'deploy:setup', 'deploy:create_deploy_to_with_sudo'

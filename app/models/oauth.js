@@ -138,7 +138,7 @@ var oAuth = function(){
       },
       function checkSignature(err, data){        
         if (err) callback(err, null);
-        callback(err, (signature === data) ? ohash.user_id : null);
+        callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
       }
     );
   }
