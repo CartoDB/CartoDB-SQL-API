@@ -30,6 +30,8 @@ var express= require('express')
 // NOTE: private queries can only be ran on databases the oAuth key gives access to.
 app.get('/api/v1/', function(req, res){
 
+  console.log(req);
+  
   //sanitize input
   var sql       = req.query.sql;
   var database  = req.query.database;
@@ -74,6 +76,8 @@ app.get('/api/v1/', function(req, res){
 
 function handleException(err, res){
   var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
+  console.log(err.message);
+  console.log(err.stack);
   res.send(msg, 400);  
 }
 
