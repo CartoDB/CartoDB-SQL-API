@@ -58,7 +58,7 @@ namespace :deploy do
   end
 
   task :restart, :roles => :app, :except => { :no_release => true } do
-    #sudo "stop #{application}"
+    sudo "stop #{application}"
     sudo "start #{application}"
   end
 

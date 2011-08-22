@@ -31,107 +31,9 @@ tests['test oauth database key'] = function(){
   assert.equal(oAuth.oauth_user_key, "rails:oauth_access_tokens:<%= oauth_access_key %>");    
 };
 
-tests['test parse params from request query'] = function(){
-  var req = {query:{oauth_token:"test_token"}}    
-  assert.equal(oAuth.parseParams(req), "test_token");    
-};
-
-tests['test parse params from request header'] = function(){
-  var req = {query:{}, headers:{authorization:"oauth_token=\"test_token\""}}    
-  assert.equal(oAuth.parseParams(req), "test_token");    
-};
-
-tests['test parse null empty token from request'] = function(){
-  var req = {query:{}, headers:{}}
-  assert.equal(oAuth.parseParams(req), null);
-}
-
-tests['test getUserId returns null user when passed null token'] = function(){
-  oAuth.getUserId(null, function(err,user_id){
-    assert.equal(user_id, null);
-  });    
-}
-
-tests['test getUserId error returns null when passed null token'] = function(){
-  oAuth.getUserId(null, function(err,user_id){
-    assert.equal(err, null);
-  });    
-}
-
-tests['returns a user id if there is an oauth_token in redis'] = function(){
-  var redisClient = redis.createClient();     
-  redisClient.select(oAuth.oauth_database);
-  
-  // make a dummy user_id/token combo and test
-  redisClient.HSET(_.template(oAuth.oauth_user_key, {oauth_access_key: "test_token"}), 'user_id', 9999, function(){
-    oAuth.getUserId("test_token", function(err,user_id){
-      assert.equal(user_id, 9999);
-      redisClient.quit();
-    });          
-  });      
-}
-
-tests['authorize returns null if no oauth_token'] = function(){
-  var req = {query:{}, headers:{}}
-  
-  oAuth.authorize(req, function(err,user_id){
-    assert.equal(user_id, null);
-  });          
-}
-
-tests['authorize returns user_id if valid query oauth_token set'] = function(){
-  var redisClient = redis.createClient();     
-  redisClient.select(oAuth.oauth_database);
-  
-  // make a dummy user_id/token combo and test
-  redisClient.HSET(_.template(oAuth.oauth_user_key, {oauth_access_key: "test_token_1"}), 'user_id', 9999, function(){
-    var req = {query:{oauth_token:"test_token_1"}, headers:{}}
-    oAuth.authorize(req, function(err,user_id){
-      assert.equal(user_id, 9999);
-      redisClient.quit();
-    });              
-  });      
-}
-
-
-tests['authorize returns user_id if valid header oauth_token set'] = function(){
-  var redisClient = redis.createClient();     
-  redisClient.select(oAuth.oauth_database);
-  
-  // make a dummy user_id/token combo and test
-  redisClient.HSET(_.template(oAuth.oauth_user_key, {oauth_access_key: "test_token_2"}), 'user_id', 9999, function(){
-    req = {query:{},  headers:{authorization:"oauth_token=\"test_token_2\""}}
-    oAuth.authorize(req, function(err,user_id){
-      assert.equal(user_id, 9999);
-      redisClient.quit();
-    }); 
-  }); 
-}
-
-
-tests['test parse tokens from empty request raises exception'] = function(){
-  var req = {query:{}, headers:{}}    
-  assert.throws(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);    
-};
-
-tests['test parse tokens from half baked headers raises exception'] = function(){
-  var req = {query:{}, headers:{authorization:"blah"}}    
-  assert.throws(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);    
-};
-
-tests['test parse tokens from half filled headers raises exception'] = function(){
-  var req = {query:{}, headers:{authorization:part_oauth_header}}    
-  assert.throws(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);    
-};
-
 tests['test parse tokens from full headers does not raise exception'] = function(){
   var req = {query:{}, headers:{authorization:full_oauth_header}}    
   assert.doesNotThrow(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);    
-};
-
-tests['test parse some normal tokens raises exception'] = function(){
-  var req = {query:oauth_data_2, headers:{}}    
-  assert.throws(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);    
 };
 
 tests['test parse all normal tokens raises no exception'] = function(){
@@ -156,10 +58,10 @@ tests['test headers take presedence over query parameters'] = function(){
 // hset rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR time sometime
 
 //the headers for this are:
-var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_consumer_key="fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2",oauth_token="l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR",oauth_signature_method="HMAC-SHA1", oauth_signature="o4hx4hWP6KtLyFwggnYB4yPK8xI%3D",oauth_timestamp="1313581372",oauth_nonce="W0zUmvyC4eVL8cBd4YwlH1nnPTbxW0QBYcWkXTwe4",oauth_version="1.0"'  
+var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_consumer_key="fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2",oauth_token="l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR",oauth_signature_method="HMAC-SHA1", oauth_signature="o4hx4hWP6KtLyFwggnYB4yPK8xI%3D",oauth_timestamp="1313581372",oauth_nonce="W0zUmvyC4eVL8cBd4YwlH1nnPTbxW0QBYcWkXTwe4",oauth_version="1.0"';
 
 tests['test can access oauth hash for a user based on access token (oauth_token)'] = function(){
-  var req = {query:{}, headers:{authorization:real_oauth_header}}    
+  var req = {query:{}, headers:{authorization:real_oauth_header}};
   var tokens = oAuth.parseTokens(req);  
   
   oAuth.getOAuthHash(tokens.oauth_token, function(err, data){
@@ -168,8 +70,9 @@ tests['test can access oauth hash for a user based on access token (oauth_token)
 };
 
 tests['test non existant oauth hash for a user based on oauth_token returns empty hash'] = function(){
-  var req = {query:{}, headers:{authorization:full_oauth_header}}    
-  var tokens = oAuth.parseTokens(req);    
+  var req = {query:{}, headers:{authorization:full_oauth_header}};
+  var tokens = oAuth.parseTokens(req);
+    
   oAuth.getOAuthHash(tokens.oauth_token, function(err, data){
     assert.eql(data, {})
   });
@@ -180,24 +83,24 @@ tests['can return user for verified signature'] = function(){
          headers:{authorization:real_oauth_header, host: 'vizzuality.testhost.lan' },
          method: 'GET',
          route: {path: '/api/v1/tables'}
-         }
+         };
          
   oAuth.verifyRequest(req, function(err, data){
     assert.eql(data, 1);
   }, true)             
-}
+};
 
 tests['returns null user for unverified signatures'] = function(){
   var req = {query:{}, 
          headers:{authorization:real_oauth_header, host: 'vizzuality.testyhost.lan' },
          method: 'GET',
          route: {path: '/api/v1/tables'}
-         }
+         };
          
   oAuth.verifyRequest(req, function(err, data){
     assert.eql(data, null);
   }, true)             
-}
+};
 
 tests['returns null user for no oauth'] = function(){
   var req = {
@@ -205,10 +108,10 @@ tests['returns null user for no oauth'] = function(){
              headers:{},
              method: 'GET',
              route: {path: '/api/v1/tables'}
-            }
-  
-  assert.throws(function(){
-    oAuth.verifyRequest(req, function(err, data){}, true);    
-  }, /incomplete oauth tokens in request/)       
-}
+            };
+
+  oAuth.verifyRequest(req,function(err,data){
+     assert.eql(data, null);
+  });
+};
 

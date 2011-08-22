@@ -8,8 +8,10 @@ var _      = require('underscore')
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db, limit, offset){  
-  if (!_.isString(user_id) && !_.isString(db)) throw new Error("database user or database name must be specified") 
+var PSQL = function(user_id, db, limit, offset){
+
+  var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please specify a database name."
+  if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
 
   var me = {
       public_user: "publicuser"

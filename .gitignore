@@ -3,3 +3,4 @@ pids/
 *.sock
 test/tmp/*
 node_modules/
+.idea/*

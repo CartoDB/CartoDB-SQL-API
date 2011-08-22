@@ -53,7 +53,7 @@ app.get('/api/v1/', function(req, res){
         oAuth.verifyRequest(req, this);        
       },
       function querySql(err, user_id){
-        if (err && err.message !== 'incomplete oauth tokens in request') throw err; 
+        if (err) throw err;
         pg = new PSQL(user_id, database, limit, offset);
         pg.query(sql, this);
       },

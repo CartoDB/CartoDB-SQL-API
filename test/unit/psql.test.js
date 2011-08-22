@@ -8,7 +8,7 @@ exports['test throws error if no args passed to constructor'] = function(){
   try{
     var pg = new PSQL();    
   } catch (err){
-    assert.equal(err.message, "database user or database name must be specified");
+    assert.equal(err.message, "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please specify a database name.");
   }  
 };
 
