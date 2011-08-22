@@ -105,7 +105,7 @@ var oAuth = function(){
       },
       function checkSignature(err, data){
         if (err) throw err;
-        console.log(data + " should equal the provided signature: " + signature);
+        //console.log(data + " should equal the provided signature: " + signature);
         callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
       }
     );
