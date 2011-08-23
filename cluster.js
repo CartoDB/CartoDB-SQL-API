@@ -15,7 +15,7 @@ var cluster = require('cluster');
 // sanity check arguments
 var ENV = process.argv[2]
 if (ENV != 'development' && ENV != 'production') {
-  console.error("\nnode app [environment]");
+  console.error("\n./cluster [environment]");
   console.error("environments: [development, test, production]");
   process.exit(1);
 }
@@ -29,6 +29,4 @@ cluster('./app/controllers/app')
   .use(cluster.logger('logs'))
   .use(cluster.stats())
   .use(cluster.pidfiles('pids'))
-  .use(cluster.cli())
-  .use(cluster.repl(8888))
   .listen(global.settings.node_port);
