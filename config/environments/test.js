@@ -10,3 +10,4 @@ module.exports.redisPool    = 50;
 module.exports.redisIdleTimeoutMillis   = 100;
 module.exports.redisReapIntervalMillis  = 10;
 module.exports.redisLog     = false;
+
