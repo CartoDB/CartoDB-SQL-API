@@ -23,22 +23,22 @@ var express= require('express')
     , PSQL   = require(global.settings.app_root + '/app/models/psql')
     , _      = require('underscore');
 
-_.mixin(require('underscore.string'));
 app.enable('jsonp callback');
 app.get('/api/v1/', function(req, res){
 
-    //sanitize input
+    // sanitize input
     var sql       = req.query.sql;
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var that      = this;
 
     sql       = (sql == "")      ? null : sql;
     database  = (database == "") ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
-    offset    = (_.isNumber(offset)) ? offset * limit : null;
+    offset    = (_.isNumber(offset)) ? offset * limit : null
 
+    // setup step run
+    var that  = this;
     var start = new Date().getTime();
 
     try {
