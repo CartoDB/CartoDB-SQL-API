@@ -55,7 +55,7 @@ app.get('/api/v1/', function(req, res){
             },
             function setDBGetUser(err, data) {
                 if (err) throw err;
-                database = (data == "") ? null : data;
+                database = (data == "" || _.isNull(data)) ? database : data;
                 oAuth.verifyRequest(req, this);
             },
             function querySql(err, user_id){
@@ -81,10 +81,12 @@ app.get('/api/v1/', function(req, res){
 
 function handleException(err, res){
     var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
-    // TODO: email this Exception report
-    console.log("EXCEPTION REPORT")
-    console.log(err.message);
-    console.log(err.stack);
+    if (global.settings.environment !== 'test'){
+        // TODO: email this Exception report
+        console.log("EXCEPTION REPORT")
+        console.log(err.message);
+        console.log(err.stack);
+    }
     res.send(msg, 400);
 }
 
