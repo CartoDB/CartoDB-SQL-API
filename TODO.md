@@ -1,4 +1,3 @@
-reinvestigate use of database variable now we take only from subdomain
 update error messages if a query goes wrong
 
 

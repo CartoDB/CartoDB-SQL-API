@@ -10,7 +10,7 @@ var _      = require('underscore')
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
 var PSQL = function(user_id, db, limit, offset){
 
-  var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please specify a database name."
+  var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
   if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
 
   var me = {
