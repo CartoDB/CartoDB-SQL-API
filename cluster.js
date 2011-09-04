@@ -30,3 +30,5 @@ cluster('./app/controllers/app')
   .use(cluster.stats())
   .use(cluster.pidfiles('pids'))
   .listen(global.settings.node_port);
+
+console.log('CartoDB SQL-API running on port: ' + global.settings.node_port);
