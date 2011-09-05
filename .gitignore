@@ -1,5 +1,5 @@
-logs/
-pids/
+logs/*.log
+pids/*.pid
 *.sock
 test/tmp/*
 node_modules/
