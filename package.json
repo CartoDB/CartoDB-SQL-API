@@ -4,7 +4,7 @@
   "description": "high speed SQL api for cartodb",
   "version": "0.0.1",
   "dependencies": {
-		"cluster": "0.6.4",
+		"cluster": "0.6.9",
     "express": "2.4.3",
 		"underscore"  : "1.1.x",
 		"underscore.string": "1.1.5",

@@ -26,6 +26,8 @@ var env          = require(__dirname + '/config/environments/' + ENV)
 _.extend(global.settings, env);
  
 cluster('./app/controllers/app')
+  .set('workers', 2)
+  .set('socket path', '/tmp')
   .use(cluster.logger('logs'))
   .use(cluster.stats())
   .use(cluster.pidfiles('pids'))
