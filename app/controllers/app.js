@@ -23,11 +23,16 @@ var express= require('express')
     , PSQL   = require(global.settings.app_root + '/app/models/psql')
     , _      = require('underscore');
 
+app.use(express.bodyParser());
 app.enable('jsonp callback');
-app.get('/api/v1/', function(req, res){
+
+app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
+app.post('/api/v1/sql', function(req, res) { handleQuery(req, res) } );
+function handleQuery(req, res){
 
     // sanitize input
-    var sql       = req.query.sql;
+    var body      = (req.body) ? req.body : {};
+    var sql       = req.query.q || body.q; // get and post
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
@@ -75,9 +80,12 @@ app.get('/api/v1/', function(req, res){
             }
         );
     } catch (err) {
+        console.log('[ERROR]\n' + err);
         handleException(err, res);
     }
-});
+}
+
+
 
 function handleException(err, res){
     var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
