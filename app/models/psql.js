@@ -1,6 +1,7 @@
 var _      = require('underscore')
-  , pg     = require('pg').native;
-  _.mixin(require('underscore.string'));  
+  , Step   = require('step')
+  , pg     = require('pg');//.native;
+  _.mixin(require('underscore.string'));
 
 // PSQL
 //
@@ -28,7 +29,7 @@ var PSQL = function(user_id, db, limit, offset){
       username = _.template(global.settings.db_user, {user_id: this.user_id});
     
     return username; 
-  }
+  };
   
   me.database = function(){      
     var database = db;    
@@ -36,7 +37,7 @@ var PSQL = function(user_id, db, limit, offset){
       database = _.template(global.settings.db_base_name, {user_id: this.user_id});
           
     return database;
-  }
+  };
   
   // memoizes connection in object. move to proper pool.
   me.connect = function(callback){
@@ -51,21 +52,29 @@ var PSQL = function(user_id, db, limit, offset){
         return callback(err, client);        
       });      
     }
-  }
+  };
     
   me.query = function(sql, callback){
     var that = this;
-    this.connect(function(err, client){      
-      if (err) return callback(err, null);      
-      client.query(that.window_sql(sql), function(err, result){
-        return callback(err, result)
-      });
-    });
+
+    Step(
+        function(){
+            that.connect(this);
+        },
+        function(err, client){
+            if (err) return callback(err, null);
+            client.query(that.window_sql(sql), this);
+        },
+        function(err, res){
+            //if (err) console.log(err);
+            callback(err, res)
+        }
+    );
   };  
 
   me.end = function(){
     this.client.end();
-  }
+  };
   
   // little hack for UI
   me.window_sql = function(sql){
@@ -75,7 +84,7 @@ var PSQL = function(user_id, db, limit, offset){
     } else {
       return sql;
     }    
-  }
+  };
   
   return me;
 };
