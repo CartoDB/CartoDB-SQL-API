@@ -63,6 +63,8 @@ function handleQuery(req, res){
                 database = (data == "" || _.isNull(data)) ? database : data;
                 oAuth.verifyRequest(req, this);
             },
+            // TODO insert check here for if it's a map request from the internal CartoDB session key
+            // TODO if it is, allow RW or R?
             function querySql(err, user_id){
                 if (err) throw err;
                 pg = new PSQL(user_id, database, limit, offset);
