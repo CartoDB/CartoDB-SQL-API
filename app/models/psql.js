@@ -21,39 +21,39 @@ var PSQL = function(user_id, db, limit, offset){
     , limit: limit
     , offset: offset
     , client: null
-  };      
-  
-  me.username = function(){
-    var username = this.public_user;    
-    if (_.isString(this.user_id)) 
-      username = _.template(global.settings.db_user, {user_id: this.user_id});
-    
-    return username; 
   };
-  
-  me.database = function(){      
-    var database = db;    
+
+  me.username = function(){
+    var username = this.public_user;
+    if (_.isString(this.user_id))
+      username = _.template(global.settings.db_user, {user_id: this.user_id});
+
+    return username;
+  };
+
+  me.database = function(){
+    var database = db;
     if (_.isString(this.user_id))
       database = _.template(global.settings.db_base_name, {user_id: this.user_id});
-          
+
     return database;
   };
-  
+
   // memoizes connection in object. move to proper pool.
   me.connect = function(callback){
     var that = this
     var conString = "tcp://" + this.username() + "@" + global.settings.db_host + ":" + global.settings.db_port + "/" + this.database();
-    
+
     if (that.client) {
       return callback(null, that.client);
     } else {
       pg.connect(conString, function(err, client){
         that.client = client;
-        return callback(err, client);        
-      });      
+        return callback(err, client);
+      });
     }
   };
-    
+
   me.query = function(sql, callback){
     var that = this;
 
@@ -70,12 +70,12 @@ var PSQL = function(user_id, db, limit, offset){
             callback(err, res)
         }
     );
-  };  
+  };
 
   me.end = function(){
     this.client.end();
   };
-  
+
   // little hack for UI
   me.window_sql = function(sql){
     // only window select functions
@@ -83,9 +83,9 @@ var PSQL = function(user_id, db, limit, offset){
       return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + this.limit + " OFFSET " + this.offset;
     } else {
       return sql;
-    }    
+    }
   };
-  
+
   return me;
 };
 

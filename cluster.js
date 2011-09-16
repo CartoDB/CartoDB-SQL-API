@@ -14,9 +14,9 @@ var cluster = require('cluster');
 
 // sanity check arguments
 var ENV = process.argv[2]
-if (ENV != 'development' && ENV != 'production') {
+if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging') {
   console.error("\n./cluster [environment]");
-  console.error("environments: [development, test, production]");
+  console.error("environments: [development, test, production, staging]");
   process.exit(1);
 }
 
