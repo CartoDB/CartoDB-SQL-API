@@ -38,8 +38,6 @@ function handleQuery(req, res, format){
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    
-    console.log(format);
 
     sql       = (sql == "")      ? null : sql;
     database  = (database == "") ? null : database;
@@ -81,7 +79,6 @@ function handleQuery(req, res, format){
             function packageResults(err, result){
                 if (err) throw err;
                 var end = new Date().getTime();
-                console.log(format);
                 if (format == 'geojson'){
 					var out = {type: "FeatureCollection",
 							   features: []};
