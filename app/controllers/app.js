@@ -26,9 +26,11 @@ var express= require('express')
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 
-app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
-app.post('/api/v1/sql', function(req, res) { handleQuery(req, res) } );
-function handleQuery(req, res){
+app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res, null) } );
+app.post('/api/v1/sql', function(req, res) { handleQuery(req, res, null) } );
+app.get('/api/v1/sql.:f', function(req, res) { handleQuery(req, res, req.params.f) } );
+app.post('/api/v1/sql.:f', function(req, res) { handleQuery(req, res, req.params.f) } );
+function handleQuery(req, res, format){
 
     // sanitize input
     var body      = (req.body) ? req.body : {};
@@ -36,6 +38,8 @@ function handleQuery(req, res){
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
+    
+    console.log(format);
 
     sql       = (sql == "")      ? null : sql;
     database  = (database == "") ? null : database;
@@ -68,14 +72,35 @@ function handleQuery(req, res){
             function querySql(err, user_id){
                 if (err) throw err;
                 pg = new PSQL(user_id, database, limit, offset);
+                
+                if (format == 'geojson'){
+					sql = ['SELECT *,ST_AsGeoJSON(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
+				}
                 pg.query(sql, this);
             },
             function packageResults(err, result){
                 if (err) throw err;
                 var end = new Date().getTime();
-                res.send({'time' : ((end - start)/1000),
-                    'total_rows': result.rows.length,
-                    'rows'      : result.rows});
+                console.log(format);
+                if (format == 'geojson'){
+					var out = {type: "FeatureCollection",
+							   features: []};
+					for (i=0; i < result.rows.length; i++) {
+						var geojson = { type: "Feature", 
+										properties: { },
+										geometry: { } };
+						geojson.geometry = JSON.parse(result.rows[i]["the_geom"]);
+						delete result.rows[i]["the_geom"];
+						delete result.rows[i]["the_geom_webmercator"];
+						geojson.properties = result.rows[i];
+						out.features.push(geojson);
+					}
+					res.send(out);
+				}else{
+					res.send({'time' : ((end - start)/1000),
+						'total_rows': result.rows.length,
+						'rows'      : result.rows});
+				}
             },
             function errorHandle(err, result){
                 handleException(err, res);
@@ -86,7 +111,6 @@ function handleQuery(req, res){
         handleException(err, res);
     }
 }
-
 
 
 function handleException(err, res){
