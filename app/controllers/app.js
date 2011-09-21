@@ -14,14 +14,15 @@
 // eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
 
 var express= require('express')
-    , app    = express.createServer(
-                express.logger({buffer:true,
-                                format:'[:req[X-Real-IP] :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
-    , Step   = require('step')
-    , Meta   = require(global.settings.app_root + '/app/models/metadata')
-    , oAuth  = require(global.settings.app_root + '/app/models/oauth')
-    , PSQL   = require(global.settings.app_root + '/app/models/psql')
-    , _      = require('underscore');
+    , app      = express.createServer(
+                  express.logger({buffer:true,
+                                  format:'[:req[X-Real-IP] :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
+    , Step     = require('step')
+    , Meta     = require(global.settings.app_root + '/app/models/metadata')
+    , oAuth    = require(global.settings.app_root + '/app/models/oauth')
+    , PSQL     = require(global.settings.app_root + '/app/models/psql')
+    , _        = require('underscore')
+    , libxml   = require("libxmljs");
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -72,12 +73,15 @@ function handleQuery(req, res){
                 
                 if (format == 'geojson'){
 					sql = ['SELECT *,ST_AsGeoJSON(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
+				}else if (format == 'kml'){
+					sql = ['SELECT *,ST_AsKML(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
 				}
                 pg.query(sql, this);
             },
             function packageResults(err, result){
                 if (err) throw err;
                 var end = new Date().getTime();
+                
                 if (format == 'geojson'){
 					var out = {type: "FeatureCollection",
 							   features: []};
@@ -92,6 +96,34 @@ function handleQuery(req, res){
 						out.features.push(geojson);
 					}
 					res.send(out);
+                } else if (format == 'kml'){
+					var doc = new libxml.Document(function(n) {
+					  n.node('kml', {xmlns: "http://www.opengis.net/kml/2.2"}, function(n) {
+						n.node('Document', function(n) {
+						  n.node('Folder', function(n){
+							n.node('name', 'CartoDB SQL API');
+							for (i=0; i < result.rows.length; i++) {
+								n.node('Placemark', function(n){
+									var name = result.rows[i].name ? result.rows[i].name : result.rows[i].cartodb_id;
+									var geom = libxml.parseXmlString(result.rows[i].the_geom).root();
+									n.node('name', name);
+									n.node(geom);
+									delete result.rows[i]["the_geom"];
+									delete result.rows[i]["the_geom_webmercator"];
+									for (var key in result.rows[i]){
+										var val = result.rows[i][key];
+										if (val && val != null && val != ''){
+											if (typeof(val) === 'object') val = val.toString();
+											n.node(key, val);
+										}
+									}
+								});
+							}
+						  });
+						});
+					  });
+					});
+					res.send(doc.toString());
 				}else{
 					res.send({'time' : ((end - start)/1000),
 						'total_rows': result.rows.length,
