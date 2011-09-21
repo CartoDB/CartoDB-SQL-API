@@ -26,11 +26,9 @@ var express= require('express')
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 
-app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res, null) } );
-app.post('/api/v1/sql', function(req, res) { handleQuery(req, res, null) } );
-app.get('/api/v1/sql.:f', function(req, res) { handleQuery(req, res, req.params.f) } );
-app.post('/api/v1/sql.:f', function(req, res) { handleQuery(req, res, req.params.f) } );
-function handleQuery(req, res, format){
+app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
+app.post('/api/v1/sql', function(req, res) { handleQuery(req, res) } );
+function handleQuery(req, res){
 
     // sanitize input
     var body      = (req.body) ? req.body : {};
@@ -38,7 +36,8 @@ function handleQuery(req, res, format){
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-
+	var format    = (req.query.format) ? req.query.format : null;
+	
     sql       = (sql == "")      ? null : sql;
     database  = (database == "") ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
