@@ -29,6 +29,8 @@ app.enable('jsonp callback');
 
 app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
 app.post('/api/v1/sql', function(req, res) { handleQuery(req, res) } );
+app.get('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
+app.post('/api/v1/sql.:f', function(req, res) { handleQuery(req, res) } );
 function handleQuery(req, res){
 
     // sanitize input
@@ -37,7 +39,8 @@ function handleQuery(req, res){
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-	var format    = (req.query.format) ? req.query.format : null;
+	var format    = (req.params.f) ? req.params.f : null;
+	    format    = (req.query.format) ? req.query.format : format;
 	
     sql       = (sql == "")      ? null : sql;
     database  = (database == "") ? null : database;
