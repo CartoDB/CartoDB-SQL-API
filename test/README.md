@@ -1,7 +1,7 @@
 cartodb-sql-api tests
 --
 
-* Tests require you create a test database, execute prepare_db.sh. You need postgres and redis running
+Tests require you create a test database and set some redis keys before, you can execute prepare_db.sh script, it will create database, users and redis stuff for you. Be sure postgres and redis are running
 
 once database is configured, run the tests with expresso:
 
