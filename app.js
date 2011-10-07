@@ -12,7 +12,7 @@
 var _ = require('underscore');
 
 // sanity check arguments
-var ENV = process.argv[2]
+var ENV = process.argv[2];
 if (ENV != 'development' && ENV != 'production') {
   console.error("\n./app [environment]");
   console.error("environments: [development, test, production]");
@@ -20,8 +20,8 @@ if (ENV != 'development' && ENV != 'production') {
 }
 
 // set Node.js app settings and boot
-global.settings  = require(__dirname + '/config/settings')
-var env          = require(__dirname + '/config/environments/' + ENV)
+global.settings  = require(__dirname + '/config/settings');
+var env          = require(__dirname + '/config/environments/' + ENV);
 _.extend(global.settings, env);
  
 // kick off controller
