@@ -1,22 +1,19 @@
 SQL API for cartodb.com
 ========================
  
-Provides a concurrent event driven interface for running SQL queries against the cartoDB postgres database. Users are authenticated over oAuth. Also provides ability to make public "SELECT" only calls.
+Provides a nodejs based API for running SQL queries against CartoDB.
+
+* Users are authenticated over OAuth. Also provides ability to make public "SELECT" only calls.
+* OAuth requests to this API should always be made over SSL.
+
 
 usage
 ------
 ``` bash
-node cluster.js [developement,test,production]
+node cluster.js/app.js [developement,test,production]
 ```
 
-tests
-------
-``` bash
-npm test-unit
-npm test-acceptance
-```
-
-make sure you have setup your database connections in /config, and have the correct databases and keys setup in redis (hint, for redis, you'll need a `HSET rails:oauth_tokens:1 user_id 1` for the acceptance tests)
+for examples of use, see /tests
 
 
 core requirements
@@ -25,24 +22,23 @@ core requirements
 * postgres
 * redis
 * node v0.4.8+
-
-node.js dependencies
----------------------
 * npm
 
-To install dependencies from package.json:
 
-``` npm install```
+dependencies
+---------------------
 
-deployment
-----------
-* capistrano on ruby 1.9.2. 
+```bash
+npm install
+```
 
-To install dependencies from Gemfile:
 
-```bundle install``` 
+tests
+------
+``` bash
+npm test-unit
+npm test-acceptance
+```
 
-ensure after first code deploy to run the dependencies task:
-
-```cap production node:npm_dependencies```
-
+make sure you have setup your database connections in /config, and have the correct databases and keys setup in redis.
+You'll at least need to set redis with `HSET rails:oauth_tokens:1 user_id 1` for the acceptance tests.
