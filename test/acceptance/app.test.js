@@ -20,6 +20,8 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
 
 var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_consumer_key="fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2",oauth_token="l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR",oauth_signature_method="HMAC-SHA1", oauth_signature="o4hx4hWP6KtLyFwggnYB4yPK8xI%3D",oauth_timestamp="1313581372",oauth_nonce="W0zUmvyC4eVL8cBd4YwlH1nnPTbxW0QBYcWkXTwe4",oauth_version="1.0"';
 
+
+
 tests['GET /api/v1/sql'] = function(){
     assert.response(app, {
         url: '/api/v1/sql',
@@ -30,14 +32,16 @@ tests['GET /api/v1/sql'] = function(){
     });
 };
 
+
 tests['GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included '] = function(){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_dev_user_1_db',
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
         method: 'GET'
     },{
         status: 200
     });
 };
+
 
 tests['GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers'] = function(){
     assert.response(app, {
@@ -48,6 +52,8 @@ tests['GET /api/v1/sql with SQL parameter on SELECT only. no database param, jus
         status: 200
     });
 };
+
+
 
 tests['POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers'] = function(){
     assert.response(app, {
@@ -97,3 +103,4 @@ tests['GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db 
         status: 400
     });
 };
+
