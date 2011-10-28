@@ -104,7 +104,7 @@ tests['GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db 
     });
 };
 
-tests['GET /api/v1/sql with SQL parameter on SELECT only and geojson'] = function(){
+tests['GET /api/v1/sql with SQL parameter and geojson format, ensuring content-disposition set to geojson'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -117,7 +117,7 @@ tests['GET /api/v1/sql with SQL parameter on SELECT only and geojson'] = functio
     });
 };
 
-tests['GET /api/v1/sql with SQL parameter on SELECT only and json'] = function(){
+tests['GET /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=json',
         headers: {host: 'vizzuality.cartodb.com'},
