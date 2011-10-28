@@ -104,3 +104,28 @@ tests['GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db 
     });
 };
 
+tests['GET /api/v1/sql with SQL parameter on SELECT only and geojson'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
+    });
+};
+
+tests['GET /api/v1/sql with SQL parameter on SELECT only and json'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=json',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
+    });
+};

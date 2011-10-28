@@ -15,14 +15,13 @@
 
 var express= require('express')
     , app      = express.createServer(
-                  express.logger({buffer:true,
-                                  format:'[:req[X-Real-IP] :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
+    express.logger({buffer:true,
+        format:'[:req[X-Real-IP] :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
     , Step     = require('step')
     , Meta     = require(global.settings.app_root + '/app/models/metadata')
     , oAuth    = require(global.settings.app_root + '/app/models/oauth')
     , PSQL     = require(global.settings.app_root + '/app/models/psql')
-    , _        = require('underscore')
-    , libxml   = require("libxmljs");
+    , _        = require('underscore');
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -39,11 +38,12 @@ function handleQuery(req, res){
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-	var format    = (req.params.f) ? req.params.f : null;
-	    format    = (req.query.format) ? req.query.format : format;
-	
-    sql       = (sql == "")      ? null : sql;
-    database  = (database == "") ? null : database;
+    var format    = (req.query.format) ? req.query.format : null;
+
+    // validate input slightly
+    format    = (format === "")   ? null : format;
+    sql       = (sql === "")      ? null : sql;
+    database  = (database === "") ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
     offset    = (_.isNumber(offset)) ? offset * limit : null
 
@@ -71,66 +71,37 @@ function handleQuery(req, res){
             function querySql(err, user_id){
                 if (err) throw err;
                 pg = new PSQL(user_id, database, limit, offset);
-                
-                if (format == 'geojson'){
-					sql = ['SELECT *,ST_AsGeoJSON(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
-				}else if (format == 'kml'){
-					sql = ['SELECT *,ST_AsKML(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
-				}
+
+                // TODO: refactor formats to external object
+                if (format === 'geojson'){
+                    sql = ['SELECT *, ST_AsGeoJSON(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
+                }
+
                 pg.query(sql, this);
             },
             function packageResults(err, result){
                 if (err) throw err;
-                var end = new Date().getTime();
 
-                // TODO: Tidy... tsk.
-                if (format == 'geojson'){
-					var out = {type: "FeatureCollection",
-							   features: []};
-					for (i=0; i < result.rows.length; i++) {
-						var geojson = { type: "Feature", 
-										properties: { },
-										geometry: { } };
-						geojson.geometry = JSON.parse(result.rows[i]["the_geom"]);
-						delete result.rows[i]["the_geom"];
-						delete result.rows[i]["the_geom_webmercator"];
-						geojson.properties = result.rows[i];
-						out.features.push(geojson);
-					}
-					res.send(out);
-                } else if (format == 'kml'){
-					var doc = new libxml.Document(function(n) {
-					  n.node('kml', {xmlns: "http://www.opengis.net/kml/2.2"}, function(n) {
-						n.node('Document', function(n) {
-						  n.node('Folder', function(n){
-							n.node('name', 'CartoDB SQL API');
-							for (i=0; i < result.rows.length; i++) {
-								n.node('Placemark', function(n){
-									var name = result.rows[i].name ? result.rows[i].name : result.rows[i].cartodb_id;
-									var geom = libxml.parseXmlString(result.rows[i].the_geom).root();
-									n.node('name', name);
-									n.node(geom);
-									delete result.rows[i]["the_geom"];
-									delete result.rows[i]["the_geom_webmercator"];
-									for (var key in result.rows[i]){
-										var val = result.rows[i][key];
-										if (val && val != null && val != ''){
-											if (typeof(val) === 'object') val = val.toString();
-											n.node(key, val);
-										}
-									}
-								});
-							}
-						  });
-						});
-					  });
-					});
-					res.send(doc.toString());
-				}else{
-					res.send({'time' : ((end - start)/1000),
-						'total_rows': result.rows.length,
-						'rows'      : result.rows});
-				}
+                // TODO: refactor formats to external object
+                if (format === 'geojson'){
+                    toGeoJSON(result, res, this);
+                } else {
+                    var end = new Date().getTime();
+                    return {
+                        'time' : ((end - start)/1000),
+                        'total_rows': result.rows.length,
+                        'rows'      : result.rows
+                    };
+                }
+            },
+            function sendResults(err, out){
+                if (err) throw err;
+
+                // configure headers for geojson
+                res.header("Content-Disposition", getContentDisposition(format));
+
+                // return to browser
+                res.send(out);
             },
             function errorHandle(err, result){
                 handleException(err, res);
@@ -142,6 +113,38 @@ function handleQuery(req, res){
     }
 }
 
+function toGeoJSON(data, res, callback){
+    try{
+        var out = {
+            type: "FeatureCollection",
+            features: []
+        };
+
+        _.each(data.rows, function(ele){
+            var geojson = {
+                type: "Feature",
+                properties: { },
+                geometry: { }
+            };
+            geojson.geometry = JSON.parse(ele["the_geom"]);
+            delete ele["the_geom"];
+            delete ele["the_geom_webmercator"];
+            geojson.properties = ele;
+            out.features.push(geojson);
+        });
+
+        // return payload
+        callback(null, out);
+    } catch (err) {
+        callback(err,null);
+    }
+}
+
+function getContentDisposition(format){
+    var ext = (format === 'geojson') ? 'geojson' : 'json';
+    var time = new Date().toUTCString();
+    return 'inline; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
+}
 
 function handleException(err, res){
     var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
@@ -151,6 +154,7 @@ function handleException(err, res){
         console.log(err.message);
         console.log(err.stack);
     }
+
     res.send(msg, 400);
 }
 
