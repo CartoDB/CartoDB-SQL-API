@@ -26,10 +26,8 @@ var express= require('express')
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 
-app.get('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
-app.post('/api/v1/sql', function(req, res) { handleQuery(req, res) } );
-app.get('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
-app.post('/api/v1/sql.:f', function(req, res) { handleQuery(req, res) } );
+app.all('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
+app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
 function handleQuery(req, res){
 
     // sanitize input
@@ -50,6 +48,10 @@ function handleQuery(req, res){
     // setup step run
     var that  = this;
     var start = new Date().getTime();
+
+    // allow cross site post
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
