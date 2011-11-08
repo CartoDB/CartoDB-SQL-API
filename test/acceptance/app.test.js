@@ -119,7 +119,7 @@ tests['GET /api/v1/sql with SQL parameter and geojson format, ensuring content-d
 
 tests['GET /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json'] = function(){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=json',
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
@@ -129,3 +129,25 @@ tests['GET /api/v1/sql with SQL parameter and no format, ensuring content-dispos
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
     });
 };
+
+tests['GET /api/v1/sql as geojson limiting decimal places'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&dp=1',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var result = JSON.parse(res.body);
+        assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
+    });
+};
+
+// use dec_sep for internationalization
+function checkDecimals(x, dec_sep){
+    tmp='' + x;
+    if (tmp.indexOf(dec_sep)>-1)
+        return tmp.length-tmp.indexOf(dec_sep)-1;
+    else
+        return 0;
+}

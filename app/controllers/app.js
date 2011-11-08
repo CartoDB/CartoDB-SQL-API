@@ -37,8 +37,10 @@ function handleQuery(req, res){
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
     var format    = (req.query.format) ? req.query.format : null;
+    var dp        = (req.query.dp) ? req.query.dp: '15';
 
     // validate input slightly
+    dp        = (dp=== "")        ? '15' : dp;
     format    = (format === "")   ? null : format;
     sql       = (sql === "")      ? null : sql;
     database  = (database === "") ? null : database;
@@ -76,7 +78,7 @@ function handleQuery(req, res){
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
-                    sql = ['SELECT *, ST_AsGeoJSON(the_geom) as the_geom FROM (', sql, ') as foo'].join("");
+                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
                 }
 
                 pg.query(sql, this);
