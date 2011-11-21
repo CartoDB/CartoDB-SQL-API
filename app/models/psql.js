@@ -86,6 +86,9 @@ var PSQL = function(user_id, db, limit, offset){
     }
   };
 
+  // throw exception if system table detected
+  
+
   return me;
 };
 

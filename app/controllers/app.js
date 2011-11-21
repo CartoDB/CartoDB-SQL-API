@@ -159,7 +159,7 @@ function handleException(err, res){
         console.log(err.stack);
     }
 
-    res.send(msg, 400);
+    res.send(msg, 500);
 }
 
 module.exports = app;
