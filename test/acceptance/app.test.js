@@ -28,7 +28,7 @@ tests['GET /api/v1/sql'] = function(){
         method: 'GET'
     },{
         body: '{"error":["You must indicate a sql query"]}',
-        status: 500
+        status: 400
     });
 };
 
@@ -71,7 +71,7 @@ tests['GET /api/v1/sql with SQL parameter on INSERT only. oAuth not used, so pub
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)&database=cartodb_dev_user_1_db",
         method: 'GET'
     },{
-        status: 500
+        status: 400
     });
 };
 
@@ -80,7 +80,7 @@ tests['GET /api/v1/sql with SQL parameter on DROP DATABASE only. oAuth not used,
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_dev_user_1_db",
         method: 'GET'
     },{
-        status: 500
+        status: 400
     });
 };
 
@@ -90,7 +90,7 @@ tests['GET /api/v1/sql with SQL parameter on INSERT only. header based db - shou
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-        status: 500
+        status: 400
     });
 };
 
@@ -100,7 +100,7 @@ tests['GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db 
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-        status: 500
+        status: 400
     });
 };
 

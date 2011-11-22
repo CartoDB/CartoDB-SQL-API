@@ -159,7 +159,12 @@ function handleException(err, res){
         console.log(err.stack);
     }
 
-    res.send(msg, 500);
+    // if the exception defines a http status code, use that, else a 500
+    if (!_.isUndefined(err.http_status)){
+        res.send(msg, err.http_status);
+    } else {
+        res.send(msg, 400);
+    }
 }
 
 module.exports = app;
