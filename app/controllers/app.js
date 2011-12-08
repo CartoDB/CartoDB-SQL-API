@@ -55,6 +55,10 @@ function handleQuery(req, res){
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
+    // set cache headers
+    res.header('Last-Modified', new Date().toUTCString());
+    res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
+
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
         var pg;
@@ -70,6 +74,7 @@ function handleQuery(req, res){
             function setDBGetUser(err, data) {
                 if (err) throw err;
                 database = (data == "" || _.isNull(data)) ? database : data;
+                res.header('X-Cache-Channel', database);
                 oAuth.verifyRequest(req, this);
             },
             function querySql(err, user_id){
