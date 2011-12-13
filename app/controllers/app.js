@@ -16,7 +16,7 @@
 var express= require('express')
     , app      = express.createServer(
     express.logger({buffer:true,
-        format:'[:req[X-Real-IP] - :req[Host] :date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
+        format:'[:req[X-Real-IP]>:req[Host]@:date] \033[90m:method\033[0m \033[36m:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'}))
     , Step     = require('step')
     , Meta     = require(global.settings.app_root + '/app/models/metadata')
     , oAuth    = require(global.settings.app_root + '/app/models/oauth')
