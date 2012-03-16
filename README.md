@@ -18,14 +18,13 @@ for examples of use, see /tests
 
 core requirements
 -------------
-* pg_bouncer
 * postgres
 * redis
 * node v0.4.8+
 * npm
 
 
-dependencies
+Install dependencies
 ---------------------
 
 ```bash
@@ -35,10 +34,4 @@ npm install
 
 tests
 ------
-``` bash
-npm test-unit
-npm test-acceptance
-```
-
-make sure you have setup your database connections in /config, and have the correct databases and keys setup in redis.
-You'll at least need to set redis with `HSET rails:oauth_tokens:1 user_id 1` for the acceptance tests.
+see test/README.md

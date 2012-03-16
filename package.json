@@ -26,5 +26,5 @@
         "unit": "expresso ./test/unit/* | sh",
         "acceptance": "expresso ./test/acceptance/* | sh"
     },
-    "engines": { "node": ">= 0.4.1 < 0.5.0" }
+    "engines": { "node": ">= 0.4.1 < 0.7.0" }
 }
