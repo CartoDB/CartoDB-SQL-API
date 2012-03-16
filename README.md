@@ -41,3 +41,8 @@ npm install
 tests
 ------
 see test/README.md
+
+
+note on 0.4.x
+--------------
+output of large result sets is slow under node 0.4. Recommend running under 0.6 where possible.
