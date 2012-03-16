@@ -19,11 +19,14 @@ core requirements
 usage
 -----
 
+Edit config/environments/<environment>.js
 Make sure redis is running and knows about active cartodb user.
 
 ``` bash
-node [cluster.js|app.js] [developement|test|production]
+node [cluster.js|app.js] <environment>
 ```
+
+Supported <environment> values are developement, test, production
 
 for examples of use, see /tests
 
