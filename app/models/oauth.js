@@ -16,7 +16,7 @@ var oAuth = function(){
   // * in GET request
   // * in header
   me.parseTokens = function(req){
-    var query_oauth = _.clone(req.query);
+    var query_oauth = _.clone(req.method == "POST" ? req.body: req.query);
     var header_oauth = {};
     var oauth_variables = ['oauth_body_hash',
                            'oauth_consumer_key',
@@ -47,23 +47,24 @@ var oAuth = function(){
 
   // remove oauthy tokens from an object
   me.splitParams = function(obj) {
-  	var removed = null;
-  	for (var prop in obj) {
-  		if (/^oauth_\w+$/.test(prop)) {
-  			if(!removed) {
-  				removed = {};
-  			}
-  			removed[prop] = obj[prop];
-  			delete obj[prop];
-  		}
-  	}
-  	return removed;
+    var removed = null;
+    for (var prop in obj) {
+        if (/^oauth_\w+$/.test(prop)) {
+            if(!removed) {
+                removed = {};
+            }
+            removed[prop] = obj[prop];
+            delete obj[prop];
+        }
+    }
+    return removed;
   };
 
 
   // do new fancy get User ID
   me.verifyRequest = function(req, callback){
     var that = this;
+    //TODO: review this
     var http = arguments['2'];
     var passed_tokens;
     var ohash;
@@ -95,13 +96,17 @@ var oAuth = function(){
         delete passed_tokens['oauth_signature'];
 
         var base64;
-      	var joined = {};
+        var joined = {};
 
-      	_.extend(joined, req.body ? req.body : null);
-      	_.extend(joined, passed_tokens);
-      	_.extend(joined, req.query);
+        // remove oauth_signature from body
+        if(req.body) {
+            delete req.body['oauth_signature'];
+        }
+        _.extend(joined, req.body ? req.body : null);
+        _.extend(joined, passed_tokens);
+        _.extend(joined, req.query);
 
-      	return signer.sign(method, path, joined);
+        return signer.sign(method, path, joined);
       },
       function checkSignature(err, data){
         if (err) throw err;
