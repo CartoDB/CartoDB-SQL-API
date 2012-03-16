@@ -18,6 +18,9 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
     , tests  = module.exports = {}
     , querystring = require('querystring');
 
+// allow lots of emitters to be set to silence warning
+app.setMaxListeners(0);
+
 var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_consumer_key="fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2",oauth_token="l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR",oauth_signature_method="HMAC-SHA1", oauth_signature="o4hx4hWP6KtLyFwggnYB4yPK8xI%3D",oauth_timestamp="1313581372",oauth_nonce="W0zUmvyC4eVL8cBd4YwlH1nnPTbxW0QBYcWkXTwe4",oauth_version="1.0"';
 
 
