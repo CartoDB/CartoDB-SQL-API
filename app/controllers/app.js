@@ -19,10 +19,11 @@ var express= require('express')
         buffer: true,
         format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
     }))
-    , Step     = require('step')
-    , Meta     = require(global.settings.app_root + '/app/models/metadata')
-    , oAuth    = require(global.settings.app_root + '/app/models/oauth')
-    , PSQL     = require(global.settings.app_root + '/app/models/psql')
+    , Step       = require('step')
+    , Meta       = require(global.settings.app_root + '/app/models/metadata')
+    , oAuth      = require(global.settings.app_root + '/app/models/oauth')
+    , PSQL       = require(global.settings.app_root + '/app/models/psql')
+    , ApiKeyAuth = require(global.settings.app_root + '/app/models/apikey_auth')
     , _        = require('underscore');
 
 app.use(express.bodyParser());
@@ -35,6 +36,7 @@ function handleQuery(req, res){
     // sanitize input
     var body      = (req.body) ? req.body : {};
     var sql       = req.query.q || body.q; // get and post
+    var api_key   = req.query.api_key || body.api_key;
     var database  = req.query.database; // deprecate this in future
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
@@ -68,7 +70,11 @@ function handleQuery(req, res){
             function setDBGetUser(err, data) {
                 if (err) throw err;
                 database = (data == "" || _.isNull(data)) ? database : data;
-                oAuth.verifyRequest(req, this);
+                if(api_key) {
+                    ApiKeyAuth.verifyRequest(req, this);
+                } else {
+                    oAuth.verifyRequest(req, this);
+                }
             },
             function querySql(err, user_id){
                 if (err) throw err;
