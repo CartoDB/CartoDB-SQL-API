@@ -2,7 +2,7 @@
     "private": true,
     "name": "cartodb_api",
     "description": "high speed SQL api for cartodb",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": {
         "name": "Simon Tokumine, Vizzuality",
         "url": "http://vizzuality.com",
