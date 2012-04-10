@@ -65,7 +65,7 @@ var oAuth = function(){
   me.verifyRequest = function(req, callback){
     var that = this;
     //TODO: review this
-    var http = arguments['2'];
+    var http = true;//arguments['2'];
     var passed_tokens;
     var ohash;
     var signature;

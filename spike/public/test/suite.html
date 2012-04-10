@@ -1,0 +1,62 @@
+
+
+<!doctype html> 
+<html lang=en> 
+  <head> 
+    <title>quick'n'dirty js testing framework</title> 
+    <meta charset=utf-8> 
+    <style type="text/css" media="screen"> 
+      h1{ font: 1.5em Helvetica; }
+      p { font: .9em courier; padding: .5em 1em; margin: 0;}
+      .result { margin-top: 1px; }
+      .pass { color: #4F8A10; background: #DFF2BF }
+      .fail { color: #D8000C; background: #FFBABA }
+      .error{ color: white; background: red; font-weight: bold; }
+      .describe { border-bottom: 1px solid #ccc; padding: 20px; }
+    </style> 
+    <script> 
+      var setup_fn = null;
+      function describe(desc, fn) {
+        document.write('<div class="describe">');
+        document.write('<h1>' + desc  +'</h1>');
+        fn();
+        document.write('</div>');
+        setup_fn = null;
+      }
+ 
+      function before_each(be) {
+        setup_fn = be;
+      }
+
+      var result = true;
+      function assert(cond, msg) {
+          if(result) {
+              if(!cond) {
+                  result = false;
+              }
+          }
+      }
+ 
+      function it(desc, fn) {
+        var output = function(klass, msg){
+          document.write('<p class="result ' + klass + '">' + msg + '</p>')
+        }
+        try{ 
+            if (setup_fn != null) 
+                setup_fn();
+            result = true;
+            fn() 
+        } catch(err){ result = err }
+        if (typeof result === 'boolean'){
+          result ? output('pass', desc) : output('fail', desc)
+        }else{
+          output('error', ['ERROR:',result.message,'when testing',desc].join(' '))
+        }
+      }
+    </script> 
+    <script src="../gmaps_mercator.js"> </script>
+    <script src="../map.js"> </script>
+    <script src="map.test.js"> </script>
+  </head> 
+  <body></body> 
+</html> 
