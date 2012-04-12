@@ -93,6 +93,8 @@ function handleQuery(req, res){
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
                     toGeoJSON(result, res, this);
+                } else if (format === 'csv'){
+                    toCSV(result, res, this);
                 } else {
                     var end = new Date().getTime();
                     return {
@@ -107,10 +109,10 @@ function handleQuery(req, res){
 
                 // configure headers for geojson
                 res.header("Content-Disposition", getContentDisposition(format));
+                res.header("Content-Type", getContentType(format));
 
                 // allow cross site post
-                res.header("Access-Control-Allow-Origin", "*");
-                res.header("Access-Control-Allow-Headers", "X-Requested-With");
+                setCrossDomain(res);
 
                 // set cache headers
                 res.header('Last-Modified', new Date().toUTCString());
@@ -157,10 +159,46 @@ function toGeoJSON(data, res, callback){
     }
 }
 
+function toCSV(data, res, callback){
+    try{
+        var out = ""
+        if (data.rows.length > 0){
+            out = out + _.keys(data.rows[0]).join(',') + '\n';
+            _.each(data.rows, function(ele){
+                out = out + _.values(ele).join(',') + '\n';
+            });
+        }
+
+        // return payload
+        callback(null, out);
+    } catch (err) {
+        callback(err,null);
+    }
+}
+
 function getContentDisposition(format){
-    var ext = (format === 'geojson') ? 'geojson' : 'json';
+    var ext = 'json';
+    if (format === 'geojson'){
+        ext = 'geojson';
+    }
+    if (format === 'csv'){
+        ext = 'csv';
+    }
     var time = new Date().toUTCString();
     return 'inline; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
+}
+
+function getContentType(format){
+    var type = "application/json; charset=utf-8";
+    if (format === 'csv'){
+        type = "text/csv; charset=utf-8";
+    }
+    return type;
+}
+
+function setCrossDomain(res){
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 }
 
 function handleException(err, res){
@@ -171,6 +209,9 @@ function handleException(err, res){
         console.log(err.message);
         console.log(err.stack);
     }
+
+    // allow cross site post
+    setCrossDomain(res);
 
     // if the exception defines a http status code, use that, else a 500
     if (!_.isUndefined(err.http_status)){
