@@ -132,6 +132,19 @@ tests['GET /api/v1/sql with SQL parameter and no format, ensuring content-dispos
     });
 };
 
+tests['GET /api/v1/sql ensure cross domain set on errors'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*gadfgadfg%20FROM%20untitle_table_4',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 400
+    }, function(res){
+        var cd = res.header('Access-Control-Allow-Origin');
+        assert.equal(cd, '*');
+    });
+};
+
 tests['GET /api/v1/sql as geojson limiting decimal places'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&dp=1',
@@ -142,6 +155,19 @@ tests['GET /api/v1/sql as geojson limiting decimal places'] = function(){
     }, function(res){
         var result = JSON.parse(res.body);
         assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
+    });
+};
+
+tests['GET /api/v1/sql as csv'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var body = "cartodb_id,geom\n1,SRID=4326;POINT(-3.699732 40.423012)\n"
+        assert.equal(body, res.body);
     });
 };
 
