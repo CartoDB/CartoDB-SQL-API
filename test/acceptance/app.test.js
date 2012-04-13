@@ -166,7 +166,20 @@ tests['GET /api/v1/sql as csv'] = function(){
     },{
         status: 200
     }, function(res){
-        var body = "cartodb_id,geom\n1,SRID=4326;POINT(-3.699732 40.423012)\n"
+        var body = "cartodb_id,geom\r\n1,SRID=4326;POINT(-3.699732 40.423012)";
+        assert.equal(body, res.body);
+    });
+};
+
+tests['GET /api/v1/sql as csv, properly escaped'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"';
         assert.equal(body, res.body);
     });
 };
