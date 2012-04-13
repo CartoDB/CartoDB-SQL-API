@@ -12,14 +12,14 @@
 // - sql only, provided the subdomain exists in CartoDB and the table's sharing options are public
 //
 // eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
-
-var express= require('express')
+var express = require('express')
     , app      = express.createServer(
     express.logger({
         buffer: true,
         format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
     }))
     , Step       = require('step')
+    , csv        = require('csv')
     , Meta       = require(global.settings.app_root + '/app/models/metadata')
     , oAuth      = require(global.settings.app_root + '/app/models/oauth')
     , PSQL       = require(global.settings.app_root + '/app/models/psql')
@@ -87,6 +87,23 @@ function handleQuery(req, res){
 
                 pg.query(sql, this);
             },
+            function setHeaders(err, result){
+                if (err) throw err;
+
+                // configure headers for geojson/CSV
+                res.header("Content-Disposition", getContentDisposition(format));
+                res.header("Content-Type", getContentType(format));
+
+                // allow cross site post
+                setCrossDomain(res);
+
+                // set cache headers
+                res.header('Last-Modified', new Date().toUTCString());
+                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
+                res.header('X-Cache-Channel', database);
+
+                return result;
+            },
             function packageResults(err, result){
                 if (err) throw err;
 
@@ -106,18 +123,6 @@ function handleQuery(req, res){
             },
             function sendResults(err, out){
                 if (err) throw err;
-
-                // configure headers for geojson
-                res.header("Content-Disposition", getContentDisposition(format));
-                res.header("Content-Type", getContentType(format));
-
-                // allow cross site post
-                setCrossDomain(res);
-
-                // set cache headers
-                res.header('Last-Modified', new Date().toUTCString());
-                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', database);
 
                 // return to browser
                 res.send(out);
@@ -161,16 +166,14 @@ function toGeoJSON(data, res, callback){
 
 function toCSV(data, res, callback){
     try{
-        var out = ""
-        if (data.rows.length > 0){
-            out = out + _.keys(data.rows[0]).join(',') + '\n';
-            _.each(data.rows, function(ele){
-                out = out + _.values(ele).join(',') + '\n';
-            });
-        }
+        // pull out keys for column headers
+        var columns = _.keys(data.rows[0]);
 
-        // return payload
-        callback(null, out);
+        // stream the csv out over http
+        csv()
+          .from(data.rows)
+          .toStream(res, {end: true, columns: columns, header: true});
+        return true;
     } catch (err) {
         callback(err,null);
     }
