@@ -90,9 +90,6 @@ function handleQuery(req, res){
             function setHeaders(err, result){
                 if (err) throw err;
 
-                // close connection to psql. be nice.
-                //pg.end();
-
                 // configure headers for geojson/CSV
                 res.header("Content-Disposition", getContentDisposition(format));
                 res.header("Content-Type", getContentType(format));
