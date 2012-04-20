@@ -82,10 +82,11 @@ function handleQuery(req, res){
                 pg = new PSQL(user_id, database, limit, offset);
 
                 // get all the tables
-                pg.query('SELECT CDB_QueryTables(\''+sql+'\')', this);
+                pg.query("SELECT CDB_QueryTables($$" + sql + "$$)", this);
             },
             function queryResult(err, result){
                 if (err) throw err;
+
                 // store explain result
                 explain_result = result;
 
