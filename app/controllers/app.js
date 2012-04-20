@@ -44,7 +44,7 @@ function handleQuery(req, res){
     var dp        = (req.query.dp) ? req.query.dp: '15';
 
     // validate input slightly
-    dp        = (dp=== "")        ? '15' : dp;
+    dp        = (dp === "")        ? '15' : dp;
     format    = (format === "")   ? null : format;
     sql       = (sql === "")      ? null : sql;
     database  = (database === "") ? null : database;
@@ -52,17 +52,17 @@ function handleQuery(req, res){
     offset    = (_.isNumber(offset)) ? offset * limit : null
 
     // setup step run
-    var that  = this;
     var start = new Date().getTime();
  
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
-        var pg;
+        var pg, explain_result;
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
-        // 3. Run query with r/w or public user
-        // 4. package results and send back
+        // 3. Get the list of tables affected by the query
+        // 4. Run query with r/w or public user
+        // 5. package results and send back
         Step(
             function getDatabaseName(){
                 Meta.getDatabase(req, this);
@@ -76,9 +76,18 @@ function handleQuery(req, res){
                     oAuth.verifyRequest(req, this);
                 }
             },
-            function querySql(err, user_id){
+            function queryExplain(err, user_id){
                 if (err) throw err;
+                // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
+
+                // get all the tables
+                pg.query('SELECT CDB_QueryTables(\''+sql+'\')', this);
+            },
+            function queryResult(err, result){
+                if (err) throw err;
+                // store explain result
+                explain_result = result;
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
@@ -90,9 +99,6 @@ function handleQuery(req, res){
             function setHeaders(err, result){
                 if (err) throw err;
 
-                // close connection to psql. be nice.
-                //pg.end();
-
                 // configure headers for geojson/CSV
                 res.header("Content-Disposition", getContentDisposition(format));
                 res.header("Content-Type", getContentType(format));
@@ -103,7 +109,7 @@ function handleQuery(req, res){
                 // set cache headers
                 res.header('Last-Modified', new Date().toUTCString());
                 res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', database);
+                res.header('X-Cache-Channel', generateCacheKey(database,explain_result));
 
                 return result;
             },
@@ -205,6 +211,10 @@ function getContentType(format){
 function setCrossDomain(res){
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+}
+
+function generateCacheKey(database,tables){
+    return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
 }
 
 function handleException(err, res){
