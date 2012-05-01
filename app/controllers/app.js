@@ -91,12 +91,11 @@ function handleQuery(req, res){
                 pg = new PSQL(user_id, database, limit, offset);
 
                 // get all the tables from Cache or SQL
-
                 if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
                    tableCache[sql_md5].hits++;
                    return true;
                 } else{
-                    pg.query("SELECT CDB_QueryTables($$" + sql + "$$)", this);
+                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
             },
             function queryResult(err, result){
