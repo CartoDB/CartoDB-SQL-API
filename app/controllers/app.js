@@ -65,7 +65,7 @@ function handleQuery(req, res){
 
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
-        var pg, explain_result;
+        var pg;
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
@@ -79,6 +79,7 @@ function handleQuery(req, res){
             function setDBGetUser(err, data) {
                 if (err) throw err;
                 database = (data == "" || _.isNull(data)) ? database : data;
+
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
                 } else {
