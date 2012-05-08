@@ -60,11 +60,13 @@ function handleQuery(req, res){
     // setup step run
     var start = new Date().getTime();
 
-    // initialise MD5 key of sql for cache lookups
-    var sql_md5 = generateMD5(sql);
-
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
+
+        // initialise MD5 key of sql for cache lookups
+        var sql_md5 = generateMD5(sql);
+
+        // placeholder for connection
         var pg;
 
         // 1. Get database from redis via the username stored in the host header subdomain
