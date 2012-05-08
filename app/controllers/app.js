@@ -18,19 +18,25 @@ var express = require('express')
         buffer: true,
         format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
     }))
-    , Step       = require('step')
-    , csv        = require('csv')
-    , Meta       = require(global.settings.app_root + '/app/models/metadata')
-    , oAuth      = require(global.settings.app_root + '/app/models/oauth')
-    , PSQL       = require(global.settings.app_root + '/app/models/psql')
-    , ApiKeyAuth = require(global.settings.app_root + '/app/models/apikey_auth')
-    , _        = require('underscore');
+    , Step        = require('step')
+    , csv         = require('csv')
+    , crypto      = require('crypto')
+    , Meta        = require(global.settings.app_root + '/app/models/metadata')
+    , oAuth       = require(global.settings.app_root + '/app/models/oauth')
+    , PSQL        = require(global.settings.app_root + '/app/models/psql')
+    , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
+    , _           = require('underscore')
+    , tableCache  = {};
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 
-app.all('/api/v1/sql',  function(req, res) { handleQuery(req, res) } );
+// basic routing
+app.all('/api/v1/sql',     function(req, res) { handleQuery(req, res) } );
 app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
+app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
+
+// request handlers
 function handleQuery(req, res){
 
     // sanitize input
@@ -53,10 +59,15 @@ function handleQuery(req, res){
 
     // setup step run
     var start = new Date().getTime();
- 
+
     try {
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
-        var pg, explain_result;
+
+        // initialise MD5 key of sql for cache lookups
+        var sql_md5 = generateMD5(sql);
+
+        // placeholder for connection
+        var pg;
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
@@ -70,6 +81,7 @@ function handleQuery(req, res){
             function setDBGetUser(err, data) {
                 if (err) throw err;
                 database = (data == "" || _.isNull(data)) ? database : data;
+
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
                 } else {
@@ -81,14 +93,22 @@ function handleQuery(req, res){
                 // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
 
-                // get all the tables
-                pg.query("SELECT CDB_QueryTables($$" + sql + "$$)", this);
+                // get all the tables from Cache or SQL
+                if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
+                   tableCache[sql_md5].hits++;
+                   return true;
+                } else{
+                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                }
             },
             function queryResult(err, result){
                 if (err) throw err;
 
-                // store explain result
-                explain_result = result;
+                // store explain result in local Cache
+                if (_.isUndefined(tableCache[sql_md5])){
+                    tableCache[sql_md5] = result;
+                    tableCache[sql_md5].hits = 1; //initialise hit counter
+                }
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
@@ -110,7 +130,7 @@ function handleQuery(req, res){
                 // set cache headers
                 res.header('Last-Modified', new Date().toUTCString());
                 res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', generateCacheKey(database,explain_result));
+                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5]));
 
                 return result;
             },
@@ -147,6 +167,15 @@ function handleQuery(req, res){
     }
 }
 
+function handleCacheStatus(req, res){
+    var tableCacheValues = _.values(tableCache);
+    var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
+    var totalExplainKeys = tableCacheValues.length;
+
+    res.send({explain: {hits: totalExplainHits, keys : totalExplainKeys }});
+}
+
+// helper functions
 function toGeoJSON(data, res, callback){
     try{
         var out = {
@@ -216,6 +245,12 @@ function setCrossDomain(res){
 
 function generateCacheKey(database,tables){
     return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+}
+
+function generateMD5(data){
+    var hash = crypto.createHash('md5');
+    hash.update(data);
+    return hash.digest('hex');
 }
 
 function handleException(err, res){

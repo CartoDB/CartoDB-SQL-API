@@ -7,7 +7,7 @@
 -- > createdb -Upostgres -hlocalhost -Ttemplate_postgis -Opostgres -EUTF8 cartodb_test_user_1_db
 -- > psql -Upostgres -hlocalhost cartodb_test_user_1_db < test.sql
 --
--- NOTE: requires a postgis template called template_postgis
+-- NOTE: requires a postgis template called template_postgis with CDB functions included
 --
 
 SET statement_timeout = 0;
@@ -21,7 +21,32 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 
+-- Return an array of table names used by a given query
+CREATE OR REPLACE FUNCTION CDB_QueryTables(query text)
+RETURNS name[]
+AS $$
+DECLARE
+  exp XML;
+  tables NAME[];
+BEGIN
+
+  EXECUTE 'EXPLAIN (FORMAT XML) ' || query INTO STRICT exp;
+
+  -- Now need to extract all values of <Relation-Name>
+
+  --RAISE DEBUG 'Explain: %', exp;
+
+  tables := xpath('//x:Relation-Name/text()', exp, ARRAY[ARRAY['x', 'http://www.postgresql.org/2009/explain']]);
+
+  --RAISE DEBUG 'Tables: %', tables;
+
+  return tables;
+END
+$$ LANGUAGE 'plpgsql' VOLATILE STRICT;
+
+
 -- first table
+DROP TABLE IF EXISTS untitle_table_4;
 CREATE TABLE untitle_table_4 (
     updated_at timestamp without time zone DEFAULT now(),
     created_at timestamp without time zone DEFAULT now(),
@@ -62,6 +87,7 @@ ALTER TABLE ONLY untitle_table_4 ADD CONSTRAINT test_table_pkey PRIMARY KEY (car
 CREATE INDEX test_table_the_geom_idx ON untitle_table_4 USING gist (the_geom);
 CREATE INDEX test_table_the_geom_webmercator_idx ON untitle_table_4 USING gist (the_geom_webmercator);
 
+DROP TABLE IF EXISTS private_table;
 CREATE TABLE private_table (
     updated_at timestamp without time zone DEFAULT now(),
     created_at timestamp without time zone DEFAULT now(),
