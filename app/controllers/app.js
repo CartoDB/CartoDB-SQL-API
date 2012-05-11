@@ -47,10 +47,10 @@ function handleQuery(req, res){
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
     var format    = (req.query.format) ? req.query.format : null;
-    var dp        = (req.query.dp) ? req.query.dp: '15';
+    var dp        = (req.query.dp) ? req.query.dp: '6';
 
     // validate input slightly
-    dp        = (dp === "")        ? '15' : dp;
+    dp        = (dp === "")        ? '6' : dp;
     format    = (format === "")   ? null : format;
     sql       = (sql === "")      ? null : sql;
     database  = (database === "") ? null : database;
