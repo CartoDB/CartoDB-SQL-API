@@ -81,6 +81,14 @@ function handleQuery(req, res){
             function setDBGetUser(err, data) {
                 if (err) throw err;
                 database = (data == "" || _.isNull(data)) ? database : data;
+                
+                // If the dataabase could not be found is because the user does not exist
+                if (!database) {
+                    err = new Error("The URL refers to a non existent CartoDB user. Check that you have entered the correct domain.");
+                    err.http_status=404;
+                    err.stack=undefined;
+                    throw err;
+                }
 
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
