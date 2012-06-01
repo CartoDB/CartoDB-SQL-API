@@ -1,8 +1,8 @@
 require('../helper');
 
-var _      = require('underscore')
+var _          = require('underscore')
   , redis_pool = require('../../app/models/redis_pool')
-  , assert = require('assert');
+  , assert     = require('assert');
 
 
 exports['test truth'] = function(){
