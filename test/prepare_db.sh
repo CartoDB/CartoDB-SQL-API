@@ -7,6 +7,8 @@ echo "HSET rails:users:vizzuality id 1" | redis-cli -n 5
 echo "HSET rails:users:vizzuality database_name cartodb_test_user_1_db" | redis-cli -n 5
 echo "SADD rails:users:vizzuality:map_key 1234" | redis-cli -n 5
 
+
+
 echo "preparing postgres..."
 dropdb -Upostgres -hlocalhost  cartodb_test_user_1_db
 createdb -Upostgres -hlocalhost -Ttemplate_postgis -Opostgres -EUTF8 cartodb_test_user_1_db
