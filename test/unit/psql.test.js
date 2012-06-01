@@ -6,7 +6,7 @@ var _      = require('underscore')
 
 exports['test throws error if no args passed to constructor'] = function(){  
   try{
-    var pg = new PSQL();    
+    var pg = new PSQL();
   } catch (err){
     assert.equal(err.message, "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published.");
   }  
@@ -43,13 +43,13 @@ exports['test username returns interpolated db if user set'] = function(){
 };
 
 // TODO fix
-//exports['test can connect to db'] = function(){
-//  var pg = new PSQL('simon');
-//  pg.connect(function(err, client){
-//    assert.equal(client.connected, true);
-//    pg.end();
-//  });
-//};
+exports['test can connect to db'] = function(){
+  var pg = new PSQL('simon');
+  pg.connect(function(err, client){
+    assert.equal(client.connected, true);
+    pg.end();
+  });
+};
 
 exports['test private user can execute SELECTS on db'] = function(){  
   var pg = new PSQL('1');
