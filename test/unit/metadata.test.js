@@ -1,10 +1,9 @@
 require('../helper');
 
-var _      = require('underscore')
-    , redis  = require("redis")
+var _           = require('underscore')
+    , redis     = require("redis")
     , MetaData  = require('../../app/models/metadata')
-    , assert = require('assert')
-
+    , assert    = require('assert')
     , tests  = module.exports = {};
 
 tests['test can retrieve database name from header and redis'] = function(){
