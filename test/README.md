@@ -13,7 +13,6 @@ Acceptance tests (need ctrl-C to exit)
 > expresso test/acceptance/app.auth.test.js
 
 
-Unit tests
-----------
-
-> expresso test/unit/psql.tests.js
+Unit tests (need ctrl-C to exit)
+--------------------------------
+> expresso test/unit/*.js (or run the tests individually)

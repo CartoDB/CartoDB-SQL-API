@@ -1,11 +1,10 @@
 SQL API for cartodb.com
 ========================
- 
+
 Provides a nodejs based API for running SQL queries against CartoDB.
 
-* Users are authenticated over OAuth. Also provides ability to make public
-  "SELECT" only calls.
-* OAuth requests to this API should always be made over SSL.
+* Users are authenticated over OAuth or via an API KEY.
+* Authenticated requests to this API should always be made over SSL.
 
 
 core requirements
