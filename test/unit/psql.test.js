@@ -42,15 +42,6 @@ exports['test username returns interpolated db if user set'] = function(){
   assert.equal(pg.database(), "cartodb_test_user_simon_db");
 };
 
-// TODO fix
-exports['test can connect to db'] = function(){
-  var pg = new PSQL('simon');
-  pg.connect(function(err, client){
-    assert.equal(client.connected, true);
-    pg.end();
-  });
-};
-
 exports['test private user can execute SELECTS on db'] = function(){  
   var pg = new PSQL('1');
   var sql = "SELECT 1 as test_sum"
