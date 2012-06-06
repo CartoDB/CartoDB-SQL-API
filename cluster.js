@@ -4,6 +4,9 @@
 * SQL API loader
 * ===============
 *
+* Builds a cluster of node processes managed by cluster library.
+* Only compatible with node 0.4.x
+*
 * node app [environment] 
 *
 * environments: [development, test, production]

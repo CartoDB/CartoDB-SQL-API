@@ -56,7 +56,6 @@ tests['GET /api/v1/sql with SQL parameter on SELECT only. no database param, jus
 };
 
 
-
 tests['POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers'] = function(){
     assert.response(app, {
         url: '/api/v1/sql',
@@ -158,6 +157,19 @@ tests['GET /api/v1/sql as geojson limiting decimal places'] = function(){
     });
 };
 
+tests['GET /api/v1/sql as geojson with default dp as 6'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var result = JSON.parse(res.body);
+        assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
+    });
+};
+
 tests['GET /api/v1/sql as csv'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
@@ -184,13 +196,26 @@ tests['GET /api/v1/sql as csv, properly escaped'] = function(){
     });
 };
 
-tests['GET system tables'] = function(){
+tests['cannot GET system tables'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20pg_attribute',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
         status: 403
+    });
+};
+
+tests['GET decent error if domain is incorrect'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzualinot.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 404
+    }, function(res){
+        var result = JSON.parse(res.body);
+        assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
     });
 };
 
