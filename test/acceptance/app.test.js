@@ -158,6 +158,19 @@ tests['GET /api/v1/sql as geojson limiting decimal places'] = function(){
     });
 };
 
+tests['GET /api/v1/sql as geojson with default dp as 6'] = function(){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 200
+    }, function(res){
+        var result = JSON.parse(res.body);
+        assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
+    });
+};
+
 tests['GET /api/v1/sql as csv'] = function(){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
