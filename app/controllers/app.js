@@ -39,23 +39,23 @@ app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res)
 // request handlers
 function handleQuery(req, res){
 
-    // sanitize input
+    // extract input
     var body      = (req.body) ? req.body : {};
-    var sql       = req.query.q || body.q; // get and post
+    var sql       = req.query.q || body.q; // HTTP GET and POST store in different vars
     var api_key   = req.query.api_key || body.api_key;
-    var database  = req.query.database; // deprecate this in future
+    var database  = req.query.database; // TODO: Depricate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var format    = (req.query.format) ? req.query.format : null;
-    var dp        = (req.query.dp) ? req.query.dp: '6';
+    var format    = req.query.format;
+    var dp        = req.query.dp;
 
-    // validate input slightly
-    dp        = (dp === "")        ? '6' : dp;
-    format    = (format === "")   ? null : format;
-    sql       = (sql === "")      ? null : sql;
-    database  = (database === "") ? null : database;
+    // sanitize and apply defaults to input
+    dp        = (dp       === "" || _.isUndefined(dp))       ? '6' : dp;
+    format    = (format   === "" || _.isUndefined(format))   ? null : format;
+    sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
+    database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
-    offset    = (_.isNumber(offset)) ? offset * limit : null
+    offset    = (_.isNumber(offset)) ? offset * limit : null;
 
     // setup step run
     var start = new Date().getTime();
@@ -80,13 +80,13 @@ function handleQuery(req, res){
             },
             function setDBGetUser(err, data) {
                 if (err) throw err;
-                database = (data == "" || _.isNull(data)) ? database : data;
-                
-                // If the dataabase could not be found is because the user does not exist
-                if (!database) {
-                    err = new Error("The URL refers to a non existent CartoDB user. Check that you have entered the correct domain.");
-                    err.http_status=404;
-                    err.stack=undefined;
+                database = (data == "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
+
+                // If the database could not be found, the user is non-existant
+                if (_.isNull(database)) {
+                    var msg = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
+                    err = new Error(msg);
+                    err.http_status = 404;
                     throw err;
                 }
 
@@ -273,7 +273,7 @@ function handleException(err, res){
     // allow cross site post
     setCrossDomain(res);
 
-    // if the exception defines a http status code, use that, else a 500
+    // if the exception defines a http status code, use that, else a 400
     if (!_.isUndefined(err.http_status)){
         res.send(msg, err.http_status);
     } else {
