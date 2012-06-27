@@ -119,7 +119,7 @@ function handleQuery(req, res){
                 }
 
                 // TODO: refactor formats to external object
-                if (format === 'geojson'){
+                if (format.toLowerCase() === 'geojson'){
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
                 }
 
