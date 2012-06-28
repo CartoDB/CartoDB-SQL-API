@@ -51,7 +51,7 @@ function handleQuery(req, res){
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6' : dp;
-    format    = (format   === "" || _.isUndefined(format))   ? null : format;
+    format    = (format   === "" || _.isUndefined(format))   ? null : format.toLowerCase();
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
@@ -119,7 +119,7 @@ function handleQuery(req, res){
                 }
 
                 // TODO: refactor formats to external object
-                if (format.toLowerCase() === 'geojson'){
+                if (format === 'geojson') {
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
                 }
 
@@ -146,7 +146,7 @@ function handleQuery(req, res){
                 if (err) throw err;
 
                 // TODO: refactor formats to external object
-                if (format === 'geojson'){
+                if (format === 'geojson') {
                     toGeoJSON(result, res, this);
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
@@ -230,8 +230,7 @@ function getContentDisposition(format){
     var ext = 'json';
     if (format === 'geojson'){
         ext = 'geojson';
-    }
-    if (format === 'csv'){
+    } else if (format === 'csv'){
         ext = 'csv';
     }
     var time = new Date().toUTCString();
