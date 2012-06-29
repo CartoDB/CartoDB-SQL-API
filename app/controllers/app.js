@@ -66,6 +66,9 @@ function handleQuery(req, res){
         // initialise MD5 key of sql for cache lookups
         var sql_md5 = generateMD5(sql);
 
+        // placeholder for authenticated user id
+        var authenticated_user_id;
+
         // placeholder for connection
         var pg;
 
@@ -80,6 +83,7 @@ function handleQuery(req, res){
             },
             function setDBGetUser(err, data) {
                 if (err) throw err;
+
                 database = (data == "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
 
                 // If the database could not be found, the user is non-existant
@@ -96,8 +100,11 @@ function handleQuery(req, res){
                     oAuth.verifyRequest(req, this);
                 }
             },
-            function queryExplain(err, user_id){
+            function queryExplain(err, user_id) {
                 if (err) throw err;
+
+                authenticated_user_id = user_id;
+
                 // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
 
@@ -135,10 +142,13 @@ function handleQuery(req, res){
                 // allow cross site post
                 setCrossDomain(res);
 
-                // set cache headers
-                res.header('Last-Modified', new Date().toUTCString());
-                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5]));
+                // cache headers just for unauthenticated queries (see https://github.com/Vizzuality/CartoDB-SQL-API/issues/27)
+                if (_.isNull(authenticated_user_id)) {
+                    // set cache headers
+                    res.header('Last-Modified', new Date().toUTCString());
+                    res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
+                    res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5]));
+                }
 
                 return result;
             },
