@@ -135,4 +135,4 @@ CREATE USER test_cartodb_user_1 WITH PASSWORD '';
 
 GRANT SELECT ON TABLE untitle_table_4 TO publicuser;
 GRANT ALL ON TABLE private_table TO test_cartodb_user_1;
-GRANT ALL ON SEQUENCE test_table_cartodb_id_seq_p TO test_cartodb_user_1
+GRANT ALL ON SEQUENCE test_table_cartodb_id_seq_p TO test_cartodb_user_1;
