@@ -152,11 +152,17 @@ function handleQuery(req, res){
                     toCSV(result, res, this);
                 } else {
                     var end = new Date().getTime();
-                    return {
-                        'time' : ((end - start)/1000),
-                        'total_rows': result.rows.length,
-                        'rows'      : result.rows
-                    };
+
+                    var json_result = {'time' : (end - start)/1000};
+
+                    if (result.command === 'SELECT') {
+                        json_result.total_rows = result.rows.length;
+                        json_result.rows = result.rows;
+                    } else {
+                        json_result.total_rows = result.rowCount;
+                    }
+                    
+                    return json_result;
                 }
             },
             function sendResults(err, out){
