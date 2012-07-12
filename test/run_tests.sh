@@ -36,8 +36,8 @@ echo "Running tests"
 expresso \
   test/unit/redis_pool.test.js \
   test/unit/metadata.test.js \
-  test/unit/oauth.test.js 
-#expresso test/unit/psql.test.js  # hangs
+  test/unit/oauth.test.js \
+  test/unit/psql.test.js  
 
 #expresso test/acceptance/app.test.js # fails
 #expresso test/acceptance/app.auth.test.js # fails
