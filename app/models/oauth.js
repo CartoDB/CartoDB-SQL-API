@@ -9,7 +9,8 @@ var RedisPool = require("./redis_pool")
 var oAuth = function(){
   var me = {
     oauth_database: 3,
-    oauth_user_key: "rails:oauth_access_tokens:<%= oauth_access_key %>"
+    oauth_user_key: "rails:oauth_access_tokens:<%= oauth_access_key %>",
+    is_oauth_request: true
   };
 
   // oauth token cases:
@@ -76,11 +77,21 @@ var oAuth = function(){
       },
       function getOAuthHash(err, data){
         if (err) throw err;
-        passed_tokens = data;
-        that.getOAuthHash(passed_tokens.oauth_token, this);
+
+        // this is oauth request only if oauth headers are present
+        this.is_oauth_request = !_.isEmpty(data);
+
+        if (this.is_oauth_request) {
+          passed_tokens = data;
+          that.getOAuthHash(passed_tokens.oauth_token, this);
+        } else {
+          return null;
+        }
       },
       function regenerateSignature(err, data){
         if (err) throw err;
+        if (!this.is_oauth_request) return null;
+
         ohash = data;
         var consumer     = OAuthUtil.createConsumer(ohash.consumer_key, ohash.consumer_secret);
         var access_token = OAuthUtil.createToken(ohash.access_token_token, ohash.access_token_secret);
@@ -110,6 +121,7 @@ var oAuth = function(){
       },
       function checkSignature(err, data){
         if (err) throw err;
+
         //console.log(data + " should equal the provided signature: " + signature);
         callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
       }

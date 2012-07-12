@@ -37,7 +37,7 @@ app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
 app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
 
 // request handlers
-function handleQuery(req, res){
+function handleQuery(req, res) {
 
     // extract input
     var body      = (req.body) ? req.body : {};
@@ -50,7 +50,7 @@ function handleQuery(req, res){
     var dp        = req.query.dp;
 
     // sanitize and apply defaults to input
-    dp        = (dp       === "" || _.isUndefined(dp))       ? '6' : dp;
+    dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
     format    = (format   === "" || _.isUndefined(format))   ? null : format;
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
@@ -75,12 +75,18 @@ function handleQuery(req, res){
         // 4. Run query with r/w or public user
         // 5. package results and send back
         Step(
-            function getDatabaseName(){
-                Meta.getDatabase(req, this);
+            function getDatabaseName() {
+                if (_.isNull(database)) {
+                    Meta.getDatabase(req, this);
+                } else {
+                    // database hardcoded in query string (deprecated??): don't use redis
+                    return database;
+                }
             },
             function setDBGetUser(err, data) {
                 if (err) throw err;
-                database = (data == "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
+
+                database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
 
                 // If the database could not be found, the user is non-existant
                 if (_.isNull(database)) {
