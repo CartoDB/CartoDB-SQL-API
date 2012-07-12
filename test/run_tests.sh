@@ -24,7 +24,7 @@ die() {
 trap 'cleanup_and_exit' 1 2 3 5 9 13
 
 echo "Starting redis on port ${REDIS_PORT}"
-echo "port ${REDIS_PORT}" | redis-server - > test.log &
+echo "port ${REDIS_PORT}" | redis-server - > test/test.log &
 PID_REDIS=$!
 
 echo "Preparing the environment"
@@ -39,8 +39,8 @@ expresso \
   test/unit/oauth.test.js \
   test/unit/psql.test.js  
 
-#expresso test/acceptance/app.test.js # fails
-#expresso test/acceptance/app.auth.test.js # fails
+#expresso test/acceptance/app.test.js # hangs
+#expresso test/acceptance/app.auth.test.js # hangs
 
 
 cleanup
