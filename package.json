@@ -23,7 +23,7 @@
         "csv":"0.0.13"
     },
     "devDependencies": {
-        "expresso": "0.8.x"
+        "mocha": "1.2.1"
     },
     "scripts": {
         "test": "test/run_tests.sh"

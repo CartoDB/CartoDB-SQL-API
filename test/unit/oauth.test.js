@@ -19,49 +19,53 @@ var _        = require('underscore')
     , oauth_header_tokens = 'oauth_consumer_key="dpf43f3p2l4k3l03",oauth_token="nnch734d00sl2jdk",oauth_signature_method="HMAC-SHA1", oauth_signature="tR3%2BTy81lMeYAr%2FFid0kMTYa%2FWM%3D",oauth_timestamp="1191242096",oauth_nonce="kllo9940pd9333jh",oauth_version="1.0"'
     , full_oauth_header   = 'OAuth realm="http://photos.example.net/"' + oauth_header_tokens;
 
-tests['test database number'] = function(){
+suite('oauth', function() {
+
+test('test database number', function(){
     assert.equal(oAuth.oauth_database, 3);
-};
+});
 
-tests['test oauth database key'] = function(){
+test('test oauth database key', function(){
     assert.equal(oAuth.oauth_user_key, "rails:oauth_access_tokens:<%= oauth_access_key %>");
-};
+});
 
-tests['test parse tokens from full headers does not raise exception'] = function(){
+test('test parse tokens from full headers does not raise exception', function(){
     var req = {query:{}, headers:{authorization:full_oauth_header}};
     assert.doesNotThrow(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);
-};
+});
 
-tests['test parse all normal tokens raises no exception'] = function(){
+test('test parse all normal tokens raises no exception', function(){
     var req = {query:oauth_data, headers:{}};
     assert.doesNotThrow(function(){ oAuth.parseTokens(req) }, /incomplete oauth tokens in request/);
-};
+});
 
-tests['test headers take presedence over query parameters'] = function(){
+test('test headers take presedence over query parameters', function(){
     var req = {query:{oauth_signature_method: "MY_HASH"}, headers:{authorization:full_oauth_header}};
     var tokens = oAuth.parseTokens(req);
     assert.equal(tokens.oauth_signature_method, "HMAC-SHA1");
-};
+});
 
-tests['test can access oauth hash for a user based on access token (oauth_token)'] = function(){
+test('test can access oauth hash for a user based on access token (oauth_token)', function(done){
     var req = {query:{}, headers:{authorization:real_oauth_header}};
     var tokens = oAuth.parseTokens(req);
 
     oAuth.getOAuthHash(tokens.oauth_token, function(err, data){
         assert.equal(tokens.oauth_consumer_key, data.consumer_key);
+        done();
     });
-};
+});
 
-tests['test non existant oauth hash for a user based on oauth_token returns empty hash'] = function(){
+test('test non existant oauth hash for a user based on oauth_token returns empty hash', function(done){
     var req = {query:{}, headers:{authorization:full_oauth_header}};
     var tokens = oAuth.parseTokens(req);
 
     oAuth.getOAuthHash(tokens.oauth_token, function(err, data){
-        assert.eql(data, {});
+        assert.deepEqual(data, {});
+        done();
     });
-};
+});
 
-tests['can return user for verified signature'] = function(){
+test('can return user for verified signature', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testhost.lan' },
         method: 'GET',
@@ -69,11 +73,12 @@ tests['can return user for verified signature'] = function(){
     };
 
     oAuth.verifyRequest(req, function(err, data){
-        assert.eql(data, 1);
+        assert.equal(data, 1);
+        done();
     }, true);
-};
+});
 
-tests['returns null user for unverified signatures'] = function(){
+test('returns null user for unverified signatures', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testyhost.lan' },
         method: 'GET',
@@ -81,11 +86,12 @@ tests['returns null user for unverified signatures'] = function(){
     };
 
     oAuth.verifyRequest(req, function(err, data){
-        assert.eql(data, null);
+        assert.equal(data, null);
+        done();
     }, true);
-};
+});
 
-tests['returns null user for no oauth'] = function(){
+test('returns null user for no oauth', function(done){
     var req = {
         query:{},
         headers:{},
@@ -94,6 +100,9 @@ tests['returns null user for no oauth'] = function(){
     };
 
     oAuth.verifyRequest(req,function(err,data){
-        assert.eql(data, null);
+        assert.equal(data, null);
+        done();
     });
-};
+});
+
+});

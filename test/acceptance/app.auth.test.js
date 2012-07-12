@@ -1,11 +1,14 @@
 require('../helper');
+require('../support/assert');
 
 var app    = require(global.settings.app_root + '/app/controllers/app')
     , assert = require('assert')
     , tests  = module.exports = {}
     , querystring = require('querystring');
 
-tests['valid api key should allow insert in protected tables'] = function(){
+suite('app.auth', function() {
+
+test('valid api key should allow insert in protected tables', function(done){
     assert.response(app, {
         // view prepare_db.sh to see where to set api_key
         url: "/api/v1/sql?api_key=1234&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('test')",
@@ -14,10 +17,10 @@ tests['valid api key should allow insert in protected tables'] = function(){
         method: 'GET'
     },{}, function(res) {
         assert.equal(res.statusCode, 200, res.body);
-    } );
-}
+    }, function() { done(); });
+});
 
-tests['invalid api key should NOT allow insert in protected tables'] = function(){
+test('invalid api key should NOT allow insert in protected tables', function(done){
     assert.response(app, {
         // view prepare_db.sh to see where to set api_key
         url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
@@ -26,7 +29,8 @@ tests['invalid api key should NOT allow insert in protected tables'] = function(
         method: 'GET'
     },{
         status: 400
-    });
-}
+    }, function() { done(); });
+});
 
 
+});
