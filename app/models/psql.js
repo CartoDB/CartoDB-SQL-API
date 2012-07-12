@@ -47,10 +47,11 @@ var PSQL = function(user_id, db, limit, offset){
         if (that.client) {
             return callback(null, that.client);
         } else {
-            pg.connect(conString, function(err, client){
-                that.client = client;
-                return callback(err, client);
-            });
+            var err = null;
+            var client = new pg.Client(conString);
+            client.connect();
+            that.client = client;
+            return callback(err, client);
         }
     };
 
