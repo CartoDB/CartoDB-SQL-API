@@ -33,13 +33,14 @@ cd test; sh prepare_db.sh >> test.log || die "database preparation failure (see 
 PATH=node_modules/.bin/:$PATH
 
 echo "Running tests"
-expresso test/unit/redis_pool.test.js
-# expresso test/unit/metadata.test.js # fails (#36)
-#expresso test/unit/oauth.test.js 
-#expresso test/unit/psql.test.js 
+expresso \
+  test/unit/redis_pool.test.js \
+  test/unit/metadata.test.js \
+  test/unit/oauth.test.js 
+#expresso test/unit/psql.test.js  # hangs
 
-#expresso test/acceptance/app.test.js
-#expresso test/acceptance/app.auth.test.js
+#expresso test/acceptance/app.test.js # fails
+#expresso test/acceptance/app.auth.test.js # fails
 
 
 cleanup
