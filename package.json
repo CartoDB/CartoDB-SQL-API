@@ -26,8 +26,7 @@
         "expresso": "0.8.x"
     },
     "scripts": {
-        "unit": "expresso ./test/unit/* | sh",
-        "acceptance": "expresso ./test/acceptance/* | sh"
+        "test": "test/run_tests.sh"
     },
     "engines": { "node": ">= 0.4.1 < 0.7.0" }
 }

@@ -31,13 +31,13 @@ exports['test calling aquire on another DB returns a redis client object that ca
     client.get("key", function(err,data){      
       assert.eql(data, "value");      
       redis_pool.release("MYDATABASE", client);
+      redis_pool.acquire("MYDATABASE", function(client){
+        client.get("key", function(err,data){      
+          assert.eql(data, "value");      
+          redis_pool.release("MYDATABASE", client);
+        });
+      });      
     })
   });    
   
-  redis_pool.acquire("MYDATABASE", function(client){
-    client.get("key", function(err,data){      
-      assert.eql(data, "value");      
-      redis_pool.release("MYDATABASE", client);
-    });
-  });      
 };
