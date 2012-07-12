@@ -12,15 +12,15 @@ tests['valid api key should allow insert in protected tables'] = function(){
 
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{
-        status: 200
-    });
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+    } );
 }
 
 tests['invalid api key should NOT allow insert in protected tables'] = function(){
     assert.response(app, {
         // view prepare_db.sh to see where to set api_key
-        url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('test')",
+        url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
 
         headers: {host: 'vizzuality.cartodb.com' },
         method: 'GET'
