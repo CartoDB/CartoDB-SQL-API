@@ -37,9 +37,9 @@ mocha -u tdd \
   test/unit/redis_pool.test.js \
   test/unit/metadata.test.js \
   test/unit/oauth.test.js \
-  test/unit/psql.test.js  
+  test/unit/psql.test.js \
+  test/acceptance/app.test.js 
 
-#mocha -u tdd test/acceptance/app.test.js # hangs
 #mocha -u tdd test/acceptance/app.auth.test.js # hangs
 
 
