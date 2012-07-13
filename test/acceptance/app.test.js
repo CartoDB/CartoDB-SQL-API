@@ -28,7 +28,7 @@ var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_con
 
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
-    tmp='' + x;
+    var tmp='' + x;
     if (tmp.indexOf(dec_sep)>-1)
         return tmp.length-tmp.indexOf(dec_sep)-1;
     else
