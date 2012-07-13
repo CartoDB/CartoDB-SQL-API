@@ -46,35 +46,38 @@ test('GET /api/v1/sql', function(){
 });
 
 
-test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', function(){
+test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
         method: 'GET'
-    },{
-        status: 200
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        done();
     });
 });
 
 
-test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(){
+test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        done();
     });
 });
 
 
-test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(){
+test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4"}),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{
-        status: 200
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        done();
     });
 });
 
@@ -121,9 +124,8 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         done();
@@ -135,9 +137,8 @@ test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposi
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
         done();
@@ -163,9 +164,8 @@ test('GET /api/v1/sql as geojson limiting decimal places', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&dp=1',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var result = JSON.parse(res.body);
         assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
         done();
@@ -177,9 +177,8 @@ test('GET /api/v1/sql as geojson with default dp as 6', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var result = JSON.parse(res.body);
         assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
         done();
@@ -191,9 +190,8 @@ test('GET /api/v1/sql as csv', function(done){
         url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var body = "cartodb_id,geom\r\n1,SRID=4326;POINT(-3.699732 40.423012)";
         assert.equal(body, res.body);
         done();
@@ -205,9 +203,8 @@ test('GET /api/v1/sql as csv, properly escaped', function(done){
         url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 200
-    }, function(res){
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
         var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"';
         assert.equal(body, res.body);
         done();
