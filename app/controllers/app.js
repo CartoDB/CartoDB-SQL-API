@@ -51,7 +51,7 @@ function handleQuery(req, res) {
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
-    format    = (format   === "" || _.isUndefined(format))   ? null : format;
+    format    = (format   === "" || _.isUndefined(format))   ? null : format.toLowerCase();
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
