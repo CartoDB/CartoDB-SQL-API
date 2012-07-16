@@ -35,13 +35,15 @@ var checkDecimals = function(x, dec_sep){
         return 0;
 }
 
-test('GET /api/v1/sql', function(){
+test('GET /api/v1/sql', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
         method: 'GET'
     },{
-        body: '{"error":["You must indicate a sql query"]}',
         status: 400
+    }, function(res) {
+        assert.deepEqual(JSON.parse(res.body), {"error":["You must indicate a sql query"]});
+        done();
     });
 });
 
