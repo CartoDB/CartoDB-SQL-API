@@ -117,7 +117,8 @@ assert.response = function(server, req, res, msg){
             port: server.__port,
             path: req.url,
             method: method,
-            headers: req.headers
+            headers: req.headers,
+            agent: false
         });
 
         var check = function() {
