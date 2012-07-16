@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "cluster": "0.6.4",
-        "express": "2.5.8",
+        "express": "~2.5.11",
         "underscore"  : "1.1.x",
         "underscore.string": "1.1.5",
         "pg": "0.6.14",
@@ -29,5 +29,5 @@
     "scripts": {
         "test": "test/run_tests.sh"
     },
-    "engines": { "node": ">= 0.4.1 < 0.7.0" }
+    "engines": { "node": ">= 0.4.1 < 0.9" }
 }
