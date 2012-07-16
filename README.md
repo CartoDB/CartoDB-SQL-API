@@ -11,7 +11,7 @@ core requirements
 -------------
 * postgres
 * redis
-* node >v0.4.8 && < 0.7.0>
+* node > v0.4.8 && < v0.9.0
 * npm
 
 usage
