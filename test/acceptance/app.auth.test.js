@@ -17,7 +17,8 @@ test('valid api key should allow insert in protected tables', function(done){
         method: 'GET'
     },{}, function(res) {
         assert.equal(res.statusCode, 200, res.body);
-    }, function() { done(); });
+        done();
+    });
 });
 
 test('invalid api key should NOT allow insert in protected tables', function(done){
