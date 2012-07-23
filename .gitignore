@@ -1,3 +1,4 @@
+config/environments/*.js
 logs/*.log
 pids/*.pid
 *.sock

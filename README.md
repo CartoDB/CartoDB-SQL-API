@@ -18,7 +18,10 @@ core requirements
 usage
 -----
 
-Edit config/environments/<environment>.js
+Create and edit config/environments/<environment>.js from .js.example files.
+You may find the ./configure script useful to make an edited copy for you,
+see ```./configure --help``` for a list of supported switches.
+
 Make sure redis is running and knows about active cartodb user.
 
 ``` bash
@@ -27,7 +30,7 @@ node [cluster.js|app.js] <environment>
 
 Supported <environment> values are developement, test, production
 
-for examples of use, see /tests
+for examples of use, see /test
 
 
 Install dependencies
@@ -45,4 +48,4 @@ see test/README.md
 
 note on 0.4.x
 --------------
-output of large result sets is slow under node 0.4. Recommend running under 0.6 where possible.
+output of large result sets is slow under node 0.4. Recommend running under 0.6+ where possible.
