@@ -37,12 +37,14 @@ node [cluster.js|app.js] <environment>
 
 Supported <environment> values are developement, test, production
 
-for examples of use, see /test
+See /doc for API documentation.
+For examples of use, see /test.
 
 
 tests
 ------
-see test/README.md
+
+Run ```make check``` or see test/README.md
 
 
 note on 0.4.x
