@@ -12,6 +12,8 @@
 // - sql only, provided the subdomain exists in CartoDB and the table's sharing options are public
 //
 // eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
+//
+//
 var express = require('express')
     , app      = express.createServer(
     express.logger({
@@ -47,7 +49,7 @@ function handleQuery(req, res) {
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
     var format    = req.query.format;
-    var dp        = req.query.dp;
+    var dp        = req.query.dp; // decimal point digits (defaults to 6)
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
