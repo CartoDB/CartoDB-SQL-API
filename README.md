@@ -15,6 +15,13 @@ core requirements
 * node > v0.4.8 && < v0.9.0
 * npm
 
+Install dependencies
+---------------------
+
+```bash
+npm install
+```
+
 usage
 -----
 
@@ -31,14 +38,6 @@ node [cluster.js|app.js] <environment>
 Supported <environment> values are developement, test, production
 
 for examples of use, see /test
-
-
-Install dependencies
----------------------
-
-```bash
-npm install
-```
 
 
 tests
