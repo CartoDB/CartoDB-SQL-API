@@ -31,6 +31,11 @@ see ```./configure --help``` for a list of supported switches.
 
 Make sure redis is running and knows about active cartodb user.
 
+Make sure your PostgreSQL server is running, is accessible on
+the host and port specified in the <environment> file, has
+a 'publicuser' role and trusts user authentication from localhost
+connections.
+
 ``` bash
 node [cluster.js|app.js] <environment>
 ```
