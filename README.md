@@ -37,8 +37,8 @@ node [cluster.js|app.js] <environment>
 
 Supported <environment> values are developement, test, production
 
-See /doc for API documentation.
-For examples of use, see /test.
+See doc/API.md for API documentation.
+For examples of use, see under test/.
 
 
 tests
