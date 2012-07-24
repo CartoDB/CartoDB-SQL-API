@@ -86,8 +86,6 @@ Response errors
 To help you debug your SQL queries, the CartoDB SQL API returns errors
 as part of the JSON response. Errors come back as follows,
 
-Errors
-
 ```
     {
         error: [
@@ -96,18 +94,14 @@ Errors
     }
 ```
 
-You can use these errors to help understand your SQL, for more complete
-documentation see the Error codes and Solutions section of this Users
-Guide.
+You can use these errors to help understand your SQL.
 
 
 Getting table information
 -------------------------
 
 Currently, there is no public method for accessing your table schemas. The
-simplest way to get table structure is to access the first row of the data,
-
-Columns
+simplest way to get table structure is to access the first row of the data:
 
     http://entrypoint?q=SELECT * FROM mytable LIMIT 1
 
