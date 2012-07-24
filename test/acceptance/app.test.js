@@ -393,4 +393,18 @@ test('GET decent error if SQL is broken', function(done){
     });
 });
 
+// CSV tests
+test('CSV format', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
+        done();
+    });
+});
+
 });

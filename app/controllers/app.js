@@ -159,6 +159,7 @@ function handleQuery(req, res) {
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
                 } else {
+                    // TODO: error out if 'format' resolves to an unsupported format !
                     var end = new Date().getTime();
 
                     var json_result = {'time' : (end - start)/1000};
