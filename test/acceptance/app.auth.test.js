@@ -33,5 +33,16 @@ test('invalid api key should NOT allow insert in protected tables', function(don
     }, function() { done(); });
 });
 
+test('invalid api key (old redis location) should NOT allow insert in protected tables', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1235&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
+
+        headers: {host: 'vizzuality.cartodb.com' },
+        method: 'GET'
+    },{
+        status: 400
+    }, function() { done(); });
+});
 
 });

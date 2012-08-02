@@ -12,7 +12,6 @@ module.exports = (function() {
         user_metadata_db: 5,
         table_metadata_db: 0,
         user_key: "rails:users:<%= username %>",
-        map_key: "rails:users:<%= username %>:map_key",
         table_key: "rails:<%= database_name %>:<%= table_name %>"
     };
 
@@ -76,9 +75,13 @@ module.exports = (function() {
     me.checkAPIKey= function(req, callback) {
         // strip subdomain from header host
         var username = req.headers.host.split('.')[0];
-        var redisKey = _.template(this.map_key, {username: username});
+        var redisKey = "rails:users:" + username;
         var api_key = req.query.api_key || req.body.api_key;
-        this.inSet(this.user_metadata_db, redisKey, api_key, callback);
+        this.retrieve(this.user_metadata_db, redisKey, "map_key", function(err, val) {
+          var allow = 0;
+          if ( val && val == api_key ) allow = 1;
+          callback(err, allow);
+        });
     };
 
     /**
