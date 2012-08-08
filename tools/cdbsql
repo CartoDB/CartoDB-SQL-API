@@ -32,12 +32,16 @@ function usage(exit_code) {
   console.log(" --key <string>          API authentication key (none)");
   console.log(" --format <string>       Response format (json)");
   console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
+  if ( hasReadline ) {
+  console.log(" --batch                 Send all read queries at once (off)");
+  }
   process.exit(exit_code);
 }
 
 process.argv.shift(); // this will be "node" (argv[0])
 process.argv.shift(); // this will be "benchmark.js" (argv[1])
 
+var batch_mode = false;
 var format = 'json';
 var username;
 var domain = 'localhost';
@@ -76,6 +80,9 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--dp' ) {
     decimal_places = process.argv.shift();
   }
+  else if ( arg == '--batch' ) {
+    batch_mode = true;
+  }
   else if ( ! sql ) {
     sql = arg;
   }
@@ -88,13 +95,44 @@ var hostname = username + '.' + domain;
 
 if ( ! sql ) {
   if ( readline ) {
+
     var rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
-    rl.on('line', function(sql) {
-      // TODO: some sanity checking, like trim the line ?
-      if ( sql ) processQuery(sql);
+
+    if ( ! batch_mode ) {
+      rl.setPrompt(hostname + '> ');
+      rl.prompt();
+    }
+
+    sql = '';
+    rl.on('line', function(line) {
+      sql += line;
+      if ( ! batch_mode ) {
+        // TODO: some sanity checking, like trim the line or check if it ends with semicolon
+        if ( sql.length ) {
+          processQuery(sql, function() {
+            sql = '';
+            rl.prompt();
+          });
+        } else rl.prompt();
+      } 
+    }).on('close', function() {
+      if ( batch_mode ) {
+        if ( sql.length )  {
+          processQuery(sql);
+          sql = '';
+        }
+      } else {
+        if ( sql.length ) {
+          console.warn("Unprocessed sql left: [" + sql + "]");
+        }
+        console.log("Good bye");
+      }
+    }).on('SIGCONT', function() {
+      // this is needed so not to exit on stop/resume
+      rl.prompt();
     });
   } else {
     usage(1);
@@ -105,7 +143,7 @@ if ( ! sql ) {
 
 // -- Perform the request
 
-function processQuery(sql)
+function processQuery(sql, callback)
 {
   var opt = {
     host: hostname,
@@ -115,23 +153,29 @@ function processQuery(sql)
 
   if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
 
-  console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
-
   var body = '';
+  var request = 'http://' + opt.host + ':' + opt.port + opt.path;
+  //console.log("Sending request:", request);
 
   http.get(opt, function(res) {
-    console.log("Response status: " + res.statusCode);
+    //console.log("Response status: " + res.statusCode);
     res.on('data', function(chunk) {
       body += chunk;
       //console.log("data: "); console.dir(json);
     });
 
     res.on('end', function() {
-      console.log('Body:');
+      console.log("Request:", request);
+      console.log("Response status: " + res.statusCode);
+      console.log('Response body:');
       console.dir(body);
+      if ( callback ) callback();
     });
+
   }).on('error', function(e) {
-    console.log("ERROR: " + e.message);
+    console.log("Request:", request);
+    console.log("Error: " + e.message);
+    if ( callback ) callback();
   });
 
 }
