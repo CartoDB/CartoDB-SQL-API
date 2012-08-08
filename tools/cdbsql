@@ -18,12 +18,14 @@ function usage(exit_code) {
   console.log(" --port <num>            service tcp port number (8080)");
   console.log(" --api-version <num>     API version (1)");
   console.log(" --key <string>          API authentication key (none)");
+  console.log(" --format <string>       Response format (json)");
   process.exit(exit_code);
 }
 
 process.argv.shift(); // this will be "node" (argv[0])
 process.argv.shift(); // this will be "benchmark.js" (argv[1])
 
+var format = 'json';
 var username;
 var domain = 'localhost';
 var port = 8080;
@@ -54,6 +56,9 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--api-version' ) {
     api_version = process.argv.shift();
   }
+  else if ( arg == '--format' ) {
+    format = process.argv.shift();
+  }
   else if ( ! sql ) {
     sql = arg;
   }
@@ -71,7 +76,7 @@ var hostname = username + '.' + domain;
 var opt = {
   host: hostname,
   port: port,
-  path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql)
+  path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql) + '&format=' + encodeURIComponent(format)
 };
 
 console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
@@ -87,8 +92,7 @@ http.get(opt, function(res) {
 
   res.on('end', function() {
     console.log('Body:');
-    var json = JSON.parse(body);
-    console.dir(json);
+    console.dir(body);
   });
 }).on('error', function(e) {
   console.log("ERROR: " + e.message);
