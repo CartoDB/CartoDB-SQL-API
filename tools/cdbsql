@@ -19,6 +19,7 @@ function usage(exit_code) {
   console.log(" --api-version <num>     API version (1)");
   console.log(" --key <string>          API authentication key (none)");
   console.log(" --format <string>       Response format (json)");
+  console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
   process.exit(exit_code);
 }
 
@@ -32,6 +33,7 @@ var port = 8080;
 var api_version = 1;
 var api_key;
 var sql;
+var decimal_places;
 
 var arg;
 while ( arg = process.argv.shift() ) {
@@ -59,6 +61,9 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--format' ) {
     format = process.argv.shift();
   }
+  else if ( arg == '--dp' ) {
+    decimal_places = process.argv.shift();
+  }
   else if ( ! sql ) {
     sql = arg;
   }
@@ -78,6 +83,8 @@ var opt = {
   port: port,
   path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql) + '&format=' + encodeURIComponent(format)
 };
+
+if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
 
 console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
 
