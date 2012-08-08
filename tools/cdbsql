@@ -42,8 +42,8 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--key' ) {
     api_key = process.argv.shift();
   }
-  else if ( arg == '--host' ) {
-    hostname = process.argv.shift();
+  else if ( arg == '--domain' ) {
+    domain = process.argv.shift();
   }
   else if ( arg == '--user' ) {
     username = process.argv.shift();
