@@ -151,6 +151,7 @@ function processQuery(sql, callback)
     path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql) + '&format=' + encodeURIComponent(format)
   };
 
+  if ( typeof(api_key) != 'undefined' ) opt.path += '&api_key=' + api_key;
   if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
 
   var body = '';
