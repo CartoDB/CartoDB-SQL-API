@@ -3,13 +3,25 @@
 // Command line tool for CartoDB SQL API
 //
 // https://github.com/Vizzuality/CartoDB-SQL-API
+//
 
-var http = require('http')
+var http = require('http');
+
+var nodevers = process.versions.node.split('.');
+
+// NOTE: readline is also available in 0.4 but doesn't work
+var hasReadline = parseInt(nodevers[0]) > 0 || parseInt(nodevers[1]) >= 8;
+//console.log('Node version ' + nodevers.join(',') + ( hasReadline ? ' has' : ' does not have' ) + ' readline support');
+
+var readline = hasReadline ? require('readline') : null;
 
 var me = process.argv[1];
 
 function usage(exit_code) {
   console.log("Usage: " + me + " [OPTIONS] <query>");
+  if ( hasReadline ) {
+    console.log("       " + me + " [OPTIONS]");
+  }
   console.log("Options:");
   console.log(" -v                      verbose operations (off)");
   console.log(" --help                  print this help");
@@ -72,37 +84,54 @@ while ( arg = process.argv.shift() ) {
   }
 }
 
-if ( ! sql ) usage(1);
-
 var hostname = username + '.' + domain;
+
+if ( ! sql ) {
+  if ( readline ) {
+    var rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    rl.on('line', function(sql) {
+      // TODO: some sanity checking, like trim the line ?
+      if ( sql ) processQuery(sql);
+    });
+  } else {
+    usage(1);
+  }
+} else {
+  processQuery(sql);
+}
 
 // -- Perform the request
 
-var opt = {
-  host: hostname,
-  port: port,
-  path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql) + '&format=' + encodeURIComponent(format)
-};
+function processQuery(sql)
+{
+  var opt = {
+    host: hostname,
+    port: port,
+    path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql) + '&format=' + encodeURIComponent(format)
+  };
 
-if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
+  if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
 
-console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
+  console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
 
-var body = '';
+  var body = '';
 
-http.get(opt, function(res) {
-  console.log("Response status: " + res.statusCode);
-  res.on('data', function(chunk) {
-    body += chunk;
-    //console.log("data: "); console.dir(json);
+  http.get(opt, function(res) {
+    console.log("Response status: " + res.statusCode);
+    res.on('data', function(chunk) {
+      body += chunk;
+      //console.log("data: "); console.dir(json);
+    });
+
+    res.on('end', function() {
+      console.log('Body:');
+      console.dir(body);
+    });
+  }).on('error', function(e) {
+    console.log("ERROR: " + e.message);
   });
 
-  res.on('end', function() {
-    console.log('Body:');
-    console.dir(body);
-  });
-}).on('error', function(e) {
-  console.log("ERROR: " + e.message);
-});
-
-
+}
