@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+
+// Command line tool for CartoDB SQL API
+//
+// https://github.com/Vizzuality/CartoDB-SQL-API
+
+var http = require('http')
+
+var me = process.argv[1];
+
+function usage(exit_code) {
+  console.log("Usage: " + me + " [OPTIONS] <query>");
+  console.log("Options:");
+  console.log(" -v                      verbose operations (off)");
+  console.log(" --help                  print this help");
+  console.log(" --user <string>         cartodb username (none)");
+  console.log(" --domain <string>       service domain (localhost)");
+  console.log(" --port <num>            service tcp port number (8080)");
+  console.log(" --api-version <num>     API version (1)");
+  console.log(" --key <string>          API authentication key (none)");
+  process.exit(exit_code);
+}
+
+process.argv.shift(); // this will be "node" (argv[0])
+process.argv.shift(); // this will be "benchmark.js" (argv[1])
+
+var username;
+var domain = 'localhost';
+var port = 8080;
+var api_version = 1;
+var api_key;
+var sql;
+
+var arg;
+while ( arg = process.argv.shift() ) {
+  if ( arg == '-v' ) {
+    ++verbose;
+  }
+  else if ( arg == '--help' ) {
+    usage(0);
+  }
+  else if ( arg == '--key' ) {
+    api_key = process.argv.shift();
+  }
+  else if ( arg == '--host' ) {
+    hostname = process.argv.shift();
+  }
+  else if ( arg == '--user' ) {
+    username = process.argv.shift();
+  }
+  else if ( arg == '--port' ) {
+    port = process.argv.shift();
+  }
+  else if ( arg == '--api-version' ) {
+    api_version = process.argv.shift();
+  }
+  else if ( ! sql ) {
+    sql = arg;
+  }
+  else {
+    usage(1);
+  }
+}
+
+if ( ! sql ) usage(1);
+
+var hostname = username + '.' + domain;
+
+// -- Perform the request
+
+var opt = {
+  host: hostname,
+  port: port,
+  path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql)
+};
+
+console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
+
+var body = '';
+
+http.get(opt, function(res) {
+  console.log("Response status: " + res.statusCode);
+  res.on('data', function(chunk) {
+    body += chunk;
+    //console.log("data: "); console.dir(json);
+  });
+
+  res.on('end', function() {
+    console.log('Body:');
+    var json = JSON.parse(body);
+    console.dir(json);
+  });
+}).on('error', function(e) {
+  console.log("ERROR: " + e.message);
+});
+
+
