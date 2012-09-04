@@ -76,8 +76,17 @@ var PSQL = function(user_id, db, limit, offset){
         );
     };
 
+    /// @deprecated -- should not be called
     me.end = function(){
-        this.client.end();
+      // NOTE: clients created via the pg#connect method will be                                                                                                     //       automatically disconnected or placed back into the
+      //       connection pool and should NOT have their #end
+      //       method called
+      // REF: https://github.com/brianc/node-postgres/wiki/Client#method-end
+      // See me.connect()
+    
+      // if ( this.client ) { this.client.end(); this.client = null; }
+
+      // NOTE: maybe provide a function resumeDrain, but change its name
     };
 
     // little hack for UI
