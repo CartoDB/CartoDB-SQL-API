@@ -51,7 +51,6 @@ test('test private user can execute SELECTS on db', function(done){
   var sql = "SELECT 1 as test_sum";
   pg.query(sql, function(err, result){
     assert.equal(result.rows[0].test_sum, 1);
-    pg.end();
     done();
   });
 });
@@ -61,7 +60,6 @@ test('test private user can execute CREATE on db', function(done){
   var sql = "DROP TABLE IF EXISTS distributors; CREATE TABLE distributors (id integer, name varchar(40), UNIQUE(name))";
   pg.query(sql, function(err, result){
     assert.ok(_.isNull(err));
-    pg.end();
     done();
   });
 });
@@ -73,7 +71,6 @@ test('test private user can execute INSERT on db', function(done){
     sql = "INSERT INTO distributors1 (id, name) VALUES (1, 'fish')";
     pg.query(sql,function(err, result){
       assert.deepEqual(result.rows, []);
-      pg.end();
       done();
     });
   });
@@ -83,11 +80,9 @@ test('test publicuser can execute SELECT on enabled tables', function(done){
   var pg = new PSQL("1");
   var sql = "DROP TABLE IF EXISTS distributors2; CREATE TABLE distributors2 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors2 TO publicuser;";
   pg.query(sql, function(err, result){
-    pg.end();
     pg = new PSQL(null, 'cartodb_test_user_1_db');
     pg.query("SELECT count(*) FROM distributors2", function(err, result){
       assert.equal(result.rows[0].count, 0);
-      pg.end();      
       done();
     });
   });
@@ -97,12 +92,10 @@ test('test publicuser cannot execute INSERT on db', function(done){
   var pg = new PSQL("1");
   var sql = "DROP TABLE IF EXISTS distributors3; CREATE TABLE distributors3 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors3 TO publicuser;";
   pg.query(sql, function(err, result){    
-    pg.end();
     
     pg = new PSQL(null, 'cartodb_test_user_1_db'); //anonymous user
     pg.query("INSERT INTO distributors3 (id, name) VALUES (1, 'fishy')", function(err, result){
       assert.equal(err.message, 'permission denied for relation distributors3');
-      pg.end();      
       done();
     });
   });
