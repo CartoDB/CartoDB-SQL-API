@@ -45,4 +45,28 @@ test('invalid api key (old redis location) should NOT allow insert in protected 
     }, function() { done(); });
 });
 
+test('no api key should NOT allow insert in protected tables', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
+
+        headers: {host: 'vizzuality.cartodb.com' },
+        method: 'GET'
+    },{
+        status: 400
+    }, function() { done(); });
+});
+
+test('no api key should NOT allow insert in public tables', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to find public table name and structure
+        url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(name)%20VALUES%20('RAMBO')",
+
+        headers: {host: 'vizzuality.cartodb.com' },
+        method: 'GET'
+    },{
+        status: 400
+    }, function() { done(); });
+});
+
 });
