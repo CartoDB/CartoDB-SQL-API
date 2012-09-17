@@ -287,4 +287,20 @@ test('GET decent error if domain is incorrect', function(done){
     });
 });
 
+test('GET decent error if SQL is broken', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({q:
+          'SELECT star FROM this and that'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        var result = JSON.parse(res.body);
+        // NOTE: actual error message may be slighly different, possibly worth a regexp here
+        assert.equal(result.error[0], 'syntax error at or near "and"');
+        done();
+    });
+});
+
 });
