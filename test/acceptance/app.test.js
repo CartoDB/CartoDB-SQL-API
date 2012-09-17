@@ -111,6 +111,72 @@ test('GET /api/v1/sql with SQL parameter on INSERT only. header based db - shoul
     });
 });
 
+// Check results from INSERT 
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('INSERT returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "INSERT INTO private_table(name) VALUES('noret1') UNION VALUES('noret2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
+// Check results from UPDATE
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('UPDATE returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "UPDATE private_table SET name = upper(name) WHERE name in ('noret1', 'noret2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
+// Check results from DELETE
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('DELETE returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "DELETE FROM private_table WHERE name in ('NORET1', 'NORET2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
 // Check results from INSERT .. RETURNING
 //
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
