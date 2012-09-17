@@ -161,6 +161,30 @@ test('UPDATE with RETURNING returns all results', function(done){
     });
 });
 
+// Check results from DELETE .. RETURNING
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
+test('DELETE with RETURNING returns all results', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "DELETE FROM private_table WHERE name = 'tost' RETURNING name"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 1);
+        assert.equal(out.rows.length, 1);
+        assert.equal(_.keys(out.rows[0]).length, 1);
+        assert.equal(out.rows[0].name, 'tost');
+        done();
+    });
+});
+
 test('GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db - should fail', function(){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4",
