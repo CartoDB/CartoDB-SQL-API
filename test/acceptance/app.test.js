@@ -16,8 +16,8 @@ require('../support/assert');
 
 var app    = require(global.settings.app_root + '/app/controllers/app')
     , assert = require('assert')
-    , tests  = module.exports = {}
-    , querystring = require('querystring');
+    , querystring = require('querystring')
+    , _ = require('underscore');
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
@@ -108,6 +108,56 @@ test('GET /api/v1/sql with SQL parameter on INSERT only. header based db - shoul
         method: 'GET'
     },{
         status: 400
+    });
+});
+
+// Check results from INSERT .. RETURNING
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
+test('INSERT with RETURNING returns all results', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "INSERT INTO private_table(name) VALUES('test') RETURNING upper(name), reverse(name)"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 1);
+        assert.equal(out.rows.length, 1);
+        assert.equal(_.keys(out.rows[0]).length, 2);
+        assert.equal(out.rows[0].upper, 'TEST');
+        assert.equal(out.rows[0].reverse, 'tset');
+        done();
+    });
+});
+
+// Check results from UPDATE .. RETURNING
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
+test('UPDATE with RETURNING returns all results', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "UPDATE private_table SET name = 'tost' WHERE name = 'test' RETURNING upper(name), reverse(name)"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 1);
+        assert.equal(out.rows.length, 1);
+        assert.equal(_.keys(out.rows[0]).length, 2);
+        assert.equal(out.rows[0].upper, 'TOST');
+        assert.equal(out.rows[0].reverse, 'tsot');
+        done();
     });
 });
 

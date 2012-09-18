@@ -160,14 +160,9 @@ function handleQuery(req, res) {
                     var end = new Date().getTime();
 
                     var json_result = {'time' : (end - start)/1000};
-
-                    if (result.command === 'SELECT') {
-                        json_result.total_rows = result.rows.length;
-                        json_result.rows = result.rows;
-                    } else {
                         json_result.total_rows = result.rowCount;
-                    }
-                    
+                        json_result.rows = result.rows;
+
                     return json_result;
                 }
             },
