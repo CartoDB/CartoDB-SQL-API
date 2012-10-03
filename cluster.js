@@ -16,7 +16,7 @@ var Cluster = require('cluster2');
 var ENV = process.argv[2];
 if (ENV != 'development' && ENV != 'production') {
   console.error("\n./cluster [environment]");
-  console.error("environments: [development, test, production]");
+  console.error("environments: [development, test, production, staging]");
   process.exit(1);
 }
 
