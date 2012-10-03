@@ -4,22 +4,19 @@
 * SQL API loader
 * ===============
 *
-* Builds a cluster of node processes managed by cluster library.
-* Only compatible with node 0.4.x
-*
-* node app [environment] 
+* node cluster [environment] 
 *
 * environments: [development, test, production]
 *
 */
 var _ = require('underscore');
-var cluster = require('cluster');
+var Cluster = require('cluster2');
 
 // sanity check arguments
 var ENV = process.argv[2];
-if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging') {
+if (ENV != 'development' && ENV != 'production') {
   console.error("\n./cluster [environment]");
-  console.error("environments: [development, test, production, staging]");
+  console.error("environments: [development, test, production]");
   process.exit(1);
 }
 
@@ -28,10 +25,16 @@ global.settings  = require(__dirname + '/config/settings');
 var env          = require(__dirname + '/config/environments/' + ENV);
 _.extend(global.settings, env);
  
-cluster('./app/controllers/app')
-  .use(cluster.logger('logs'))
-  .use(cluster.stats())
-  .use(cluster.pidfiles('pids'))
-  .listen(global.settings.node_port, global.settings.node_host);
+// kick off controller
+var app = require(global.settings.app_root + '/app/controllers/app');
 
-console.log('CartoDB SQL-API running on port: ' + global.settings.node_port);
+var cluster = new Cluster({
+  port: global.settings.node_port,
+  monPort: global.settings.node_port+1
+});
+
+cluster.listen(function(cb) {
+  cb(app);
+});
+
+console.log("CartoDB SQL API listening on port " + global.settings.node_port); 

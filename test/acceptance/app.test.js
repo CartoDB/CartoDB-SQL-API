@@ -111,6 +111,72 @@ test('GET /api/v1/sql with SQL parameter on INSERT only. header based db - shoul
     });
 });
 
+// Check results from INSERT 
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('INSERT returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "INSERT INTO private_table(name) VALUES('noret1') UNION VALUES('noret2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
+// Check results from UPDATE
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('UPDATE returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "UPDATE private_table SET name = upper(name) WHERE name in ('noret1', 'noret2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
+// Check results from DELETE
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
+test('DELETE returns affected rows', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "DELETE FROM private_table WHERE name in ('NORET1', 'NORET2')"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 2);
+        assert.equal(out.rows.length, 0);
+        done();
+    });
+});
+
 // Check results from INSERT .. RETURNING
 //
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
@@ -157,6 +223,30 @@ test('UPDATE with RETURNING returns all results', function(done){
         assert.equal(_.keys(out.rows[0]).length, 2);
         assert.equal(out.rows[0].upper, 'TOST');
         assert.equal(out.rows[0].reverse, 'tsot');
+        done();
+    });
+});
+
+// Check results from DELETE .. RETURNING
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/50
+test('DELETE with RETURNING returns all results', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "DELETE FROM private_table WHERE name = 'tost' RETURNING name"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 1);
+        assert.equal(out.rows.length, 1);
+        assert.equal(_.keys(out.rows[0]).length, 1);
+        assert.equal(out.rows[0].name, 'tost');
         done();
     });
 });
@@ -283,6 +373,22 @@ test('GET decent error if domain is incorrect', function(done){
     }, function(res){
         var result = JSON.parse(res.body);
         assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
+        done();
+    });
+});
+
+test('GET decent error if SQL is broken', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({q:
+          'SELECT star FROM this and that'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        var result = JSON.parse(res.body);
+        // NOTE: actual error message may be slighly different, possibly worth a regexp here
+        assert.equal(result.error[0], 'syntax error at or near "and"');
         done();
     });
 });
