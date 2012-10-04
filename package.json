@@ -2,11 +2,11 @@
     "private": true,
     "name": "cartodb_api",
     "description": "high speed SQL api for cartodb",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": {
-        "name": "Simon Tokumine, Vizzuality",
+        "name": "Simon Tokumine, Sandro Santilli, Vizzuality",
         "url": "http://vizzuality.com",
-        "email": "simon@vizzuality.com"
+        "email": "simon@vizzuality.com, strk@vizzuality.com"
     },
     "dependencies": {
         "cluster2": "git://github.com/CartoDB/cluster2.git#28cde11",

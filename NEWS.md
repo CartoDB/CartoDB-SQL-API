@@ -1,3 +1,6 @@
+1.1.0 (DD/MM/YY)
+-----
+
 1.0.0 (03/10/12)
 -----
 * Migrated to node 0.8 version
