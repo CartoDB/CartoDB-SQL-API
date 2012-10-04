@@ -18,10 +18,6 @@ Supported query string parameters:
               Only affects format=GeoJSON.
               By default this is 6.
 
-  'gn':       Geometry column name. 
-              Only affects format=GeoJSON.
-              By default this is 'the_geom'.
-
   'api_key':  Needed to authenticate in order to modify the database.
 
 Response formats
