@@ -30,11 +30,13 @@ var app = require(global.settings.app_root + '/app/controllers/app');
 
 var cluster = new Cluster({
   port: global.settings.node_port,
+  host: global.settings.node_host,
+  monHost: global.settings.node_host,
   monPort: global.settings.node_port+1
 });
 
 cluster.listen(function(cb) {
   cb(app);
+}, function() {
+  console.log("CartoDB SQL API listening on " + global.settings.node_host + ':' + global.settings.node_port); 
 });
-
-console.log("CartoDB SQL API listening on port " + global.settings.node_port); 
