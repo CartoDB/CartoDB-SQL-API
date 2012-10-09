@@ -26,5 +26,6 @@ _.extend(global.settings, env);
  
 // kick off controller
 var app = require(global.settings.app_root + '/app/controllers/app');
-app.listen(global.settings.node_port);
-console.log("CartoDB SQL API listening on port " + global.settings.node_port); 
+app.listen(global.settings.node_port, global.settings.node_host, function() {
+  console.log("CartoDB SQL API listening on " + global.settings.node_host + ":" + global.settings.node_port); 
+});
