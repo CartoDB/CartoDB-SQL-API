@@ -274,7 +274,7 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
     });
 });
 
-test('the last format parameter is used, when multiple are used', function(done){
+test('uses the last format parameter when multiple are used', function(done){
     assert.response(app, {
         url: '/api/v1/sql?format=csv&q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -283,6 +283,18 @@ test('the last format parameter is used, when multiple are used', function(done)
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
+        done();
+    });
+});
+
+test('sends a 400 when an unsupported format is requested', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=unknown',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 400, res.body);
+        assert.deepEqual(JSON.parse(res.body), {"error":[ "Invalid format: unknown" ]});
         done();
     });
 });

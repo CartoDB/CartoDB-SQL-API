@@ -41,6 +41,10 @@ app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res)
 // request handlers
 function handleQuery(req, res) {
 
+    var supportedFormats = ['json', 'geojson', 'csv', 'svg'];
+    var svg_width  = 1024.0;
+    var svg_height = 768.0;
+
     // extract input
     var body      = (req.body) ? req.body : {};
     var sql       = req.query.q || body.q; // HTTP GET and POST store in different vars
@@ -48,24 +52,27 @@ function handleQuery(req, res) {
     var database  = req.query.database; // TODO: Depricate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var format    = _.isArray(req.query.format) ? req.query.format[req.query.format.length-1] : req.query.format; 
+    var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
-    var svg_width  = 1024.0;
-    var svg_height = 768.0;
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
-    format    = (format   === "" || _.isUndefined(format))   ? null : format.toLowerCase();
+    format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
     offset    = (_.isNumber(offset)) ? offset * limit : null;
 
+
     // setup step run
     var start = new Date().getTime();
 
     try {
+
+        if ( -1 === supportedFormats.indexOf(format) )
+          throw new Error("Invalid format: " + format);
+
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
 
         // initialise MD5 key of sql for cache lookups
@@ -132,7 +139,7 @@ function handleQuery(req, res) {
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
-                } else if (format === 'svg'){
+                } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
                     sql = 'WITH source AS ( ' + sql + '), extent AS ( ' 
                         + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
