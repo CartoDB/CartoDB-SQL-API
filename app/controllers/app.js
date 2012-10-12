@@ -48,12 +48,11 @@ function handleQuery(req, res) {
     var database  = req.query.database; // TODO: Depricate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var format    = req.query.format;
+    var format    = _.isArray(req.query.format) ? req.query.format[req.query.format.length-1] : req.query.format; 
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
     var svg_width  = 1024.0;
     var svg_height = 768.0;
-
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;

@@ -274,6 +274,19 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
     });
 });
 
+test('the last format parameter is used, when multiple are used', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?format=csv&q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
+        done();
+    });
+});
+
 test('GET /api/v1/sql with SVG format', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
