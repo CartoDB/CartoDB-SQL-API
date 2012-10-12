@@ -1,5 +1,7 @@
 1.1.0 (DD/MM/YY)
 -----
+* Only use last format parameter when multiple are requested
+* Return a 400 response on unsupported format request
 * Fixed problem in cluster2 with pidfile name
 * SVG output format
 * Enhancement to the cdbsql tool:
