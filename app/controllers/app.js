@@ -191,8 +191,7 @@ function handleQuery(req, res) {
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
-                } else {
-                    // TODO: error out if 'format' resolves to an unsupported format !
+                } else if ( format === 'json'){
                     var end = new Date().getTime();
 
                     var json_result = {'time' : (end - start)/1000};
@@ -201,6 +200,7 @@ function handleQuery(req, res) {
 
                     return json_result;
                 }
+                else throw new Error("Unexpected format in packageResults: " + format);
             },
             function sendResults(err, out){
                 if (err) throw err;
