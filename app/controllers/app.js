@@ -46,7 +46,7 @@ app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res)
 //
 function queryMayWrite(sql) {
   var mayWrite = false;  
-  var pattern = RegExp("(insert|update|delete|create|drop)", "i");
+  var pattern = RegExp("(alter|insert|update|delete|create|drop)", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
   }

@@ -295,7 +295,7 @@ test('GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db -
 test('CREATE TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
-          q: 'CREATE TABLE create_table_test(a int)',
+          q: 'CREATE TABLE test_table(a int)',
           api_key: 1234
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -314,7 +314,7 @@ test('CREATE TABLE with GET and auth', function(done){
 //test('COPY TABLE with GET and auth', function(done){
 //    assert.response(app, {
 //        url: "/api/v1/sql?" + querystring.stringify({
-//          q: 'COPY TABLE create_table_test FROM stdin; 1\n\\.\n',
+//          q: 'COPY TABLE test_table FROM stdin; 1\n\\.\n',
 //          api_key: 1234
 //        }),
 //        headers: {host: 'vizzuality.cartodb.com'},
@@ -329,10 +329,28 @@ test('CREATE TABLE with GET and auth', function(done){
 //    });
 //});
 
+test('ALTER TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'ALTER TABLE test_table ADD b int',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      // Check cache headers
+      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      done();
+    });
+});
+
 test('DROP TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
-          q: 'DROP TABLE create_table_test',
+          q: 'DROP TABLE test_table',
           api_key: 1234
         }),
         headers: {host: 'vizzuality.cartodb.com'},
