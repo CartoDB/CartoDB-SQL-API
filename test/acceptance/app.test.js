@@ -24,7 +24,7 @@ app.setMaxListeners(0);
 
 suite('app.test', function() {
 
-var real_oauth_header = 'OAuth realm="http://vizzuality.testhost.lan/",oauth_consumer_key="fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2",oauth_token="l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR",oauth_signature_method="HMAC-SHA1", oauth_signature="o4hx4hWP6KtLyFwggnYB4yPK8xI%3D",oauth_timestamp="1313581372",oauth_nonce="W0zUmvyC4eVL8cBd4YwlH1nnPTbxW0QBYcWkXTwe4",oauth_version="1.0"';
+var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
 
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
@@ -54,10 +54,13 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
     });
 });
-
 
 test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {
@@ -66,6 +69,22 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers. Authenticated.',
+function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20cartodb_id*2%20FROM%20untitle_table_4&api_key=1234',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
     });
 });
@@ -129,6 +148,10 @@ test('INSERT returns affected rows', function(done){
         assert.ok(out.hasOwnProperty('time'));
         assert.equal(out.total_rows, 2);
         assert.equal(out.rows.length, 0);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'NONE');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
     });
 });
@@ -151,6 +174,10 @@ test('UPDATE returns affected rows', function(done){
         assert.ok(out.hasOwnProperty('time'));
         assert.equal(out.total_rows, 2);
         assert.equal(out.rows.length, 0);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'NONE');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
     });
 });
@@ -173,6 +200,10 @@ test('DELETE returns affected rows', function(done){
         assert.ok(out.hasOwnProperty('time'));
         assert.equal(out.total_rows, 2);
         assert.equal(out.rows.length, 0);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'NONE');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
     });
 });
@@ -258,6 +289,97 @@ test('GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db -
         method: 'GET'
     },{
         status: 400
+    });
+});
+
+test('CREATE TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'CREATE TABLE create_table_test(a int)',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      // Check cache headers
+      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      done();
+    });
+});
+
+// TODO: test COPY
+//test('COPY TABLE with GET and auth', function(done){
+//    assert.response(app, {
+//        url: "/api/v1/sql?" + querystring.stringify({
+//          q: 'COPY TABLE create_table_test FROM stdin; 1\n\\.\n',
+//          api_key: 1234
+//        }),
+//        headers: {host: 'vizzuality.cartodb.com'},
+//        method: 'GET'
+//    },{}, function(res) {
+//      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+//      // Check cache headers
+//      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+//      assert.equal(res.headers['x-cache-channel'], 'NONE');
+//      assert.equal(res.headers['cache-control'], expected_cache_control);
+//      done();
+//    });
+//});
+
+test('DROP TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'DROP TABLE create_table_test',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      // Check cache headers
+      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      done();
+    });
+});
+
+test('CREATE FUNCTION with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'CREATE FUNCTION create_func_test(a int) RETURNS INT AS \'SELECT 1\' LANGUAGE \'sql\'',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      // Check cache headers
+      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      done();
+    });
+});
+
+test('DROP FUNCTION with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'DROP FUNCTION create_func_test(a int)',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      // Check cache headers
+      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      done();
     });
 });
 

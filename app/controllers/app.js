@@ -38,6 +38,21 @@ app.all('/api/v1/sql',     function(req, res) { handleQuery(req, res) } );
 app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
 app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
 
+// Return true of the given query may write to the database
+//
+// NOTE: this is a fuzzy check, the return could be true even
+//       if the query doesn't really write anything.
+//       But you can be pretty sure of a false return.
+//
+function queryMayWrite(sql) {
+  var mayWrite = false;  
+  var pattern = RegExp("(insert|update|delete|create|drop)", "i");
+  if ( pattern.test(sql) ) {
+    mayWrite = true;
+  }
+  return mayWrite;
+}
+
 // request handlers
 function handleQuery(req, res) {
 
@@ -81,6 +96,8 @@ function handleQuery(req, res) {
         // placeholder for connection
         var pg;
 
+        var authenticated;
+
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -119,12 +136,14 @@ function handleQuery(req, res) {
                 // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
 
+                authenticated = ! _.isNull(user_id);
+
                 // get all the tables from Cache or SQL
                 if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
                    tableCache[sql_md5].hits++;
                    return true;
-                } else{
-                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                } else {
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
             },
             function queryResult(err, result){
@@ -133,6 +152,7 @@ function handleQuery(req, res) {
                 // store explain result in local Cache
                 if (_.isUndefined(tableCache[sql_md5])){
                     tableCache[sql_md5] = result;
+                    tableCache[sql_md5].may_write = queryMayWrite(sql);
                     tableCache[sql_md5].hits = 1; //initialise hit counter
                 }
 
@@ -176,8 +196,8 @@ function handleQuery(req, res) {
 
                 // set cache headers
                 res.header('Last-Modified', new Date().toUTCString());
-                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5]));
+                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate,public');
+                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5], authenticated));
 
                 return result;
             },
@@ -392,8 +412,12 @@ function setCrossDomain(res){
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 }
 
-function generateCacheKey(database,tables){
-    return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+function generateCacheKey(database,tables,is_authenticated){
+    if ( is_authenticated && tables.may_write ) {
+      return "NONE";
+    } else {
+      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+    }
 }
 
 function generateMD5(data){
