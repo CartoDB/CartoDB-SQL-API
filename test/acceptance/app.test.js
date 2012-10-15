@@ -653,4 +653,34 @@ test('CSV format', function(done){
     });
 });
 
+// SHP tests
+
+test('SHP format, unauthenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+        // TODO: check for actual content, at least try to uncompress..
+        done();
+    });
+});
+
+test('SHP format, authenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&api_key=1234',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+        // TODO: check for actual content, at least try to uncompress..
+        done();
+    });
+});
+
 });

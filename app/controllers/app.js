@@ -23,6 +23,9 @@ var express = require('express')
     , Step        = require('step')
     , csv         = require('csv')
     , crypto      = require('crypto')
+    , fs          = require('fs')
+    , zlib        = require('zlib')
+    , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
@@ -65,7 +68,7 @@ function userid_to_dbuser(user_id) {
 // request handlers
 function handleQuery(req, res) {
 
-    var supportedFormats = ['json', 'geojson', 'csv', 'svg'];
+    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp'];
     var svg_width  = 1024.0;
     var svg_height = 768.0;
 
@@ -79,6 +82,7 @@ function handleQuery(req, res) {
     var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
+    var user_id;
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
@@ -140,8 +144,9 @@ function handleQuery(req, res) {
                     oAuth.verifyRequest(req, this);
                 }
             },
-            function queryExplain(err, user_id){
+            function queryExplain(err, data){
                 if (err) throw err;
+                user_id = data;
                 // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
 
@@ -168,6 +173,8 @@ function handleQuery(req, res) {
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
+                } else if (format === 'shp') {
+                    return null;
                 } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
                     sql = 'WITH source AS ( ' + sql + '), extent AS ( ' 
@@ -220,6 +227,8 @@ function handleQuery(req, res) {
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
+                } else if ( format === 'shp'){
+                    toSHP(database, user_id, gn, sql, res, this);
                 } else if ( format === 'json'){
                     var end = new Date().getTime();
 
@@ -235,7 +244,7 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // return to browser
-                res.send(out);
+                if ( out ) res.send(out);
             },
             function errorHandle(err, result){
                 handleException(err, res);
@@ -390,6 +399,182 @@ function toCSV(data, res, callback){
     }
 }
 
+function toSHP(dbname, user_id, gcol, sql, res, callback) {
+  var zip = 'zip'; // FIXME: make configurable
+  var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var dbhost = global.settings.db_host; 
+  var dbport = global.settings.db_port; 
+  var dbpass = ''; // turn into a parameter..
+  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
+  var shapefile = outdirpath + '/cartodb-query.shp';
+  var dbuser = userid_to_dbuser(user_id);
+  var columns = [];
+
+  // TODO: following tests:
+  //  - fetch with no auth [done]
+  //  - fetch with auth [done]
+  //  - fetch same query concurrently
+  //  - fetch query with no "the_geom" column
+
+  // TODO: Check if the file already exists
+  // (should mean another export of the same query is in progress)
+
+  Step (
+
+    function createOutDir() {
+      fs.mkdir(outdirpath, 0777, this);
+
+    },
+    function fetchColumns(err) {
+      if ( err ) throw err;
+      var next = this;
+      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
+      var pg = new PSQL(user_id, dbname, 1, 0);
+      pg.query(colsql, this);
+    },
+    function spawnDumper(err, result) {
+      if (err) throw err;
+
+      if ( ! result.rows.length ) 
+        throw new Error("Query returns no rows");
+
+      // Skip system columns
+      for (var k in result.rows[0]) {
+        if ( k === "the_geom_webmercator" ) continue;
+        columns.push('"' + k + '"');
+      }
+      console.log(columns.join(','));
+
+      var next = this;
+
+      // TODO: force epsg:4326 SRID as we know that's what we want anyway
+      sql = 'SELECT ' + columns.join(',')
+          + ' FROM (' + sql + ') as _cartodbsqlapi';
+
+      var child = spawn(ogr2ogr, [
+        '-f', 'ESRI Shapefile',
+        shapefile,
+        "PG:host=" + dbhost
+         + " user=" + dbuser
+         + " dbname=" + dbname
+         + " password=" + dbpass
+         + " tables=fake" // trick to skip query to geometry_columns 
+         + "",
+        '-sql', sql // WARNING! should we quote the sql ?
+      ]);
+
+/*
+console.log(['ogr2ogr',
+        '-f', '"ESRI Shapefile"',
+        shapefile,
+        "'PG:host=" + dbhost
+         + " user=" + dbuser
+         + " dbname=" + dbname
+         + " password=" + dbpass
+         + " tables=fake" // trick to skip query to geometry_columns
+         + "'",
+        '-sql "', sql, '"'].join(' '));
+*/
+
+
+      var stdout = '';
+      child.stdout.on('data', function(data) {
+        stdout += data;
+        //console.log('stdout: ' + data);
+      });
+
+      var stderr = '';
+      child.stderr.on('data', function(data) {
+        stderr += data;
+        console.log('ogr2ogr stderr: ' + data);
+      });
+
+      child.on('exit', function(code) {
+        if ( code ) {
+          next(new Error("ogr2ogr returned an error (error code " + code + ")\n" + stderr));
+        } else {
+          next(null, outdirpath);
+        }
+      });
+    },
+    function zipAndSendDump(err, dir) {
+      if ( err ) throw err;
+
+      var next = this;
+
+      var zipfile = dir + '.zip';
+
+      var child = spawn(zip, ['-qrj', '-', dir ]);
+
+      child.stdout.on('data', function(data) {
+        res.write(data);
+      });
+
+      var stderr = '';
+      child.stderr.on('data', function(data) {
+        stderr += data;
+        console.log('zip stderr: ' + data);
+      });
+
+      child.on('exit', function(code) {
+        if (code) {
+          res.statusCode = 500;
+          //res.send(stderr);
+        }
+        //console.log("Zip complete, zip return code was " + code);
+        next(null);
+      });
+
+    },
+    function cleanupDir(topError) {
+
+      var next = this;
+
+      //console.log("Cleaning up " + outdirpath);
+
+      // Unlink the dir content
+      var unlinkall = function(dir, files, finish) {
+        var f = files.shift();
+        if ( ! f ) { finish(null); return; }
+        var fn = dir + '/' + f;
+        fs.unlink(fn, function(err) {
+          if ( err ) {
+            console.log("Unlinking " + fn + ": " + err);
+            finish(err);
+          }
+          else unlinkall(dir, files, finish)
+        });
+      }
+      fs.readdir(outdirpath, function(err, files) {
+        if ( err ) {
+          if ( err.code != 'ENOENT' ) {
+            next(new Error([topError, err].join('\n')));
+          } else {
+            next(topError);
+          }
+        } else {
+          unlinkall(outdirpath, files, function(err) {
+            fs.rmdir(outdirpath, function(err) {
+              if ( err ) console.log("Removing dir " + path + ": " + err);
+              next(topError);
+            });
+          });
+        }
+      });
+    },
+    function finish(err) {
+      if ( err ) callback(err); 
+      else {
+        res.end();
+        callback(null);
+      }
+
+    }
+  );
+
+}
+
 function getContentDisposition(format){
     var ext = 'json';
     if (format === 'geojson'){
@@ -400,6 +585,9 @@ function getContentDisposition(format){
     }
     else if (format === 'svg'){
         ext = 'svg';
+    }
+    else if (format === 'shp'){
+        ext = 'zip';
     }
     var time = new Date().toUTCString();
     return 'inline; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
@@ -412,6 +600,9 @@ function getContentType(format){
     }
     else if (format === 'svg'){
         type = "image/svg+xml; charset=utf-8";
+    }
+    else if (format === 'shp'){
+        type = "application/zip; charset=utf-8";
     }
     return type;
 }
