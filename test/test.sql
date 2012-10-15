@@ -20,31 +20,6 @@ SET search_path = public, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
-
--- Return an array of table names used by a given query
-CREATE OR REPLACE FUNCTION CDB_QueryTables(query text)
-RETURNS name[]
-AS $$
-DECLARE
-  exp XML;
-  tables NAME[];
-BEGIN
-
-  EXECUTE 'EXPLAIN (FORMAT XML) ' || query INTO STRICT exp;
-
-  -- Now need to extract all values of <Relation-Name>
-
-  --RAISE DEBUG 'Explain: %', exp;
-
-  tables := xpath('//x:Relation-Name/text()', exp, ARRAY[ARRAY['x', 'http://www.postgresql.org/2009/explain']]);
-
-  --RAISE DEBUG 'Tables: %', tables;
-
-  return tables;
-END
-$$ LANGUAGE 'plpgsql' VOLATILE STRICT;
-
-
 -- first table
 DROP TABLE IF EXISTS untitle_table_4;
 CREATE TABLE untitle_table_4 (
