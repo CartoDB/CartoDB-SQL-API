@@ -544,7 +544,10 @@ test('GET /api/v1/sql ensure cross domain set on errors', function(done){
 
 test('GET /api/v1/sql as geojson limiting decimal places', function(done){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&dp=1',
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT ST_MakePoint(0.123,2.3456) as the_geom',
+          format: 'geojson',
+          dp: '1'}),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
@@ -557,7 +560,9 @@ test('GET /api/v1/sql as geojson limiting decimal places', function(done){
 
 test('GET /api/v1/sql as geojson with default dp as 6', function(done){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT ST_MakePoint(0.12345678,2.3456787654) as the_geom',
+          format: 'geojson'}),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
