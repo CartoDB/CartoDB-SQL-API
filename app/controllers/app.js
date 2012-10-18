@@ -53,6 +53,15 @@ function queryMayWrite(sql) {
   return mayWrite;
 }
 
+// Return database username from user_id
+// NOTE: a "null" user_id is a request to use the public user
+function userid_to_dbuser(user_id) {
+  if ( _.isString(user_id) ) 
+      return _.template(global.settings.db_user, {user_id: user_id});
+  return "publicuser" // FIXME: make configurable
+};
+
+
 // request handlers
 function handleQuery(req, res) {
 
