@@ -444,11 +444,10 @@ function toSHP(dbname, user_id, gcol, sql, res, callback) {
         if ( k === "the_geom_webmercator" ) continue;
         columns.push('"' + k + '"');
       }
-      console.log(columns.join(','));
+      //console.log(columns.join(','));
 
       var next = this;
 
-      // TODO: force epsg:4326 SRID as we know that's what we want anyway
       sql = 'SELECT ' + columns.join(',')
           + ' FROM (' + sql + ') as _cartodbsqlapi';
 
