@@ -399,36 +399,21 @@ function toCSV(data, res, callback){
     }
 }
 
-function toSHP(dbname, user_id, gcol, sql, res, callback) {
-  var zip = 'zip'; // FIXME: make configurable
+// Internal function usable by all OGR-driven outputs
+function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
-  var tmpdir = '/tmp'; // FIXME: make configurable
   var dbhost = global.settings.db_host; 
   var dbport = global.settings.db_port; 
-  var dbpass = ''; // turn into a parameter..
-  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
-  var shapefile = outdirpath + '/cartodb-query.shp';
   var dbuser = userid_to_dbuser(user_id);
+  var dbpass = ''; // turn into a parameter..
+
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
   var columns = [];
-
-  // TODO: following tests:
-  //  - fetch with no auth [done]
-  //  - fetch with auth [done]
-  //  - fetch same query concurrently
-  //  - fetch query with no "the_geom" column
-
-  // TODO: Check if the file already exists
-  // (should mean another export of the same query is in progress)
 
   Step (
 
-    function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
-
-    },
-    function fetchColumns(err) {
-      if ( err ) throw err;
-      var next = this;
+    function fetchColumns() {
       var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
       var pg = new PSQL(user_id, dbname, 1, 0);
       pg.query(colsql, this);
@@ -452,21 +437,21 @@ function toSHP(dbname, user_id, gcol, sql, res, callback) {
           + ' FROM (' + sql + ') as _cartodbsqlapi';
 
       var child = spawn(ogr2ogr, [
-        '-f', 'ESRI Shapefile',
-        shapefile,
+        '-f', out_format, 
+        out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser
          + " dbname=" + dbname
          + " password=" + dbpass
          + " tables=fake" // trick to skip query to geometry_columns 
          + "",
-        '-sql', sql // WARNING! should we quote the sql ?
+        '-sql', sql 
       ]);
 
 /*
 console.log(['ogr2ogr',
-        '-f', '"ESRI Shapefile"',
-        shapefile,
+        '-f', out_format,
+        out_filename,
         "'PG:host=" + dbhost
          + " user=" + dbuser
          + " dbname=" + dbname
@@ -475,7 +460,6 @@ console.log(['ogr2ogr',
          + "'",
         '-sql "', sql, '"'].join(' '));
 */
-
 
       var stdout = '';
       child.stdout.on('data', function(data) {
@@ -497,10 +481,41 @@ console.log(['ogr2ogr',
         }
       });
     },
-    function zipAndSendDump(err, dir) {
+    function finish(err) {
+      callback(err); 
+    }
+  );
+}
+
+function toSHP(dbname, user_id, gcol, sql, res, callback) {
+  var zip = 'zip'; // FIXME: make configurable
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
+  var shapefile = outdirpath + '/cartodb-query.shp';
+
+  // TODO: following tests:
+  //  - fetch with no auth [done]
+  //  - fetch with auth [done]
+  //  - fetch same query concurrently
+  //  - fetch query with no "the_geom" column
+
+  // TODO: Check if the file already exists
+  // (should mean another export of the same query is in progress)
+
+  Step (
+
+    function createOutDir() {
+      fs.mkdir(outdirpath, 0777, this);
+    },
+    function spawnDumper(err) {
+      if ( err ) throw err;
+      toOGR(dbname, user_id, gcol, sql, res, 'ESRI Shapefile', shapefile, this);
+    },
+    function zipAndSendDump(err) {
       if ( err ) throw err;
 
       var next = this;
+      var dir = outdirpath;
 
       var zipfile = dir + '.zip';
 
@@ -571,7 +586,6 @@ console.log(['ogr2ogr',
 
     }
   );
-
 }
 
 function getContentDisposition(format){
