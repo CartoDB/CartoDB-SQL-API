@@ -387,7 +387,7 @@ function toSVG(rows, gn, callback){
 function toCSV(data, res, callback){
     try{
         // pull out keys for column headers
-        var columns = _.keys(data.rows[0]);
+        var columns = data.rows.length ? _.keys(data.rows[0]) : [];
 
         // stream the csv out over http
         csv()

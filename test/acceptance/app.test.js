@@ -586,6 +586,20 @@ test('GET /api/v1/sql as csv', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
+test('GET /api/v1/sql as csv with no rows', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = "";
+        assert.equal(body, res.body);
+        done();
+    });
+});
+
 test('GET /api/v1/sql as csv, properly escaped', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
