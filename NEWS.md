@@ -3,6 +3,7 @@
 * New output formats:
   * ESRI Shapefile (format=shp)
   * SVG (format=svg)
+  * KML (format=kml)
 * Advertise header presence in CSV Content-Type
 * Fix CSV output with no rows (#60)
 * Use "attachment" Content-Disposition for all output formats (#61)

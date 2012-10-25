@@ -712,4 +712,36 @@ test('SHP format, authenticated', function(done){
     });
 });
 
+// KML tests
+
+test('KML format, unauthenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        // TODO: check for actual content, at least try to uncompress..
+        done();
+    });
+});
+
+test('KML format, authenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&api_key=1234',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        // TODO: check for actual content, at least try to uncompress..
+        done();
+    });
+});
+
+
 });

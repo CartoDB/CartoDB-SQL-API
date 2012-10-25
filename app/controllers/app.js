@@ -25,6 +25,7 @@ var express = require('express')
     , crypto      = require('crypto')
     , fs          = require('fs')
     , zlib        = require('zlib')
+    , util        = require('util')
     , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
@@ -68,7 +69,7 @@ function userid_to_dbuser(user_id) {
 // request handlers
 function handleQuery(req, res) {
 
-    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp'];
+    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp', 'kml'];
     var svg_width  = 1024.0;
     var svg_height = 768.0;
 
@@ -229,6 +230,8 @@ function handleQuery(req, res) {
                     toCSV(result, res, this);
                 } else if ( format === 'shp'){
                     toSHP(database, user_id, gn, sql, res, this);
+                } else if ( format === 'kml'){
+                    toKML(database, user_id, gn, sql, res, this);
                 } else if ( format === 'json'){
                     var end = new Date().getTime();
 
@@ -508,7 +511,16 @@ function toSHP(dbname, user_id, gcol, sql, res, callback) {
       fs.mkdir(outdirpath, 0777, this);
     },
     function spawnDumper(err) {
-      if ( err ) throw err;
+      if ( err ) {
+        if ( err.code == 'EEXIST' ) {
+          // TODO: this could mean another request for the same
+          //       resource is in progress, in which case we might want
+          //       to queue the response to after it's completed...
+          console.log("Reusing existing SHP output directory for query: " + sql);
+        } else {
+          throw err;
+        }
+      }
       toOGR(dbname, user_id, gcol, sql, res, 'ESRI Shapefile', shapefile, this);
     },
     function zipAndSendDump(err) {
@@ -588,6 +600,90 @@ function toSHP(dbname, user_id, gcol, sql, res, callback) {
   );
 }
 
+function toKML(dbname, user_id, gcol, sql, res, callback) {
+  var zip = 'zip'; // FIXME: make configurable
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
+  var dumpfile = outdirpath + '/cartodb-query.kml';
+
+  // TODO: following tests:
+  //  - fetch with no auth 
+  //  - fetch with auth 
+  //  - fetch same query concurrently
+  //  - fetch query with no "the_geom" column
+
+  Step (
+
+    function createOutDir() {
+      fs.mkdir(outdirpath, 0777, this);
+    },
+    function spawnDumper(err) {
+      if ( err ) {
+        if ( err.code == 'EEXIST' ) {
+          // TODO: this could mean another request for the same
+          //       resource is in progress, in which case we might want
+          //       to queue the response to after it's completed...
+          console.log("Reusing existing KML output directory for query: " + sql);
+        } else {
+          throw err;
+        }
+      }
+      toOGR(dbname, user_id, gcol, sql, res, 'KML', dumpfile, this);
+    },
+    function sendResults(err) {
+
+      if ( ! err ) {
+        var stream = fs.createReadStream(dumpfile);
+        util.pump(stream, res);
+      }
+
+      // cleanup output dir (should be safe to unlink)
+      var topError = err;
+      var next = this;
+
+      //console.log("Cleaning up " + outdirpath);
+
+      // Unlink the dir content
+      var unlinkall = function(dir, files, finish) {
+        var f = files.shift();
+        if ( ! f ) { finish(null); return; }
+        var fn = dir + '/' + f;
+        fs.unlink(fn, function(err) {
+          if ( err ) {
+            console.log("Unlinking " + fn + ": " + err);
+            finish(err);
+          }
+          else unlinkall(dir, files, finish)
+        });
+      }
+      fs.readdir(outdirpath, function(err, files) {
+        if ( err ) {
+          if ( err.code != 'ENOENT' ) {
+            next(new Error([topError, err].join('\n')));
+          } else {
+            next(topError);
+          }
+        } else {
+          unlinkall(outdirpath, files, function(err) {
+            fs.rmdir(outdirpath, function(err) {
+              if ( err ) console.log("Removing dir " + path + ": " + err);
+              next(topError);
+            });
+          });
+        }
+      });
+    },
+    function finish(err) {
+      if ( err ) callback(err); 
+      else {
+        res.end();
+        callback(null);
+      }
+
+    }
+  );
+}
+
 function getContentDisposition(format){
     var ext = 'json';
     if (format === 'geojson'){
@@ -601,6 +697,9 @@ function getContentDisposition(format){
     }
     else if (format === 'shp'){
         ext = 'zip';
+    }
+    else if (format === 'kml'){
+        ext = 'kml';
     }
     var time = new Date().toUTCString();
     return 'attachment; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
@@ -616,6 +715,9 @@ function getContentType(format){
     }
     else if (format === 'shp'){
         type = "application/zip; charset=utf-8";
+    }
+    else if (format === 'kml'){
+        type = "application/kml; charset=utf-8";
     }
     return type;
 }
