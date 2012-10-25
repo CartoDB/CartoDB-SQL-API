@@ -603,7 +603,7 @@ function getContentDisposition(format){
         ext = 'zip';
     }
     var time = new Date().toUTCString();
-    return 'inline; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
+    return 'attachment; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
 }
 
 function getContentType(format){

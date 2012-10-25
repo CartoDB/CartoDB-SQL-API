@@ -401,6 +401,88 @@ test('DROP FUNCTION with GET and auth', function(done){
     });
 });
 
+test('sends a 400 when an unsupported format is requested', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=unknown',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 400, res.body);
+        assert.deepEqual(JSON.parse(res.body), {"error":[ "Invalid format: unknown" ]});
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'JSON is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
+        done();
+    });
+});
+
+test('GET /api/v1/sql ensure cross domain set on errors', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*gadfgadfg%20FROM%20untitle_table_4',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 400
+    }, function(res){
+        var cd = res.header('Access-Control-Allow-Origin');
+        assert.equal(cd, '*');
+        done();
+    });
+});
+
+test('cannot GET system tables', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20pg_attribute',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 403
+    }, function() { done(); });
+});
+
+test('GET decent error if domain is incorrect', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzualinot.cartodb.com'},
+        method: 'GET'
+    },{
+        status: 404
+    }, function(res){
+        var result = JSON.parse(res.body);
+        assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
+        done();
+    });
+});
+
+test('GET decent error if SQL is broken', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({q:
+          'SELECT star FROM this and that'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        var result = JSON.parse(res.body);
+        // NOTE: actual error message may be slighly different, possibly worth a regexp here
+        assert.equal(result.error[0], 'syntax error at or near "and"');
+        done();
+    });
+});
+
+// GEOJSON tests
+
 test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-disposition set to geojson', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
@@ -409,6 +491,7 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         done();
     });
@@ -427,17 +510,96 @@ test('uses the last format parameter when multiple are used', function(done){
     });
 });
 
-test('sends a 400 when an unsupported format is requested', function(done){
+
+test('GET /api/v1/sql as geojson limiting decimal places', function(done){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=unknown',
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT ST_MakePoint(0.123,2.3456) as the_geom',
+          format: 'geojson',
+          dp: '1'}),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
-        assert.equal(res.statusCode, 400, res.body);
-        assert.deepEqual(JSON.parse(res.body), {"error":[ "Invalid format: unknown" ]});
+        assert.equal(res.statusCode, 200, res.body);
+        var result = JSON.parse(res.body);
+        assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
         done();
     });
 });
+
+test('GET /api/v1/sql as geojson with default dp as 6', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT ST_MakePoint(0.12345678,2.3456787654) as the_geom',
+          format: 'geojson'}),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var result = JSON.parse(res.body);
+        assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
+        done();
+    });
+});
+
+
+// CSV tests
+
+test('CSV format', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
+        done();
+    });
+});
+
+test('GET /api/v1/sql as csv', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = "cartodb_id,geom\r\n1,SRID=4326;POINT(-3.699732 40.423012)";
+        assert.equal(body, res.body);
+        done();
+    });
+});
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
+test('GET /api/v1/sql as csv with no rows', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = "";
+        assert.equal(body, res.body);
+        done();
+    });
+});
+
+test('GET /api/v1/sql as csv, properly escaped', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"';
+        assert.equal(body, res.body);
+        done();
+    });
+});
+
+// SVG tests
 
 test('GET /api/v1/sql with SVG format', function(done){
     var query = querystring.stringify({
@@ -506,6 +668,7 @@ test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
         },{}, function(res) {
           assert.equal(res.statusCode, 200, res.body);
           var cd = res.header('Content-Disposition');
+          assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
           assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
           assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
           assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.123 167.012" />') > 0, res.body );
@@ -515,157 +678,6 @@ test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
     });
 });
 
-test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
-        assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
-        done();
-    });
-});
-
-test('GET /api/v1/sql ensure cross domain set on errors', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*gadfgadfg%20FROM%20untitle_table_4',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{
-        status: 400
-    }, function(res){
-        var cd = res.header('Access-Control-Allow-Origin');
-        assert.equal(cd, '*');
-        done();
-    });
-});
-
-test('GET /api/v1/sql as geojson limiting decimal places', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          q: 'SELECT ST_MakePoint(0.123,2.3456) as the_geom',
-          format: 'geojson',
-          dp: '1'}),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var result = JSON.parse(res.body);
-        assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
-        done();
-    });
-});
-
-test('GET /api/v1/sql as geojson with default dp as 6', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          q: 'SELECT ST_MakePoint(0.12345678,2.3456787654) as the_geom',
-          format: 'geojson'}),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var result = JSON.parse(res.body);
-        assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
-        done();
-    });
-});
-
-test('GET /api/v1/sql as csv', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20cartodb_id,ST_AsEWKT(the_geom)%20as%20geom%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var body = "cartodb_id,geom\r\n1,SRID=4326;POINT(-3.699732 40.423012)";
-        assert.equal(body, res.body);
-        done();
-    });
-});
-
-// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
-test('GET /api/v1/sql as csv with no rows', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=csv',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var body = "";
-        assert.equal(body, res.body);
-        done();
-    });
-});
-
-test('GET /api/v1/sql as csv, properly escaped', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"';
-        assert.equal(body, res.body);
-        done();
-    });
-});
-
-test('cannot GET system tables', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20pg_attribute',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{
-        status: 403
-    }, function() { done(); });
-});
-
-test('GET decent error if domain is incorrect', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
-        headers: {host: 'vizzualinot.cartodb.com'},
-        method: 'GET'
-    },{
-        status: 404
-    }, function(res){
-        var result = JSON.parse(res.body);
-        assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
-        done();
-    });
-});
-
-test('GET decent error if SQL is broken', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({q:
-          'SELECT star FROM this and that'
-        }),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{}, function(res){
-        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-        var result = JSON.parse(res.body);
-        // NOTE: actual error message may be slighly different, possibly worth a regexp here
-        assert.equal(result.error[0], 'syntax error at or near "and"');
-        done();
-    });
-});
-
-// CSV tests
-test('CSV format', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
-        assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
-        done();
-    });
-});
 
 // SHP tests
 
@@ -677,6 +689,7 @@ test('SHP format, unauthenticated', function(done){
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         // TODO: check for actual content, at least try to uncompress..
         done();
