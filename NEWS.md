@@ -3,6 +3,9 @@
 * New output formats:
   * ESRI Shapefile (format=shp)
   * SVG (format=svg)
+* Advertise header presence in CSV Content-Type
+* Fix CSV output with no rows (#60)
+* Use "attachment" Content-Disposition for all output formats (#61)
 * Only use last format parameter when multiple are requested
 * Return a 400 response on unsupported format request
 * Fixed problem in cluster2 with pidfile name
