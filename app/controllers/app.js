@@ -203,7 +203,7 @@ function handleQuery(req, res) {
             function setHeaders(err, result){
                 if (err) throw err;
 
-                // configure headers for geojson/CSV
+                // configure headers for given format
                 res.header("Content-Disposition", getContentDisposition(format));
                 res.header("Content-Type", getContentType(format));
 
@@ -609,7 +609,7 @@ function getContentDisposition(format){
 function getContentType(format){
     var type = "application/json; charset=utf-8";
     if (format === 'csv'){
-        type = "text/csv; charset=utf-8";
+        type = "text/csv; charset=utf-8; header=present";
     }
     else if (format === 'svg'){
         type = "image/svg+xml; charset=utf-8";

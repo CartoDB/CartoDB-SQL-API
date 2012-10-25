@@ -555,6 +555,8 @@ test('CSV format', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
+        var ct = res.header('Content-Type');
+        assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
         done();
     });
 });
