@@ -1,4 +1,4 @@
-1.1.0 (DD/MM/YY)
+1.1.0 (30/10/12)
 -----
 * Fixed problem in cluster2 with pidfile name
 * SVG output format
@@ -7,6 +7,7 @@
   - Interactive mode
 * API documentation
 * ./configure script
+* Restrict listening to a node host
 
 1.0.0 (03/10/12)
 -----
