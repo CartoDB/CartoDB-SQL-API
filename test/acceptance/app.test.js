@@ -274,6 +274,82 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
     });
 });
 
+test('GET /api/v1/sql with SVG format', function(done){
+    var query = querystring.stringify({
+      q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
+      format: "svg"
+    });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
+        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
+        // TODO: test viewBox
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SVG format and centered point', function(done){
+    var query = querystring.stringify({
+      q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS the_geom ",
+      format: "svg"
+    });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
+        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.ok( res.body.indexOf('cx="0" cy="0"') > 0, res.body );
+        // TODO: test viewBox
+        // TODO: test radius
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
+    var queryobj = {
+      q: "SELECT 1 as cartodb_id, 'LINESTRING(0 0, 1024 768, 500.123456 600.98765432)'::geometry AS the_geom ",
+      format: "svg",
+      dp: 2
+    };
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify(queryobj),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
+        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.12 167.01" />') > 0, res.body );
+        // TODO: test viewBox
+
+        queryobj.dp = 3;
+        assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify(queryobj),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+        },{}, function(res) {
+          assert.equal(res.statusCode, 200, res.body);
+          var cd = res.header('Content-Disposition');
+          assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
+          assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+          assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.123 167.012" />') > 0, res.body );
+          // TODO: test viewBox
+          done();
+        });
+    });
+});
+
 test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
@@ -389,6 +465,20 @@ test('GET decent error if SQL is broken', function(done){
         var result = JSON.parse(res.body);
         // NOTE: actual error message may be slighly different, possibly worth a regexp here
         assert.equal(result.error[0], 'syntax error at or near "and"');
+        done();
+    });
+});
+
+// CSV tests
+test('CSV format', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
         done();
     });
 });

@@ -31,7 +31,7 @@ die() {
 }
 
 echo "preparing postgres..."
-dropdb ${TEST_DB} 2> /dev/null # error expected if doesn't exist
+dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
 createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
 psql -f test.sql ${TEST_DB} 
 

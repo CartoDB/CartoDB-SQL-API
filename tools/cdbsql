@@ -3,13 +3,25 @@
 // Command line tool for CartoDB SQL API
 //
 // https://github.com/Vizzuality/CartoDB-SQL-API
+//
 
-var http = require('http')
+var http = require('http');
+
+var nodevers = process.versions.node.split('.');
+
+// NOTE: readline is also available in 0.4 but doesn't work
+var hasReadline = parseInt(nodevers[0]) > 0 || parseInt(nodevers[1]) >= 8;
+//console.log('Node version ' + nodevers.join(',') + ( hasReadline ? ' has' : ' does not have' ) + ' readline support');
+
+var readline = hasReadline ? require('readline') : null;
 
 var me = process.argv[1];
 
 function usage(exit_code) {
   console.log("Usage: " + me + " [OPTIONS] <query>");
+  if ( hasReadline ) {
+    console.log("       " + me + " [OPTIONS]");
+  }
   console.log("Options:");
   console.log(" -v                      verbose operations (off)");
   console.log(" --help                  print this help");
@@ -18,18 +30,26 @@ function usage(exit_code) {
   console.log(" --port <num>            service tcp port number (8080)");
   console.log(" --api-version <num>     API version (1)");
   console.log(" --key <string>          API authentication key (none)");
+  console.log(" --format <string>       Response format (json)");
+  console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
+  if ( hasReadline ) {
+  console.log(" --batch                 Send all read queries at once (off)");
+  }
   process.exit(exit_code);
 }
 
 process.argv.shift(); // this will be "node" (argv[0])
 process.argv.shift(); // this will be "benchmark.js" (argv[1])
 
+var batch_mode = false;
+var format = 'json';
 var username;
 var domain = 'localhost';
 var port = 8080;
 var api_version = 1;
 var api_key;
 var sql;
+var decimal_places;
 
 var arg;
 while ( arg = process.argv.shift() ) {
@@ -54,6 +74,15 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--api-version' ) {
     api_version = process.argv.shift();
   }
+  else if ( arg == '--format' ) {
+    format = process.argv.shift();
+  }
+  else if ( arg == '--dp' ) {
+    decimal_places = process.argv.shift();
+  }
+  else if ( arg == '--batch' ) {
+    batch_mode = true;
+  }
   else if ( ! sql ) {
     sql = arg;
   }
@@ -62,36 +91,106 @@ while ( arg = process.argv.shift() ) {
   }
 }
 
-if ( ! sql ) usage(1);
-
 var hostname = username + '.' + domain;
+
+if ( ! sql ) {
+  if ( readline ) {
+
+    var rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    if ( ! batch_mode ) {
+      rl.setPrompt(hostname + '> ');
+      rl.prompt();
+    }
+
+    sql = '';
+    rl.on('line', function(line) {
+      sql += line;
+      if ( ! batch_mode ) {
+        // TODO: some sanity checking, like trim the line or check if it ends with semicolon
+        if ( sql.length ) {
+          processQuery(sql, function() {
+            sql = '';
+            rl.prompt();
+          });
+        } else rl.prompt();
+      } 
+    }).on('close', function() {
+      if ( batch_mode ) {
+        if ( sql.length )  {
+          processQuery(sql);
+          sql = '';
+        }
+      } else {
+        if ( sql.length ) {
+          console.warn("Unprocessed sql left: [" + sql + "]");
+        }
+        console.log("Good bye");
+      }
+    }).on('SIGCONT', function() {
+      // this is needed so not to exit on stop/resume
+      rl.prompt();
+    });
+  } else {
+    usage(1);
+  }
+} else {
+  processQuery(sql);
+}
 
 // -- Perform the request
 
-var opt = {
-  host: hostname,
-  port: port,
-  path: '/api/v' + api_version + '/sql?q=' + encodeURIComponent(sql)
-};
+function processQuery(sql, callback)
+{
 
-console.log("Requests:", 'http://' + opt.host + ':' + opt.port + opt.path);
+  var post_data = 'q=' + encodeURIComponent(sql);
 
-var body = '';
+  var opt = {
+    host: hostname,
+    port: port,
+    path: '/api/v' + api_version + '/sql?format=' + encodeURIComponent(format),
+    method: 'POST',
+    headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': post_data.length
+    }
+  };
 
-http.get(opt, function(res) {
-  console.log("Response status: " + res.statusCode);
-  res.on('data', function(chunk) {
-    body += chunk;
-    //console.log("data: "); console.dir(json);
+  if ( typeof(api_key) != 'undefined' ) opt.path += '&api_key=' + api_key;
+  if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
+
+  var body = '';
+  var request = 'http://' + opt.host + ':' + opt.port + opt.path;
+  //console.log("Sending request:", request);
+
+  var req = http.request(opt, function(res) {
+    //console.log("Response status: " + res.statusCode);
+    res.on('data', function(chunk) {
+      body += chunk;
+      //console.log("data: "); console.dir(json);
+    });
+
+    res.on('end', function() {
+      console.log("Request:", request);
+      var sqlprint = sql.length > 100 ? sql.substring(0, 100) + ' ... [truncated ' + (sql.length-100) + ' bytes]' : sql;
+      sqlprint = sqlprint.split('\n').join(' ');
+      console.log("Query:", sqlprint);
+      console.log("Response status: " + res.statusCode);
+      console.log('Response body:');
+      console.dir(body);
+      if ( callback ) callback();
+    });
+
+  }).on('error', function(e) {
+    console.log("Request:", request);
+    console.log("Error: " + e.message);
+    if ( callback ) callback();
   });
 
-  res.on('end', function() {
-    console.log('Body:');
-    var json = JSON.parse(body);
-    console.dir(json);
-  });
-}).on('error', function(e) {
-  console.log("ERROR: " + e.message);
-});
+  req.write(post_data);
+  req.end();
 
-
+}
