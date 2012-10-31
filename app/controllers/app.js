@@ -411,7 +411,6 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
   var dbpass = ''; // turn into a parameter..
 
   var tmpdir = '/tmp'; // FIXME: make configurable
-  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
   var columns = [];
 
   Step (
@@ -480,7 +479,7 @@ console.log(['ogr2ogr',
         if ( code ) {
           next(new Error("ogr2ogr returned an error (error code " + code + ")\n" + stderr));
         } else {
-          next(null, outdirpath);
+          next(null);
         }
       });
     },
@@ -493,7 +492,7 @@ console.log(['ogr2ogr',
 function toSHP(dbname, user_id, gcol, sql, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = '/tmp'; // FIXME: make configurable
-  var outdirpath = tmpdir + '/shapefile-' + generateMD5(sql);
+  var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
   var shapefile = outdirpath + '/cartodb-query.shp';
 
   // TODO: following tests:
