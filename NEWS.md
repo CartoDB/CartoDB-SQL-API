@@ -1,4 +1,4 @@
-1.1.1 (DD/MM/YY)
+1.2.0-dev (DD/MM/YY)
 -----
 * New output formats:
   * ESRI Shapefile (format=shp)
