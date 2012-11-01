@@ -9,6 +9,7 @@
 * Use "attachment" Content-Disposition for all output formats (#61)
 * Only use last format parameter when multiple are requested
 * Return a 400 response on unsupported format request
+* Added X-Prototype-Version, X-CSRF-Token to Access-Control-Allow-Headers
 
 1.1.0 (30/10/12)
 -----
