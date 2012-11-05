@@ -1,3 +1,19 @@
+1.2.1 (DD/MM/YY)
+-----
+
+1.2.0 (DD/MM/YY)
+-----
+* New output formats:
+  * ESRI Shapefile (format=shp)
+  * SVG (format=svg)
+  * KML (format=kml)
+* Advertise header presence in CSV Content-Type
+* Fix CSV output with no rows (#60)
+* Use "attachment" Content-Disposition for all output formats (#61)
+* Only use last format parameter when multiple are requested
+* Return a 400 response on unsupported format request
+* Added X-Prototype-Version, X-CSRF-Token to Access-Control-Allow-Headers
+
 1.1.0 (30/10/12)
 -----
 * Fixed problem in cluster2 with pidfile name

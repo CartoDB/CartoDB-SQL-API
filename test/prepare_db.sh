@@ -34,6 +34,8 @@ echo "preparing postgres..."
 dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
 createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
 psql -f test.sql ${TEST_DB} 
+psql -f support/CDB_QueryStatements.sql ${TEST_DB} 
+psql -f support/CDB_QueryTables.sql ${TEST_DB} 
 
 echo "preparing redis..."
 echo "HSET rails:users:vizzuality id 1" | redis-cli -p ${REDIS_PORT} -n 5

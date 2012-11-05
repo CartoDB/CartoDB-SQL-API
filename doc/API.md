@@ -12,7 +12,7 @@ Supported query string parameters:
 
   'format':   Specifies which format to use for the response.
               Supported formats: JSON (the default), GeoJSON,
-              CSV, SVG
+              CSV, SVG, SHP
 
   'dp':       Number of digits after the decimal point.
               Only affects format=GeoJSON.

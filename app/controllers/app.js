@@ -23,6 +23,10 @@ var express = require('express')
     , Step        = require('step')
     , csv         = require('csv')
     , crypto      = require('crypto')
+    , fs          = require('fs')
+    , zlib        = require('zlib')
+    , util        = require('util')
+    , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
@@ -38,8 +42,36 @@ app.all('/api/v1/sql',     function(req, res) { handleQuery(req, res) } );
 app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
 app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
 
+// Return true of the given query may write to the database
+//
+// NOTE: this is a fuzzy check, the return could be true even
+//       if the query doesn't really write anything.
+//       But you can be pretty sure of a false return.
+//
+function queryMayWrite(sql) {
+  var mayWrite = false;  
+  var pattern = RegExp("(alter|insert|update|delete|create|drop)", "i");
+  if ( pattern.test(sql) ) {
+    mayWrite = true;
+  }
+  return mayWrite;
+}
+
+// Return database username from user_id
+// NOTE: a "null" user_id is a request to use the public user
+function userid_to_dbuser(user_id) {
+  if ( _.isString(user_id) ) 
+      return _.template(global.settings.db_user, {user_id: user_id});
+  return "publicuser" // FIXME: make configurable
+};
+
+
 // request handlers
 function handleQuery(req, res) {
+
+    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp', 'kml'];
+    var svg_width  = 1024.0;
+    var svg_height = 768.0;
 
     // extract input
     var body      = (req.body) ? req.body : {};
@@ -48,25 +80,28 @@ function handleQuery(req, res) {
     var database  = req.query.database; // TODO: Depricate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var format    = req.query.format;
+    var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
-    var svg_width  = 1024.0;
-    var svg_height = 768.0;
-
+    var user_id;
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
-    format    = (format   === "" || _.isUndefined(format))   ? null : format.toLowerCase();
+    format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
     offset    = (_.isNumber(offset)) ? offset * limit : null;
 
+
     // setup step run
     var start = new Date().getTime();
 
     try {
+
+        if ( -1 === supportedFormats.indexOf(format) )
+          throw new Error("Invalid format: " + format);
+
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
 
         // initialise MD5 key of sql for cache lookups
@@ -74,6 +109,8 @@ function handleQuery(req, res) {
 
         // placeholder for connection
         var pg;
+
+        var authenticated;
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
@@ -108,17 +145,20 @@ function handleQuery(req, res) {
                     oAuth.verifyRequest(req, this);
                 }
             },
-            function queryExplain(err, user_id){
+            function queryExplain(err, data){
                 if (err) throw err;
+                user_id = data;
                 // store postgres connection
                 pg = new PSQL(user_id, database, limit, offset);
+
+                authenticated = ! _.isNull(user_id);
 
                 // get all the tables from Cache or SQL
                 if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
                    tableCache[sql_md5].hits++;
                    return true;
-                } else{
-                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                } else {
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
             },
             function queryResult(err, result){
@@ -127,13 +167,16 @@ function handleQuery(req, res) {
                 // store explain result in local Cache
                 if (_.isUndefined(tableCache[sql_md5])){
                     tableCache[sql_md5] = result;
+                    tableCache[sql_md5].may_write = queryMayWrite(sql);
                     tableCache[sql_md5].hits = 1; //initialise hit counter
                 }
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
-                } else if (format === 'svg'){
+                } else if (format === 'shp') {
+                    return null;
+                } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
                     sql = 'WITH source AS ( ' + sql + '), extent AS ( ' 
                         + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
@@ -161,7 +204,7 @@ function handleQuery(req, res) {
             function setHeaders(err, result){
                 if (err) throw err;
 
-                // configure headers for geojson/CSV
+                // configure headers for given format
                 res.header("Content-Disposition", getContentDisposition(format));
                 res.header("Content-Type", getContentType(format));
 
@@ -170,8 +213,8 @@ function handleQuery(req, res) {
 
                 // set cache headers
                 res.header('Last-Modified', new Date().toUTCString());
-                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate, public');
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5]));
+                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate,public');
+                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5], authenticated));
 
                 return result;
             },
@@ -185,8 +228,11 @@ function handleQuery(req, res) {
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
-                } else {
-                    // TODO: error out if 'format' resolves to an unsupported format !
+                } else if ( format === 'shp'){
+                    toSHP(database, user_id, gn, sql, res, this);
+                } else if ( format === 'kml'){
+                    toKML(database, user_id, gn, sql, res, this);
+                } else if ( format === 'json'){
                     var end = new Date().getTime();
 
                     var json_result = {'time' : (end - start)/1000};
@@ -195,12 +241,13 @@ function handleQuery(req, res) {
 
                     return json_result;
                 }
+                else throw new Error("Unexpected format in packageResults: " + format);
             },
             function sendResults(err, out){
                 if (err) throw err;
 
                 // return to browser
-                res.send(out);
+                if ( out ) res.send(out);
             },
             function errorHandle(err, result){
                 handleException(err, res);
@@ -343,7 +390,7 @@ function toSVG(rows, gn, callback){
 function toCSV(data, res, callback){
     try{
         // pull out keys for column headers
-        var columns = _.keys(data.rows[0]);
+        var columns = data.rows.length ? _.keys(data.rows[0]) : [];
 
         // stream the csv out over http
         csv()
@@ -353,6 +400,287 @@ function toCSV(data, res, callback){
     } catch (err) {
         callback(err,null);
     }
+}
+
+// Internal function usable by all OGR-driven outputs
+function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callback) {
+  var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
+  var dbhost = global.settings.db_host; 
+  var dbport = global.settings.db_port; 
+  var dbuser = userid_to_dbuser(user_id);
+  var dbpass = ''; // turn into a parameter..
+
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var columns = [];
+
+  Step (
+
+    function fetchColumns() {
+      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
+      var pg = new PSQL(user_id, dbname, 1, 0);
+      pg.query(colsql, this);
+    },
+    function spawnDumper(err, result) {
+      if (err) throw err;
+
+      if ( ! result.rows.length ) 
+        throw new Error("Query returns no rows");
+
+      // Skip system columns
+      for (var k in result.rows[0]) {
+        if ( k === "the_geom_webmercator" ) continue;
+        columns.push('"' + k + '"');
+      }
+      //console.log(columns.join(','));
+
+      var next = this;
+
+      sql = 'SELECT ' + columns.join(',')
+          + ' FROM (' + sql + ') as _cartodbsqlapi';
+
+      var child = spawn(ogr2ogr, [
+        '-f', out_format, 
+        out_filename,
+        "PG:host=" + dbhost
+         + " user=" + dbuser
+         + " dbname=" + dbname
+         + " password=" + dbpass
+         + " tables=fake" // trick to skip query to geometry_columns 
+         + "",
+        '-sql', sql 
+      ]);
+
+/*
+console.log(['ogr2ogr',
+        '-f', out_format,
+        out_filename,
+        "'PG:host=" + dbhost
+         + " user=" + dbuser
+         + " dbname=" + dbname
+         + " password=" + dbpass
+         + " tables=fake" // trick to skip query to geometry_columns
+         + "'",
+        '-sql "', sql, '"'].join(' '));
+*/
+
+      var stdout = '';
+      child.stdout.on('data', function(data) {
+        stdout += data;
+        //console.log('stdout: ' + data);
+      });
+
+      var stderr = '';
+      child.stderr.on('data', function(data) {
+        stderr += data;
+        console.log('ogr2ogr stderr: ' + data);
+      });
+
+      child.on('exit', function(code) {
+        if ( code ) {
+          next(new Error("ogr2ogr returned an error (error code " + code + ")\n" + stderr));
+        } else {
+          next(null);
+        }
+      });
+    },
+    function finish(err) {
+      callback(err); 
+    }
+  );
+}
+
+function toSHP(dbname, user_id, gcol, sql, res, callback) {
+  var zip = 'zip'; // FIXME: make configurable
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
+  var shapefile = outdirpath + '/cartodb-query.shp';
+
+  // TODO: following tests:
+  //  - fetch with no auth [done]
+  //  - fetch with auth [done]
+  //  - fetch same query concurrently
+  //  - fetch query with no "the_geom" column
+
+  // TODO: Check if the file already exists
+  // (should mean another export of the same query is in progress)
+
+  Step (
+
+    function createOutDir() {
+      fs.mkdir(outdirpath, 0777, this);
+    },
+    function spawnDumper(err) {
+      if ( err ) {
+        if ( err.code == 'EEXIST' ) {
+          // TODO: this could mean another request for the same
+          //       resource is in progress, in which case we might want
+          //       to queue the response to after it's completed...
+          console.log("Reusing existing SHP output directory for query: " + sql);
+        } else {
+          throw err;
+        }
+      }
+      toOGR(dbname, user_id, gcol, sql, res, 'ESRI Shapefile', shapefile, this);
+    },
+    function zipAndSendDump(err) {
+      if ( err ) throw err;
+
+      var next = this;
+      var dir = outdirpath;
+
+      var zipfile = dir + '.zip';
+
+      var child = spawn(zip, ['-qrj', '-', dir ]);
+
+      child.stdout.on('data', function(data) {
+        res.write(data);
+      });
+
+      var stderr = '';
+      child.stderr.on('data', function(data) {
+        stderr += data;
+        console.log('zip stderr: ' + data);
+      });
+
+      child.on('exit', function(code) {
+        if (code) {
+          res.statusCode = 500;
+          //res.send(stderr);
+        }
+        //console.log("Zip complete, zip return code was " + code);
+        next(null);
+      });
+
+    },
+    function cleanupDir(topError) {
+
+      var next = this;
+
+      //console.log("Cleaning up " + outdirpath);
+
+      // Unlink the dir content
+      var unlinkall = function(dir, files, finish) {
+        var f = files.shift();
+        if ( ! f ) { finish(null); return; }
+        var fn = dir + '/' + f;
+        fs.unlink(fn, function(err) {
+          if ( err ) {
+            console.log("Unlinking " + fn + ": " + err);
+            finish(err);
+          }
+          else unlinkall(dir, files, finish)
+        });
+      }
+      fs.readdir(outdirpath, function(err, files) {
+        if ( err ) {
+          if ( err.code != 'ENOENT' ) {
+            next(new Error([topError, err].join('\n')));
+          } else {
+            next(topError);
+          }
+        } else {
+          unlinkall(outdirpath, files, function(err) {
+            fs.rmdir(outdirpath, function(err) {
+              if ( err ) console.log("Removing dir " + path + ": " + err);
+              next(topError);
+            });
+          });
+        }
+      });
+    },
+    function finish(err) {
+      if ( err ) callback(err); 
+      else {
+        res.end();
+        callback(null);
+      }
+
+    }
+  );
+}
+
+function toKML(dbname, user_id, gcol, sql, res, callback) {
+  var zip = 'zip'; // FIXME: make configurable
+  var tmpdir = '/tmp'; // FIXME: make configurable
+  var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
+  var dumpfile = outdirpath + '/cartodb-query.kml';
+
+  // TODO: following tests:
+  //  - fetch with no auth 
+  //  - fetch with auth 
+  //  - fetch same query concurrently
+  //  - fetch query with no "the_geom" column
+
+  Step (
+
+    function createOutDir() {
+      fs.mkdir(outdirpath, 0777, this);
+    },
+    function spawnDumper(err) {
+      if ( err ) {
+        if ( err.code == 'EEXIST' ) {
+          // TODO: this could mean another request for the same
+          //       resource is in progress, in which case we might want
+          //       to queue the response to after it's completed...
+          console.log("Reusing existing KML output directory for query: " + sql);
+        } else {
+          throw err;
+        }
+      }
+      toOGR(dbname, user_id, gcol, sql, res, 'KML', dumpfile, this);
+    },
+    function sendResults(err) {
+
+      if ( ! err ) {
+        var stream = fs.createReadStream(dumpfile);
+        util.pump(stream, res);
+      }
+
+      // cleanup output dir (should be safe to unlink)
+      var topError = err;
+      var next = this;
+
+      //console.log("Cleaning up " + outdirpath);
+
+      // Unlink the dir content
+      var unlinkall = function(dir, files, finish) {
+        var f = files.shift();
+        if ( ! f ) { finish(null); return; }
+        var fn = dir + '/' + f;
+        fs.unlink(fn, function(err) {
+          if ( err ) {
+            console.log("Unlinking " + fn + ": " + err);
+            finish(err);
+          }
+          else unlinkall(dir, files, finish)
+        });
+      }
+      fs.readdir(outdirpath, function(err, files) {
+        if ( err ) {
+          if ( err.code != 'ENOENT' ) {
+            next(new Error([topError, err].join('\n')));
+          } else {
+            next(topError);
+          }
+        } else {
+          unlinkall(outdirpath, files, function(err) {
+            fs.rmdir(outdirpath, function(err) {
+              if ( err ) console.log("Removing dir " + path + ": " + err);
+              next(topError);
+            });
+          });
+        }
+      });
+    },
+    function finish(err) {
+      if ( err ) callback(err); 
+      else {
+        res.end();
+        callback(null);
+      }
+
+    }
+  );
 }
 
 function getContentDisposition(format){
@@ -366,28 +694,44 @@ function getContentDisposition(format){
     else if (format === 'svg'){
         ext = 'svg';
     }
+    else if (format === 'shp'){
+        ext = 'zip';
+    }
+    else if (format === 'kml'){
+        ext = 'kml';
+    }
     var time = new Date().toUTCString();
-    return 'inline; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
+    return 'attachment; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
 }
 
 function getContentType(format){
     var type = "application/json; charset=utf-8";
     if (format === 'csv'){
-        type = "text/csv; charset=utf-8";
+        type = "text/csv; charset=utf-8; header=present";
     }
     else if (format === 'svg'){
         type = "image/svg+xml; charset=utf-8";
+    }
+    else if (format === 'shp'){
+        type = "application/zip; charset=utf-8";
+    }
+    else if (format === 'kml'){
+        type = "application/kml; charset=utf-8";
     }
     return type;
 }
 
 function setCrossDomain(res){
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With, X-Prototype-Version, X-CSRF-Token");
 }
 
-function generateCacheKey(database,tables){
-    return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+function generateCacheKey(database,tables,is_authenticated){
+    if ( is_authenticated && tables.may_write ) {
+      return "NONE";
+    } else {
+      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+    }
 }
 
 function generateMD5(data){
