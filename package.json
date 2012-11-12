@@ -24,7 +24,8 @@
     },
     "devDependencies": {
         "mocha": "1.2.1",
-        "zipfile": "~0.3.2"
+        "zipfile": "~0.3.2",
+        "libxmljs": "~0.6.1"
     },
     "scripts": {
         "test": "test/run_tests.sh"

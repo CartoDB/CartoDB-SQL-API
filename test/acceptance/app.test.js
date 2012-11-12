@@ -21,6 +21,7 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
     , _ = require('underscore')
     , zipfile = require('zipfile')
     , fs      = require('fs')
+    , libxmljs = require('libxmljs')
     ;
 
 // allow lots of emitters to be set to silence warning
@@ -431,6 +432,46 @@ test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposi
     });
 });
 
+test('field named "the_geom_webmercator" is not skipped by default', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = JSON.parse(res.body).rows[0];
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls included fields', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&skipfields=the_geom_webmercator,cartodb_id,unexistant',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = JSON.parse(res.body).rows[0];
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
 test('GET /api/v1/sql ensure cross domain set on errors', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*gadfgadfg%20FROM%20untitle_table_4',
@@ -527,6 +568,48 @@ test('uses custom filename', function(done){
     });
 });
 
+test('does not include the_geom and the_geom_webmercator properties by default', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed_body = JSON.parse(res.body);
+        var row0 = parsed_body.features[0].properties;
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls fields included in GeoJSON output', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&skipfields=unexistant,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed_body = JSON.parse(res.body);
+        var row0 = parsed_body.features[0].properties;
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
 
 test('GET /api/v1/sql as geojson limiting decimal places', function(done){
     assert.response(app, {
@@ -590,6 +673,37 @@ test('CSV format, custom filename', function(done){
         assert.equal(true, /filename=mycsv.csv/gi.test(cd), cd);
         var ct = res.header('Content-Type');
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+        var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          var idx = row0.indexOf(f);
+          if ( checkfields[f] ) {
+            assert.ok(idx != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(idx == -1, "result includes '" + f + "' ("+idx+")");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls fields included in CSV output', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv&skipfields=unexistant,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          var idx = row0.indexOf(f);
+          if ( checkfields[f] ) {
+            assert.ok(idx != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(idx == -1, "result includes '" + f + "' ("+idx+")");
+          }
+        }
         done();
     });
 });
@@ -757,6 +871,7 @@ test('SHP format, unauthenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
         // missing SRID, so no PRJ (TODO: add ?)
         //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // TODO: check DBF contents
         fs.unlinkSync(tmpfile);
         done();
     });
@@ -832,6 +947,7 @@ test('SHP format, authenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
         // missing SRID, so no PRJ (TODO: add ?)
         //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // TODO: check contents of the DBF
         fs.unlinkSync(tmpfile);
         done();
     });
@@ -849,7 +965,38 @@ test('KML format, unauthenticated', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-        // TODO: check for actual content, at least try to uncompress..
+        var row0 = res.body;
+        var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('KML format, skipfields', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&skipfields=address,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        var row0 = res.body;
+        var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+          }
+        }
         done();
     });
 });

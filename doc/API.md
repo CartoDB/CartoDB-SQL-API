@@ -17,6 +17,10 @@ Supported query string parameters:
   'filename': Sets the filename to use for the query result 
               file attachment
 
+  'skipfields':
+              Comma separate list of fields that are not wanted
+              in output. Only useful with "SELECT *" queries.
+
   'dp':       Number of digits after the decimal point.
               Only affects format=GeoJSON.
               By default this is 6.

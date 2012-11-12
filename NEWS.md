@@ -1,6 +1,7 @@
 1.3.0 (DD/MM/YY)
 -----
 * Support for specifying a filename for exports (#64)
+* Support for specifying a list of fields to skip from output (#63)
 
 1.2.1 (DD/MM/YY)
 -----

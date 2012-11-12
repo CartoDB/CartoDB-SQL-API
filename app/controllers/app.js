@@ -91,6 +91,8 @@ function handleQuery(req, res) {
     var offset    = parseInt(req.query.page);
     var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
     var filename  = req.query.filename;
+    var skipfields = req.query.skipfields ? req.query.skipfields.split(',') : [];
+    req.query.skipfields = skipfields; // save back, for toOGR use
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
     var user_id;
@@ -231,6 +233,14 @@ function handleQuery(req, res) {
             function packageResults(err, result){
                 if (err) throw err;
 
+                if ( skipfields.length ){
+                  for ( var i=0; i<result.rows.length; ++i ) {
+                    for ( var j=0; j<skipfields.length; ++j ) {
+                      delete result.rows[i][skipfields[j]];
+                    }
+                  }
+                }
+
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
                     toGeoJSON(result, res, this);
@@ -248,7 +258,6 @@ function handleQuery(req, res) {
                     var json_result = {'time' : (end - start)/1000};
                         json_result.total_rows = result.rowCount;
                         json_result.rows = result.rows;
-
                     return json_result;
                 }
                 else throw new Error("Unexpected format in packageResults: " + format);
@@ -423,6 +432,9 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
   var tmpdir = '/tmp'; // FIXME: make configurable
   var columns = [];
 
+  var skipfields = res.req.query.skipfields;
+  skipfields.push( "the_geom_webmercator" );
+
   Step (
 
     function fetchColumns() {
@@ -438,7 +450,7 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
 
       // Skip system columns
       for (var k in result.rows[0]) {
-        if ( k === "the_geom_webmercator" ) continue;
+        if ( skipfields.indexOf(k) != -1 ) continue;
         columns.push('"' + k + '"');
       }
       //console.log(columns.join(','));
