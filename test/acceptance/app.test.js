@@ -440,9 +440,27 @@ test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposi
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
+        var ct = res.header('Content-Type');
+        assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
         var cd = res.header('Content-Disposition');
-        assert.equal(true, /^attachment/.test(cd), 'JSON is not disposed as attachment: ' + cd);
+        assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SQL parameter and no format, but a filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&filename=x',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var ct = res.header('Content-Type');
+        assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'Format with filename is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=x.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
         done();
     });
 });
