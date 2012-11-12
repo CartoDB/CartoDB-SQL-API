@@ -1,3 +1,6 @@
+1.2.2 (DD/MM/YY)
+-----
+
 1.2.1 (DD/MM/YY)
 -----
 * Added timeout default to 600 miliseconds in cluster.js
