@@ -2,7 +2,7 @@
     "private": true,
     "name": "cartodb_api",
     "description": "high speed SQL api for cartodb",
-    "version": "1.2.2",
+    "version": "1.3.0-dev",
     "author": {
         "name": "Simon Tokumine, Sandro Santilli, Vizzuality",
         "url": "http://vizzuality.com",
@@ -23,7 +23,8 @@
         "csv":"0.0.13"
     },
     "devDependencies": {
-        "mocha": "1.2.1"
+        "mocha": "1.2.1",
+        "zipfile": "~0.3.2"
     },
     "scripts": {
         "test": "test/run_tests.sh"
