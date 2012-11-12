@@ -27,6 +27,13 @@ Supported query string parameters:
 
   'api_key':  Needed to authenticate in order to modify the database.
 
+  'cache_policy':
+              Set to "persist" to have the server send an Cache-Control
+              header requesting caching devices to keep the response
+              cached as much as possible. This is best used with a
+              timestamp value in cache_buster for manual control of
+              updates.
+
 Response formats
 ----------------
 

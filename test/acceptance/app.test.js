@@ -30,6 +30,7 @@ app.setMaxListeners(0);
 suite('app.test', function() {
 
 var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
+var expected_cache_control_persist = 'public,max-age=31536000';
 
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
@@ -63,6 +64,20 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
+        done();
+    });
+});
+
+test('cache_policy=persist', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db&cache_policy=persist',
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        assert.equal(res.headers['cache-control'], expected_cache_control_persist);
         done();
     });
 });

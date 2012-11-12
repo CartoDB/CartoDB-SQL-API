@@ -2,6 +2,7 @@
 -----
 * Support for specifying a filename for exports (#64)
 * Support for specifying a list of fields to skip from output (#63)
+* Add 'cache_policy' parameter (#62)
 
 1.2.1 (DD/MM/YY)
 -----
