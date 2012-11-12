@@ -14,6 +14,9 @@ Supported query string parameters:
               Supported formats: JSON (the default), GeoJSON,
               CSV, SVG, SHP
 
+  'filename': Sets the filename to use for the query result 
+              file attachment
+
   'dp':       Number of digits after the decimal point.
               Only affects format=GeoJSON.
               By default this is 6.
