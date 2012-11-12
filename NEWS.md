@@ -1,5 +1,6 @@
 1.2.1 (DD/MM/YY)
 -----
+* Added timeout default to 600 miliseconds in cluster.js
 
 1.2.0 (DD/MM/YY)
 -----
