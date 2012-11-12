@@ -14,10 +14,15 @@
 require('../helper');
 require('../support/assert');
 
+
 var app    = require(global.settings.app_root + '/app/controllers/app')
     , assert = require('assert')
     , querystring = require('querystring')
-    , _ = require('underscore');
+    , _ = require('underscore')
+    , zipfile = require('zipfile')
+    , fs      = require('fs')
+    , libxmljs = require('libxmljs')
+    ;
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
@@ -25,6 +30,7 @@ app.setMaxListeners(0);
 suite('app.test', function() {
 
 var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
+var expected_cache_control_persist = 'public,max-age=31536000';
 
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
@@ -58,6 +64,20 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
+        done();
+    });
+});
+
+test('cache_policy=persist', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db&cache_policy=persist',
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        // Check cache headers
+        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        assert.equal(res.headers['cache-control'], expected_cache_control_persist);
         done();
     });
 });
@@ -422,7 +442,47 @@ test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposi
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'JSON is not disposed as attachment: ' + cd);
-        assert.equal(true, /filename=cartodb-query.json/gi.test(cd));
+        assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
+        done();
+    });
+});
+
+test('field named "the_geom_webmercator" is not skipped by default', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = JSON.parse(res.body).rows[0];
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls included fields', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&skipfields=the_geom_webmercator,cartodb_id,unexistant',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = JSON.parse(res.body).rows[0];
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
         done();
     });
 });
@@ -510,6 +570,61 @@ test('uses the last format parameter when multiple are used', function(done){
     });
 });
 
+test('uses custom filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&filename=x',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=x.geojson/gi.test(cd), cd);
+        done();
+    });
+});
+
+test('does not include the_geom and the_geom_webmercator properties by default', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed_body = JSON.parse(res.body);
+        var row0 = parsed_body.features[0].properties;
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls fields included in GeoJSON output', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&skipfields=unexistant,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed_body = JSON.parse(res.body);
+        var row0 = parsed_body.features[0].properties;
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
 
 test('GET /api/v1/sql as geojson limiting decimal places', function(done){
     assert.response(app, {
@@ -557,6 +672,53 @@ test('CSV format', function(done){
         assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
         var ct = res.header('Content-Type');
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+        done();
+    });
+});
+
+test('CSV format, custom filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv&filename=mycsv.csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=mycsv.csv/gi.test(cd), cd);
+        var ct = res.header('Content-Type');
+        assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+        var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
+        var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          var idx = row0.indexOf(f);
+          if ( checkfields[f] ) {
+            assert.ok(idx != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(idx == -1, "result includes '" + f + "' ("+idx+")");
+          }
+        }
+        done();
+    });
+});
+
+test('skipfields controls fields included in CSV output', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv&skipfields=unexistant,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':1};
+        for ( var f in checkfields ) {
+          var idx = row0.indexOf(f);
+          if ( checkfields[f] ) {
+            assert.ok(idx != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(idx == -1, "result includes '" + f + "' ("+idx+")");
+          }
+        }
         done();
     });
 });
@@ -616,6 +778,27 @@ test('GET /api/v1/sql with SVG format', function(done){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
+        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
+        // TODO: test viewBox
+        done();
+    });
+});
+
+test('GET /api/v1/sql with SVG format and custom filename', function(done){
+    var query = querystring.stringify({
+      q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
+      format: "svg",
+      filename: 'mysvg'
+    });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.ok(/filename=mysvg.svg/gi.test(cd), cd);
         assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
@@ -687,13 +870,75 @@ test('SHP format, unauthenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
-        // TODO: check for actual content, at least try to uncompress..
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+        // missing SRID, so no PRJ (TODO: add ?)
+        //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // TODO: check DBF contents
+        fs.unlinkSync(tmpfile);
+        done();
+    });
+});
+
+test('SHP format, unauthenticated, with custom filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=myshape',
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=myshape.zip/gi.test(cd));
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'myshape.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'myshape.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+        // missing SRID, so no PRJ (TODO: add ?)
+        //assert.ok(_.contains(zf.names, 'myshape.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        fs.unlinkSync(tmpfile);
+        done();
+    });
+});
+
+test('SHP format, unauthenticated, with custom, dangerous filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=b;"%20()[]a',
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var fname = "b_______a";
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+        assert.ok(_.contains(zf.names, fname + '.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+        assert.ok(_.contains(zf.names, fname + '.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+        // missing SRID, so no PRJ (TODO: add ?)
+        //assert.ok(_.contains(zf.names, fname+ '.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        fs.unlinkSync(tmpfile);
         done();
     });
 });
@@ -702,12 +947,23 @@ test('SHP format, authenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
-        // TODO: check for actual content, at least try to uncompress..
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+        // missing SRID, so no PRJ (TODO: add ?)
+        //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // TODO: check contents of the DBF
+        fs.unlinkSync(tmpfile);
         done();
     });
 });
@@ -724,6 +980,52 @@ test('KML format, unauthenticated', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        var row0 = res.body;
+        var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('KML format, skipfields', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&skipfields=address,cartodb_id',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        var row0 = res.body;
+        var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+          } else {
+            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('KML format, unauthenticated, custom filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&filename=kmltest',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         // TODO: check for actual content, at least try to uncompress..
         done();
     });

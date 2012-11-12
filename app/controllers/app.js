@@ -14,6 +14,9 @@
 // eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
 //
 //
+
+var path = require('path');
+
 var express = require('express')
     , app      = express.createServer(
     express.logger({
@@ -65,6 +68,12 @@ function userid_to_dbuser(user_id) {
   return "publicuser" // FIXME: make configurable
 };
 
+function sanitize_filename(filename) {
+  filename = path.basename(filename, path.extname(filename));
+  filename = filename.replace(/[;()\[\]<>'"\s]/g, '_');
+  //console.log("Sanitized: " + filename);
+  return filename;
+}
 
 // request handlers
 function handleQuery(req, res) {
@@ -81,6 +90,9 @@ function handleQuery(req, res) {
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
     var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
+    var filename  = req.query.filename;
+    var skipfields = req.query.skipfields ? req.query.skipfields.split(',') : [];
+    req.query.skipfields = skipfields; // save back, for toOGR use
     var dp        = req.query.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file 
     var user_id;
@@ -88,11 +100,11 @@ function handleQuery(req, res) {
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
     format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
+    filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
     sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
     database  = (database === "" || _.isUndefined(database)) ? null : database;
     limit     = (_.isNumber(limit))  ? limit : null;
     offset    = (_.isNumber(offset)) ? offset * limit : null;
-
 
     // setup step run
     var start = new Date().getTime();
@@ -205,21 +217,37 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // configure headers for given format
-                res.header("Content-Disposition", getContentDisposition(format));
+                res.header("Content-Disposition", getContentDisposition(format, filename));
                 res.header("Content-Type", getContentType(format));
 
                 // allow cross site post
                 setCrossDomain(res);
 
                 // set cache headers
-                res.header('Last-Modified', new Date().toUTCString());
-                res.header('Cache-Control', 'no-cache,max-age=3600,must-revalidate,public');
                 res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5], authenticated));
+                var cache_policy = req.query.cache_policy;
+                if ( cache_policy == 'persist' ) {
+                  res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
+                } else {
+                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
+                  var ttl = 3600;
+                  res.header('Last-Modified', new Date().toUTCString());
+                  res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
+                }
+
 
                 return result;
             },
             function packageResults(err, result){
                 if (err) throw err;
+
+                if ( skipfields.length ){
+                  for ( var i=0; i<result.rows.length; ++i ) {
+                    for ( var j=0; j<skipfields.length; ++j ) {
+                      delete result.rows[i][skipfields[j]];
+                    }
+                  }
+                }
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
@@ -229,7 +257,7 @@ function handleQuery(req, res) {
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
                 } else if ( format === 'shp'){
-                    toSHP(database, user_id, gn, sql, res, this);
+                    toSHP(database, user_id, gn, sql, filename, res, this);
                 } else if ( format === 'kml'){
                     toKML(database, user_id, gn, sql, res, this);
                 } else if ( format === 'json'){
@@ -238,7 +266,6 @@ function handleQuery(req, res) {
                     var json_result = {'time' : (end - start)/1000};
                         json_result.total_rows = result.rowCount;
                         json_result.rows = result.rows;
-
                     return json_result;
                 }
                 else throw new Error("Unexpected format in packageResults: " + format);
@@ -413,6 +440,9 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
   var tmpdir = '/tmp'; // FIXME: make configurable
   var columns = [];
 
+  var skipfields = res.req.query.skipfields;
+  skipfields.push( "the_geom_webmercator" );
+
   Step (
 
     function fetchColumns() {
@@ -428,7 +458,7 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
 
       // Skip system columns
       for (var k in result.rows[0]) {
-        if ( k === "the_geom_webmercator" ) continue;
+        if ( skipfields.indexOf(k) != -1 ) continue;
         columns.push('"' + k + '"');
       }
       //console.log(columns.join(','));
@@ -489,11 +519,11 @@ console.log(['ogr2ogr',
   );
 }
 
-function toSHP(dbname, user_id, gcol, sql, res, callback) {
+function toSHP(dbname, user_id, gcol, sql, filename, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = '/tmp'; // FIXME: make configurable
   var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
-  var shapefile = outdirpath + '/cartodb-query.shp';
+  var shapefile = outdirpath + '/' + filename + '.shp';
 
   // TODO: following tests:
   //  - fetch with no auth [done]
@@ -683,7 +713,7 @@ function toKML(dbname, user_id, gcol, sql, res, callback) {
   );
 }
 
-function getContentDisposition(format){
+function getContentDisposition(format, filename) {
     var ext = 'json';
     if (format === 'geojson'){
         ext = 'geojson';
@@ -701,7 +731,7 @@ function getContentDisposition(format){
         ext = 'kml';
     }
     var time = new Date().toUTCString();
-    return 'attachment; filename=cartodb-query.' + ext + '; modification-date="' + time + '";';
+    return 'attachment; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
 }
 
 function getContentType(format){
