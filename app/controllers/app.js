@@ -220,7 +220,8 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // configure headers for given format
-                res.header("Content-Disposition", getContentDisposition(format, filename));
+                var use_inline = !req.query.hasOwnProperty('format') && !req.query.hasOwnProperty('filename');
+                res.header("Content-Disposition", getContentDisposition(format, filename, use_inline));
                 res.header("Content-Type", getContentType(format));
 
                 // allow cross site post
@@ -716,7 +717,7 @@ function toKML(dbname, user_id, gcol, sql, res, callback) {
   );
 }
 
-function getContentDisposition(format, filename) {
+function getContentDisposition(format, filename, inline) {
     var ext = 'json';
     if (format === 'geojson'){
         ext = 'geojson';
@@ -734,7 +735,7 @@ function getContentDisposition(format, filename) {
         ext = 'kml';
     }
     var time = new Date().toUTCString();
-    return 'attachment; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
+    return ( inline ? 'inline' : 'attachment' ) +'; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
 }
 
 function getContentType(format){
