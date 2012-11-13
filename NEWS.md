@@ -1,3 +1,6 @@
+1.3.1 (DD/MM/YY)
+-----
+
 1.3.0 (DD/MM/YY)
 -----
 * Support for specifying a filename for exports (#64)
