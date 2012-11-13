@@ -52,7 +52,7 @@ app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res)
 //       But you can be pretty sure of a false return.
 //
 function queryMayWrite(sql) {
-  var mayWrite = false;  
+  var mayWrite = false;
   var pattern = RegExp("(alter|insert|update|delete|create|drop)", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
@@ -63,7 +63,7 @@ function queryMayWrite(sql) {
 // Return database username from user_id
 // NOTE: a "null" user_id is a request to use the public user
 function userid_to_dbuser(user_id) {
-  if ( _.isString(user_id) ) 
+  if ( _.isString(user_id) )
       return _.template(global.settings.db_user, {user_id: user_id});
   return "publicuser" // FIXME: make configurable
 };
@@ -86,15 +86,18 @@ function handleQuery(req, res) {
     var body      = (req.body) ? req.body : {};
     var sql       = req.query.q || body.q; // HTTP GET and POST store in different vars
     var api_key   = req.query.api_key || body.api_key;
-    var database  = req.query.database; // TODO: Depricate
+    var database  = req.query.database; // TODO: Deprecate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var format    = _.isArray(req.query.format) ? _.last(req.query.format) : req.query.format; 
-    var filename  = req.query.filename;
-    var skipfields = req.query.skipfields ? req.query.skipfields.split(',') : [];
+    var requestedFormat = req.query.format || body.format;
+    var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
+    var requestedFilename = req.query.filename || body.filename
+    var filename  = requestedFilename;
+    var requestedSkipfields = req.query.skipfields || body.skipfields;
+    var skipfields = requestedSkipfields ? requestedSkipfields.split(',') : [];
     req.query.skipfields = skipfields; // save back, for toOGR use
-    var dp        = req.query.dp; // decimal point digits (defaults to 6)
-    var gn        = "the_geom"; // TODO: read from configuration file 
+    var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
+    var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
 
     // sanitize and apply defaults to input
@@ -190,7 +193,7 @@ function handleQuery(req, res) {
                     return null;
                 } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
-                    sql = 'WITH source AS ( ' + sql + '), extent AS ( ' 
+                    sql = 'WITH source AS ( ' + sql + '), extent AS ( '
                         + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
                         + '), extent_info AS ( SELECT e, '
                         + 'st_xmin(e) as ex0, st_ymax(e) as ey0, '
@@ -355,7 +358,7 @@ function toSVG(rows, gn, callback){
           polys.push('<path d="' + g + '" />');
         }
 
-        if ( ! bbox ) { 
+        if ( ! bbox ) {
           // Parse layer extent: "BOX(x y, X Y)"
           // NOTE: the name of the extent field is
           //       determined by the same code adding the
@@ -365,9 +368,9 @@ function toSVG(rows, gn, callback){
           bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
           bbox = {
             xmin: parseFloat(bbox[1]),
-            ymin: parseFloat(bbox[2]), 
+            ymin: parseFloat(bbox[2]),
             xmax: parseFloat(bbox[3]),
-            ymax: parseFloat(bbox[4]) 
+            ymax: parseFloat(bbox[4])
            };
         }
     });
@@ -394,7 +397,7 @@ function toSVG(rows, gn, callback){
       bbox.width = bbox.xmax - bbox.xmin;
       bbox.height = bbox.ymax - bbox.ymin;
       root_tag += 'viewBox="' + bbox.xmin + ' ' + (-bbox.ymax) + ' '
-               + bbox.width + ' ' + bbox.height + '" '; 
+               + bbox.width + ' ' + bbox.height + '" ';
     }
     root_tag += 'style="fill-opacity:' + fill_opacity
               + '; stroke:' + stroke_color
@@ -432,8 +435,8 @@ function toCSV(data, res, callback){
 // Internal function usable by all OGR-driven outputs
 function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
-  var dbhost = global.settings.db_host; 
-  var dbport = global.settings.db_port; 
+  var dbhost = global.settings.db_host;
+  var dbport = global.settings.db_port;
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
 
@@ -453,7 +456,7 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
     function spawnDumper(err, result) {
       if (err) throw err;
 
-      if ( ! result.rows.length ) 
+      if ( ! result.rows.length )
         throw new Error("Query returns no rows");
 
       // Skip system columns
@@ -469,15 +472,15 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
           + ' FROM (' + sql + ') as _cartodbsqlapi';
 
       var child = spawn(ogr2ogr, [
-        '-f', out_format, 
+        '-f', out_format,
         out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser
          + " dbname=" + dbname
          + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns 
+         + " tables=fake" // trick to skip query to geometry_columns
          + "",
-        '-sql', sql 
+        '-sql', sql
       ]);
 
 /*
@@ -514,7 +517,7 @@ console.log(['ogr2ogr',
       });
     },
     function finish(err) {
-      callback(err); 
+      callback(err);
     }
   );
 }
@@ -619,7 +622,7 @@ function toSHP(dbname, user_id, gcol, sql, filename, res, callback) {
       });
     },
     function finish(err) {
-      if ( err ) callback(err); 
+      if ( err ) callback(err);
       else {
         res.end();
         callback(null);
@@ -636,8 +639,8 @@ function toKML(dbname, user_id, gcol, sql, res, callback) {
   var dumpfile = outdirpath + '/cartodb-query.kml';
 
   // TODO: following tests:
-  //  - fetch with no auth 
-  //  - fetch with auth 
+  //  - fetch with no auth
+  //  - fetch with auth
   //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
 
@@ -703,7 +706,7 @@ function toKML(dbname, user_id, gcol, sql, res, callback) {
       });
     },
     function finish(err) {
-      if ( err ) callback(err); 
+      if ( err ) callback(err);
       else {
         res.end();
         callback(null);
@@ -760,7 +763,7 @@ function generateCacheKey(database,tables,is_authenticated){
     if ( is_authenticated && tables.may_write ) {
       return "NONE";
     } else {
-      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];   
+      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];
     }
 }
 
