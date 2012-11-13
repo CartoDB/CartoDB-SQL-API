@@ -220,7 +220,7 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // configure headers for given format
-                var use_inline = !req.query.hasOwnProperty('format') && !req.query.hasOwnProperty('filename');
+                var use_inline = req.method == 'GET' && !req.query.hasOwnProperty('format') && !req.query.hasOwnProperty('filename');
                 res.header("Content-Disposition", getContentDisposition(format, filename, use_inline));
                 res.header("Content-Type", getContentType(format));
 
