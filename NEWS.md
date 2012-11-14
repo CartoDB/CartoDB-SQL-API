@@ -1,7 +1,6 @@
 1.3.1 (DD/MM/YY)
 -----
 * Support 'format' and 'filename' params in POST
-* Always dispose response as attachment when using POST
 
 1.3.0 (DD/MM/YY)
 -----
