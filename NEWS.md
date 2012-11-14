@@ -1,7 +1,7 @@
 1.3.1 (DD/MM/YY)
 -----
 * Support 'format' and 'filename' params in POST
-* Fix oAuth bug introduced by 'skipfields' param in 1.3.0
+* Fix oAuth bug introduced by 'skipfields' param in 1.3.0 (#69)
 
 1.3.0 (DD/MM/YY)
 -----
