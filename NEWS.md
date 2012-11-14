@@ -1,3 +1,6 @@
+1.3.2 (DD/MM/YY)
+-----
+
 1.3.1 (DD/MM/YY)
 -----
 * Support 'format' and 'filename' params in POST
