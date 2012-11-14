@@ -460,7 +460,7 @@ test('POST /api/v1/sql with SQL parameter and no format, ensuring content-dispos
         var ct = res.header('Content-Type');
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
         var cd = res.header('Content-Disposition');
-        assert.equal(true, /^attachment/.test(cd), 'Default format is not disposed as attachment: ' + cd);
+        assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
         done();
     });
