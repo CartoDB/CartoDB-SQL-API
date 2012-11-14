@@ -95,7 +95,6 @@ function handleQuery(req, res) {
     var filename  = requestedFilename;
     var requestedSkipfields = req.query.skipfields || body.skipfields;
     var skipfields = requestedSkipfields ? requestedSkipfields.split(',') : [];
-    req.query.skipfields = skipfields; // save back, for toOGR use
     var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
@@ -261,9 +260,9 @@ function handleQuery(req, res) {
                 } else if (format === 'csv'){
                     toCSV(result, res, this);
                 } else if ( format === 'shp'){
-                    toSHP(database, user_id, gn, sql, filename, res, this);
+                    toSHP(database, user_id, gn, sql, skipfields, filename, res, this);
                 } else if ( format === 'kml'){
-                    toKML(database, user_id, gn, sql, res, this);
+                    toKML(database, user_id, gn, sql, skipfields, res, this);
                 } else if ( format === 'json'){
                     var end = new Date().getTime();
 
@@ -434,7 +433,7 @@ function toCSV(data, res, callback){
 }
 
 // Internal function usable by all OGR-driven outputs
-function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callback) {
+function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_filename, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
@@ -443,9 +442,6 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
 
   var tmpdir = '/tmp'; // FIXME: make configurable
   var columns = [];
-
-  var skipfields = res.req.query.skipfields;
-  skipfields.push( "the_geom_webmercator" );
 
   Step (
 
@@ -463,6 +459,7 @@ function toOGR(dbname, user_id, gcol, sql, res, out_format, out_filename, callba
       // Skip system columns
       for (var k in result.rows[0]) {
         if ( skipfields.indexOf(k) != -1 ) continue;
+        if ( k == "the_geom_webmercator" ) continue;
         columns.push('"' + k + '"');
       }
       //console.log(columns.join(','));
@@ -523,7 +520,7 @@ console.log(['ogr2ogr',
   );
 }
 
-function toSHP(dbname, user_id, gcol, sql, filename, res, callback) {
+function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = '/tmp'; // FIXME: make configurable
   var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
@@ -554,7 +551,7 @@ function toSHP(dbname, user_id, gcol, sql, filename, res, callback) {
           throw err;
         }
       }
-      toOGR(dbname, user_id, gcol, sql, res, 'ESRI Shapefile', shapefile, this);
+      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'ESRI Shapefile', shapefile, this);
     },
     function zipAndSendDump(err) {
       if ( err ) throw err;
@@ -633,7 +630,7 @@ function toSHP(dbname, user_id, gcol, sql, filename, res, callback) {
   );
 }
 
-function toKML(dbname, user_id, gcol, sql, res, callback) {
+function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = '/tmp'; // FIXME: make configurable
   var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
@@ -661,7 +658,7 @@ function toKML(dbname, user_id, gcol, sql, res, callback) {
           throw err;
         }
       }
-      toOGR(dbname, user_id, gcol, sql, res, 'KML', dumpfile, this);
+      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'KML', dumpfile, this);
     },
     function sendResults(err) {
 
