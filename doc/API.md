@@ -12,13 +12,27 @@ Supported query string parameters:
 
   'format':   Specifies which format to use for the response.
               Supported formats: JSON (the default), GeoJSON,
-              CSV, SVG
+              CSV, SVG, SHP
+
+  'filename': Sets the filename to use for the query result 
+              file attachment
+
+  'skipfields':
+              Comma separate list of fields that are not wanted
+              in output. Only useful with "SELECT *" queries.
 
   'dp':       Number of digits after the decimal point.
               Only affects format=GeoJSON.
               By default this is 6.
 
   'api_key':  Needed to authenticate in order to modify the database.
+
+  'cache_policy':
+              Set to "persist" to have the server send an Cache-Control
+              header requesting caching devices to keep the response
+              cached as much as possible. This is best used with a
+              timestamp value in cache_buster for manual control of
+              updates.
 
 Response formats
 ----------------

@@ -88,7 +88,7 @@ module.exports = (function() {
      * Get privacy for cartodb table
      *
      * @param req - standard req object. Importantly contains table and host information
-     * @param callback - user_id if ok, null if auth fails
+     * @param callback - err, user_id (null if no auth)
      */
     me.verifyRequest = function(req, callback) {
         var that = this;
@@ -108,8 +108,8 @@ module.exports = (function() {
                 }
             },
             function (err, user_id){
-                if (err) throw err;
-                callback(false, user_id);
+                if (err) callback(err);
+                else callback(false, user_id);
             }
         );
     };

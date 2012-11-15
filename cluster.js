@@ -32,7 +32,8 @@ var cluster = new Cluster({
   port: global.settings.node_port,
   host: global.settings.node_host,
   monHost: global.settings.node_host,
-  monPort: global.settings.node_port+1
+  monPort: global.settings.node_port+1,
+  timeout: 600000
 });
 
 cluster.listen(function(cb) {

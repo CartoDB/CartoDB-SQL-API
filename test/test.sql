@@ -20,31 +20,6 @@ SET search_path = public, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
-
--- Return an array of table names used by a given query
-CREATE OR REPLACE FUNCTION CDB_QueryTables(query text)
-RETURNS name[]
-AS $$
-DECLARE
-  exp XML;
-  tables NAME[];
-BEGIN
-
-  EXECUTE 'EXPLAIN (FORMAT XML) ' || query INTO STRICT exp;
-
-  -- Now need to extract all values of <Relation-Name>
-
-  --RAISE DEBUG 'Explain: %', exp;
-
-  tables := xpath('//x:Relation-Name/text()', exp, ARRAY[ARRAY['x', 'http://www.postgresql.org/2009/explain']]);
-
-  --RAISE DEBUG 'Tables: %', tables;
-
-  return tables;
-END
-$$ LANGUAGE 'plpgsql' VOLATILE STRICT;
-
-
 -- first table
 DROP TABLE IF EXISTS untitle_table_4;
 CREATE TABLE untitle_table_4 (
@@ -133,6 +108,7 @@ CREATE INDEX test_table_the_geom_webmercator_idx_p ON private_table USING gist (
 CREATE USER publicuser WITH PASSWORD '';
 CREATE USER test_cartodb_user_1 WITH PASSWORD '';
 
+GRANT ALL ON TABLE untitle_table_4 TO test_cartodb_user_1;
 GRANT SELECT ON TABLE untitle_table_4 TO publicuser;
 GRANT ALL ON TABLE private_table TO test_cartodb_user_1;
 GRANT ALL ON SEQUENCE test_table_cartodb_id_seq_p TO test_cartodb_user_1
