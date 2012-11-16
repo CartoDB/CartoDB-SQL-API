@@ -1,6 +1,7 @@
 1.3.2 (DD/MM/YY)
 -----
 * Fix KML export truncation (#70)
+* Fix UTF8 in shapefile export (#66)
 
 1.3.1 (DD/MM/YY)
 -----

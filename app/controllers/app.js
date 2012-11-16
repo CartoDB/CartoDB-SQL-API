@@ -471,6 +471,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
 
       var child = spawn(ogr2ogr, [
         '-f', out_format,
+        '-lco', 'ENCODING=UTF-8',
         out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser

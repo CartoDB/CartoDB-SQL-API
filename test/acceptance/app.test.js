@@ -1091,6 +1091,33 @@ test('SHP format, authenticated', function(done){
     });
 });
 
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/66
+test('SHP format, unauthenticated, with utf8 data', function(done){
+    var query = querystring.stringify({
+        q: "SELECT '♥♦♣♠' as f, st_makepoint(0,0,4326) as the_geom",
+        format: 'shp',
+        filename: 'myshape'
+      });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        var buffer = zf.readFileSync('myshape.dbf');
+        fs.unlinkSync(tmpfile);
+        var strings = buffer.toString();
+        assert.ok(/♥♦♣♠/.exec(strings), "Cannot find '♥♦♣♠' in here:\n" + strings);
+        done();
+    });
+});
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
