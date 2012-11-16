@@ -726,6 +726,22 @@ test('CSV format', function(done){
     });
 });
 
+test('CSV format, bigger than 81920 bytes', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql',
+        data: querystring.stringify({
+          q: 'SELECT 0 as fname FROM generate_series(0,81920)',
+          format: 'csv'
+        }),
+        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST'
+    },{ }, function(res){
+        assert.ok(res.body.length > 81920, 'CSV smaller than expected: ' + res.body.length);
+        done();
+    });
+});
+
+
 test('CSV format from POST', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
