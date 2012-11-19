@@ -1,6 +1,6 @@
 {
   "name": "cartodb_api",
-  "version": "1.3.2",
+  "version": "1.3.0",
   "dependencies": {
     "cluster2": {
       "version": "0.3.5-cdb02",
@@ -216,7 +216,7 @@
       "version": "1.3.3"
     },
     "csv": {
-      "version": "0.2.4"
+      "version": "0.0.13"
     },
     "zipfile": {
       "version": "0.3.2"
