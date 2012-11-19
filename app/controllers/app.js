@@ -424,8 +424,8 @@ function toCSV(data, res, callback){
 
         // stream the csv out over http
         csv()
-          .from(data.rows)
-          .toStream(res, {end: true, columns: columns, header: true});
+          .from.array(data.rows)
+          .to.stream(res, {columns: columns, header: true, lineBreaks: 'windows'});
         return true;
     } catch (err) {
         callback(err,null);
