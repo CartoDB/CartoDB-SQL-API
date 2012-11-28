@@ -1,3 +1,6 @@
+1.3.3 (DD/MM/YY)
+-----
+
 1.3.2 (DD/MM/YY)
 -----
 * Fix KML export truncation (#70)
