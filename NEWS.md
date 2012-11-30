@@ -1,3 +1,8 @@
+1.3.2 (30/11/12)
+-----
+* Fix KML export truncation (#70)
+* Fix UTF8 in shapefile export (#66)
+
 1.3.1 (DD/MM/YY)
 -----
 * Support 'format' and 'filename' params in POST

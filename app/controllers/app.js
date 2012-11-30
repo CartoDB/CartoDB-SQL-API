@@ -471,6 +471,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
 
       var child = spawn(ogr2ogr, [
         '-f', out_format,
+        '-lco', 'ENCODING=UTF-8',
         out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser
@@ -563,6 +564,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
 
       var child = spawn(zip, ['-qrj', '-', dir ]);
 
+      // TODO: convert to a stream operation
       child.stdout.on('data', function(data) {
         res.write(data);
       });
@@ -663,8 +665,7 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
     function sendResults(err) {
 
       if ( ! err ) {
-        var stream = fs.createReadStream(dumpfile);
-        util.pump(stream, res);
+        fs.createReadStream(dumpfile).pipe(res);
       }
 
       // cleanup output dir (should be safe to unlink)
@@ -706,7 +707,6 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
     function finish(err) {
       if ( err ) callback(err);
       else {
-        res.end();
         callback(null);
       }
 

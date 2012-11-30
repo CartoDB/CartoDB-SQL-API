@@ -726,6 +726,22 @@ test('CSV format', function(done){
     });
 });
 
+test('CSV format, bigger than 81920 bytes', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql',
+        data: querystring.stringify({
+          q: 'SELECT 0 as fname FROM generate_series(0,81920)',
+          format: 'csv'
+        }),
+        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST'
+    },{ }, function(res){
+        assert.ok(res.body.length > 81920, 'CSV smaller than expected: ' + res.body.length);
+        done();
+    });
+});
+
+
 test('CSV format from POST', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
@@ -996,6 +1012,25 @@ test('SHP format, unauthenticated, POST', function(done){
     });
 });
 
+test('SHP format, big size, POST', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql',
+        data: querystring.stringify({
+          q: 'SELECT 0 as fname FROM generate_series(0,81920)',
+          format: 'shp'
+        }),
+        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
+        assert.ok(res.body.length > 81920, 'SHP smaller than expected: ' + res.body.length);
+        done();
+    });
+});
+
 test('SHP format, unauthenticated, with custom filename', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=myshape',
@@ -1072,6 +1107,33 @@ test('SHP format, authenticated', function(done){
     });
 });
 
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/66
+test('SHP format, unauthenticated, with utf8 data', function(done){
+    var query = querystring.stringify({
+        q: "SELECT '♥♦♣♠' as f, st_makepoint(0,0,4326) as the_geom",
+        format: 'shp',
+        filename: 'myshape'
+      });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        var buffer = zf.readFileSync('myshape.dbf');
+        fs.unlinkSync(tmpfile);
+        var strings = buffer.toString();
+        assert.ok(/♥♦♣♠/.exec(strings), "Cannot find '♥♦♣♠' in here:\n" + strings);
+        done();
+    });
+});
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
@@ -1108,6 +1170,25 @@ test('KML format, unauthenticated, POST', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        done();
+    });
+});
+
+test('KML format, bigger than 81920 bytes', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql',
+        data: querystring.stringify({
+          q: 'SELECT 0 as fname FROM generate_series(0,81920)',
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        assert.ok(res.body.length > 81920, 'KML smaller than expected: ' + res.body.length);
         done();
     });
 });

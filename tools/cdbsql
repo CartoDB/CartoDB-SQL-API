@@ -14,6 +14,7 @@ var hasReadline = parseInt(nodevers[0]) > 0 || parseInt(nodevers[1]) >= 8;
 //console.log('Node version ' + nodevers.join(',') + ( hasReadline ? ' has' : ' does not have' ) + ' readline support');
 
 var readline = hasReadline ? require('readline') : null;
+var tty = require('tty');
 
 var me = process.argv[1];
 
@@ -32,6 +33,7 @@ function usage(exit_code) {
   console.log(" --key <string>          API authentication key (none)");
   console.log(" --format <string>       Response format (json)");
   console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
+  console.log(" --echo-queries          echo commands sent to server");
   if ( hasReadline ) {
   console.log(" --batch                 Send all read queries at once (off)");
   }
@@ -50,6 +52,7 @@ var api_version = 1;
 var api_key;
 var sql;
 var decimal_places;
+var echo_queries = false;
 
 var arg;
 while ( arg = process.argv.shift() ) {
@@ -83,6 +86,9 @@ while ( arg = process.argv.shift() ) {
   else if ( arg == '--batch' ) {
     batch_mode = true;
   }
+  else if ( arg == '--echo-queries' ) {
+    echo_queries = true;
+  }
   else if ( ! sql ) {
     sql = arg;
   }
@@ -93,23 +99,27 @@ while ( arg = process.argv.shift() ) {
 
 var hostname = username + '.' + domain;
 
+if ( ! tty.isatty(process.stdin) || ! tty.isatty(process.stdout) ) {
+  batch_mode = true;
+}
+
 if ( ! sql ) {
-  if ( readline ) {
 
-    var rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
+  if ( ! batch_mode ) {
 
-    if ( ! batch_mode ) {
+    if ( readline ) {
+
+      var rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
       rl.setPrompt(hostname + '> ');
       rl.prompt();
-    }
 
-    sql = '';
-    rl.on('line', function(line) {
-      sql += line;
-      if ( ! batch_mode ) {
+      sql = '';
+      rl.on('line', function(line) {
+        sql += line;
         // TODO: some sanity checking, like trim the line or check if it ends with semicolon
         if ( sql.length ) {
           processQuery(sql, function() {
@@ -117,25 +127,26 @@ if ( ! sql ) {
             rl.prompt();
           });
         } else rl.prompt();
-      } 
-    }).on('close', function() {
-      if ( batch_mode ) {
-        if ( sql.length )  {
-          processQuery(sql);
-          sql = '';
-        }
-      } else {
+      }).on('close', function() {
         if ( sql.length ) {
           console.warn("Unprocessed sql left: [" + sql + "]");
         }
         console.log("Good bye");
-      }
-    }).on('SIGCONT', function() {
-      // this is needed so not to exit on stop/resume
-      rl.prompt();
+      }).on('SIGCONT', function() {
+        // this is needed so not to exit on stop/resume
+        rl.prompt();
+      });
+    } else {
+      usage(1);
+    }
+  } else { // batch mode
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    sql = '';
+    process.stdin.on('data', function(chunk) {
+      // TODO: some sanity checking, like trim the line or check if it ends with semicolon
+      processQuery(chunk);
     });
-  } else {
-    usage(1);
   }
 } else {
   processQuery(sql);
@@ -177,7 +188,7 @@ function processQuery(sql, callback)
       console.log("Request:", request);
       var sqlprint = sql.length > 100 ? sql.substring(0, 100) + ' ... [truncated ' + (sql.length-100) + ' bytes]' : sql;
       sqlprint = sqlprint.split('\n').join(' ');
-      console.log("Query:", sqlprint);
+      if ( echo_queries ) console.log("Query:", sqlprint);
       console.log("Response status: " + res.statusCode);
       console.log('Response body:');
       console.dir(body);
