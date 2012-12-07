@@ -730,8 +730,8 @@ test('CSV format', function(done){
         var row0 = rows[0].split(',');
         var row1 = rows[1].split(',');
 
-        assert.equal(row0[0], 'updated_at');
-        assert.equal(row1[0], '2011-09-21 14:02:21.358706');
+        assert.equal(row0[1], 'created_at');
+        assert.equal(row1[1], '2011-09-21 14:02:21');
 
         done();
     });

@@ -28,6 +28,7 @@ var express = require('express')
     , crypto      = require('crypto')
     , fs          = require('fs')
     , zlib        = require('zlib')
+    , strftime    = require('strftime')
     , util        = require('util')
     , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
@@ -425,7 +426,21 @@ function toCSV(data, res, callback){
         // stream the csv out over http
         csv()
           .from(data.rows)
-          .toStream(res, {end: true, columns: columns, header: true});
+          .toStream(res, {end: true, columns: columns, header: true})
+          .transform( function(data) {
+            for (var i in data) {
+              // convert dates to string
+              // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/77
+              // TODO: take a format string as a parameter
+              if ( data[i] instanceof Date ) {
+                // ISO time
+                data[i] = strftime('%F %H:%M:%S', data[i]);
+              }
+            }
+            return data;
+          })
+          ;
+          
         return true;
     } catch (err) {
         callback(err,null);
