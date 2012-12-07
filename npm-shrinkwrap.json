@@ -185,7 +185,8 @@
       }
     },
     "pg": {
-      "version": "0.6.14",
+      "version": "0.8.7-cdb1",
+      "from": "git://github.com/CartoDB/node-postgres.git#cdb_production",
       "dependencies": {
         "generic-pool": {
           "version": "1.0.9"
