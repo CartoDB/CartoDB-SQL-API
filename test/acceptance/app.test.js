@@ -712,7 +712,10 @@ test('GET /api/v1/sql as geojson with default dp as 6', function(done){
 
 test('CSV format', function(done){
     assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT * FROM untitle_table_4 WHERE cartodb_id = 1',
+          format: 'csv'
+        }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
@@ -722,6 +725,14 @@ test('CSV format', function(done){
         assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
         var ct = res.header('Content-Type');
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+
+        var rows = res.body.split(/\r\n/);
+        var row0 = rows[0].split(',');
+        var row1 = rows[1].split(',');
+
+        assert.equal(row0[0], 'updated_at');
+        assert.equal(row1[0], '2011-09-21 14:02:21.358706');
+
         done();
     });
 });
