@@ -186,12 +186,7 @@
     },
     "pg": {
       "version": "0.8.7-cdb1",
-      "from": "git://github.com/CartoDB/node-postgres.git#cdb_production",
-      "dependencies": {
-        "generic-pool": {
-          "version": "1.0.9"
-        }
-      }
+      "from": "git://github.com/CartoDB/node-postgres.git#cdb_production"
     },
     "generic-pool": {
       "version": "1.0.12"
@@ -204,6 +199,19 @@
     },
     "step": {
       "version": "0.0.5"
+    },
+    "topojson": {
+      "version": "0.0.8",
+      "dependencies": {
+        "optimist": {
+          "version": "0.3.5",
+          "dependencies": {
+            "wordwrap": {
+              "version": "0.0.2"
+            }
+          }
+        }
+      }
     },
     "oauth-client": {
       "version": "0.2.0",

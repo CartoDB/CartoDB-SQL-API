@@ -79,7 +79,7 @@ function sanitize_filename(filename) {
 // request handlers
 function handleQuery(req, res) {
 
-    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp', 'kml'];
+    var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml'];
     var svg_width  = 1024.0;
     var svg_height = 768.0;
 
@@ -187,7 +187,7 @@ function handleQuery(req, res) {
                 }
 
                 // TODO: refactor formats to external object
-                if (format === 'geojson'){
+                if (format === 'geojson' || format === 'topojson' ){
                     sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
                 } else if (format === 'shp') {
                     return null;
@@ -255,7 +255,9 @@ function handleQuery(req, res) {
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
-                    toGeoJSON(result, res, this);
+                    toGeoJSON(result, gn, this);
+                } else if (format === 'topojson'){
+                    toTopoJSON(result, gn, this);
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
@@ -299,7 +301,7 @@ function handleCacheStatus(req, res){
 }
 
 // helper functions
-function toGeoJSON(data, res, callback){
+function toGeoJSON(data, gn, callback){
     try{
         var out = {
             type: "FeatureCollection",
@@ -312,9 +314,9 @@ function toGeoJSON(data, res, callback){
                 properties: { },
                 geometry: { }
             };
-            geojson.geometry = JSON.parse(ele["the_geom"]);
-            delete ele["the_geom"];
-            delete ele["the_geom_webmercator"];
+            geojson.geometry = JSON.parse(ele[gn]);
+            delete ele[gn];
+            delete ele["the_geom_webmercator"]; // TODO: use skipfields
             geojson.properties = ele;
             out.features.push(geojson);
         });
@@ -324,6 +326,19 @@ function toGeoJSON(data, res, callback){
     } catch (err) {
         callback(err,null);
     }
+}
+
+function toTopoJSON(data, gn, callback){
+  toGeoJSON(data, gn, function(err, geojson) {
+    if ( err ) {
+      callback(err, null);
+      return;
+    }
+    var TopoJSON = require('topojson');
+    // TODO: provide some identifiers here
+    var topology = TopoJSON.topology(geojson.features);
+    callback(err, topology);
+  });
 }
 
 function toSVG(rows, gn, callback){
@@ -733,6 +748,9 @@ function getContentDisposition(format, filename, inline) {
     var ext = 'json';
     if (format === 'geojson'){
         ext = 'geojson';
+    }
+    else if (format === 'topojson'){
+        ext = 'topojson';
     }
     else if (format === 'csv'){
         ext = 'csv';
