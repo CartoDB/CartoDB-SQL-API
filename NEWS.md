@@ -1,7 +1,7 @@
 1.3.4 (DD/MM/YY)
 -----
 * Improve mixed-geometry export error message (#78)
-* Omit NULL the_geom features from from geojson and topojson outputs (#80)
+* Remove NULL the_geom features from topojson output (#80)
 
 1.3.3 (11/01/13)
 -----

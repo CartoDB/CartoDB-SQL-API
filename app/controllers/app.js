@@ -188,7 +188,12 @@ function handleQuery(req, res) {
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson' || format === 'topojson' ){
-                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo where the_geom is not null'].join("");
+                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'];
+                    if ( format === 'topojson' ) {
+                      // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
+                      sql.push(' where the_geom is not null');
+                    }
+                    sql = sql.join("");
                 } else if (format === 'shp') {
                     return null;
                 } else if (format === 'svg') {
