@@ -126,4 +126,64 @@ test('GET two polygons sharing an edge as topojson', function(done){
     });
 });
 
+test('null geometries', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
+             " UNION ALL " +
+             "SELECT 2, 'D', null::geometry as the_geom ",
+          format: 'topojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
+        var topojson = JSON.parse(res.body);
+        assert.equal(topojson.type, 'Topology');
+
+        // Check transform
+        assert.ok(topojson.hasOwnProperty('transform'));
+        var trans = topojson.transform;
+        assert.equal(_.keys(trans).length, 2); // only scale and translate
+        assert.equal(trans.scale.length, 2); // scalex, scaley
+        assert.equal(Math.round(trans.scale[0]*1e6), 1000); 
+        assert.equal(Math.round(trans.scale[1]*1e6), 500);
+        assert.equal(trans.translate.length, 2); // translatex, translatey
+        assert.equal(trans.translate[0], -5);
+        assert.equal(trans.translate[1], 0);
+
+        // Check objects
+        assert.ok(topojson.hasOwnProperty('objects'));
+        assert.equal(_.keys(topojson.objects).length, 1);
+
+        var obj = topojson.objects[0];
+        //console.dir(obj);
+        // Expected: 
+        // { type: 'Polygon',
+        //   arcs: [ [ 0, 1 ] ],
+        //   properties: { gid: 1, nam: 'U' } }
+        assert.equal(_.keys(obj).length, 3); // type, arcs, properties
+        assert.equal(obj.type, 'Polygon');
+        assert.equal(obj.arcs.length, 1); /* only shell, no holes */
+        var shell = obj.arcs[0];
+        assert.equal(shell.length, 1); /* one non shared arc */
+        assert.equal(shell[0], 0); /* non-shared arc */
+        var props = obj.properties;
+        assert.equal(_.keys(props).length, 2); // gid, name
+        assert.equal(props['gid'], 1);
+        assert.equal(props['name'], 'U');
+
+        // Check arcs
+        assert.ok(topojson.hasOwnProperty('arcs'));
+        assert.equal(topojson.arcs.length, 1); 
+        var arc = topojson.arcs[0]; 
+        assert.deepEqual(arc, [ [ 0, 0 ], [ 4999, 9999 ], [ 5000, -9999 ], [ -9999, 0 ] ]);
+
+        done();
+    });
+});
+
 });

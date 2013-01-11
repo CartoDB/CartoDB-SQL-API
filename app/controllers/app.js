@@ -188,7 +188,7 @@ function handleQuery(req, res) {
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson' || format === 'topojson' ){
-                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
+                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo where the_geom is not null'].join("");
                 } else if (format === 'shp') {
                     return null;
                 } else if (format === 'svg') {
