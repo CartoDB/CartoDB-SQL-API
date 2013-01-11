@@ -257,7 +257,7 @@ function handleQuery(req, res) {
                 if (format === 'geojson'){
                     toGeoJSON(result, gn, this);
                 } else if (format === 'topojson'){
-                    toTopoJSON(result, gn, this);
+                    toTopoJSON(result, gn, skipfields, this);
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
@@ -328,15 +328,27 @@ function toGeoJSON(data, gn, callback){
     }
 }
 
-function toTopoJSON(data, gn, callback){
+function toTopoJSON(data, gn, skipfields, callback){
   toGeoJSON(data, gn, function(err, geojson) {
     if ( err ) {
       callback(err, null);
       return;
     }
     var TopoJSON = require('topojson');
-    // TODO: provide some identifiers here
-    var topology = TopoJSON.topology(geojson.features);
+    var topology = TopoJSON.topology(geojson.features, {
+/* TODO: expose option to API for requesting an identifier
+      "id": function(o) {
+        console.log("id called with obj: "); console.dir(o);
+        return o;
+      },
+*/
+      "quantization": 1e4, // TODO: expose option to API (use existing "dp" for this ?)
+      "force-clockwise": true,
+      "property-filter": function(d) {
+        // TODO: delegate skipfields handling to toGeoJSON
+        return skipfields.indexOf(d) != -1 ? null : d;
+      }
+    });
     callback(err, topology);
   });
 }

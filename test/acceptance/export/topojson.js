@@ -22,9 +22,9 @@ suite('export.topojson', function() {
 test('GET two polygons sharing an edge as topojson', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
-          q: "SELECT 1 as cartodb_id, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
+          q: "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
              " UNION ALL " +
-             "SELECT 2 as cartodb_id, 'POLYGON((0 -5,0 5,-5 0,0 -5))'::geometry as the_geom ",
+             "SELECT 2, 'D', 'POLYGON((0 -5,0 5,-5 0,0 -5))'::geometry as the_geom ",
           format: 'topojson'
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -36,7 +36,7 @@ test('GET two polygons sharing an edge as topojson', function(done){
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
         var topojson = JSON.parse(res.body);
         assert.equal(topojson.type, 'Topology');
-        
+
         // Check transform
         assert.ok(topojson.hasOwnProperty('transform'));
         var trans = topojson.transform;
@@ -51,26 +51,42 @@ test('GET two polygons sharing an edge as topojson', function(done){
         // Check objects
         assert.ok(topojson.hasOwnProperty('objects'));
         assert.equal(_.keys(topojson.objects).length, 2);
+
         var obj = topojson.objects[0];
         //console.dir(obj);
-        // Expected: { type: 'Polygon', arcs: [ [ 0, 1 ] ] }
-        assert.equal(_.keys(obj).length, 2); // only type and arcs, no props
+        // Expected: 
+        // { type: 'Polygon',
+        //   arcs: [ [ 0, 1 ] ],
+        //   properties: { gid: 1, nam: 'U' } }
+        assert.equal(_.keys(obj).length, 3); // type, arcs, properties
         assert.equal(obj.type, 'Polygon');
         assert.equal(obj.arcs.length, 1); /* only shell, no holes */
         var shell = obj.arcs[0];
         assert.equal(shell.length, 2); /* one shared arc, one non-shared */
         assert.equal(shell[0], 0); /* shared arc */
         assert.equal(shell[1], 1); /* non-shared arc */
-        obj = topojson.objects[1];
+        var props = obj.properties;
+        assert.equal(_.keys(props).length, 2); // gid, name
+        assert.equal(props['gid'], 1);
+        assert.equal(props['name'], 'U');
+
+        obj = topojson.objects[1]; 
         //console.dir(obj);
-        // Expected: { type: 'Polygon', arcs: [ [ 0, 2 ] ] }
-        assert.equal(_.keys(obj).length, 2); // only type and arcs, no props
+        // Expected: 
+        // { type: 'Polygon',
+        //   arcs: [ [ 0, 2 ] ],
+        //   properties: { gid: 2, nam: 'D' } }
+        assert.equal(_.keys(obj).length, 3); // type, arcs, properties
         assert.equal(obj.type, 'Polygon');
         assert.equal(obj.arcs.length, 1); /* only shell, no holes */
         shell = obj.arcs[0];
         assert.equal(shell.length, 2); /* one shared arc, one non-shared */
         assert.equal(shell[0], 0); /* shared arc */
         assert.equal(shell[1], 2); /* non-shared arc */
+        props = obj.properties;
+        assert.equal(_.keys(props).length, 2); // gid, name
+        assert.equal(props['gid'], 2);
+        assert.equal(props['name'], 'D');
 
         // Check arcs
         assert.ok(topojson.hasOwnProperty('arcs'));
