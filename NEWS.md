@@ -1,6 +1,7 @@
 1.3.3 (DD/MM/YY)
 -----
 * Fix Date format in CSV output (#77)
+* Add TopoJSON output format (#79)
 
 1.3.2 (30/11/12)
 -----
