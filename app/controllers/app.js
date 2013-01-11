@@ -551,7 +551,10 @@ console.log(['ogr2ogr',
 
       child.on('exit', function(code) {
         if ( code ) {
-          next(new Error("ogr2ogr returned an error (error code " + code + ")\n" + stderr));
+          var emsg = stderr.split('\n')[0];
+          // TODO: add more info about this error ?
+          //if ( RegExp(/attempt to write non-.*geometry.*to.*type shapefile/i).exec(emsg) )
+          next(new Error(emsg));
         } else {
           next(null);
         }

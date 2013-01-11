@@ -1,5 +1,6 @@
 1.3.4 (DD/MM/YY)
 -----
+* Improve mixed-geometry export error message (#78)
 
 1.3.3 (11/01/13)
 -----

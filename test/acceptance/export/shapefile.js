@@ -181,5 +181,26 @@ test('SHP format, unauthenticated, with utf8 data', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/66
+test('mixed type geometry', function(done){
+    var query = querystring.stringify({
+        q: "SELECT 'POINT(0 0)'::geometry as g UNION ALL "
+         + "SELECT 'LINESTRING(0 0, 1 0)'::geometry",
+        format: 'shp'
+      });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
+        var parsedBody = JSON.parse(res.body);
+        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]}
+        assert.deepEqual(parsedBody, expectedBody);
+        done();
+    });
+});
+
 
 });
