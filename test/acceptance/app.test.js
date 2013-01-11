@@ -707,6 +707,31 @@ test('GET /api/v1/sql as geojson with default dp as 6', function(done){
     });
 });
 
+test('null geometries in geojson output', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1 as gid, 'U' as name, null::geometry as the_geom ",
+          format: 'geojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
+        var gjson = JSON.parse(res.body);
+        var expected = {
+            type: 'FeatureCollection',
+            features: [ { type: 'Feature',
+                properties: { gid: 1, name: 'U' },
+                geometry: null } ]
+         };
+        assert.deepEqual(gjson, expected);
+        done();
+      });
+});
+
 // SVG tests
 
 test('GET /api/v1/sql with SVG format', function(done){
