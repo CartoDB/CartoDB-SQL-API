@@ -1,4 +1,7 @@
-1.3.3 (DD/MM/YY)
+1.3.4 (DD/MM/YY)
+-----
+
+1.3.3 (11/01/13)
 -----
 * Fix Date format in CSV output (#77)
 * Add TopoJSON output format (#79)
