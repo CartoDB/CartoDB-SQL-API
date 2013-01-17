@@ -330,24 +330,23 @@ test('CREATE TABLE with GET and auth', function(done){
     });
 });
 
-// TODO: test COPY
-//test('COPY TABLE with GET and auth', function(done){
-//    assert.response(app, {
-//        url: "/api/v1/sql?" + querystring.stringify({
-//          q: 'COPY TABLE test_table FROM stdin; 1\n\\.\n',
-//          api_key: 1234
-//        }),
-//        headers: {host: 'vizzuality.cartodb.com'},
-//        method: 'GET'
-//    },{}, function(res) {
-//      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
-//      // Check cache headers
-//      // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-//      assert.equal(res.headers['x-cache-channel'], 'NONE');
-//      assert.equal(res.headers['cache-control'], expected_cache_control);
-//      done();
-//    });
-//});
+// Test effects of COPY
+// See https://github.com/Vizzuality/cartodb-management/issues/1502
+test('COPY TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'COPY test_table FROM stdin;',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      // We expect a problem, actually
+      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.deepEqual(JSON.parse(res.body), {"error":["COPY from stdin failed: No source stream defined"]});
+      done();
+    });
+});
 
 test('ALTER TABLE with GET and auth', function(done){
     assert.response(app, {

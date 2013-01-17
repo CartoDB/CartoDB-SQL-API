@@ -2,6 +2,7 @@
 -----
 * Improve mixed-geometry export error message (#78)
 * Remove NULL the_geom features from topojson output (#80)
+* Fix crash when issuing SQL "COPY" command
 
 1.3.3 (11/01/13)
 -----
