@@ -1,4 +1,7 @@
-1.3.4 (DD/MM/YY)
+1.3.5 (DD/MM/YY)
+-----
+
+1.3.4 (21/01/13)
 -----
 * Improve mixed-geometry export error message (#78)
 * Remove NULL the_geom features from topojson output (#80)
