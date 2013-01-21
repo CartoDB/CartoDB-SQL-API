@@ -348,6 +348,22 @@ test('COPY TABLE with GET and auth', function(done){
     });
 });
 
+test('COPY TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: "COPY test_table to '/tmp/x';",
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      // We expect a problem, actually
+      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.deepEqual(JSON.parse(res.body), {"error":["must be superuser to COPY to or from a file"]});
+      done();
+    });
+});
+
 test('ALTER TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
