@@ -136,4 +136,46 @@ test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
     });
 });
 
+// Test adding "the_geom" to skipfields
+// See http://github.com/Vizzuality/CartoDB-SQL-API/issues/73
+test('SVG format with "the_geom" in skipfields', function(done){
+    var query = querystring.stringify({
+      q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS the_geom ",
+      format: "svg",
+      skipfields: "the_geom"
+    });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+
+        assert.deepEqual(JSON.parse(res.body), {
+          error:['column "the_geom" does not exist']
+        });
+        done();
+    });
+});
+
+test('SVG format with missing "the_geom" field', function(done){
+    var query = querystring.stringify({
+      q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS something_else ",
+      format: "svg"
+    });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.deepEqual(JSON.parse(res.body), {
+          error:['column "the_geom" does not exist']
+        });
+        done();
+    });
+});
+
+
+
 });

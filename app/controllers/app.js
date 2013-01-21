@@ -373,6 +373,9 @@ function toSVG(rows, gn, callback){
     var lines = [];
     var points = [];
     _.each(rows, function(ele){
+        if ( ! ele.hasOwnProperty(gn) ) {
+          throw new Error('column "' + gn + '" does not exist');
+        }
         var g = ele[gn];
         if ( ! g ) return; // null or empty
         var gdims = ele[gn + '_dimension'];
