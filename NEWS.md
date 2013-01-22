@@ -1,3 +1,18 @@
+1.3.5 (DD/MM/YY)
+-----
+
+1.3.4 (21/01/13)
+-----
+* Improve mixed-geometry export error message (#78)
+* Remove NULL the_geom features from topojson output (#80)
+* Fix crash when issuing SQL "COPY" command
+* Return an error when "the_geom" is in skipfield for SVG output (#73)
+
+1.3.3 (11/01/13)
+-----
+* Fix Date format in CSV output (#77)
+* Add TopoJSON output format (#79)
+
 1.3.2 (30/11/12)
 -----
 * Fix KML export truncation (#70)

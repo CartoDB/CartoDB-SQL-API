@@ -12,7 +12,7 @@ Supported query string parameters:
 
   'format':   Specifies which format to use for the response.
               Supported formats: JSON (the default), GeoJSON,
-              CSV, SVG, SHP
+              TopoJSON, CSV, SVG, SHP
 
   'filename': Sets the filename to use for the query result 
               file attachment
@@ -22,7 +22,7 @@ Supported query string parameters:
               in output. Only useful with "SELECT *" queries.
 
   'dp':       Number of digits after the decimal point.
-              Only affects format=GeoJSON.
+              Only affects format GeoJSON, TopoJSON, SVG.
               By default this is 6.
 
   'api_key':  Needed to authenticate in order to modify the database.
@@ -88,7 +88,7 @@ The GeoJSON response is follows:
     }
 ```
 
-TODO: csv, kml responses
+TODO: csv, kml, svg, topojson responses
 
 Response errors
 ---------------

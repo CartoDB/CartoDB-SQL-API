@@ -28,6 +28,7 @@ var express = require('express')
     , crypto      = require('crypto')
     , fs          = require('fs')
     , zlib        = require('zlib')
+    , strftime    = require('strftime')
     , util        = require('util')
     , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
@@ -78,7 +79,7 @@ function sanitize_filename(filename) {
 // request handlers
 function handleQuery(req, res) {
 
-    var supportedFormats = ['json', 'geojson', 'csv', 'svg', 'shp', 'kml'];
+    var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml'];
     var svg_width  = 1024.0;
     var svg_height = 768.0;
 
@@ -186,8 +187,13 @@ function handleQuery(req, res) {
                 }
 
                 // TODO: refactor formats to external object
-                if (format === 'geojson'){
-                    sql = ['SELECT *, ST_AsGeoJSON(the_geom,',dp,') as the_geom FROM (', sql, ') as foo'].join("");
+                if (format === 'geojson' || format === 'topojson' ){
+                    sql = 'SELECT *, ST_AsGeoJSON(' + gn + ',' + dp
+                        + ') as the_geom FROM (' + sql + ') as foo';
+                    if ( format === 'topojson' ) {
+                        // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
+                        sql += ' where ' + gn + ' is not null';
+                    }
                 } else if (format === 'shp') {
                     return null;
                 } else if (format === 'svg') {
@@ -254,7 +260,9 @@ function handleQuery(req, res) {
 
                 // TODO: refactor formats to external object
                 if (format === 'geojson'){
-                    toGeoJSON(result, res, this);
+                    toGeoJSON(result, gn, this);
+                } else if (format === 'topojson'){
+                    toTopoJSON(result, gn, skipfields, this);
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
@@ -298,7 +306,7 @@ function handleCacheStatus(req, res){
 }
 
 // helper functions
-function toGeoJSON(data, res, callback){
+function toGeoJSON(data, gn, callback){
     try{
         var out = {
             type: "FeatureCollection",
@@ -311,9 +319,9 @@ function toGeoJSON(data, res, callback){
                 properties: { },
                 geometry: { }
             };
-            geojson.geometry = JSON.parse(ele["the_geom"]);
-            delete ele["the_geom"];
-            delete ele["the_geom_webmercator"];
+            geojson.geometry = JSON.parse(ele[gn]);
+            delete ele[gn];
+            delete ele["the_geom_webmercator"]; // TODO: use skipfields
             geojson.properties = ele;
             out.features.push(geojson);
         });
@@ -323,6 +331,31 @@ function toGeoJSON(data, res, callback){
     } catch (err) {
         callback(err,null);
     }
+}
+
+function toTopoJSON(data, gn, skipfields, callback){
+  toGeoJSON(data, gn, function(err, geojson) {
+    if ( err ) {
+      callback(err, null);
+      return;
+    }
+    var TopoJSON = require('topojson');
+    var topology = TopoJSON.topology(geojson.features, {
+/* TODO: expose option to API for requesting an identifier
+      "id": function(o) {
+        console.log("id called with obj: "); console.dir(o);
+        return o;
+      },
+*/
+      "quantization": 1e4, // TODO: expose option to API (use existing "dp" for this ?)
+      "force-clockwise": true,
+      "property-filter": function(d) {
+        // TODO: delegate skipfields handling to toGeoJSON
+        return skipfields.indexOf(d) != -1 ? null : d;
+      }
+    });
+    callback(err, topology);
+  });
 }
 
 function toSVG(rows, gn, callback){
@@ -340,6 +373,9 @@ function toSVG(rows, gn, callback){
     var lines = [];
     var points = [];
     _.each(rows, function(ele){
+        if ( ! ele.hasOwnProperty(gn) ) {
+          throw new Error('column "' + gn + '" does not exist');
+        }
         var g = ele[gn];
         if ( ! g ) return; // null or empty
         var gdims = ele[gn + '_dimension'];
@@ -425,7 +461,21 @@ function toCSV(data, res, callback){
         // stream the csv out over http
         csv()
           .from(data.rows)
-          .toStream(res, {end: true, columns: columns, header: true});
+          .toStream(res, {end: true, columns: columns, header: true})
+          .transform( function(data) {
+            for (var i in data) {
+              // convert dates to string
+              // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/77
+              // TODO: take a format string as a parameter
+              if ( data[i] instanceof Date ) {
+                // ISO time
+                data[i] = strftime('%F %H:%M:%S', data[i]);
+              }
+            }
+            return data;
+          })
+          ;
+          
         return true;
     } catch (err) {
         callback(err,null);
@@ -509,7 +559,10 @@ console.log(['ogr2ogr',
 
       child.on('exit', function(code) {
         if ( code ) {
-          next(new Error("ogr2ogr returned an error (error code " + code + ")\n" + stderr));
+          var emsg = stderr.split('\n')[0];
+          // TODO: add more info about this error ?
+          //if ( RegExp(/attempt to write non-.*geometry.*to.*type shapefile/i).exec(emsg) )
+          next(new Error(emsg));
         } else {
           next(null);
         }
@@ -718,6 +771,9 @@ function getContentDisposition(format, filename, inline) {
     var ext = 'json';
     if (format === 'geojson'){
         ext = 'geojson';
+    }
+    else if (format === 'topojson'){
+        ext = 'topojson';
     }
     else if (format === 'csv'){
         ext = 'csv';

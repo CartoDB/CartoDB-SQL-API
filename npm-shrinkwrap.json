@@ -1,6 +1,6 @@
 {
   "name": "cartodb_api",
-  "version": "1.3.0",
+  "version": "1.3.4",
   "dependencies": {
     "cluster2": {
       "version": "0.3.5-cdb02",
@@ -185,10 +185,10 @@
       }
     },
     "pg": {
-      "version": "0.6.14",
+      "version": "0.11.2",
       "dependencies": {
         "generic-pool": {
-          "version": "1.0.9"
+          "version": "2.0.2"
         }
       }
     },
@@ -204,6 +204,19 @@
     "step": {
       "version": "0.0.5"
     },
+    "topojson": {
+      "version": "0.0.8",
+      "dependencies": {
+        "optimist": {
+          "version": "0.3.5",
+          "dependencies": {
+            "wordwrap": {
+              "version": "0.0.2"
+            }
+          }
+        }
+      }
+    },
     "oauth-client": {
       "version": "0.2.0",
       "dependencies": {
@@ -214,6 +227,9 @@
     },
     "node-uuid": {
       "version": "1.3.3"
+    },
+    "strftime": {
+      "version": "0.4.7"
     },
     "csv": {
       "version": "0.0.13"
