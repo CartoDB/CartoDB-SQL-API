@@ -171,7 +171,7 @@ function handleQuery(req, res) {
                 // get all the tables from Cache or SQL
                 if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
                    tableCache[sql_md5].hits++;
-                   return true;
+                   return false;
                 } else {
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
@@ -180,10 +180,20 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // store explain result in local Cache
-                if (_.isUndefined(tableCache[sql_md5])){
-                    tableCache[sql_md5] = result;
-                    tableCache[sql_md5].may_write = queryMayWrite(sql);
-                    tableCache[sql_md5].hits = 1; //initialise hit counter
+                if ( result !== false ) {
+
+                    if ( result.rowCount === 1 ) {
+                      tableCache[sql_md5] = {
+                        affected_tables: result.rows[0].cdb_querytables, 
+                        // check if query may possibly write
+                        may_write: queryMayWrite(sql),
+                        // initialise hit counter
+                        hits: 1
+                      };
+                    } else {
+                      console.log("[ERROR] Unexpected result from CDB_QueryTables: ");
+                      console.dir(result);
+                    }
                 }
 
                 // TODO: refactor formats to external object
@@ -301,8 +311,7 @@ function handleCacheStatus(req, res){
     var tableCacheValues = _.values(tableCache);
     var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
     var totalExplainKeys = tableCacheValues.length;
-
-    res.send({explain: {hits: totalExplainHits, keys : totalExplainKeys }});
+    res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
 // helper functions
@@ -813,11 +822,11 @@ function setCrossDomain(res){
     res.header("Access-Control-Allow-Headers", "X-Requested-With, X-Prototype-Version, X-CSRF-Token");
 }
 
-function generateCacheKey(database,tables,is_authenticated){
-    if ( is_authenticated && tables.may_write ) {
+function generateCacheKey(database, query_info, is_authenticated){
+    if ( is_authenticated && query_info.may_write ) {
       return "NONE";
     } else {
-      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];
+      return database + ":" + query_info.affected_tables.split(/^\{(.*)\}$/)[1];
     }
 }
 
