@@ -1,6 +1,7 @@
 1.3.5 (DD/MM/YY)
 -----
 * Fix skipfields use with SHP output format (#81)
+* Fix Content-Disposition for error responses (#82)
 
 1.3.4 (21/01/13)
 -----

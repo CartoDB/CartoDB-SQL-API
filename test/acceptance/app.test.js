@@ -48,6 +48,8 @@ test('GET /api/v1/sql', function(done){
     },{
         status: 400
     }, function(res) {
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), {"error":["You must indicate a sql query"]});
         done();
     });
@@ -122,25 +124,42 @@ test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, jus
     });
 });
 
-test('GET /api/v1/sql with SQL parameter on INSERT only. oAuth not used, so public user - should fail', function(){
+test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)&database=cartodb_dev_user_1_db",
         method: 'GET'
     },{
-        status: 400
+    }, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        assert.deepEqual(JSON.parse(res.body), 
+          // FIXME: doesn't look like this is what the test subject wants to test...
+          {"error":["relation \"untitle_table_4\" does not exist"]}
+        );
+        done();
     });
 });
 
-test('GET /api/v1/sql with SQL parameter on DROP DATABASE only. oAuth not used, so public user - should fail', function(){
+test('GET /api/v1/sql with DROP TABlE. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_dev_user_1_db",
         method: 'GET'
     },{
-        status: 400
+    }, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        assert.deepEqual(JSON.parse(res.body), 
+          // FIXME: doesn't look like this is what the test subject wants to test...
+          {"error":["table \"untitle_table_4\" does not exist"]}
+        );
+        done();
     });
 });
 
-test('GET /api/v1/sql with SQL parameter on INSERT only. header based db - should fail', function(){
+// FIXME: Duplicated test, drop 
+test('GET /api/v1/sql with INSERT. header based db - should fail', function(){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)",
         headers: {host: 'vizzuality.cartodb.com'},
@@ -302,13 +321,19 @@ test('DELETE with RETURNING returns all results', function(done){
     });
 });
 
-test('GET /api/v1/sql with SQL parameter on DROP DATABASE only.header based db - should fail', function(){
+test('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4",
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
-        status: 400
+    },{}, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        assert.deepEqual(JSON.parse(res.body), 
+          {"error":["must be owner of relation untitle_table_4"]} 
+        );
+        done();
     });
 });
 
@@ -343,6 +368,8 @@ test('COPY TABLE with GET and auth', function(done){
     },{}, function(res) {
       // We expect a problem, actually
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+      assert.deepEqual(res.headers['content-disposition'], 'inline');
       assert.deepEqual(JSON.parse(res.body), {"error":["COPY from stdin failed: No source stream defined"]});
       done();
     });
@@ -359,6 +386,8 @@ test('COPY TABLE with GET and auth', function(done){
     },{}, function(res) {
       // We expect a problem, actually
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+      assert.deepEqual(res.headers['content-disposition'], 'inline');
       assert.deepEqual(JSON.parse(res.body), {"error":["must be superuser to COPY to or from a file"]});
       done();
     });
@@ -443,6 +472,8 @@ test('sends a 400 when an unsupported format is requested', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 400, res.body);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), {"error":[ "Invalid format: unknown" ]});
         done();
     });
@@ -546,6 +577,8 @@ test('GET /api/v1/sql ensure cross domain set on errors', function(done){
         status: 400
     }, function(res){
         var cd = res.header('Access-Control-Allow-Origin');
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(cd, '*');
         done();
     });
@@ -558,7 +591,12 @@ test('cannot GET system tables', function(done){
         method: 'GET'
     },{
         status: 403
-    }, function() { done(); });
+    }, function(res) {
+      assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+      assert.deepEqual(res.headers['content-disposition'], 'inline');
+      // TODO: check actual error message...
+      done();
+    });
 });
 
 test('GET decent error if domain is incorrect', function(done){
@@ -569,6 +607,8 @@ test('GET decent error if domain is incorrect', function(done){
     },{
         status: 404
     }, function(res){
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         var result = JSON.parse(res.body);
         assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
         done();
@@ -584,6 +624,8 @@ test('GET decent error if SQL is broken', function(done){
         method: 'GET'
     },{}, function(res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         var result = JSON.parse(res.body);
         // NOTE: actual error message may be slighly different, possibly worth a regexp here
         assert.equal(result.error[0], 'syntax error at or near "and"');

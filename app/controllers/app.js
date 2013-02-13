@@ -839,6 +839,9 @@ function handleException(err, res){
     // allow cross site post
     setCrossDomain(res);
 
+    // Force inline content disposition
+    res.header("Content-Disposition", 'inline');
+
     // if the exception defines a http status code, use that, else a 400
     if (!_.isUndefined(err.http_status)){
         res.send(msg, err.http_status);

@@ -195,6 +195,7 @@ test('mixed type geometry', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
         var parsedBody = JSON.parse(res.body);
         var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]}
