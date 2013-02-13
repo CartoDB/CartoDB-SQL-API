@@ -36,7 +36,15 @@ var express = require('express')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
-    , tableCache  = {};
+    , LRU         = require('lru-cache')
+    ;
+
+var tableCache = LRU({
+  // store no more than these many items in the cache
+  max: global.settings.tableCacheMax || 8192,
+  // consider entries expired after these many milliseconds (10 minutes by default)
+  maxAge: global.settings.tableCacheMaxAge || 1000*60*10
+});
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -99,6 +107,7 @@ function handleQuery(req, res) {
     var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
+    var tableCacheItem;
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
@@ -169,8 +178,9 @@ function handleQuery(req, res) {
                 authenticated = ! _.isNull(user_id);
 
                 // get all the tables from Cache or SQL
-                if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
-                   tableCache[sql_md5].hits++;
+                tableCacheItem = tableCache.get(sql_md5);
+                if (tableCacheItem) {
+                   tableCacheItem.hits++;
                    return false;
                 } else {
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
@@ -180,16 +190,17 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // store explain result in local Cache
-                if ( result !== false ) {
+                if ( ! tableCacheItem ) {
 
                     if ( result.rowCount === 1 ) {
-                      tableCache[sql_md5] = {
+                      tableCacheItem = {
                         affected_tables: result.rows[0].cdb_querytables, 
                         // check if query may possibly write
                         may_write: queryMayWrite(sql),
                         // initialise hit counter
                         hits: 1
                       };
+                      tableCache.set(sql_md5, tableCacheItem);
                     } else {
                       console.log("[ERROR] Unexpected result from CDB_QueryTables: ");
                       console.dir(result);
@@ -243,7 +254,7 @@ function handleQuery(req, res) {
                 setCrossDomain(res);
 
                 // set cache headers
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5], authenticated));
+                res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy == 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
@@ -308,7 +319,7 @@ function handleQuery(req, res) {
 }
 
 function handleCacheStatus(req, res){
-    var tableCacheValues = _.values(tableCache);
+    var tableCacheValues = tableCache.values();
     var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
     var totalExplainKeys = tableCacheValues.length;
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});

@@ -1,6 +1,6 @@
 {
   "name": "cartodb_api",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "dependencies": {
     "cluster2": {
       "version": "0.3.5-cdb02",
@@ -233,6 +233,9 @@
     },
     "csv": {
       "version": "0.0.13"
+    },
+    "lru-cache": {
+      "version": "2.2.2"
     },
     "zipfile": {
       "version": "0.3.2"

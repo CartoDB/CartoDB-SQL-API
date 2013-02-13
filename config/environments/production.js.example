@@ -13,3 +13,7 @@ module.exports.redisPool    = 50;
 module.exports.redisIdleTimeoutMillis   = 10000;
 module.exports.redisReapIntervalMillis  = 1000;
 module.exports.redisLog     = false;
+// Max number of entries in the query tables cache
+module.exports.tableCacheMax = 8192;
+// Max age of query table cache items, in milliseconds
+module.exports.tableCacheMaxAge = 1000*60*10;
