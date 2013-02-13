@@ -250,7 +250,7 @@ function handleQuery(req, res) {
             function packageResults(err, result){
                 if (err) throw err;
 
-                if ( skipfields.length ){
+                if ( result && skipfields.length ){
                   for ( var i=0; i<result.rows.length; ++i ) {
                     for ( var j=0; j<skipfields.length; ++j ) {
                       delete result.rows[i][skipfields[j]];
