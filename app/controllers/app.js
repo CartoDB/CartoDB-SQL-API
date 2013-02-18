@@ -202,7 +202,7 @@ function handleQuery(req, res) {
                       };
                       tableCache.set(sql_md5, tableCacheItem);
                     } else {
-                      console.log("[ERROR] Unexpected result from CDB_QueryTables: ");
+                      console.log("[ERROR] Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$)");
                       console.dir(result);
                     }
                 }
@@ -834,7 +834,7 @@ function setCrossDomain(res){
 }
 
 function generateCacheKey(database, query_info, is_authenticated){
-    if ( is_authenticated && query_info.may_write ) {
+    if ( ! query_info || ( is_authenticated && query_info.may_write ) ) {
       return "NONE";
     } else {
       return database + ":" + query_info.affected_tables.split(/^\{(.*)\}$/)[1];
