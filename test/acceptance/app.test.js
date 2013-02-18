@@ -111,6 +111,25 @@ function(done){
     });
 });
 
+// Test for https://github.com/Vizzuality/CartoDB-SQL-API/issues/85
+test("paging doesn't break x-cache-channel", 
+function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT cartodb_id*3 FROM untitle_table_4',
+          api_key: '1234',
+          rows_per_page: 1,
+          page: 2
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        done();
+    });
+});
+
 
 test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {

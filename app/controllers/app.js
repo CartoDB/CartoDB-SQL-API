@@ -183,7 +183,7 @@ function handleQuery(req, res) {
                    tableCacheItem.hits++;
                    return false;
                 } else {
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this, true);
                 }
             },
             function queryResult(err, result){

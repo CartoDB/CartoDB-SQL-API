@@ -5,6 +5,7 @@
 * Add pid to /cachestatus (#83)
 * Check CDB_QueryTable response before saving into cache (#83)
 * Use an expiring LRU cache for query tables (#83)
+* Fix X-Cache-Channel computation with paging parameters (#85)
 
 1.3.4 (21/01/13)
 -----
