@@ -430,6 +430,23 @@ test('ALTER TABLE with GET and auth', function(done){
     });
 });
 
+test('multistatement insert, alter, select, begin, commit', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'BEGIN; DELETE FROM test_table; COMMIT; BEGIN; INSERT INTO test_table(b) values (5); COMMIT; ALTER TABLE test_table ALTER b TYPE float USING b::float/2; SELECT b FROM test_table; COMMIT;',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      var parsedBody = JSON.parse(res.body);
+      assert.equal(parsedBody.total_rows, 1);
+      assert.deepEqual(parsedBody.rows[0], {b:2.5});
+      done();
+    });
+});
+
 test('DROP TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
