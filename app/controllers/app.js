@@ -36,7 +36,15 @@ var express = require('express')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
-    , tableCache  = {};
+    , LRU         = require('lru-cache')
+    ;
+
+var tableCache = LRU({
+  // store no more than these many items in the cache
+  max: global.settings.tableCacheMax || 8192,
+  // consider entries expired after these many milliseconds (10 minutes by default)
+  maxAge: global.settings.tableCacheMaxAge || 1000*60*10
+});
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -99,6 +107,7 @@ function handleQuery(req, res) {
     var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
+    var tableCacheItem;
 
     // sanitize and apply defaults to input
     dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
@@ -169,21 +178,33 @@ function handleQuery(req, res) {
                 authenticated = ! _.isNull(user_id);
 
                 // get all the tables from Cache or SQL
-                if (!_.isNull(tableCache[sql_md5]) && !_.isUndefined(tableCache[sql_md5])){
-                   tableCache[sql_md5].hits++;
-                   return true;
+                tableCacheItem = tableCache.get(sql_md5);
+                if (tableCacheItem) {
+                   tableCacheItem.hits++;
+                   return false;
                 } else {
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this, true);
                 }
             },
             function queryResult(err, result){
                 if (err) throw err;
 
                 // store explain result in local Cache
-                if (_.isUndefined(tableCache[sql_md5])){
-                    tableCache[sql_md5] = result;
-                    tableCache[sql_md5].may_write = queryMayWrite(sql);
-                    tableCache[sql_md5].hits = 1; //initialise hit counter
+                if ( ! tableCacheItem ) {
+
+                    if ( result.rowCount === 1 ) {
+                      tableCacheItem = {
+                        affected_tables: result.rows[0].cdb_querytables, 
+                        // check if query may possibly write
+                        may_write: queryMayWrite(sql),
+                        // initialise hit counter
+                        hits: 1
+                      };
+                      tableCache.set(sql_md5, tableCacheItem);
+                    } else {
+                      console.log("[ERROR] Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$)");
+                      console.dir(result);
+                    }
                 }
 
                 // TODO: refactor formats to external object
@@ -233,7 +254,7 @@ function handleQuery(req, res) {
                 setCrossDomain(res);
 
                 // set cache headers
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCache[sql_md5], authenticated));
+                res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy == 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
@@ -250,7 +271,7 @@ function handleQuery(req, res) {
             function packageResults(err, result){
                 if (err) throw err;
 
-                if ( skipfields.length ){
+                if ( result && skipfields.length ){
                   for ( var i=0; i<result.rows.length; ++i ) {
                     for ( var j=0; j<skipfields.length; ++j ) {
                       delete result.rows[i][skipfields[j]];
@@ -298,11 +319,10 @@ function handleQuery(req, res) {
 }
 
 function handleCacheStatus(req, res){
-    var tableCacheValues = _.values(tableCache);
+    var tableCacheValues = tableCache.values();
     var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
     var totalExplainKeys = tableCacheValues.length;
-
-    res.send({explain: {hits: totalExplainHits, keys : totalExplainKeys }});
+    res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
 // helper functions
@@ -813,11 +833,11 @@ function setCrossDomain(res){
     res.header("Access-Control-Allow-Headers", "X-Requested-With, X-Prototype-Version, X-CSRF-Token");
 }
 
-function generateCacheKey(database,tables,is_authenticated){
-    if ( is_authenticated && tables.may_write ) {
+function generateCacheKey(database, query_info, is_authenticated){
+    if ( ! query_info || ( is_authenticated && query_info.may_write ) ) {
       return "NONE";
     } else {
-      return database + ":" + tables.rows[0].cdb_querytables.split(/^\{(.*)\}$/)[1];
+      return database + ":" + query_info.affected_tables.split(/^\{(.*)\}$/)[1];
     }
 }
 
@@ -838,6 +858,9 @@ function handleException(err, res){
 
     // allow cross site post
     setCrossDomain(res);
+
+    // Force inline content disposition
+    res.header("Content-Disposition", 'inline');
 
     // if the exception defines a http status code, use that, else a 400
     if (!_.isUndefined(err.http_status)){

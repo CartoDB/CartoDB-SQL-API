@@ -54,7 +54,7 @@ var PSQL = function(user_id, db, limit, offset){
         }
     };
 
-    me.query = function(sql, callback){
+    me.query = function(sql, callback, skip_window){
         var that = this;
 
         Step(
@@ -67,7 +67,7 @@ var PSQL = function(user_id, db, limit, offset){
             },
             function(err, client){
                 if (err) return callback(err, null);
-                client.query(that.window_sql(sql), this);
+                client.query(skip_window ? sql : that.window_sql(sql), this);
             },
             function(err, res){
                 //if (err) console.log(err);

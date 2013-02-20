@@ -22,7 +22,8 @@
         "oauth-client": "0.2.0",
         "node-uuid":"1.3.3",
         "strftime":"~0.4.7",
-        "csv":"0.0.13"
+        "csv":"0.0.13",
+        "lru-cache":"~2.2.2"
     },
     "devDependencies": {
         "mocha": "1.2.1",
@@ -30,7 +31,7 @@
         "libxmljs": "~0.6.1"
     },
     "scripts": {
-        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/redis_pool.test.js test/unit/metadata.test.js test/unit/oauth.test.js test/unit/psql.test.js test/acceptance/app.test.js  test/acceptance/app.auth.test.js test/acceptance/export/*.js"
+        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/redis_pool.test.js test/unit/metadata.test.js test/unit/oauth.test.js test/unit/psql.test.js test/acceptance/app.test.js  test/acceptance/app.auth.test.js test/acceptance/x-cache-channel.js test/acceptance/export/*.js"
     },
     "engines": { "node": ">= 0.4.1 < 0.9" }
 }
