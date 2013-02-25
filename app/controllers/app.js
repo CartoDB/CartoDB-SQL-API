@@ -571,9 +571,12 @@ console.log(['ogr2ogr',
         //console.log('stdout: ' + data);
       });
 
-      var stderr = '';
+      var stderr;
+      var logErrPat = new RegExp(/^ERROR/);
       child.stderr.on('data', function(data) {
-        stderr += data;
+        data = data.toString(); // know of a faster way ?
+        // Store only the first ERROR line
+        if ( ! stderr && data.match(logErrPat) ) stderr = data;
         console.log('ogr2ogr stderr: ' + data);
       });
 

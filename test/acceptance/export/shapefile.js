@@ -204,6 +204,31 @@ test('mixed type geometry', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/87
+test('errors are not confused with warnings', function(done){
+    var query = querystring.stringify({
+        q: "SELECT 'POINT(0 0)'::geometry as g"
+         + ", 1 as a_very_very_very_long_field_name"
+         + " UNION ALL "
+         + "SELECT 'LINESTRING(0 0, 1 0)'::geometry, 2",
+        format: 'shp'
+      });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
+        var parsedBody = JSON.parse(res.body);
+        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]}
+        assert.deepEqual(parsedBody, expectedBody);
+        done();
+    });
+});
+
 test('skipfields controls fields included in SHP output', function(done){
     var query = querystring.stringify({
         q: "SELECT 111 as skipme, 222 as keepme, 'POINT(0 0)'::geometry as g",
