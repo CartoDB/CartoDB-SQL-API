@@ -1,4 +1,8 @@
-1.3.5 (DD/MM/YY)
+1.3.6 (DD/MM/YY)
+-----
+* Do not confuse warnings with errors on shapefile output (#87)
+
+1.3.5 (19/02/13)
 -----
 * Fix skipfields use with SHP output format (#81)
 * Fix Content-Disposition for error responses (#82)
