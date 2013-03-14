@@ -1,6 +1,7 @@
 1.3.7
 -----
 * Fix parsing of numeric arrays (#88)
+* node-pool upgraded to 2.0.3
 
 1.3.6 (DD/MM/YY)
 -----
