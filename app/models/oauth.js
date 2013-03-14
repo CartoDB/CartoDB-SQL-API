@@ -130,11 +130,12 @@ var oAuth = function(){
 
   me.getOAuthHash = function(access_key, callback){
     var that = this;
-    RedisPool.acquire(this.oauth_database, function(client){
+    RedisPool.acquire(this.oauth_database, function(err, client){
+      if ( err ) { callback(err); return; }
       var redisClient = client;
       redisClient.HGETALL(_.template(that.oauth_user_key, {oauth_access_key: access_key}), function(err, data){
         RedisPool.release(that.oauth_database, redisClient);
-        return callback(err, data)
+        callback(err, data);
       });
     });
   };

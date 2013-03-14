@@ -18,7 +18,8 @@ test('test pool object has an aquire function', function(){
 });
 
 test('test calling aquire returns a redis client object that can get/set', function(done){
-  redis_pool.acquire(0, function(client){
+  redis_pool.acquire(0, function(err, client){
+    assert.ok(!err);
     client.set("key","value");
     client.get("key", function(err,data){      
       assert.equal(data, "value");      
@@ -29,12 +30,14 @@ test('test calling aquire returns a redis client object that can get/set', funct
 });
 
 test('test calling aquire on another DB returns a redis client object that can get/set', function(done){
-  redis_pool.acquire("MYDATABASE", function(client){
+  redis_pool.acquire("MYDATABASE", function(err, client){
+    assert.ok(!err);
     client.set("key","value");
     client.get("key", function(err,data){      
       assert.equal(data, "value");      
       redis_pool.release("MYDATABASE", client);
-      redis_pool.acquire("MYDATABASE", function(client){
+      redis_pool.acquire("MYDATABASE", function(err, client){
+        assert.ok(!err);
         client.get("key", function(err,data){      
           assert.equal(data, "value");      
           redis_pool.release("MYDATABASE", client);

@@ -59,13 +59,13 @@ module.exports = function() {
             function getRedisClient() {
                 RedisPool.acquire(that.metadata_database, this);
             },
-            function lookupMetadata(data) {
+            function lookupMetadata(err, data) {
+                if (err) throw err;
                 redisClient = data;
                 redisClient.HGET(redisKey, hashKey, this);
             },
             function releaseRedisClient(err, data) {
-                if (err) throw err;
-                RedisPool.release(that.metadata_database, redisClient);
+                if ( redisClient ) RedisPool.release(that.metadata_database, redisClient);
                 callback(err, data);
             }
         );

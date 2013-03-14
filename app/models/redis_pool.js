@@ -6,13 +6,13 @@ var RedisPool = {
     //
     // - `database` {String} redis database name
     // - `callback` {Function} callback to call once acquired. Takes the form
-    //   `callback(err, resource)`
+    //                         `callback(err, resource)`
     acquire: function(database, callback) {
         if (!this.pools[database]) {
           this.pools[database] = this.makePool(database);            
         }
-        this.pools[database].acquire(function(resource) {
-          callback(resource);
+        this.pools[database].acquire(function(err, resource) {
+          callback(err, resource);
         });
     },
     
