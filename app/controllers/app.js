@@ -605,8 +605,6 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
   var shapefile = outdirpath + '/' + filename + '.shp';
 
   // TODO: following tests:
-  //  - fetch with no auth [done]
-  //  - fetch with auth [done]
   //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
 
@@ -712,8 +710,6 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   var dumpfile = outdirpath + '/cartodb-query.kml';
 
   // TODO: following tests:
-  //  - fetch with no auth
-  //  - fetch with auth
   //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
 
