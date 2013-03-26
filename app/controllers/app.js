@@ -708,7 +708,6 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
 }
 
 function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
-  var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ 'kml', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + reqKey;
