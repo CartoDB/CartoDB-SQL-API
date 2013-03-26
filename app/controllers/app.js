@@ -527,15 +527,16 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
     function spawnDumper(err, result) {
       if (err) throw err;
 
-      if ( ! result.rows.length )
-        throw new Error("Query returns no rows");
+      //if ( ! result.rows.length ) throw new Error("Query returns no rows");
 
       // Skip system columns
-      for (var k in result.rows[0]) {
-        if ( skipfields.indexOf(k) != -1 ) continue;
-        if ( k == "the_geom_webmercator" ) continue;
-        columns.push('"' + k + '"');
-      }
+      if ( result.rows.length ) {
+        for (var k in result.rows[0]) {
+          if ( skipfields.indexOf(k) != -1 ) continue;
+          if ( k == "the_geom_webmercator" ) continue;
+          columns.push('"' + k + '"');
+        }
+      } else columns.push('*');
       //console.log(columns.join(','));
 
       var next = this;
@@ -735,20 +736,32 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
 
       //console.log("toOGR completed, have to send result to " + baking.req.length + " requests");
 
-      if ( ! err ) {
-        _.each(baking.req, function(r) {
-          fs.createReadStream(dumpfile).pipe(r.res);
+      var nextPipe = function(finish) {
+        var r = baking.req.shift();
+        if ( ! r ) { finish(null); return; }
+        var stream = fs.createReadStream(dumpfile);
+        stream.on('open', function(fd) {
+          nextPipe(finish);
         });
+        stream.pipe(r.res);
+        r.cb(err);
       }
+
+      if ( ! err ) nextPipe(this);
+      else {
+        _.each(baking.req, function(r) {
+          r.cb(err);
+        });
+        return true;
+      }
+
+    },
+    function cleanup(err) {
 
       delete bakingExports[reqKey];
 
       // unlink dump file (sync to avoid race condition)
       fs.unlinkSync(dumpfile);
-
-      _.each(baking.req, function(r) {
-        r.cb(err);
-      });
 
     }
   );

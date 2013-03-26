@@ -162,4 +162,18 @@ test('KML format, unauthenticated, concurrent requests', function(done){
     }
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
+test('GET /api/v1/sql as kml with no rows', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=kml',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
+        assert.equal(res.body, body);
+        done();
+    });
+});
+
 });

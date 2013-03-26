@@ -4,6 +4,7 @@
 * node-pool upgraded to 2.0.3
 * Reduce memory use on KML export
 * Fix concurrent request for KML exports
+* Send an empty-like KML when exporting zero-rows queries
 * Make temporary dir a configuration setting
 
 1.3.6 (DD/MM/YY)
