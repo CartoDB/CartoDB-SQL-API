@@ -215,7 +215,9 @@ function handleQuery(req, res) {
                         // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
                         sql += ' where ' + gn + ' is not null';
                     }
-                } else if (format === 'shp') {
+                } else if (format === 'shp' || format === 'kml' ) {
+                    // These format are implemented via OGR2OGR, so we don't
+                    // need to run a query ourselves
                     return null;
                 } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
