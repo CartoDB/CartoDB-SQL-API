@@ -3,6 +3,7 @@
 * Fix parsing of numeric arrays (#88)
 * node-pool upgraded to 2.0.3
 * Reduce memory use on KML export
+* Make temporary dir a configuration setting
 
 1.3.6 (DD/MM/YY)
 -----

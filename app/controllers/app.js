@@ -512,7 +512,6 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
 
-  var tmpdir = '/tmp'; // FIXME: make configurable
   var columns = [];
 
   Step (
@@ -601,7 +600,7 @@ console.log(['ogr2ogr',
 
 function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
-  var tmpdir = '/tmp'; // FIXME: make configurable
+  var tmpdir = global.settings.tmpDir || '/tmp';
   var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
   var shapefile = outdirpath + '/' + filename + '.shp';
 
@@ -708,7 +707,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
 
 function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
-  var tmpdir = '/tmp'; // FIXME: make configurable
+  var tmpdir = global.settings.tmpDir || '/tmp';
   var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
   var dumpfile = outdirpath + '/cartodb-query.kml';
 
