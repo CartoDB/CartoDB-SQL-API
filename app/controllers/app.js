@@ -700,12 +700,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
       });
     },
     function finish(err) {
-      if ( err ) callback(err);
-      else {
-        res.end();
-        callback(null);
-      }
-
+      callback(err);
     }
   );
 }
@@ -783,11 +778,7 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
       });
     },
     function finish(err) {
-      if ( err ) callback(err);
-      else {
-        callback(null);
-      }
-
+      callback(err);
     }
   );
 }
