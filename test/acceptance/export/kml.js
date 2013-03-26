@@ -120,7 +120,6 @@ test('KML format, unauthenticated, custom filename', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-        // TODO: check for actual content, at least try to uncompress..
         done();
     });
 });
@@ -134,7 +133,6 @@ test('KML format, authenticated', function(done){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-        // TODO: check for actual content, at least try to uncompress..
         done();
     });
 });
