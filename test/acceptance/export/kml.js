@@ -137,4 +137,29 @@ test('KML format, authenticated', function(done){
     });
 });
 
+test('KML format, unauthenticated, concurrent requests', function(done){
+    var query = querystring.stringify({
+        q: "SELECT 'val', x, y, st_makepoint(x,y,4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
+        format: 'kml',
+        filename: 'multi'
+      });
+
+    var waiting = 4;
+
+    for (var i=0; i<waiting; ++i) {
+      assert.response(app, {
+          url: '/api/v1/sql?' + query,
+          headers: {host: 'vizzuality.cartodb.com'},
+          encoding: 'binary',
+          method: 'GET'
+      },{ }, function(res){
+          assert.equal(res.statusCode, 200, res.body);
+          var cd = res.header('Content-Disposition');
+          assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+          assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+          if ( ! --waiting ) done();
+      });
+    }
+});
+
 });

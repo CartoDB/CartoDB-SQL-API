@@ -46,6 +46,9 @@ var tableCache = LRU({
   maxAge: global.settings.tableCacheMaxAge || 1000*60*10
 });
 
+// Keeps track of what's waiting baking for export
+var bakingExports = {};
+
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 
@@ -505,7 +508,7 @@ function toCSV(data, res, callback){
 }
 
 // Internal function usable by all OGR-driven outputs
-function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_filename, callback) {
+function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
@@ -627,7 +630,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
           throw err;
         }
       }
-      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'ESRI Shapefile', shapefile, this);
+      toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
     },
     function zipAndSendDump(err) {
       if ( err ) throw err;
@@ -706,75 +709,47 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
 function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
-  var dumpfile = outdirpath + '/cartodb-query.kml';
+  var reqKey = [ 'kml', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
+  var outdirpath = tmpdir + '/sqlapi-' + reqKey;
+  var dumpfile = outdirpath + ':cartodb-query.kml';
 
   // TODO: following tests:
-  //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
+
+  var baking = bakingExports[reqKey];
+  if ( baking ) {
+    baking.req.push( {cb:callback, res:res} );
+    return;
+  }
+
+  baking = bakingExports[reqKey] = {
+    req: [ {cb:callback, res:res} ]
+  };
 
   Step (
 
-    function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
-    },
-    function spawnDumper(err) {
-      if ( err ) {
-        if ( err.code == 'EEXIST' ) {
-          // TODO: this could mean another request for the same
-          //       resource is in progress, in which case we might want
-          //       to queue the response to after it's completed...
-          console.log("Reusing existing KML output directory for query: " + sql);
-        } else {
-          throw err;
-        }
-      }
-      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'KML', dumpfile, this);
+    function spawnDumper() {
+      toOGR(dbname, user_id, gcol, sql, skipfields, 'KML', dumpfile, this);
     },
     function sendResults(err) {
 
+      //console.log("toOGR completed, have to send result to " + baking.req.length + " requests");
+
       if ( ! err ) {
-        fs.createReadStream(dumpfile).pipe(res);
-      }
-
-      // cleanup output dir (should be safe to unlink)
-      var topError = err;
-      var next = this;
-
-      //console.log("Cleaning up " + outdirpath);
-
-      // Unlink the dir content
-      var unlinkall = function(dir, files, finish) {
-        var f = files.shift();
-        if ( ! f ) { finish(null); return; }
-        var fn = dir + '/' + f;
-        fs.unlink(fn, function(err) {
-          if ( err ) {
-            console.log("Unlinking " + fn + ": " + err);
-            finish(err);
-          }
-          else unlinkall(dir, files, finish)
+        _.each(baking.req, function(r) {
+          fs.createReadStream(dumpfile).pipe(r.res);
         });
       }
-      fs.readdir(outdirpath, function(err, files) {
-        if ( err ) {
-          if ( err.code != 'ENOENT' ) {
-            next(new Error([topError, err].join('\n')));
-          } else {
-            next(topError);
-          }
-        } else {
-          unlinkall(outdirpath, files, function(err) {
-            fs.rmdir(outdirpath, function(err) {
-              if ( err ) console.log("Removing dir " + path + ": " + err);
-              next(topError);
-            });
-          });
-        }
+
+      delete bakingExports[reqKey];
+
+      // unlink dump file (sync to avoid race condition)
+      fs.unlinkSync(dumpfile);
+
+      _.each(baking.req, function(r) {
+        r.cb(err);
       });
-    },
-    function finish(err) {
-      callback(err);
+
     }
   );
 }
