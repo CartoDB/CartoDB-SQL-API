@@ -37,7 +37,7 @@ test('CSV format', function(done){
         var row1 = rows[1].split(',');
 
         assert.equal(row0[1], 'created_at');
-        assert.equal(row1[1], '2011-09-21 14:02:21');
+        assert.equal(row1[1], '2011-09-21 14:02:21.314252');
 
         done();
     });
@@ -130,7 +130,7 @@ test('GET /api/v1/sql as csv', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = "cartodb_id,geom\r\n1,SRID=4326;POINT(-3.699732 40.423012)";
+        var body = 'cartodb_id,geom\r\n1,"SRID=4326;POINT(-3.699732 40.423012)"\r\n';
         assert.equal(body, res.body);
         done();
     });
@@ -157,7 +157,7 @@ test('GET /api/v1/sql as csv, properly escaped', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"';
+        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
         assert.equal(body, res.body);
         done();
     });

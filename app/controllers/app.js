@@ -218,7 +218,7 @@ function handleQuery(req, res) {
                         // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
                         sql += ' where ' + gn + ' is not null';
                     }
-                } else if (format === 'shp' || format === 'kml' ) {
+                } else if (format === 'shp' || format === 'kml' || format === 'csv' ) {
                     // These format are implemented via OGR2OGR, so we don't
                     // need to run a query ourselves
                     return null;
@@ -292,7 +292,8 @@ function handleQuery(req, res) {
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
-                    toCSV(result, res, this);
+                    toCSV_ogr(database, user_id, gn, sql, skipfields, res, this);
+                    //toCSV(result, res, this);
                 } else if ( format === 'shp'){
                     toSHP(database, user_id, gn, sql, skipfields, filename, res, this);
                 } else if ( format === 'kml'){
@@ -478,6 +479,10 @@ function toSVG(rows, gn, callback){
     callback(null, out.join("\n"));
 }
 
+function toCSV_ogr(dbname, user_id, gcol, sql, skipfields, res, callback) {
+  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'CSV', 'csv', res, callback);
+}
+
 function toCSV(data, res, callback){
     try{
         // pull out keys for column headers
@@ -533,8 +538,9 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
       if ( result.rows.length ) {
         for (var k in result.rows[0]) {
           if ( skipfields.indexOf(k) != -1 ) continue;
-          if ( k == "the_geom_webmercator" ) continue;
-          columns.push('"' + k + '"');
+          if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
+          if ( out_format == 'CSV' ) columns.push('"' + k + '"::text');
+          else columns.push('"' + k + '"');
         }
       } else columns.push('*');
       //console.log(columns.join(','));
@@ -547,6 +553,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
       var child = spawn(ogr2ogr, [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
+        '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser
@@ -557,9 +564,9 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
         '-sql', sql
       ]);
 
-/*
+/**/
 console.log(['ogr2ogr',
-        '-f', out_format,
+        '-f', '"'+out_format+'"',
         out_filename,
         "'PG:host=" + dbhost
          + " user=" + dbuser
@@ -567,8 +574,8 @@ console.log(['ogr2ogr',
          + " password=" + dbpass
          + " tables=fake" // trick to skip query to geometry_columns
          + "'",
-        '-sql "', sql, '"'].join(' '));
-*/
+        "-sql '", sql, "'"].join(' '));
+/**/
 
       var stdout = '';
       child.stdout.on('data', function(data) {
@@ -707,11 +714,12 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
   );
 }
 
-function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
+function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ 'kml', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
+  var reqKey = [ fmt, dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + reqKey;
-  var dumpfile = outdirpath + ':cartodb-query.kml';
+  var dumpfile = outdirpath + ':cartodb-query.' + ext;
+  var dumped = false;
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
@@ -729,7 +737,7 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   Step (
 
     function spawnDumper() {
-      toOGR(dbname, user_id, gcol, sql, skipfields, 'KML', dumpfile, this);
+      toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, this);
     },
     function sendResults(err) {
 
@@ -740,9 +748,15 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
         if ( ! r ) { finish(null); return; }
         var stream = fs.createReadStream(dumpfile);
         stream.on('open', function(fd) {
+          dumped = true;
+          stream.pipe(r.res);
           nextPipe(finish);
         });
-        stream.pipe(r.res);
+        stream.on('error', function(e) {
+          console.log("Can't send response: " + e);
+          r.res.end(); 
+          nextPipe(finish);
+        });
         r.cb(err);
       }
 
@@ -760,10 +774,19 @@ function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
       delete bakingExports[reqKey];
 
       // unlink dump file (sync to avoid race condition)
-      fs.unlinkSync(dumpfile);
+      try { fs.unlinkSync(dumpfile); }
+      catch (e) {
+        if ( e.code != 'ENOENT' ) {
+          console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
+        }
+      }
 
     }
   );
+}
+
+function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
+  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'KML', 'kml', res, callback);
 }
 
 function getContentDisposition(format, filename, inline) {

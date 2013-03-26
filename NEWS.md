@@ -6,6 +6,7 @@
 * Fix concurrent request for KML exports
 * Send an empty-like KML when exporting zero-rows queries
 * Make temporary dir a configuration setting
+* Use OGR for CSV output, reducing memory requirement
 
 1.3.6 (DD/MM/YY)
 -----
