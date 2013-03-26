@@ -700,6 +700,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
       });
     },
     function finish(err) {
+      if ( ! err ) res.end();
       callback(err);
     }
   );
