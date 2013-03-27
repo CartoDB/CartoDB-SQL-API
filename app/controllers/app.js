@@ -532,7 +532,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
         '-sql', sql
       ]);
 
-/**/
+/*
 console.log(['ogr2ogr',
         '-f', '"'+out_format+'"',
         out_filename,
@@ -543,7 +543,7 @@ console.log(['ogr2ogr',
          + " tables=fake" // trick to skip query to geometry_columns
          + "'",
         "-sql '", sql, "'"].join(' '));
-/**/
+*/
 
       var stdout = '';
       child.stdout.on('data', function(data) {
