@@ -3,7 +3,7 @@
 * Fix parsing of numeric arrays (#88)
 * node-pool upgraded to 2.0.3
 * Reduce memory use on KML export
-* Fix concurrent request for KML exports
+* Fix concurrent request for KML and Shapefile exports
 * Send an empty-like KML when exporting zero-rows queries
 * Make temporary dir a configuration setting
 * Use OGR for CSV output, reducing memory requirement

@@ -580,15 +580,23 @@ console.log(['ogr2ogr',
 function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
+  var reqKey = [ 'shp', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
+  var outdirpath = tmpdir + '/sqlapi-' + reqKey; 
+  var zipfile = outdirpath + '.zip';
   var shapefile = outdirpath + '/' + filename + '.shp';
 
   // TODO: following tests:
-  //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
 
-  // TODO: Check if the file already exists
-  // (should mean another export of the same query is in progress)
+  var baking = bakingExports[reqKey];
+  if ( baking ) {
+    baking.req.push( {cb:callback, res:res} );
+    return;
+  }
+
+  baking = bakingExports[reqKey] = {
+    req: [ {cb:callback, res:res} ]
+  };
 
   Step (
 
@@ -596,45 +604,22 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
       fs.mkdir(outdirpath, 0777, this);
     },
     function spawnDumper(err) {
-      if ( err ) {
-        if ( err.code == 'EEXIST' ) {
-          // TODO: this could mean another request for the same
-          //       resource is in progress, in which case we might want
-          //       to queue the response to after it's completed...
-          console.log("Reusing existing SHP output directory for query: " + sql);
-        } else {
-          throw err;
-        }
-      }
+      if ( err ) throw err;
       toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
     },
-    function zipAndSendDump(err) {
+    function doZip(err) {
       if ( err ) throw err;
 
       var next = this;
-      var dir = outdirpath;
 
-      var zipfile = dir + '.zip';
-
-      var child = spawn(zip, ['-qrj', '-', dir ]);
-
-      // TODO: convert to a stream operation
-      child.stdout.on('data', function(data) {
-        res.write(data);
-      });
-
-      var stderr = '';
-      child.stderr.on('data', function(data) {
-        stderr += data;
-        console.log('zip stderr: ' + data);
-      });
+      var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
 
       child.on('exit', function(code) {
-        if (code) {
-          res.statusCode = 500;
-          //res.send(stderr);
-        }
         //console.log("Zip complete, zip return code was " + code);
+        if (code) {
+          next(new Error("Zip command return code " + code));
+          res.statusCode = 500; 
+        }
         next(null);
       });
 
@@ -675,9 +660,45 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
         }
       });
     },
-    function finish(err) {
-      if ( ! err ) res.end();
-      callback(err);
+    function sendResults(err) {
+
+      var nextPipe = function(finish) {
+        var r = baking.req.shift();
+        if ( ! r ) { finish(null); return; }
+        var stream = fs.createReadStream(zipfile);
+        stream.on('open', function(fd) {
+          stream.pipe(r.res);
+          nextPipe(finish);
+        });
+        stream.on('error', function(e) {
+          console.log("Can't send response: " + e);
+          r.res.end(); 
+          nextPipe(finish);
+        });
+        r.cb(err);
+      }
+
+      if ( ! err ) nextPipe(this);
+      else {
+        _.each(baking.req, function(r) {
+          r.cb(err);
+        });
+        return true;
+      }
+
+    },
+    function cleanup(err) {
+
+      delete bakingExports[reqKey];
+
+      // unlink dump file (sync to avoid race condition)
+      try { fs.unlinkSync(zipfile); }
+      catch (e) {
+        if ( e.code != 'ENOENT' ) {
+          console.log("Could not unlink zipfile " + zipfile + ": " + e);
+        }
+      }
+
     }
   );
 }
@@ -687,7 +708,6 @@ function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res,
   var reqKey = [ fmt, dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
-  var dumped = false;
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
@@ -716,7 +736,6 @@ function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res,
         if ( ! r ) { finish(null); return; }
         var stream = fs.createReadStream(dumpfile);
         stream.on('open', function(fd) {
-          dumped = true;
           stream.pipe(r.res);
           nextPipe(finish);
         });
