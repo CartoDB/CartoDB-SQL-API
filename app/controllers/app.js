@@ -24,11 +24,9 @@ var express = require('express')
         format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
     }))
     , Step        = require('step')
-    , csv         = require('csv')
     , crypto      = require('crypto')
     , fs          = require('fs')
     , zlib        = require('zlib')
-    , strftime    = require('strftime')
     , util        = require('util')
     , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
@@ -292,8 +290,7 @@ function handleQuery(req, res) {
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
-                    toCSV_ogr(database, user_id, gn, sql, skipfields, res, this);
-                    //toCSV(result, res, this);
+                    toCSV(database, user_id, gn, sql, skipfields, res, this);
                 } else if ( format === 'shp'){
                     toSHP(database, user_id, gn, sql, skipfields, filename, res, this);
                 } else if ( format === 'kml'){
@@ -479,37 +476,8 @@ function toSVG(rows, gn, callback){
     callback(null, out.join("\n"));
 }
 
-function toCSV_ogr(dbname, user_id, gcol, sql, skipfields, res, callback) {
+function toCSV(dbname, user_id, gcol, sql, skipfields, res, callback) {
   toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'CSV', 'csv', res, callback);
-}
-
-function toCSV(data, res, callback){
-    try{
-        // pull out keys for column headers
-        var columns = data.rows.length ? _.keys(data.rows[0]) : [];
-
-        // stream the csv out over http
-        csv()
-          .from(data.rows)
-          .toStream(res, {end: true, columns: columns, header: true})
-          .transform( function(data) {
-            for (var i in data) {
-              // convert dates to string
-              // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/77
-              // TODO: take a format string as a parameter
-              if ( data[i] instanceof Date ) {
-                // ISO time
-                data[i] = strftime('%F %H:%M:%S', data[i]);
-              }
-            }
-            return data;
-          })
-          ;
-          
-        return true;
-    } catch (err) {
-        callback(err,null);
-    }
 }
 
 // Internal function usable by all OGR-driven outputs
