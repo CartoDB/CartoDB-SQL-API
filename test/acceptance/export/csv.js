@@ -163,4 +163,24 @@ test('GET /api/v1/sql as csv, properly escaped', function(done){
     });
 });
 
+test('GET /api/v1/sql as csv, concurrently', function(done){
+
+    var concurrency = 4;
+    var waiting = concurrency;
+    for (var i=0; i<concurrency; ++i) {
+
+      assert.response(app, {
+          url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res){
+          assert.equal(res.statusCode, 200, res.body);
+          var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
+          assert.equal(body, res.body);
+          if ( ! --waiting ) done();
+      });
+
+    }
+});
+
 });

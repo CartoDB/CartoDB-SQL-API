@@ -144,9 +144,9 @@ test('KML format, unauthenticated, concurrent requests', function(done){
         filename: 'multi'
       });
 
-    var waiting = 4;
-
-    for (var i=0; i<waiting; ++i) {
+    var concurrency = 4;
+    var waiting = concurrency;
+    for (var i=0; i<concurrency; ++i) {
       assert.response(app, {
           url: '/api/v1/sql?' + query,
           headers: {host: 'vizzuality.cartodb.com'},
