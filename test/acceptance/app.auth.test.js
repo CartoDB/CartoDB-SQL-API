@@ -11,7 +11,7 @@ suite('app.auth', function() {
 test('valid api key should allow insert in protected tables', function(done){
     assert.response(app, {
         // view prepare_db.sh to see where to set api_key
-        url: "/api/v1/sql?api_key=1234&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('test')",
+        url: "/api/v1/sql?api_key=1234&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('app_auth_test1')",
 
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
