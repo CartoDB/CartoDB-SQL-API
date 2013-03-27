@@ -588,15 +588,14 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
 
+  var qElem = new ExportRequest(res, callback);
   var baking = bakingExports[reqKey];
   if ( baking ) {
-    baking.req.push( {cb:callback, res:res} );
+    baking.req.push( qElem );
     return;
   }
 
-  baking = bakingExports[reqKey] = {
-    req: [ {cb:callback, res:res} ]
-  };
+  baking = bakingExports[reqKey] = { req: [ qElem ] };
 
   Step (
 
@@ -665,17 +664,9 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
       var nextPipe = function(finish) {
         var r = baking.req.shift();
         if ( ! r ) { finish(null); return; }
-        var stream = fs.createReadStream(zipfile);
-        stream.on('open', function(fd) {
-          stream.pipe(r.res);
+        r.sendFile(err, zipfile, function() {
           nextPipe(finish);
         });
-        stream.on('error', function(e) {
-          console.log("Can't send response: " + e);
-          r.res.end(); 
-          nextPipe(finish);
-        });
-        r.cb(err);
       }
 
       if ( ! err ) nextPipe(this);
@@ -703,6 +694,44 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
   );
 }
 
+function ExportRequest(ostream, callback) {
+  this.cb = callback;
+  this.ostream = ostream;
+  this.istream = null;
+  this.canceled = false;
+
+  var that = this;
+
+  this.ostream.on('close', function() {
+    //console.log("Request close event, qElem.stream is " + qElem.stream);
+    that.canceled = true;
+    if ( that.istream ) {
+      that.istream.destroy();
+    }
+  });
+}
+
+ExportRequest.prototype.sendFile = function (err, filename, callback) {
+  var that = this;
+  if ( ! this.canceled ) {
+    //console.log("Creating readable stream out of dumpfile");
+    this.istream = fs.createReadStream(filename)
+    .on('open', function(fd) {
+      that.istream.pipe(that.ostream);
+      callback();
+    })
+    .on('error', function(e) {
+      console.log("Can't send response: " + e);
+      that.ostream.end(); 
+      callback();
+    });
+  } else {
+    //console.log("Response was canceled, not streaming the file");
+    callback();
+  }
+  this.cb();
+}
+
 function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ fmt, dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
@@ -712,15 +741,18 @@ function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res,
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
 
+
+  var qElem = new ExportRequest(res, callback);
   var baking = bakingExports[reqKey];
   if ( baking ) {
-    baking.req.push( {cb:callback, res:res} );
+    //console.log("Queuing request for baking resource " + reqKey);
+    baking.req.push( qElem );
     return;
   }
 
-  baking = bakingExports[reqKey] = {
-    req: [ {cb:callback, res:res} ]
-  };
+  //console.log("Registering baking resource " + reqKey);
+
+  baking = bakingExports[reqKey] = { req: [ qElem ] };
 
   Step (
 
@@ -734,17 +766,9 @@ function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res,
       var nextPipe = function(finish) {
         var r = baking.req.shift();
         if ( ! r ) { finish(null); return; }
-        var stream = fs.createReadStream(dumpfile);
-        stream.on('open', function(fd) {
-          stream.pipe(r.res);
+        r.sendFile(err, dumpfile, function() {
           nextPipe(finish);
         });
-        stream.on('error', function(e) {
-          console.log("Can't send response: " + e);
-          r.res.end(); 
-          nextPipe(finish);
-        });
-        r.cb(err);
       }
 
       if ( ! err ) nextPipe(this);
@@ -757,6 +781,8 @@ function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res,
 
     },
     function cleanup(err) {
+
+      //console.log("Deleting baking export " + reqKey + " and cleaning up");
 
       delete bakingExports[reqKey];
 
