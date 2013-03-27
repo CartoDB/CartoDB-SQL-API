@@ -30,7 +30,7 @@
         "libxmljs": "~0.6.1"
     },
     "scripts": {
-        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/redis_pool.test.js test/unit/metadata.test.js test/unit/oauth.test.js test/unit/psql.test.js test/acceptance/app.test.js  test/acceptance/app.auth.test.js test/acceptance/x-cache-channel.js test/acceptance/export/*.js"
+        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/acceptance/*.js  test/acceptance/export/*.js"
     },
     "engines": { "node": ">= 0.4.1 < 0.9" }
 }
