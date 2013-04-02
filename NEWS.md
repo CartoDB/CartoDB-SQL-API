@@ -1,3 +1,6 @@
+1.3.8
+-----
+
 1.3.7
 -----
 * Fix parsing of numeric arrays (#88)
