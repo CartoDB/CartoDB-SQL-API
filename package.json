@@ -13,7 +13,7 @@
         "express": "~2.5.11",
         "underscore"  : "1.1.x",
         "underscore.string": "1.1.5",
-        "pg": "git://github.com/CartoDB/node-postgres.git#cdb_production",
+        "pg": "git://github.com/CartoDB/node-postgres.git#cdb-0.12.3-cdb2",
         "express": "~2.5.11",
         "generic-pool": "~2.0.2",
         "redis": "0.7.1",
