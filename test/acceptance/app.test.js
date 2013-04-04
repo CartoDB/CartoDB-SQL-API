@@ -669,6 +669,30 @@ test('GET decent error if SQL is broken', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/88
+test('numeric arrays are rendered as such', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?"
+         + querystring.stringify({q:
+          "SELECT ARRAY[8.7,4.3]::numeric[] as x"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.ok(out.hasOwnProperty('time'));
+        assert.equal(out.total_rows, 1);
+        assert.equal(out.rows.length, 1);
+        assert.ok(out.rows[0].hasOwnProperty('x'));
+        assert.equal(out.rows[0].x.length, 2);
+        assert.equal(out.rows[0].x[0], '8.7');
+        assert.equal(out.rows[0].x[1], '4.3');
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:'); // keep forever
+        done();
+    });
+});
+
 // GEOJSON tests
 
 test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-disposition set to geojson', function(done){

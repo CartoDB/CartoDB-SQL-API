@@ -120,7 +120,6 @@ test('KML format, unauthenticated, custom filename', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-        // TODO: check for actual content, at least try to uncompress..
         done();
     });
 });
@@ -134,7 +133,45 @@ test('KML format, authenticated', function(done){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-        // TODO: check for actual content, at least try to uncompress..
+        done();
+    });
+});
+
+test('KML format, unauthenticated, concurrent requests', function(done){
+    var query = querystring.stringify({
+        q: "SELECT 'val', x, y, st_makepoint(x,y,4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
+        format: 'kml',
+        filename: 'multi'
+      });
+
+    var concurrency = 4;
+    var waiting = concurrency;
+    for (var i=0; i<concurrency; ++i) {
+      assert.response(app, {
+          url: '/api/v1/sql?' + query,
+          headers: {host: 'vizzuality.cartodb.com'},
+          encoding: 'binary',
+          method: 'GET'
+      },{ }, function(res){
+          assert.equal(res.statusCode, 200, res.body);
+          var cd = res.header('Content-Disposition');
+          assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+          assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+          if ( ! --waiting ) done();
+      });
+    }
+});
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
+test('GET /api/v1/sql as kml with no rows', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=kml',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
+        assert.equal(res.body, body);
         done();
     });
 });

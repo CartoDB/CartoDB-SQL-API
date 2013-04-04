@@ -37,15 +37,15 @@ module.exports = (function() {
         Step(
             function() {
                 var step = this;
-                RedisPool.acquire(db, function(_redisClient) {
+                RedisPool.acquire(db, function(err, _redisClient) {
+                    if ( err ) { step(err); return };
                     redisClient = _redisClient;
                     redisArgs.push(step);
                     redisClient[redisFunc.toUpperCase()].apply(redisClient, redisArgs);
                 });
             },
             function releaseRedisClient(err, data) {
-                if (err) throw err;
-                RedisPool.release(db, redisClient);
+                if ( redisClient ) RedisPool.release(db, redisClient);
                 callback(err, data);
             }
         );

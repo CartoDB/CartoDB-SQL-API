@@ -24,11 +24,9 @@ var express = require('express')
         format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
     }))
     , Step        = require('step')
-    , csv         = require('csv')
     , crypto      = require('crypto')
     , fs          = require('fs')
     , zlib        = require('zlib')
-    , strftime    = require('strftime')
     , util        = require('util')
     , spawn       = require('child_process').spawn
     , Meta        = require(global.settings.app_root + '/app/models/metadata')
@@ -45,6 +43,9 @@ var tableCache = LRU({
   // consider entries expired after these many milliseconds (10 minutes by default)
   maxAge: global.settings.tableCacheMaxAge || 1000*60*10
 });
+
+// Keeps track of what's waiting baking for export
+var bakingExports = {};
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -215,7 +216,9 @@ function handleQuery(req, res) {
                         // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
                         sql += ' where ' + gn + ' is not null';
                     }
-                } else if (format === 'shp') {
+                } else if (format === 'shp' || format === 'kml' || format === 'csv' ) {
+                    // These format are implemented via OGR2OGR, so we don't
+                    // need to run a query ourselves
                     return null;
                 } else if (format === 'svg') {
                     var svg_ratio = svg_width/svg_height;
@@ -287,7 +290,7 @@ function handleQuery(req, res) {
                 } else if (format === 'svg'){
                     toSVG(result.rows, gn, this);
                 } else if (format === 'csv'){
-                    toCSV(result, res, this);
+                    toCSV(database, user_id, gn, sql, skipfields, res, this);
                 } else if ( format === 'shp'){
                     toSHP(database, user_id, gn, sql, skipfields, filename, res, this);
                 } else if ( format === 'kml'){
@@ -473,44 +476,18 @@ function toSVG(rows, gn, callback){
     callback(null, out.join("\n"));
 }
 
-function toCSV(data, res, callback){
-    try{
-        // pull out keys for column headers
-        var columns = data.rows.length ? _.keys(data.rows[0]) : [];
-
-        // stream the csv out over http
-        csv()
-          .from(data.rows)
-          .toStream(res, {end: true, columns: columns, header: true})
-          .transform( function(data) {
-            for (var i in data) {
-              // convert dates to string
-              // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/77
-              // TODO: take a format string as a parameter
-              if ( data[i] instanceof Date ) {
-                // ISO time
-                data[i] = strftime('%F %H:%M:%S', data[i]);
-              }
-            }
-            return data;
-          })
-          ;
-          
-        return true;
-    } catch (err) {
-        callback(err,null);
-    }
+function toCSV(dbname, user_id, gcol, sql, skipfields, res, callback) {
+  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'CSV', 'csv', res, callback);
 }
 
 // Internal function usable by all OGR-driven outputs
-function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_filename, callback) {
+function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
 
-  var tmpdir = '/tmp'; // FIXME: make configurable
   var columns = [];
 
   Step (
@@ -523,15 +500,17 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
     function spawnDumper(err, result) {
       if (err) throw err;
 
-      if ( ! result.rows.length )
-        throw new Error("Query returns no rows");
+      //if ( ! result.rows.length ) throw new Error("Query returns no rows");
 
       // Skip system columns
-      for (var k in result.rows[0]) {
-        if ( skipfields.indexOf(k) != -1 ) continue;
-        if ( k == "the_geom_webmercator" ) continue;
-        columns.push('"' + k + '"');
-      }
+      if ( result.rows.length ) {
+        for (var k in result.rows[0]) {
+          if ( skipfields.indexOf(k) != -1 ) continue;
+          if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
+          if ( out_format == 'CSV' ) columns.push('"' + k + '"::text');
+          else columns.push('"' + k + '"');
+        }
+      } else columns.push('*');
       //console.log(columns.join(','));
 
       var next = this;
@@ -542,6 +521,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
       var child = spawn(ogr2ogr, [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
+        '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost
          + " user=" + dbuser
@@ -554,7 +534,7 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, res, out_format, out_file
 
 /*
 console.log(['ogr2ogr',
-        '-f', out_format,
+        '-f', '"'+out_format+'"',
         out_filename,
         "'PG:host=" + dbhost
          + " user=" + dbuser
@@ -562,7 +542,7 @@ console.log(['ogr2ogr',
          + " password=" + dbpass
          + " tables=fake" // trick to skip query to geometry_columns
          + "'",
-        '-sql "', sql, '"'].join(' '));
+        "-sql '", sql, "'"].join(' '));
 */
 
       var stdout = '';
@@ -599,18 +579,23 @@ console.log(['ogr2ogr',
 
 function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) {
   var zip = 'zip'; // FIXME: make configurable
-  var tmpdir = '/tmp'; // FIXME: make configurable
-  var outdirpath = tmpdir + '/sqlapi-shapefile-' + generateMD5(sql);
+  var tmpdir = global.settings.tmpDir || '/tmp';
+  var reqKey = [ 'shp', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
+  var outdirpath = tmpdir + '/sqlapi-' + reqKey; 
+  var zipfile = outdirpath + '.zip';
   var shapefile = outdirpath + '/' + filename + '.shp';
 
   // TODO: following tests:
-  //  - fetch with no auth [done]
-  //  - fetch with auth [done]
-  //  - fetch same query concurrently
   //  - fetch query with no "the_geom" column
 
-  // TODO: Check if the file already exists
-  // (should mean another export of the same query is in progress)
+  var qElem = new ExportRequest(res, callback);
+  var baking = bakingExports[reqKey];
+  if ( baking ) {
+    baking.req.push( qElem );
+    return;
+  }
+
+  baking = bakingExports[reqKey] = { req: [ qElem ] };
 
   Step (
 
@@ -618,45 +603,22 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
       fs.mkdir(outdirpath, 0777, this);
     },
     function spawnDumper(err) {
-      if ( err ) {
-        if ( err.code == 'EEXIST' ) {
-          // TODO: this could mean another request for the same
-          //       resource is in progress, in which case we might want
-          //       to queue the response to after it's completed...
-          console.log("Reusing existing SHP output directory for query: " + sql);
-        } else {
-          throw err;
-        }
-      }
-      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'ESRI Shapefile', shapefile, this);
+      if ( err ) throw err;
+      toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
     },
-    function zipAndSendDump(err) {
+    function doZip(err) {
       if ( err ) throw err;
 
       var next = this;
-      var dir = outdirpath;
 
-      var zipfile = dir + '.zip';
-
-      var child = spawn(zip, ['-qrj', '-', dir ]);
-
-      // TODO: convert to a stream operation
-      child.stdout.on('data', function(data) {
-        res.write(data);
-      });
-
-      var stderr = '';
-      child.stderr.on('data', function(data) {
-        stderr += data;
-        console.log('zip stderr: ' + data);
-      });
+      var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
 
       child.on('exit', function(code) {
-        if (code) {
-          res.statusCode = 500;
-          //res.send(stderr);
-        }
         //console.log("Zip complete, zip return code was " + code);
+        if (code) {
+          next(new Error("Zip command return code " + code));
+          res.statusCode = 500; 
+        }
         next(null);
       });
 
@@ -697,11 +659,139 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
         }
       });
     },
-    function finish(err) {
-      if ( err ) callback(err);
+    function sendResults(err) {
+
+      var nextPipe = function(finish) {
+        var r = baking.req.shift();
+        if ( ! r ) { finish(null); return; }
+        r.sendFile(err, zipfile, function() {
+          nextPipe(finish);
+        });
+      }
+
+      if ( ! err ) nextPipe(this);
       else {
-        res.end();
-        callback(null);
+        _.each(baking.req, function(r) {
+          r.cb(err);
+        });
+        return true;
+      }
+
+    },
+    function cleanup(err) {
+
+      delete bakingExports[reqKey];
+
+      // unlink dump file (sync to avoid race condition)
+      try { fs.unlinkSync(zipfile); }
+      catch (e) {
+        if ( e.code != 'ENOENT' ) {
+          console.log("Could not unlink zipfile " + zipfile + ": " + e);
+        }
+      }
+
+    }
+  );
+}
+
+function ExportRequest(ostream, callback) {
+  this.cb = callback;
+  this.ostream = ostream;
+  this.istream = null;
+  this.canceled = false;
+
+  var that = this;
+
+  this.ostream.on('close', function() {
+    //console.log("Request close event, qElem.stream is " + qElem.stream);
+    that.canceled = true;
+    if ( that.istream ) {
+      that.istream.destroy();
+    }
+  });
+}
+
+ExportRequest.prototype.sendFile = function (err, filename, callback) {
+  var that = this;
+  if ( ! this.canceled ) {
+    //console.log("Creating readable stream out of dumpfile");
+    this.istream = fs.createReadStream(filename)
+    .on('open', function(fd) {
+      that.istream.pipe(that.ostream);
+      callback();
+    })
+    .on('error', function(e) {
+      console.log("Can't send response: " + e);
+      that.ostream.end(); 
+      callback();
+    });
+  } else {
+    //console.log("Response was canceled, not streaming the file");
+    callback();
+  }
+  this.cb();
+}
+
+function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res, callback) {
+  var tmpdir = global.settings.tmpDir || '/tmp';
+  var reqKey = [ fmt, dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
+  var outdirpath = tmpdir + '/sqlapi-' + reqKey;
+  var dumpfile = outdirpath + ':cartodb-query.' + ext;
+
+  // TODO: following tests:
+  //  - fetch query with no "the_geom" column
+
+
+  var qElem = new ExportRequest(res, callback);
+  var baking = bakingExports[reqKey];
+  if ( baking ) {
+    //console.log("Queuing request for baking resource " + reqKey);
+    baking.req.push( qElem );
+    return;
+  }
+
+  //console.log("Registering baking resource " + reqKey);
+
+  baking = bakingExports[reqKey] = { req: [ qElem ] };
+
+  Step (
+
+    function spawnDumper() {
+      toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, this);
+    },
+    function sendResults(err) {
+
+      //console.log("toOGR completed, have to send result to " + baking.req.length + " requests");
+
+      var nextPipe = function(finish) {
+        var r = baking.req.shift();
+        if ( ! r ) { finish(null); return; }
+        r.sendFile(err, dumpfile, function() {
+          nextPipe(finish);
+        });
+      }
+
+      if ( ! err ) nextPipe(this);
+      else {
+        _.each(baking.req, function(r) {
+          r.cb(err);
+        });
+        return true;
+      }
+
+    },
+    function cleanup(err) {
+
+      //console.log("Deleting baking export " + reqKey + " and cleaning up");
+
+      delete bakingExports[reqKey];
+
+      // unlink dump file (sync to avoid race condition)
+      try { fs.unlinkSync(dumpfile); }
+      catch (e) {
+        if ( e.code != 'ENOENT' ) {
+          console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
+        }
       }
 
     }
@@ -709,85 +799,7 @@ function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) 
 }
 
 function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
-  var zip = 'zip'; // FIXME: make configurable
-  var tmpdir = '/tmp'; // FIXME: make configurable
-  var outdirpath = tmpdir + '/sqlapi-kmloutput-' + generateMD5(sql);
-  var dumpfile = outdirpath + '/cartodb-query.kml';
-
-  // TODO: following tests:
-  //  - fetch with no auth
-  //  - fetch with auth
-  //  - fetch same query concurrently
-  //  - fetch query with no "the_geom" column
-
-  Step (
-
-    function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
-    },
-    function spawnDumper(err) {
-      if ( err ) {
-        if ( err.code == 'EEXIST' ) {
-          // TODO: this could mean another request for the same
-          //       resource is in progress, in which case we might want
-          //       to queue the response to after it's completed...
-          console.log("Reusing existing KML output directory for query: " + sql);
-        } else {
-          throw err;
-        }
-      }
-      toOGR(dbname, user_id, gcol, sql, skipfields, res, 'KML', dumpfile, this);
-    },
-    function sendResults(err) {
-
-      if ( ! err ) {
-        fs.createReadStream(dumpfile).pipe(res);
-      }
-
-      // cleanup output dir (should be safe to unlink)
-      var topError = err;
-      var next = this;
-
-      //console.log("Cleaning up " + outdirpath);
-
-      // Unlink the dir content
-      var unlinkall = function(dir, files, finish) {
-        var f = files.shift();
-        if ( ! f ) { finish(null); return; }
-        var fn = dir + '/' + f;
-        fs.unlink(fn, function(err) {
-          if ( err ) {
-            console.log("Unlinking " + fn + ": " + err);
-            finish(err);
-          }
-          else unlinkall(dir, files, finish)
-        });
-      }
-      fs.readdir(outdirpath, function(err, files) {
-        if ( err ) {
-          if ( err.code != 'ENOENT' ) {
-            next(new Error([topError, err].join('\n')));
-          } else {
-            next(topError);
-          }
-        } else {
-          unlinkall(outdirpath, files, function(err) {
-            fs.rmdir(outdirpath, function(err) {
-              if ( err ) console.log("Removing dir " + path + ": " + err);
-              next(topError);
-            });
-          });
-        }
-      });
-    },
-    function finish(err) {
-      if ( err ) callback(err);
-      else {
-        callback(null);
-      }
-
-    }
-  );
+  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'KML', 'kml', res, callback);
 }
 
 function getContentDisposition(format, filename, inline) {

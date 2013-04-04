@@ -255,5 +255,34 @@ test('skipfields controls fields included in SHP output', function(done){
     });
 });
 
+test('SHP format, concurrently', function(done){
+    var concurrency = 1;
+    var waiting = concurrency;
+    for (var i=0; i<concurrency; ++i) {
+      assert.response(app, {
+          url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
+          headers: {host: 'vizzuality.cartodb.com'},
+          encoding: 'binary',
+          method: 'GET'
+      },{ }, function(res){
+          assert.equal(res.statusCode, 200, res.body);
+          var cd = res.header('Content-Disposition');
+          assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+          assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+          var tmpfile = '/tmp/myshape.zip';
+          var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+          if (err) { done(err); return }
+          var zf = new zipfile.ZipFile(tmpfile);
+          assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+          assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+          assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+          // missing SRID, so no PRJ (TODO: add ?)
+          //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+          // TODO: check DBF contents
+          fs.unlinkSync(tmpfile);
+          if ( ! --waiting ) done();
+      });
+    }
+});
 
 });
