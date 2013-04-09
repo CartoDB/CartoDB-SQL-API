@@ -103,7 +103,7 @@ var PSQL = function(user_id, db, limit, offset){
     // NOTE: this check is weak hack, better database
     //       permissions should be used instead.
     me.sanitize = function(sql, callback){
-        if (sql.match(/\s+"?pg_.+/i)){
+        if (sql.match(/\bpg_.+/i)){
             var error = new SyntaxError("system tables are forbidden");
             error.http_status = 403;
             callback(error); 

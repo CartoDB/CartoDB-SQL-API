@@ -651,7 +651,17 @@ test('cannot GET system tables', function(done){
         req.url = pre + querystring.stringify({q: 'SELECT * FROM "pg_attribute"'});
         assert.response(app, req, function(res) { next(null, res); });
       },
-      function chkSysTable3_trySet1(err, res) {
+      function chkSysTable3_trySysTable4(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: 'SELECT a.* FROM untitle_table_4 a,pg_attribute'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable4_trySet1(err, res) {
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
