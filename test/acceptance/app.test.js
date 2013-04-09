@@ -22,6 +22,7 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
     , zipfile = require('zipfile')
     , fs      = require('fs')
     , libxmljs = require('libxmljs')
+    , Step = require('step')
     ;
 
 // allow lots of emitters to be set to silence warning
@@ -621,18 +622,68 @@ test('GET /api/v1/sql ensure cross domain set on errors', function(done){
 });
 
 test('cannot GET system tables', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20pg_attribute',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{
-        status: 403
-    }, function(res) {
-      assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-      assert.deepEqual(res.headers['content-disposition'], 'inline');
-      // TODO: check actual error message...
-      done();
-    });
+    var req = { headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET' };
+    var pre = '/api/v1/sql?';
+    Step(
+      function trySysTable1() {
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM pg_attribute'});
+        var next = this;
+        assert.response( app, req, function(res) { next(null, res); } );
+      },
+      function chkSysTable1_trySysTable2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM PG_attribute'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable2_trySysTable3(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM "pg_attribute"'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable3_trySet1(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSet1_trySet2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: ' SET work_mem TO 80000'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSet2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        // TODO: check actual error message...
+        return true;
+      },
+      function finish(err) {
+        done(err);
+      }
+    );
 });
 
 test('GET decent error if domain is incorrect', function(done){

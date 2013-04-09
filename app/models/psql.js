@@ -99,15 +99,23 @@ var PSQL = function(user_id, db, limit, offset){
         }
     };
 
-    // throw exception if system table detected
+    // throw exception if illegal operations are detected
+    // NOTE: this check is weak hack, better database
+    //       permissions should be used instead.
     me.sanitize = function(sql, callback){
-        if (sql.match(/\s+pg_.+/)){
+        if (sql.match(/\s+"?pg_.+/i)){
             var error = new SyntaxError("system tables are forbidden");
             error.http_status = 403;
-            throw error;
-        } else {
-            callback(null,true);
+            callback(error); 
+            return;
         }
+        if (sql.match(/^\s+set\s+/i)){
+            var error = new SyntaxError("SET command is forbidden");
+            error.http_status = 403;
+            callback(error); 
+            return;
+        }
+        callback(null,true);
     };
 
     return me;
