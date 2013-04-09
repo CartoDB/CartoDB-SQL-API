@@ -635,9 +635,6 @@ test('cannot GET system tables', function(done){
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
         req.url = pre + querystring.stringify({q: 'SELECT * FROM PG_attribute'});
         assert.response(app, req, function(res) { next(null, res); });
       },
@@ -645,9 +642,6 @@ test('cannot GET system tables', function(done){
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
         req.url = pre + querystring.stringify({q: 'SELECT * FROM "pg_attribute"'});
         assert.response(app, req, function(res) { next(null, res); });
       },
@@ -655,19 +649,27 @@ test('cannot GET system tables', function(done){
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
         req.url = pre + querystring.stringify({q: 'SELECT a.* FROM untitle_table_4 a,pg_attribute'});
         assert.response(app, req, function(res) { next(null, res); });
       },
-      function chkSysTable4_trySet1(err, res) {
+      function chkSysTable4_tryValidPg1(err, res) {
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
+        req.url = pre + querystring.stringify({q: "SELECT 'pg_'"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkValidPg1_tryValidPg2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200);
+        req.url = pre + querystring.stringify({q: "SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkValidPg2_trySet1(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200);
         req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
         assert.response(app, req, function(res) { next(null, res); });
       },
@@ -675,19 +677,12 @@ test('cannot GET system tables', function(done){
         if ( err ) throw err;
         var next = this;
         assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
         req.url = pre + querystring.stringify({q: ' SET work_mem TO 80000'});
         assert.response(app, req, function(res) { next(null, res); });
       },
       function chkSet2(err, res) {
         if ( err ) throw err;
         var next = this;
-        assert.equal(res.statusCode, 403);
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        // TODO: check actual error message...
         return true;
       },
       function finish(err) {
