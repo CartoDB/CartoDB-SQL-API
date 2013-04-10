@@ -502,6 +502,9 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
 
   var columns = [];
 
+  // Drop ending semicolon (ogr doens't like it)
+  sql = sql.replace(/;\s*$/, ''); 
+
   Step (
 
     function fetchColumns() {

@@ -1,6 +1,7 @@
 1.3.8
 -----
 * Make using SET or querying system catalogues harder
+* Allow sql queries to end with a semicolon (#90)
 
 1.3.7
 -----

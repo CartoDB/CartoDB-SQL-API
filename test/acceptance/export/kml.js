@@ -176,4 +176,21 @@ test('GET /api/v1/sql as kml with no rows', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/90
+test('GET /api/v1/sql as kml with ending semicolon', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT true WHERE false;',
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
+        assert.equal(res.body, body);
+        done();
+    });
+});
+
 });
