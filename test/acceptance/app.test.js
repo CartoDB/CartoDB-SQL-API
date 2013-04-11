@@ -147,6 +147,7 @@ test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, jus
 test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)&database=cartodb_dev_user_1_db",
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
     }, function(res) {
@@ -161,9 +162,10 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
     });
 });
 
-test('GET /api/v1/sql with DROP TABlE. oAuth not used, so public user - should fail', function(done){
+test('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_dev_user_1_db",
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
     }, function(res) {
