@@ -77,5 +77,8 @@ PATH=node_modules/.bin/:$PATH
 
 echo "Running tests"
 mocha -u tdd ${TESTS}
+ret=$?
 
-cleanup
+cleanup || exit 1
+
+exit $ret
