@@ -8,7 +8,7 @@
  *
  * SELECT 5
  * HSET rails:users:vizzuality id 1
- * HSET rails:users:vizzuality database_name cartodb_dev_user_1_db
+ * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
 require('../helper');
@@ -146,8 +146,7 @@ test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, jus
 
 test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
-        url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)&database=cartodb_dev_user_1_db",
-        headers: {host: 'vizzuality.cartodb.com'},
+        url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(cartodb_id)%20VALUES%20(1e4)&database=cartodb_test_user_1_db",
         method: 'GET'
     },{
     }, function(res) {
@@ -155,8 +154,7 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), 
-          // FIXME: doesn't look like this is what the test subject wants to test...
-          {"error":["relation \"untitle_table_4\" does not exist"]}
+          {"error":["permission denied for relation untitle_table_4"]} 
         );
         done();
     });
@@ -164,8 +162,7 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
 
 test('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
-        url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_dev_user_1_db",
-        headers: {host: 'vizzuality.cartodb.com'},
+        url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_test_user_1_db",
         method: 'GET'
     },{
     }, function(res) {
@@ -173,14 +170,12 @@ test('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should f
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), 
-          // FIXME: doesn't look like this is what the test subject wants to test...
-          {"error":["table \"untitle_table_4\" does not exist"]}
+          {"error":["must be owner of relation untitle_table_4"]}
         );
         done();
     });
 });
 
-// FIXME: Duplicated test, drop 
 test('GET /api/v1/sql with INSERT. header based db - should fail', function(){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)",
