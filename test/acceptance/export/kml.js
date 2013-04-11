@@ -9,6 +9,8 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
     , zipfile = require('zipfile')
     , fs      = require('fs')
     , libxmljs = require('libxmljs')
+    , http = require('http')
+    , server_utils = require('../../support/server_utils');
     ;
 
 // allow lots of emitters to be set to silence warning
@@ -146,20 +148,38 @@ test('KML format, unauthenticated, concurrent requests', function(done){
 
     var concurrency = 4;
     var waiting = concurrency;
-    for (var i=0; i<concurrency; ++i) {
-      assert.response(app, {
-          url: '/api/v1/sql?' + query,
-          headers: {host: 'vizzuality.cartodb.com'},
-          encoding: 'binary',
-          method: 'GET'
-      },{ }, function(res){
-          assert.equal(res.statusCode, 200, res.body);
-          var cd = res.header('Content-Disposition');
-          assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-          assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-          if ( ! --waiting ) done();
-      });
-    }
+    server_utils.startOnNextPort(app, function() { 
+      var port = app.address().port;
+      //console.log("Listening on port " + port);
+      for (var i=0; i<concurrency; ++i) {
+        //console.log("Sending request");
+        var req = http.request({
+            host: '127.0.0.1',
+            port: port,
+            path: '/api/v1/sql?' + query,
+            headers: {host: 'vizzuality.cartodb.com'},
+            agent: false // or should this be true ?
+        }).on('response', function(res) {
+            //console.log("Response started");
+            //res.body = '';
+            //res.setEncoding('binary');
+            //res.on('data', function(chunk){ res.body += chunk; });
+            res.on('end', function(){
+              //console.log("Response ended");
+              assert.equal(res.statusCode, 200, res.body);
+              var cd = res.headers['content-disposition'];
+              assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+              assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+              if ( ! --waiting ) {
+                app.close();
+                done();
+              }
+            });
+        }).on('error', function(err) {
+            console.log("Response error" + err);
+        }).end();
+      }
+    });
 });
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
