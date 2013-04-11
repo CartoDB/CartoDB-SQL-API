@@ -2,6 +2,7 @@
 -----
 * Make using SET or querying system catalogues harder
 * Allow sql queries to end with a semicolon (#90)
+* Testsuite fixes, jenkins ready :)
 
 1.3.7
 -----
