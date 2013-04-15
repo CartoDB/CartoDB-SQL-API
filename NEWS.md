@@ -1,3 +1,6 @@
+1.3.9
+-----
+
 1.3.8
 -----
 * Make using SET or querying system catalogues harder
