@@ -208,6 +208,18 @@ function handleQuery(req, res) {
                     }
                 }
 
+                if ( tableCacheItem ) {
+                    var affected_tables = tableCacheItem.affected_tables.split(/^\{(.*)\}$/)[1].split(',');
+                    for ( var i=0; i<affected_tables.length; ++i ) {
+                      var t = affected_tables[i];
+                      if ( t.match(/\.?pg_/) ) {
+                        var e = new SyntaxError("system tables are forbidden");
+                        e.http_status = 403;
+                        throw(e);
+                      }
+                    }
+                }
+
                 // TODO: refactor formats to external object
                 if (format === 'geojson' || format === 'topojson' ){
                     sql = 'SELECT *, ST_AsGeoJSON(' + gn + ',' + dp
@@ -489,6 +501,9 @@ function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename,
   var dbpass = ''; // turn into a parameter..
 
   var columns = [];
+
+  // Drop ending semicolon (ogr doens't like it)
+  sql = sql.replace(/;\s*$/, ''); 
 
   Step (
 

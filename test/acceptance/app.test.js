@@ -8,7 +8,7 @@
  *
  * SELECT 5
  * HSET rails:users:vizzuality id 1
- * HSET rails:users:vizzuality database_name cartodb_dev_user_1_db
+ * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
 require('../helper');
@@ -22,6 +22,7 @@ var app    = require(global.settings.app_root + '/app/controllers/app')
     , zipfile = require('zipfile')
     , fs      = require('fs')
     , libxmljs = require('libxmljs')
+    , Step = require('step')
     ;
 
 // allow lots of emitters to be set to silence warning
@@ -145,7 +146,7 @@ test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, jus
 
 test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
-        url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)&database=cartodb_dev_user_1_db",
+        url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(cartodb_id)%20VALUES%20(1e4)&database=cartodb_test_user_1_db",
         method: 'GET'
     },{
     }, function(res) {
@@ -153,16 +154,15 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), 
-          // FIXME: doesn't look like this is what the test subject wants to test...
-          {"error":["relation \"untitle_table_4\" does not exist"]}
+          {"error":["permission denied for relation untitle_table_4"]} 
         );
         done();
     });
 });
 
-test('GET /api/v1/sql with DROP TABlE. oAuth not used, so public user - should fail', function(done){
+test('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
-        url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_dev_user_1_db",
+        url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_test_user_1_db",
         method: 'GET'
     },{
     }, function(res) {
@@ -170,14 +170,12 @@ test('GET /api/v1/sql with DROP TABlE. oAuth not used, so public user - should f
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), 
-          // FIXME: doesn't look like this is what the test subject wants to test...
-          {"error":["table \"untitle_table_4\" does not exist"]}
+          {"error":["must be owner of relation untitle_table_4"]}
         );
         done();
     });
 });
 
-// FIXME: Duplicated test, drop 
 test('GET /api/v1/sql with INSERT. header based db - should fail', function(){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)",
@@ -621,18 +619,73 @@ test('GET /api/v1/sql ensure cross domain set on errors', function(done){
 });
 
 test('cannot GET system tables', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20pg_attribute',
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{
-        status: 403
-    }, function(res) {
-      assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-      assert.deepEqual(res.headers['content-disposition'], 'inline');
-      // TODO: check actual error message...
-      done();
-    });
+    var req = { headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET' };
+    var pre = '/api/v1/sql?';
+    Step(
+      function trySysTable1() {
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM pg_attribute'});
+        var next = this;
+        assert.response( app, req, function(res) { next(null, res); } );
+      },
+      function chkSysTable1_trySysTable2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM PG_attribute'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable2_trySysTable3(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        req.url = pre + querystring.stringify({q: 'SELECT * FROM "pg_attribute"'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable3_trySysTable4(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        req.url = pre + querystring.stringify({q: 'SELECT a.* FROM untitle_table_4 a,pg_attribute'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSysTable4_tryValidPg1(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        req.url = pre + querystring.stringify({q: "SELECT 'pg_'"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkValidPg1_tryValidPg2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200);
+        req.url = pre + querystring.stringify({q: "SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkValidPg2_trySet1(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200);
+        req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSet1_trySet2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 403);
+        req.url = pre + querystring.stringify({q: ' SET work_mem TO 80000'});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
+      function chkSet2(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        return true;
+      },
+      function finish(err) {
+        done(err);
+      }
+    );
 });
 
 test('GET decent error if domain is incorrect', function(done){
