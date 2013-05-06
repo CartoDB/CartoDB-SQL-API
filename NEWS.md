@@ -1,6 +1,7 @@
 1.3.9
 -----
 * Do not choke on multiple `skipfields` parameter
+* Do not request caching of TRUNCATE queries
 
 1.3.8
 -----

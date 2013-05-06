@@ -445,6 +445,39 @@ test('multistatement insert, alter, select, begin, commit', function(done){
     });
 });
 
+test('TRUNCATE TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'TRUNCATE TABLE test_table',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      var pbody = JSON.parse(res.body);
+      assert.equal(pbody.rows.length, 0);
+      assert.response(app, {
+          url: "/api/v1/sql?" + querystring.stringify({
+            q: 'SELECT count(*) FROM test_table',
+            api_key: 1234
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:test_table');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
+        var pbody = JSON.parse(res.body);
+        assert.equal(pbody.total_rows, 1);
+        assert.equal(pbody.rows[0]['count'], 0);
+        done();
+      });
+    });
+});
+
 test('DROP TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
