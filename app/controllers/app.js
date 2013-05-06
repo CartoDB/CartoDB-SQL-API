@@ -104,25 +104,38 @@ function handleQuery(req, res) {
     var requestedFilename = req.query.filename || body.filename
     var filename  = requestedFilename;
     var requestedSkipfields = req.query.skipfields || body.skipfields;
-    var skipfields = requestedSkipfields ? requestedSkipfields.split(',') : [];
+    var skipfields;
     var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
 
-    // sanitize and apply defaults to input
-    dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
-    format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
-    filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
-    sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
-    database  = (database === "" || _.isUndefined(database)) ? null : database;
-    limit     = (_.isNumber(limit))  ? limit : null;
-    offset    = (_.isNumber(offset)) ? offset * limit : null;
-
-    // setup step run
-    var start = new Date().getTime();
-
     try {
+
+        // sanitize and apply defaults to input
+        dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
+        format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
+        filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
+        sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
+        database  = (database === "" || _.isUndefined(database)) ? null : database;
+        limit     = (_.isNumber(limit))  ? limit : null;
+        offset    = (_.isNumber(offset)) ? offset * limit : null;
+
+        // Accept both comma-separated string or array of comma-separated strings
+        if ( requestedSkipfields ) {
+          if ( _.isString(requestedSkipfields) ) skipfields = requestedSkipfields.split(',');
+          else if ( _.isArray(requestedSkipfields) ) {
+            skipfields = [];
+            _.each(requestedSkipfields, function(ele) {
+              skipfields = skipfields.concat(ele.split(','));
+            });
+          }
+        } else {
+          skipfields = [];
+        }
+
+        // setup step run
+        var start = new Date().getTime();
 
         if ( -1 === supportedFormats.indexOf(format) )
           throw new Error("Invalid format: " + format);

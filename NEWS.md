@@ -1,5 +1,6 @@
 1.3.9
 -----
+* Do not choke on multiple `skipfields` parameter
 
 1.3.8
 -----
