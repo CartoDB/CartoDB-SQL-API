@@ -1,3 +1,6 @@
+1.3.10
+------
+
 1.3.9
 -----
 * Do not choke on multiple `skipfields` parameter
