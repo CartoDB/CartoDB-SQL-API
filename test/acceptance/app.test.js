@@ -445,6 +445,39 @@ test('multistatement insert, alter, select, begin, commit', function(done){
     });
 });
 
+test('TRUNCATE TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: 'TRUNCATE TABLE test_table',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      assert.equal(res.headers['x-cache-channel'], 'NONE');
+      assert.equal(res.headers['cache-control'], expected_cache_control);
+      var pbody = JSON.parse(res.body);
+      assert.equal(pbody.rows.length, 0);
+      assert.response(app, {
+          url: "/api/v1/sql?" + querystring.stringify({
+            q: 'SELECT count(*) FROM test_table',
+            api_key: 1234
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:test_table');
+        assert.equal(res.headers['cache-control'], expected_cache_control);
+        var pbody = JSON.parse(res.body);
+        assert.equal(pbody.total_rows, 1);
+        assert.equal(pbody.rows[0]['count'], 0);
+        done();
+      });
+    });
+});
+
 test('DROP TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
@@ -585,6 +618,26 @@ test('field named "the_geom_webmercator" is not skipped by default', function(do
 test('skipfields controls included fields', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&skipfields=the_geom_webmercator,cartodb_id,unexistant',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var row0 = JSON.parse(res.body).rows[0];
+        var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':0};
+        for ( var f in checkfields ) {
+          if ( checkfields[f] ) {
+            assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+          } else {
+            assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+          }
+        }
+        done();
+    });
+});
+
+test('multiple skipfields parameter do not kill the backend', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&skipfields=unexistent,the_geom_webmercator&skipfields=cartodb_id,unexistant',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
