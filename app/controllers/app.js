@@ -109,6 +109,7 @@ function handleQuery(req, res) {
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
+    var requestProtocol = req.protocol;
 
     try {
 
@@ -180,7 +181,7 @@ function handleQuery(req, res) {
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
                 } else {
-                    oAuth.verifyRequest(req, this);
+                    oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
             function queryExplain(err, data){

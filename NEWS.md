@@ -1,5 +1,6 @@
 1.3.10
 ------
+* Fixed problem identifying OAuth request protocol
 
 1.3.9
 -----

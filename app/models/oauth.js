@@ -66,7 +66,7 @@ var oAuth = function(){
   me.verifyRequest = function(req, callback){
     var that = this;
     //TODO: review this
-    var http = arguments['2'];
+    var httpProto = arguments['2'];
     var passed_tokens;
     var ohash;
     var signature;
@@ -99,7 +99,16 @@ var oAuth = function(){
 
         var method = req.method;
         var host   = req.headers.host;
-        var path   = http ? 'http://' + host + req.route.path : 'https://' + host + req.route.path;
+
+        if(!httpProto || (httpProto != 'http' && httpProto != 'https')) {
+          var msg = "Unknown HTTP protocol.";
+          err = new Error(msg);
+          err.http_status = 500;
+          callback(err);
+          return;
+        }
+        
+        var path   = httpProto + '://' + host + req.route.path;
         that.splitParams(req.query);
 
         // remove signature from passed_tokens
