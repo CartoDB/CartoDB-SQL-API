@@ -35,6 +35,7 @@ var express = require('express')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
+    , formats = require(global.settings.app_root + '/app/models/formats')
     ;
 
 var tableCache = LRU({
@@ -70,14 +71,6 @@ function queryMayWrite(sql) {
   return mayWrite;
 }
 
-// Return database username from user_id
-// NOTE: a "null" user_id is a request to use the public user
-function userid_to_dbuser(user_id) {
-  if ( _.isString(user_id) )
-      return _.template(global.settings.db_user, {user_id: user_id});
-  return "publicuser" // FIXME: make configurable
-};
-
 function sanitize_filename(filename) {
   filename = path.basename(filename, path.extname(filename));
   filename = filename.replace(/[;()\[\]<>'"\s]/g, '_');
@@ -89,8 +82,6 @@ function sanitize_filename(filename) {
 function handleQuery(req, res) {
 
     var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml'];
-    var svg_width  = 1024.0;
-    var svg_height = 768.0;
 
     // extract input
     var body      = (req.body) ? req.body : {};
@@ -234,39 +225,18 @@ function handleQuery(req, res) {
                     }
                 }
 
-                // TODO: refactor formats to external object
-                if (format === 'geojson' || format === 'topojson' ){
-                    sql = 'SELECT *, ST_AsGeoJSON(' + gn + ',' + dp
-                        + ') as the_geom FROM (' + sql + ') as foo';
-                    if ( format === 'topojson' ) {
-                        // see https://github.com/Vizzuality/CartoDB-SQL-API/issues/80
-                        sql += ' where ' + gn + ' is not null';
-                    }
-                } else if (format === 'shp' || format === 'kml' || format === 'csv' ) {
-                    // These format are implemented via OGR2OGR, so we don't
-                    // need to run a query ourselves
-                    return null;
-                } else if (format === 'svg') {
-                    var svg_ratio = svg_width/svg_height;
-                    sql = 'WITH source AS ( ' + sql + '), extent AS ( '
-                        + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
-                        + '), extent_info AS ( SELECT e, '
-                        + 'st_xmin(e) as ex0, st_ymax(e) as ey0, '
-                        + 'st_xmax(e)-st_xmin(e) as ew, '
-                        + 'st_ymax(e)-st_ymin(e) as eh FROM extent )'
-                        + ', trans AS ( SELECT CASE WHEN '
-                        + 'eh = 0 THEN ' + svg_width
-                        + '/ COALESCE(NULLIF(ew,0),' + svg_width +') WHEN '
-                        + svg_ratio + ' <= (ew / eh) THEN ('
-                        + svg_width  + '/ew ) ELSE ('
-                        + svg_height + '/eh ) END as s '
-                        + ', ex0 as x0, ey0 as y0 FROM extent_info ) '
-                        + 'SELECT st_TransScale(e, -x0, -y0, s, s)::box2d as '
-                        + gn + '_box, ST_Dimension(' + gn + ') as ' + gn
-                        + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
-                        + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
-                        //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
-                        + ' FROM trans, extent_info, source';
+
+                var f = formats[format]
+                if(f && !f.is_file) {
+                  sql = formats[format].getQuery(sql, {
+                    gn: gn,
+                    dp: dp,
+                    skipfields: skipfields
+                  })
+                } else {
+                  // These format are implemented via OGR2OGR, so we don't
+                  // need to run a query ourselves
+                  return null;
                 }
 
                 pg.query(sql, this);
@@ -308,28 +278,82 @@ function handleQuery(req, res) {
                   }
                 }
 
-                // TODO: refactor formats to external object
-                if (format === 'geojson'){
-                    toGeoJSON(result, gn, this);
-                } else if (format === 'topojson'){
-                    toTopoJSON(result, gn, skipfields, this);
-                } else if (format === 'svg'){
-                    toSVG(result.rows, gn, this);
-                } else if (format === 'csv'){
-                    toCSV(database, user_id, gn, sql, skipfields, res, this);
-                } else if ( format === 'shp'){
-                    toSHP(database, user_id, gn, sql, skipfields, filename, res, this);
-                } else if ( format === 'kml'){
-                    toKML(database, user_id, gn, sql, skipfields, res, this);
-                } else if ( format === 'json'){
-                    var end = new Date().getTime();
+                var end = new Date().getTime();
+                var total_time = (end - start)/1000;
 
-                    var json_result = {'time' : (end - start)/1000};
-                        json_result.total_rows = result.rowCount;
-                        json_result.rows = result.rows;
-                    return json_result;
+                var f = formats[format];
+                if(!f.is_file) {
+                  f.transform(result, {
+                    gn: gn,
+                    dp: dp,
+                    skipfields: skipfields,
+                    total_time: total_time,
+                    database: database,
+                    user_id: user_id,
+                    sql: sql,
+                    filename: filename
+                  }, this)
+                  return;
+                } else {
+                  var opts = {
+                    gn: gn,
+                    dp: dp,
+                    skipfields: skipfields,
+                    database: database,
+                    user_id: user_id,
+                    sql: sql,
+                    filename: filename
+                  }
+                  var next = this;
+                  var reqKey = f.getKey(opts);
+                  var qElem = new ExportRequest(res, this);
+                  var baking = bakingExports[reqKey];
+                  if ( baking ) {
+                    baking.req.push( qElem );
+                  } else {
+                    baking = bakingExports[reqKey] = { req: [ qElem ] };
+                    f.generate(opts, function(err, dumpfile) {
+                      if(err) {
+                        next(err);
+                        return;
+                      }
+                      Step (
+                        function sendResults(err) {
+                          var nextPipe = function(finish) {
+                            var r = baking.req.shift();
+                            if ( ! r ) { finish(null); return; }
+                            r.sendFile(err, dumpfile, function() {
+                              nextPipe(finish);
+                            });
+                          }
+
+                          if ( ! err ) nextPipe(this);
+                          else {
+                            _.each(baking.req, function(r) {
+                              r.cb(err);
+                            });
+                            return true;
+                          }
+                        },
+                        function cleanup(err) {
+                          delete bakingExports[reqKey];
+
+                          // unlink dump file (sync to avoid race condition)
+                          console.log("removing", dumpfile);
+                          try { fs.unlinkSync(dumpfile); }
+                          catch (e) {
+                            if ( e.code != 'ENOENT' ) {
+                              console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
+                            }
+                          }
+                        }
+                      );
+                    })
+                  }
+                  return;
                 }
-                else throw new Error("Unexpected format in packageResults: " + format);
+
+                throw new Error("Unexpected format in packageResults: " + format);
             },
             function sendResults(err, out){
                 if (err) throw err;
@@ -352,375 +376,6 @@ function handleCacheStatus(req, res){
     var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
     var totalExplainKeys = tableCacheValues.length;
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
-}
-
-// helper functions
-function toGeoJSON(data, gn, callback){
-    try{
-        var out = {
-            type: "FeatureCollection",
-            features: []
-        };
-
-        _.each(data.rows, function(ele){
-            var geojson = {
-                type: "Feature",
-                properties: { },
-                geometry: { }
-            };
-            geojson.geometry = JSON.parse(ele[gn]);
-            delete ele[gn];
-            delete ele["the_geom_webmercator"]; // TODO: use skipfields
-            geojson.properties = ele;
-            out.features.push(geojson);
-        });
-
-        // return payload
-        callback(null, out);
-    } catch (err) {
-        callback(err,null);
-    }
-}
-
-function toTopoJSON(data, gn, skipfields, callback){
-  toGeoJSON(data, gn, function(err, geojson) {
-    if ( err ) {
-      callback(err, null);
-      return;
-    }
-    var TopoJSON = require('topojson');
-    var topology = TopoJSON.topology(geojson.features, {
-/* TODO: expose option to API for requesting an identifier
-      "id": function(o) {
-        console.log("id called with obj: "); console.dir(o);
-        return o;
-      },
-*/
-      "quantization": 1e4, // TODO: expose option to API (use existing "dp" for this ?)
-      "force-clockwise": true,
-      "property-filter": function(d) {
-        // TODO: delegate skipfields handling to toGeoJSON
-        return skipfields.indexOf(d) != -1 ? null : d;
-      }
-    });
-    callback(err, topology);
-  });
-}
-
-function toSVG(rows, gn, callback){
-
-    var radius = 5; // in pixels (based on svg_width and svg_height)
-    var stroke_width = 1; // in pixels (based on svg_width and svg_height)
-    var stroke_color = 'black';
-    // fill settings affect polygons and points (circles)
-    var fill_opacity = 0.5; // 0.0 is fully transparent, 1.0 is fully opaque
-                            // unused if fill_color='none'
-    var fill_color = 'none'; // affects polygons and circles
-
-    var bbox; // will be computed during the results scan
-    var polys = [];
-    var lines = [];
-    var points = [];
-    _.each(rows, function(ele){
-        if ( ! ele.hasOwnProperty(gn) ) {
-          throw new Error('column "' + gn + '" does not exist');
-        }
-        var g = ele[gn];
-        if ( ! g ) return; // null or empty
-        var gdims = ele[gn + '_dimension'];
-
-        // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
-        // TODO: add "class" attribute to help with styling ?
-        if ( gdims == '0' ) {
-          points.push('<circle r="[RADIUS]" ' + g + ' />');
-        } else if ( gdims == '1' ) {
-          // Avoid filling closed linestrings
-          var linetag = '<path ';
-          if ( fill_color != 'none' ) linetag += 'fill="none" '
-          linetag += 'd="' + g + '" />';
-          lines.push(linetag);
-        } else if ( gdims == '2' ) {
-          polys.push('<path d="' + g + '" />');
-        }
-
-        if ( ! bbox ) {
-          // Parse layer extent: "BOX(x y, X Y)"
-          // NOTE: the name of the extent field is
-          //       determined by the same code adding the
-          //       ST_AsSVG call (in queryResult)
-          //
-          bbox = ele[gn + '_box'];
-          bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
-          bbox = {
-            xmin: parseFloat(bbox[1]),
-            ymin: parseFloat(bbox[2]),
-            xmax: parseFloat(bbox[3]),
-            ymax: parseFloat(bbox[4])
-           };
-        }
-    });
-
-    // Set point radius
-    for (var i=0; i<points.length; ++i) {
-      points[i] = points[i].replace('[RADIUS]', radius);
-    }
-
-    var header_tags = [
-        '<?xml version="1.0" standalone="no"?>',
-        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
-    ];
-
-    var root_tag = '<svg ';
-    if ( bbox ) {
-      // expand box by "radius" + "stroke-width"
-      // TODO: use a Box2d class for these ops
-      var growby = radius+stroke_width;
-      bbox.xmin -= growby;
-      bbox.ymin -= growby;
-      bbox.xmax += growby;
-      bbox.ymax += growby;
-      bbox.width = bbox.xmax - bbox.xmin;
-      bbox.height = bbox.ymax - bbox.ymin;
-      root_tag += 'viewBox="' + bbox.xmin + ' ' + (-bbox.ymax) + ' '
-               + bbox.width + ' ' + bbox.height + '" ';
-    }
-    root_tag += 'style="fill-opacity:' + fill_opacity
-              + '; stroke:' + stroke_color
-              + '; stroke-width:' + stroke_width
-              + '; fill:' + fill_color
-              + '" ';
-    root_tag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">';
-
-    header_tags.push(root_tag);
-
-    // Render points on top of lines and lines on top of polys
-    var out = header_tags.concat(polys, lines, points);
-
-    out.push('</svg>');
-
-    // return payload
-    callback(null, out.join("\n"));
-}
-
-function toCSV(dbname, user_id, gcol, sql, skipfields, res, callback) {
-  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'CSV', 'csv', res, callback);
-}
-
-// Internal function usable by all OGR-driven outputs
-function toOGR(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, callback) {
-  var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
-  var dbhost = global.settings.db_host;
-  var dbport = global.settings.db_port;
-  var dbuser = userid_to_dbuser(user_id);
-  var dbpass = ''; // turn into a parameter..
-
-  var columns = [];
-
-  // Drop ending semicolon (ogr doens't like it)
-  sql = sql.replace(/;\s*$/, ''); 
-
-  Step (
-
-    function fetchColumns() {
-      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
-      var pg = new PSQL(user_id, dbname, 1, 0);
-      pg.query(colsql, this);
-    },
-    function spawnDumper(err, result) {
-      if (err) throw err;
-
-      //if ( ! result.rows.length ) throw new Error("Query returns no rows");
-
-      // Skip system columns
-      if ( result.rows.length ) {
-        for (var k in result.rows[0]) {
-          if ( skipfields.indexOf(k) != -1 ) continue;
-          if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
-          if ( out_format == 'CSV' ) columns.push('"' + k + '"::text');
-          else columns.push('"' + k + '"');
-        }
-      } else columns.push('*');
-      //console.log(columns.join(','));
-
-      var next = this;
-
-      sql = 'SELECT ' + columns.join(',')
-          + ' FROM (' + sql + ') as _cartodbsqlapi';
-
-      var child = spawn(ogr2ogr, [
-        '-f', out_format,
-        '-lco', 'ENCODING=UTF-8',
-        '-lco', 'LINEFORMAT=CRLF',
-        out_filename,
-        "PG:host=" + dbhost
-         + " user=" + dbuser
-         + " dbname=" + dbname
-         + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns
-         + "",
-        '-sql', sql
-      ]);
-
-/*
-console.log(['ogr2ogr',
-        '-f', '"'+out_format+'"',
-        out_filename,
-        "'PG:host=" + dbhost
-         + " user=" + dbuser
-         + " dbname=" + dbname
-         + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns
-         + "'",
-        "-sql '", sql, "'"].join(' '));
-*/
-
-      var stdout = '';
-      child.stdout.on('data', function(data) {
-        stdout += data;
-        //console.log('stdout: ' + data);
-      });
-
-      var stderr;
-      var logErrPat = new RegExp(/^ERROR/);
-      child.stderr.on('data', function(data) {
-        data = data.toString(); // know of a faster way ?
-        // Store only the first ERROR line
-        if ( ! stderr && data.match(logErrPat) ) stderr = data;
-        console.log('ogr2ogr stderr: ' + data);
-      });
-
-      child.on('exit', function(code) {
-        if ( code ) {
-          var emsg = stderr.split('\n')[0];
-          // TODO: add more info about this error ?
-          //if ( RegExp(/attempt to write non-.*geometry.*to.*type shapefile/i).exec(emsg) )
-          next(new Error(emsg));
-        } else {
-          next(null);
-        }
-      });
-    },
-    function finish(err) {
-      callback(err);
-    }
-  );
-}
-
-function toSHP(dbname, user_id, gcol, sql, skipfields, filename, res, callback) {
-  var zip = 'zip'; // FIXME: make configurable
-  var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ 'shp', dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + reqKey; 
-  var zipfile = outdirpath + '.zip';
-  var shapefile = outdirpath + '/' + filename + '.shp';
-
-  // TODO: following tests:
-  //  - fetch query with no "the_geom" column
-
-  var qElem = new ExportRequest(res, callback);
-  var baking = bakingExports[reqKey];
-  if ( baking ) {
-    baking.req.push( qElem );
-    return;
-  }
-
-  baking = bakingExports[reqKey] = { req: [ qElem ] };
-
-  Step (
-
-    function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
-    },
-    function spawnDumper(err) {
-      if ( err ) throw err;
-      toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
-    },
-    function doZip(err) {
-      if ( err ) throw err;
-
-      var next = this;
-
-      var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
-
-      child.on('exit', function(code) {
-        //console.log("Zip complete, zip return code was " + code);
-        if (code) {
-          next(new Error("Zip command return code " + code));
-          res.statusCode = 500; 
-        }
-        next(null);
-      });
-
-    },
-    function cleanupDir(topError) {
-
-      var next = this;
-
-      //console.log("Cleaning up " + outdirpath);
-
-      // Unlink the dir content
-      var unlinkall = function(dir, files, finish) {
-        var f = files.shift();
-        if ( ! f ) { finish(null); return; }
-        var fn = dir + '/' + f;
-        fs.unlink(fn, function(err) {
-          if ( err ) {
-            console.log("Unlinking " + fn + ": " + err);
-            finish(err);
-          }
-          else unlinkall(dir, files, finish)
-        });
-      }
-      fs.readdir(outdirpath, function(err, files) {
-        if ( err ) {
-          if ( err.code != 'ENOENT' ) {
-            next(new Error([topError, err].join('\n')));
-          } else {
-            next(topError);
-          }
-        } else {
-          unlinkall(outdirpath, files, function(err) {
-            fs.rmdir(outdirpath, function(err) {
-              if ( err ) console.log("Removing dir " + path + ": " + err);
-              next(topError);
-            });
-          });
-        }
-      });
-    },
-    function sendResults(err) {
-
-      var nextPipe = function(finish) {
-        var r = baking.req.shift();
-        if ( ! r ) { finish(null); return; }
-        r.sendFile(err, zipfile, function() {
-          nextPipe(finish);
-        });
-      }
-
-      if ( ! err ) nextPipe(this);
-      else {
-        _.each(baking.req, function(r) {
-          r.cb(err);
-        });
-        return true;
-      }
-
-    },
-    function cleanup(err) {
-
-      delete bakingExports[reqKey];
-
-      // unlink dump file (sync to avoid race condition)
-      try { fs.unlinkSync(zipfile); }
-      catch (e) {
-        if ( e.code != 'ENOENT' ) {
-          console.log("Could not unlink zipfile " + zipfile + ": " + e);
-        }
-      }
-
-    }
-  );
 }
 
 function ExportRequest(ostream, callback) {
@@ -761,71 +416,6 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
   this.cb();
 }
 
-function toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, fmt, ext, res, callback) {
-  var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ fmt, dbname, user_id, gcol, generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + reqKey;
-  var dumpfile = outdirpath + ':cartodb-query.' + ext;
-
-  // TODO: following tests:
-  //  - fetch query with no "the_geom" column
-
-
-  var qElem = new ExportRequest(res, callback);
-  var baking = bakingExports[reqKey];
-  if ( baking ) {
-    //console.log("Queuing request for baking resource " + reqKey);
-    baking.req.push( qElem );
-    return;
-  }
-
-  //console.log("Registering baking resource " + reqKey);
-
-  baking = bakingExports[reqKey] = { req: [ qElem ] };
-
-  Step (
-
-    function spawnDumper() {
-      toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, this);
-    },
-    function sendResults(err) {
-
-      //console.log("toOGR completed, have to send result to " + baking.req.length + " requests");
-
-      var nextPipe = function(finish) {
-        var r = baking.req.shift();
-        if ( ! r ) { finish(null); return; }
-        r.sendFile(err, dumpfile, function() {
-          nextPipe(finish);
-        });
-      }
-
-      if ( ! err ) nextPipe(this);
-      else {
-        _.each(baking.req, function(r) {
-          r.cb(err);
-        });
-        return true;
-      }
-
-    },
-    function cleanup(err) {
-
-      //console.log("Deleting baking export " + reqKey + " and cleaning up");
-
-      delete bakingExports[reqKey];
-
-      // unlink dump file (sync to avoid race condition)
-      try { fs.unlinkSync(dumpfile); }
-      catch (e) {
-        if ( e.code != 'ENOENT' ) {
-          console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
-        }
-      }
-
-    }
-  );
-}
 
 function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
   toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'KML', 'kml', res, callback);
@@ -857,18 +447,8 @@ function getContentDisposition(format, filename, inline) {
 
 function getContentType(format){
     var type = "application/json; charset=utf-8";
-    if (format === 'csv'){
-        type = "text/csv; charset=utf-8; header=present";
-    }
-    else if (format === 'svg'){
-        type = "image/svg+xml; charset=utf-8";
-    }
-    else if (format === 'shp'){
-        type = "application/zip; charset=utf-8";
-    }
-    else if (format === 'kml'){
-        type = "application/kml; charset=utf-8";
-    }
+    var f = formats[format]
+    type = f.getContentType();
     return type;
 }
 
@@ -890,6 +470,7 @@ function generateMD5(data){
     hash.update(data);
     return hash.digest('hex');
 }
+
 
 function handleException(err, res){
     var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
