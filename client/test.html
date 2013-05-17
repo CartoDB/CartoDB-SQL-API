@@ -1,0 +1,32 @@
+
+<html>
+  <body>
+    <script src="bin_decoder.js"></script>
+    <script>
+      function get(url, callback) {
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function() {
+          if (req.readyState == 4){
+            if (req.status == 200){
+              callback(req);
+            } else {
+              callback(null);
+            }
+          }
+        };
+        req.open("GET", url, true)
+        req.responseType = 'arraybuffer';
+        req.send(null)
+        return req;
+      }
+
+      var q = 'select%20owner,%20array_agg(lat::integer)%20as%20arr_lat__int8,%20array_agg(long)%20as%20arr_long%20%20%20from%20antenas%20%20group%20by%20owner,%20lat,%20long%20limit%2020';
+
+      get('http://development.localhost.lan:8080/api/v1/sql?q=' + q+ '&format=bin', function(req) {
+        var b = new ArrayBufferSer(req.response);
+        console.log(b.length);
+        window.b = b;
+      });
+    </script>
+  </body>
+</html>

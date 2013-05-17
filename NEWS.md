@@ -1,3 +1,7 @@
+1.4.0
+-----
+* Add arraybuffer format
+
 1.3.10
 ------
 * Fixed problem identifying OAuth request protocol

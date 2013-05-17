@@ -91,7 +91,7 @@ function window_sql (sql, limit, offset) {
 // request handlers
 function handleQuery(req, res) {
 
-    var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml'];
+    //var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml', 'arraybuffer'];
 
     // extract input
     var body      = (req.body) ? req.body : {};
@@ -136,7 +136,8 @@ function handleQuery(req, res) {
           skipfields = [];
         }
 
-        if ( -1 === supportedFormats.indexOf(format) )
+        //if ( -1 === supportedFormats.indexOf(format) )
+        if ( ! formats.hasOwnProperty(format) ) 
           throw new Error("Invalid format: " + format);
 
         if (!_.isString(sql)) throw new Error("You must indicate a sql query");
@@ -235,7 +236,6 @@ function handleQuery(req, res) {
                 }
 
 
-                if ( ! formats.hasOwnProperty(format) ) throw new Error("Unknown format " + format);
                 var fClass = formats[format]
                 formatter = new fClass();
 
