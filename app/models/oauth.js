@@ -101,7 +101,7 @@ var oAuth = function(){
         var host   = req.headers.host;
 
         if(!httpProto || (httpProto != 'http' && httpProto != 'https')) {
-          var msg = "Unknown HTTP protocol.";
+          var msg = "Unknown HTTP protocol " + httpProto + ".";
           err = new Error(msg);
           err.http_status = 500;
           callback(err);
