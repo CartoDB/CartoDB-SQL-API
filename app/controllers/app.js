@@ -119,8 +119,8 @@ function handleQuery(req, res) {
         filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
         sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
         database  = (database === "" || _.isUndefined(database)) ? null : database;
-        limit     = (_.isNumber(limit))  ? limit : null;
-        offset    = (_.isNumber(offset)) ? offset * limit : null;
+        limit     = (!_.isNaN(limit))  ? limit : null;
+        offset    = (!_.isNaN(offset)) ? offset * limit : null;
 
         // Accept both comma-separated string or array of comma-separated strings
         if ( requestedSkipfields ) {

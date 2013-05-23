@@ -2,6 +2,7 @@
 ------
 * Fixed problem identifying OAuth request protocol
 * Make base url configurable
+* Update underscore dependency 
 
 1.3.9
 -----

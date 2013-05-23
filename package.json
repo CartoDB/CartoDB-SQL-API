@@ -11,15 +11,15 @@
     "dependencies": {
         "cluster2": "git://github.com/CartoDB/cluster2.git#cdb_production",
         "express": "~2.5.11",
-        "underscore"  : "1.1.x",
-        "underscore.string": "1.1.5",
+        "underscore"  : "~1.3.3",
+        "underscore.string": "~1.1.6",
         "pg": "git://github.com/CartoDB/node-postgres.git#cdb-0.12.3-cdb2",
         "express": "~2.5.11",
         "generic-pool": "~2.0.2",
         "redis": "0.7.1",
         "hiredis": "*",
         "step": "0.0.x",
-        "topojson": "~0.0.8",
+        "topojson": "0.0.8",
         "oauth-client": "0.2.0",
         "node-uuid":"1.3.3",
         "lru-cache":"~2.2.2"
