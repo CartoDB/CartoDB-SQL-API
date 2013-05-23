@@ -51,9 +51,9 @@ app.use(express.bodyParser());
 app.enable('jsonp callback');
 
 // basic routing
-app.all('/api/v1/sql',     function(req, res) { handleQuery(req, res) } );
-app.all('/api/v1/sql.:f',  function(req, res) { handleQuery(req, res) } );
-app.get('/api/v1/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
+app.all(global.settings.base_url+'/sql',     function(req, res) { handleQuery(req, res) } );
+app.all(global.settings.base_url+'/sql.:f',  function(req, res) { handleQuery(req, res) } );
+app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
 
 // Return true of the given query may write to the database
 //

@@ -1,6 +1,7 @@
 1.3.10
 ------
 * Fixed problem identifying OAuth request protocol
+* Make base url configurable
 
 1.3.9
 -----

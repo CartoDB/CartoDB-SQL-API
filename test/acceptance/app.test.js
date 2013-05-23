@@ -56,6 +56,21 @@ test('GET /api/v1/sql', function(done){
     });
 });
 
+// Test base_url setting
+test('GET /api/whatever/sql', function(done){
+    assert.response(app, {
+        url: '/api/whatever/sql',
+        method: 'GET'
+    },{
+        status: 400
+    }, function(res) {
+        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+        assert.deepEqual(res.headers['content-disposition'], 'inline');
+        assert.deepEqual(JSON.parse(res.body), {"error":["You must indicate a sql query"]});
+        done();
+    });
+});
+
 
 test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', function(done){
     assert.response(app, {
