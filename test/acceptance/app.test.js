@@ -69,6 +69,37 @@ test('GET /api/whatever/sql', function(done){
     });
 });
 
+// Test CORS headers with GET
+test('GET /api/whatever/sql', function(done){
+    assert.response(app, {
+        url: '/api/whatever/sql?q=SELECT%201',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{
+    }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        assert.equal(res.headers['access-control-allow-headers'], 'X-Requested-With, X-Prototype-Version, X-CSRF-Token');
+        assert.equal(res.headers['access-control-allow-origin'], '*');
+        done();
+    });
+});
+
+// Test that OPTIONS does not run queries 
+test('OPTIONS /api/x/sql', function(done){
+    assert.response(app, {
+        url: '/api/x/sql?q=syntax%20error',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'OPTIONS'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        assert.equal(res.body, '');
+        assert.equal(res.headers['access-control-allow-headers'], 'X-Requested-With, X-Prototype-Version, X-CSRF-Token');
+        assert.equal(res.headers['access-control-allow-origin'], '*');
+        done();
+    });
+});
+
+
 
 test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', function(done){
     assert.response(app, {
@@ -987,22 +1018,5 @@ test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS heade
         done();
     });
 });
-
-test('OPTIONS /api/v1/sql with SQL parameter on SELECT only should return CORS headers ', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
-        method: 'OPTIONS'
-    },{ }, function(res) {
-        assert.equal(res.statusCode, 200, res.body);
-        // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
-        assert.equal(res.headers['cache-control'], expected_cache_control);
-        assert.equal(res.headers['access-control-allow-origin'], '*');
-        assert.equal(res.headers['access-control-allow-headers'], "X-Requested-With, X-Prototype-Version, X-CSRF-Token");
-        done();
-    });
-});
-
 
 });

@@ -5,6 +5,7 @@
 * Update underscore dependency 
 * Add munin plugin
 * Make PostgreSQL client pooling settings configurable (#47)
+* Do not execute queries on OPTIONS (#94)
 
 1.3.9
 -----
