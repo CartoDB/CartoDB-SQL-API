@@ -3,6 +3,23 @@ var _      = require('underscore')
     , pg     = require('pg');//.native; // disabled for now due to: https://github.com/brianc/node-postgres/issues/48
 _.mixin(require('underscore.string'));
 
+// Max database connections in the pool
+// Subsequent connections will block waiting for a free slot
+pg.defaults.poolSize = global.settings.db_pool_size || 16;
+
+// Milliseconds of idle time before removing connection from pool
+// TODO: make config setting ?
+pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
+
+// Frequency to check for idle clients within the pool, ms
+// TODO: make config setting ?
+pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
+
+pg.on('error', function(err, client) {
+  console.log("PostgreSQL connection error: " + err);
+});
+
+
 // PSQL
 //
 // A simple postgres wrapper with logic about username and database to connect
@@ -13,18 +30,6 @@ var PSQL = function(user_id, db) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
-
-    // Max database connections in the pool
-    // Subsequent connections will block waiting for a free slot
-    pg.defaults.poolSize = global.settings.db_pool_size || 16;
-
-    // Milliseconds of idle time before removing connection from pool
-    // TODO: make config setting ?
-    pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
-
-    // Frequency to check for idle clients within the pool, ms
-    // TODO: make config setting ?
-    pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
 
     var me = {
         public_user: "publicuser"

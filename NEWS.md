@@ -6,6 +6,7 @@
 * Add munin plugin
 * Make PostgreSQL client pooling settings configurable (#47)
 * Do not execute queries on OPTIONS (#94)
+* Survive postgresql connection losses (#95)
 
 1.3.9
 -----
