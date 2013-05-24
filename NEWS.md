@@ -3,6 +3,7 @@
 * Fixed problem identifying OAuth request protocol
 * Make base url configurable
 * Update underscore dependency 
+* Add munin plugin
 
 1.3.9
 -----
