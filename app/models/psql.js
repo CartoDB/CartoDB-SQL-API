@@ -37,17 +37,26 @@ var PSQL = function(user_id, db) {
         return database;
     };
 
-    // memorizes connection in object. move to proper pool.
-    me.connect = function(callback){
-        var that = this
-        var conString = "tcp://" + this.username() + "@" + global.settings.db_host + ":" + global.settings.db_port + "/" + this.database();
-
-        if (that.client) {
-            return callback(null, that.client);
+    // memorizes connection in object.
+    // TODO: move to proper pool.
+    me._connect = function(callback){
+        if (this.client) {
+            callback(null, this.client);
         } else {
+            var conString = "tcp://" + this.username() + "@" +
+                            global.settings.db_host + ":" +
+                            global.settings.db_port + "/" +
+                            this.database();
+            var that = this
             pg.connect(conString, function(err, client){
+                // FIXME: there's a race condition here,
+                //        if another .connect() call was
+                //        received before we had done with
+                //        previous connection, the first
+                //        client connected will be lost
+                //        and possibly leak forever.
                 that.client = client;
-                return callback(err, client);
+                callback(err, client);
             });
         }
     };
@@ -61,10 +70,10 @@ var PSQL = function(user_id, db) {
             },
             function(err, clean){
                 if (err) throw err;
-                that.connect(this);
+                that._connect(this);
             },
             function(err, client){
-                if (err) return callback(err, null);
+                if (err) throw err;
                 client.query(sql, this);
             },
             function(err, res){
@@ -75,8 +84,9 @@ var PSQL = function(user_id, db) {
     };
 
     /// @deprecated -- should not be called
-    me.end = function(){
-      // NOTE: clients created via the pg#connect method will be                                                                                                     //       automatically disconnected or placed back into the
+    me._end = function(){
+      // NOTE: clients created via the pg#connect method will be
+      //       automatically disconnected or placed back into the
       //       connection pool and should NOT have their #end
       //       method called
       // REF: https://github.com/brianc/node-postgres/wiki/Client#method-end
