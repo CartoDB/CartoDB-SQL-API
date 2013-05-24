@@ -9,7 +9,7 @@ _.mixin(require('underscore.string'));
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db, limit, offset){
+var PSQL = function(user_id, db) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
@@ -18,8 +18,6 @@ var PSQL = function(user_id, db, limit, offset){
         public_user: "publicuser"
         , user_id: user_id
         , db: db
-        , limit: limit
-        , offset: offset
         , client: null
     };
 
@@ -54,7 +52,7 @@ var PSQL = function(user_id, db, limit, offset){
         }
     };
 
-    me.query = function(sql, callback, skip_window){
+    me.query = function(sql, callback){
         var that = this;
 
         Step(
@@ -67,7 +65,7 @@ var PSQL = function(user_id, db, limit, offset){
             },
             function(err, client){
                 if (err) return callback(err, null);
-                client.query(skip_window ? sql : that.window_sql(sql), this);
+                client.query(sql, this);
             },
             function(err, res){
                 //if (err) console.log(err);
@@ -87,16 +85,6 @@ var PSQL = function(user_id, db, limit, offset){
       // if ( this.client ) { this.client.end(); this.client = null; }
 
       // NOTE: maybe provide a function resumeDrain, but change its name
-    };
-
-    // little hack for UI
-    me.window_sql = function(sql){
-        // only window select functions
-        if (_.isNumber(this.limit) && _.isNumber(this.offset) && /^\s*SELECT.*$/.test(sql.toUpperCase())){
-            return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + this.limit + " OFFSET " + this.offset;
-        } else {
-            return sql;
-        }
     };
 
     // throw exception if illegal operations are detected

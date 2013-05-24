@@ -132,7 +132,8 @@ test("paging doesn't break x-cache-channel",
 function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
-          q: 'SELECT cartodb_id*3 FROM untitle_table_4',
+          // note: select casing intentionally mixed
+          q: 'selECT cartodb_id*3 FROM untitle_table_4',
           api_key: '1234',
           rows_per_page: 1,
           page: 2

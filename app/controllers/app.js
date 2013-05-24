@@ -78,6 +78,18 @@ function sanitize_filename(filename) {
   return filename;
 }
 
+// little hack for UI
+//
+// TODO:drop, fix in the UI (it's not documented in doc/API)
+//
+function window_sql (sql, limit, offset) {
+    // only window select functions
+    if (_.isNumber(limit) && _.isNumber(offset) && sql.match(/^\s*SELECT\s/) ) {
+        return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
+    } 
+    return sql;
+}
+
 // request handlers
 function handleQuery(req, res) {
 
@@ -179,7 +191,7 @@ function handleQuery(req, res) {
                 if (err) throw err;
                 user_id = data;
                 // store postgres connection
-                pg = new PSQL(user_id, database, limit, offset);
+                pg = new PSQL(user_id, database);
 
                 authenticated = ! _.isNull(user_id);
 
@@ -189,7 +201,7 @@ function handleQuery(req, res) {
                    tableCacheItem.hits++;
                    return false;
                 } else {
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this, true);
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
             },
             function queryResult(err, result){
@@ -239,7 +251,7 @@ function handleQuery(req, res) {
                   return null;
                 }
 
-                pg.query(sql, this);
+                pg.query(window_sql(sql,limit,offset), this);
             },
             function setHeaders(err, result){
                 if (err) throw err;
