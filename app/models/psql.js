@@ -14,6 +14,18 @@ var PSQL = function(user_id, db) {
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
 
+    // Max database connections in the pool
+    // Subsequent connections will block waiting for a free slot
+    pg.defaults.poolSize = global.settings.db_pool_size || 16;
+
+    // Milliseconds of idle time before removing connection from pool
+    // TODO: make config setting ?
+    pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
+
+    // Frequency to check for idle clients within the pool, ms
+    // TODO: make config setting ?
+    pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
+
     var me = {
         public_user: "publicuser"
         , user_id: user_id
@@ -37,18 +49,19 @@ var PSQL = function(user_id, db) {
         return database;
     };
 
+    me.conString = "tcp://" + me.username() + "@" +
+                    global.settings.db_host + ":" +
+                    global.settings.db_port + "/" +
+                    me.database();
+
     // memorizes connection in object.
     // TODO: move to proper pool.
     me._connect = function(callback){
         if (this.client) {
             callback(null, this.client);
         } else {
-            var conString = "tcp://" + this.username() + "@" +
-                            global.settings.db_host + ":" +
-                            global.settings.db_port + "/" +
-                            this.database();
             var that = this
-            pg.connect(conString, function(err, client){
+            pg.connect(this.conString, function(err, client, done){
                 // FIXME: there's a race condition here,
                 //        if another .connect() call was
                 //        received before we had done with
@@ -63,6 +76,7 @@ var PSQL = function(user_id, db) {
 
     me.query = function(sql, callback){
         var that = this;
+        var finish;
 
         Step(
             function(){
@@ -70,31 +84,25 @@ var PSQL = function(user_id, db) {
             },
             function(err, clean){
                 if (err) throw err;
-                that._connect(this);
+                pg.connect(that.conString, this);
             },
-            function(err, client){
+            function(err, client, done){
                 if (err) throw err;
+                finish = done;
                 client.query(sql, this);
             },
             function(err, res){
-                //if (err) console.log(err);
+
+                // Release client to the pool
+                // should this be postponed to after the callback ?
+                // NOTE: if we pass a true value to finish() the client
+                //       will be removed from the pool.
+                //       We don't want this. Not now.
+                if ( finish ) finish();
+
                 callback(err, res)
             }
         );
-    };
-
-    /// @deprecated -- should not be called
-    me._end = function(){
-      // NOTE: clients created via the pg#connect method will be
-      //       automatically disconnected or placed back into the
-      //       connection pool and should NOT have their #end
-      //       method called
-      // REF: https://github.com/brianc/node-postgres/wiki/Client#method-end
-      // See me.connect()
-    
-      // if ( this.client ) { this.client.end(); this.client = null; }
-
-      // NOTE: maybe provide a function resumeDrain, but change its name
     };
 
     // throw exception if illegal operations are detected

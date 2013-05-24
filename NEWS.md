@@ -4,6 +4,7 @@
 * Make base url configurable
 * Update underscore dependency 
 * Add munin plugin
+* Make PostgreSQL client pooling settings configurable (#47)
 
 1.3.9
 -----
