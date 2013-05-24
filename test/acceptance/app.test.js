@@ -59,14 +59,12 @@ test('GET /api/v1/sql', function(done){
 // Test base_url setting
 test('GET /api/whatever/sql', function(done){
     assert.response(app, {
-        url: '/api/whatever/sql',
+        url: '/api/whatever/sql?q=SELECT%201',
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-        status: 400
     }, function(res) {
-        assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-        assert.deepEqual(res.headers['content-disposition'], 'inline');
-        assert.deepEqual(JSON.parse(res.body), {"error":["You must indicate a sql query"]});
+        assert.equal(res.statusCode, 200, res.body);
         done();
     });
 });
