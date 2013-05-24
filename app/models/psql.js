@@ -30,7 +30,6 @@ var PSQL = function(user_id, db) {
         public_user: "publicuser"
         , user_id: user_id
         , db: db
-        , client: null
     };
 
     me.username = function(){
@@ -53,26 +52,6 @@ var PSQL = function(user_id, db) {
                     global.settings.db_host + ":" +
                     global.settings.db_port + "/" +
                     me.database();
-
-    // memorizes connection in object.
-    // TODO: move to proper pool.
-    me._connect = function(callback){
-        if (this.client) {
-            callback(null, this.client);
-        } else {
-            var that = this
-            pg.connect(this.conString, function(err, client, done){
-                // FIXME: there's a race condition here,
-                //        if another .connect() call was
-                //        received before we had done with
-                //        previous connection, the first
-                //        client connected will be lost
-                //        and possibly leak forever.
-                that.client = client;
-                callback(err, client);
-            });
-        }
-    };
 
     me.query = function(sql, callback){
         var that = this;
