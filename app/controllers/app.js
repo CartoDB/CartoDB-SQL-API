@@ -35,7 +35,7 @@ var express = require('express')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
-    , formats = require(global.settings.app_root + '/app/models/formats')
+    , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
 
 var tableCache = LRU({
@@ -44,9 +44,6 @@ var tableCache = LRU({
   // consider entries expired after these many milliseconds (10 minutes by default)
   maxAge: global.settings.tableCacheMaxAge || 1000*60*10
 });
-
-// Keeps track of what's waiting baking for export
-var bakingExports = {};
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -139,9 +136,6 @@ function handleQuery(req, res) {
           skipfields = [];
         }
 
-        // setup step run
-        var start = new Date().getTime();
-
         if ( -1 === supportedFormats.indexOf(format) )
           throw new Error("Invalid format: " + format);
 
@@ -155,11 +149,13 @@ function handleQuery(req, res) {
 
         var authenticated;
 
+        var formatter;
+
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
-        // 4. Run query with r/w or public user
-        // 5. package results and send back
+        // 4. Setup headers
+        // 5. Send formatted results back
         Step(
             function getDatabaseName() {
                 if (_.isNull(database)) {
@@ -205,7 +201,7 @@ function handleQuery(req, res) {
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
                 }
             },
-            function queryResult(err, result){
+            function setHeaders(err, result){
                 if (err) throw err;
 
                 // store explain result in local Cache
@@ -239,28 +235,15 @@ function handleQuery(req, res) {
                 }
 
 
-                var f = formats[format]
-                if(f && !f.is_file) {
-                  sql = formats[format].getQuery(sql, {
-                    gn: gn,
-                    dp: dp,
-                    skipfields: skipfields
-                  })
-                } else {
-                  // These format are implemented via OGR2OGR, so we don't
-                  // need to run a query ourselves
-                  return null;
-                }
+                if ( ! formats.hasOwnProperty(format) ) throw new Error("Unknown format " + format);
+                var fClass = formats[format]
+                formatter = new fClass();
 
-                pg.query(window_sql(sql,limit,offset), this);
-            },
-            function setHeaders(err, result){
-                if (err) throw err;
 
                 // configure headers for given format
                 var use_inline = !requestedFormat && !requestedFilename;
                 res.header("Content-Disposition", getContentDisposition(format, filename, use_inline));
-                res.header("Content-Type", getContentType(format));
+                res.header("Content-Type", formatter.getContentType());
 
                 // allow cross site post
                 setCrossDomain(res);
@@ -277,105 +260,29 @@ function handleQuery(req, res) {
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
 
-
                 return result;
             },
-            function packageResults(err, result){
+            function generateFormat(err, result){
                 if (err) throw err;
 
-                if ( result && skipfields.length ){
-                  for ( var i=0; i<result.rows.length; ++i ) {
-                    for ( var j=0; j<skipfields.length; ++j ) {
-                      delete result.rows[i][skipfields[j]];
-                    }
-                  }
+                // TODO: drop this, fix UI!
+                sql = window_sql(sql,limit,offset);
+
+                var opts = {
+                  sink: res,
+                  gn: gn,
+                  dp: dp,
+                  skipfields: skipfields,
+                  database: database,
+                  user_id: user_id,
+                  sql: sql,
+                  filename: filename
                 }
 
-                var end = new Date().getTime();
-                var total_time = (end - start)/1000;
-
-                var f = formats[format];
-                if(!f.is_file) {
-                  f.transform(result, {
-                    gn: gn,
-                    dp: dp,
-                    skipfields: skipfields,
-                    total_time: total_time,
-                    database: database,
-                    user_id: user_id,
-                    sql: sql,
-                    filename: filename
-                  }, this)
-                  return;
-                } else {
-                  var opts = {
-                    gn: gn,
-                    dp: dp,
-                    skipfields: skipfields,
-                    database: database,
-                    user_id: user_id,
-                    sql: sql,
-                    filename: filename
-                  }
-                  var next = this;
-                  var reqKey = f.getKey(opts);
-                  var qElem = new ExportRequest(res, this);
-                  var baking = bakingExports[reqKey];
-                  if ( baking ) {
-                    baking.req.push( qElem );
-                  } else {
-                    baking = bakingExports[reqKey] = { req: [ qElem ] };
-                    f.generate(opts, function(err, dumpfile) {
-                      if(err) {
-                        next(err);
-                        return;
-                      }
-                      Step (
-                        function sendResults(err) {
-                          var nextPipe = function(finish) {
-                            var r = baking.req.shift();
-                            if ( ! r ) { finish(null); return; }
-                            r.sendFile(err, dumpfile, function() {
-                              nextPipe(finish);
-                            });
-                          }
-
-                          if ( ! err ) nextPipe(this);
-                          else {
-                            _.each(baking.req, function(r) {
-                              r.cb(err);
-                            });
-                            return true;
-                          }
-                        },
-                        function cleanup(err) {
-                          delete bakingExports[reqKey];
-
-                          // unlink dump file (sync to avoid race condition)
-                          console.log("removing", dumpfile);
-                          try { fs.unlinkSync(dumpfile); }
-                          catch (e) {
-                            if ( e.code != 'ENOENT' ) {
-                              console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
-                            }
-                          }
-                        }
-                      );
-                    })
-                  }
-                  return;
-                }
-
-                throw new Error("Unexpected format in packageResults: " + format);
+                formatter.sendResponse(opts, this);
             },
-            function sendResults(err, out){
-                if (err) throw err;
-
-                // return to browser
-                if ( out ) res.send(out);
-            },
-            function errorHandle(err, result){
-                handleException(err, res);
+            function errorHandle(err){
+                if ( err ) handleException(err, res);
             }
         );
     } catch (err) {
@@ -391,44 +298,8 @@ function handleCacheStatus(req, res){
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
-function ExportRequest(ostream, callback) {
-  this.cb = callback;
-  this.ostream = ostream;
-  this.istream = null;
-  this.canceled = false;
 
-  var that = this;
-
-  this.ostream.on('close', function() {
-    //console.log("Request close event, qElem.stream is " + qElem.stream);
-    that.canceled = true;
-    if ( that.istream ) {
-      that.istream.destroy();
-    }
-  });
-}
-
-ExportRequest.prototype.sendFile = function (err, filename, callback) {
-  var that = this;
-  if ( ! this.canceled ) {
-    //console.log("Creating readable stream out of dumpfile");
-    this.istream = fs.createReadStream(filename)
-    .on('open', function(fd) {
-      that.istream.pipe(that.ostream);
-      callback();
-    })
-    .on('error', function(e) {
-      console.log("Can't send response: " + e);
-      that.ostream.end(); 
-      callback();
-    });
-  } else {
-    //console.log("Response was canceled, not streaming the file");
-    callback();
-  }
-  this.cb();
-}
-
+// TODO: delegate to formats
 function getContentDisposition(format, filename, inline) {
     var ext = 'json';
     if (format === 'geojson'){
@@ -451,13 +322,6 @@ function getContentDisposition(format, filename, inline) {
     }
     var time = new Date().toUTCString();
     return ( inline ? 'inline' : 'attachment' ) +'; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
-}
-
-function getContentType(format){
-    var type = "application/json; charset=utf-8";
-    var f = formats[format]
-    type = f.getContentType();
-    return type;
 }
 
 function setCrossDomain(res){

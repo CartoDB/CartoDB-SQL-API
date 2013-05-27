@@ -1,26 +1,23 @@
 
+var pg  = require('./pg');
 var _ = require('underscore')
 var geojson = require('./geojson');
 var TopoJSON = require('topojson');
 
-function topojson() {
-}
+function topojson() { }
 
-topojson.prototype = {};
+topojson.prototype = new pg('topojson');
 
-_.extend(topojson.prototype, geojson, {
-  id: "topojson",
+var p = topojson.prototype;
 
-  getQuery: function(sql, options) {
-    var sql = geojson.getQuery(sql, options);
-    return sql + ' where ' + options.gn + ' is not null';
-  },
+p.getQuery = function(sql, options) {
+  var sql = geojson.prototype.getQuery(sql, options);
+  return sql + ' where ' + options.gn + ' is not null';
+};
 
-  transform: function(result, options, callback) {
-    toTopoJSON(result, options.gn, options.skipfields, callback);
-  }
-
-})
+p.transform = function(result, options, callback) {
+  toTopoJSON(result, options.gn, options.skipfields, callback);
+};
 
 function toTopoJSON(data, gn, skipfields, callback){
   geojson.toGeoJSON(data, gn, function(err, geojson) {
@@ -47,4 +44,4 @@ function toTopoJSON(data, gn, skipfields, callback){
 }
 
 
-module.exports = new topojson();
+module.exports = topojson;

@@ -1,31 +1,23 @@
 
 var _ = require('underscore')
+var pg  = require('./pg');
 
-function geojson() {
-}
+function geojson() {}
 
-geojson.prototype = {
+geojson.prototype = new pg('geojson');
 
-  id: "geojson",
+var p = geojson.prototype;
 
-  getQuery: function(sql, options) {
+p._contentType = "application/json; charset=utf-8";
+
+p.getQuery = function(sql, options) {
     var gn = options.gn;
     var dp = options.dp;
     return 'SELECT *, ST_AsGeoJSON(' + gn + ',' + dp + ') as the_geom FROM (' + sql + ') as foo';
-  },
+};
 
-  getContentType: function(){
-    return "application/json; charset=utf-8";
-  },
-
-  getFileExtension: function() {
-    return this.id;
-  },
-
-  transform: function(result, options, callback) {
-    _toGeoJSON(result, options.gn, callback);
-  }
-
+p.transform = function(result, options, callback) {
+  _toGeoJSON(result, options.gn, callback);
 };
 
 function _toGeoJSON(data, gn, callback){
@@ -55,5 +47,5 @@ function _toGeoJSON(data, gn, callback){
   }
 }
 
-module.exports = new geojson();
+module.exports = geojson;
 module.exports.toGeoJSON = _toGeoJSON

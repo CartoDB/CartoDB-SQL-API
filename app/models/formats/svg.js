@@ -1,54 +1,44 @@
-
+var pg  = require('./pg');
 var _ = require('underscore')
-
-function svg() {
-}
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;
 var svg_ratio = svg_width/svg_height;
 
-svg.prototype = {
+function svg() {}
 
-  id: "svg",
+svg.prototype = new pg('svg');
 
+var p = svg.prototype;
 
-  getQuery: function(sql, options) {
-    var gn = options.gn;
-    var dp = options.dp;
-    return  'WITH source AS ( ' + sql + '), extent AS ( '
-          + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
-          + '), extent_info AS ( SELECT e, '
-          + 'st_xmin(e) as ex0, st_ymax(e) as ey0, '
-          + 'st_xmax(e)-st_xmin(e) as ew, '
-          + 'st_ymax(e)-st_ymin(e) as eh FROM extent )'
-          + ', trans AS ( SELECT CASE WHEN '
-          + 'eh = 0 THEN ' + svg_width
-          + '/ COALESCE(NULLIF(ew,0),' + svg_width +') WHEN '
-          + svg_ratio + ' <= (ew / eh) THEN ('
-          + svg_width  + '/ew ) ELSE ('
-          + svg_height + '/eh ) END as s '
-          + ', ex0 as x0, ey0 as y0 FROM extent_info ) '
-          + 'SELECT st_TransScale(e, -x0, -y0, s, s)::box2d as '
-          + gn + '_box, ST_Dimension(' + gn + ') as ' + gn
-          + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
-          + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
-          //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
-          + ' FROM trans, extent_info, source';
-  },
+p.getQuery = function(sql, options) {
+  var gn = options.gn;
+  var dp = options.dp;
+  return  'WITH source AS ( ' + sql + '), extent AS ( '
+        + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
+        + '), extent_info AS ( SELECT e, '
+        + 'st_xmin(e) as ex0, st_ymax(e) as ey0, '
+        + 'st_xmax(e)-st_xmin(e) as ew, '
+        + 'st_ymax(e)-st_ymin(e) as eh FROM extent )'
+        + ', trans AS ( SELECT CASE WHEN '
+        + 'eh = 0 THEN ' + svg_width
+        + '/ COALESCE(NULLIF(ew,0),' + svg_width +') WHEN '
+        + svg_ratio + ' <= (ew / eh) THEN ('
+        + svg_width  + '/ew ) ELSE ('
+        + svg_height + '/eh ) END as s '
+        + ', ex0 as x0, ey0 as y0 FROM extent_info ) '
+        + 'SELECT st_TransScale(e, -x0, -y0, s, s)::box2d as '
+        + gn + '_box, ST_Dimension(' + gn + ') as ' + gn
+        + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
+        + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
+        //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
+        + ' FROM trans, extent_info, source';
+};
 
-  getContentType: function(){
-    return "image/svg+xml; charset=utf-8";
-  },
+p._contentType = "image/svg+xml; charset=utf-8";
 
-  getFileExtension: function() {
-    return this.id;
-  },
-
-  transform: function(result, options, callback) {
-    toSVG(result.rows, options.gn, callback);
-  }
-
+p.transform = function(result, options, callback) {
+  toSVG(result.rows, options.gn, callback);
 };
 
 
@@ -147,4 +137,4 @@ function toSVG(rows, gn, callback) {
     callback(null, out.join("\n"));
 }
 
-module.exports = new svg();
+module.exports = svg;

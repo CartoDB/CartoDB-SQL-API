@@ -1,32 +1,20 @@
+var pg  = require('./pg');
 
-function json() {
-}
+function json() {}
 
-json.prototype = {
+json.prototype = new pg('json');
 
-  id: "json",
+var p = json.prototype;
 
-  getQuery: function(sql, options) {
-    return sql;
-  },
+p._contentType = "application/json; charset=utf-8";
 
-  getContentType: function(){
-    return "application/json; charset=utf-8";
-  },
-
-  getFileExtension: function() {
-    return this.id;
-  },
-
-  transform: function(result, options, callback) {
-    var j = {
-      time: options.total_time,
-      total_rows: result.rowCount,
-      rows: result.rows
-    }
-    callback(null, j);
+p.transform = function(result, options, callback) {
+  var j = {
+    time: options.total_time,
+    total_rows: result.rowCount,
+    rows: result.rows
   }
-
+  callback(null, j);
 };
 
-module.exports = new json();
+module.exports = json;
