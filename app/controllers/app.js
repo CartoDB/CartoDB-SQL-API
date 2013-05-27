@@ -429,11 +429,6 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
   this.cb();
 }
 
-
-function toKML(dbname, user_id, gcol, sql, skipfields, res, callback) {
-  toOGR_SingleFile(dbname, user_id, gcol, sql, skipfields, 'KML', 'kml', res, callback);
-}
-
 function getContentDisposition(format, filename, inline) {
     var ext = 'json';
     if (format === 'geojson'){
