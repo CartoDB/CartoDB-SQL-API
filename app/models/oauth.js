@@ -108,7 +108,7 @@ var oAuth = function(){
           return;
         }
         
-        var path   = httpProto + '://' + host + req.route.path;
+        var path   = httpProto + '://' + host + req.path;
         that.splitParams(req.query);
 
         // remove signature from passed_tokens
