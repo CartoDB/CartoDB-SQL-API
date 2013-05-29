@@ -19,7 +19,60 @@ pg.prototype = {
 
 };
 
+pg.prototype.handleQueryRow = function(row, result) {
+  //console.log("Got query row, row is "); console.dir(row);
+  //console.log("opts are: "); console.dir(this.opts);
+  var sf = this.opts.skipfields;
+  if ( sf.length ){
+    for ( var j=0; j<sf.length; ++j ) {
+      delete row[sf[j]];
+    }
+  }
+  result.addRow(row);
+};
+
+pg.prototype.handleQueryEnd = function(result) {
+  if ( this.error ) {
+    this.callback(this.error);
+    return;
+  }
+
+  //console.log("Got query end, result is "); console.dir(result);
+
+  var end = Date.now();
+  this.opts.total_time = (end - this.start_time)/1000;
+
+  var that = this;
+
+  Step (
+    function packageResult() {
+      that.transform(result, that.opts, this);
+    },
+    function sendResults(err, out){
+
+        if (err) throw err;
+
+        // return to browser
+        if ( out ) {
+          that.opts.sink.send(out);
+        } else {
+console.error("No output from transform, doing nothing ?!");
+        }
+    },
+    function errorHandle(err){
+        that.callback(err);
+    }
+  );
+};
+
 pg.prototype.sendResponse = function(opts, callback) {
+  if ( this.callback ) {
+    callback(new Error("Invalid double call to .sendResponse on a pg formatter"));
+    return;
+  }
+  this.callback = callback;
+  this.opts = opts;
+
   var sql = this.getQuery(opts.sql, {
     gn: opts.gn,
     dp: opts.dp,
@@ -28,40 +81,19 @@ pg.prototype.sendResponse = function(opts, callback) {
 
   var that = this;
 
-  var start = Date.now();
+  this.start_time = Date.now();
 
-  Step (
-    function sendQuery() {
-      var client = new PSQL(opts.user_id, opts.database);
-      client.query(sql, this);
-    },
-    function packageResults(err, result) {
-      if (err) throw err;
-
-      if ( result && opts.skipfields.length ){
-        for ( var i=0; i<result.rows.length; ++i ) {
-          for ( var j=0; j<opts.skipfields.length; ++j ) {
-            delete result.rows[i][opts.skipfields[j]];
-          }
-        }
+  var client = new PSQL(opts.user_id, opts.database);
+  client.eventedQuery(sql, function(err, query) {
+      if (err) {
+        callback(err);
+        return;
       }
 
-      var end = Date.now();
-      opts.total_time = (end - start)/1000;
-
-      that.transform(result, opts, this);
-    },
-    function sendResults(err, out){
-
-        if (err) throw err;
-
-        // return to browser
-        if ( out ) opts.sink.send(out);
-    },
-    function errorHandle(err){
-        callback(err);
-    }
-  );
+      query.on('row', that.handleQueryRow.bind(that));
+      query.on('end', that.handleQueryEnd.bind(that));
+      query.on('error', function(err) { that.error = err; });
+  });
 };
 
 module.exports = pg;

@@ -58,6 +58,32 @@ var PSQL = function(user_id, db) {
                     global.settings.db_port + "/" +
                     me.database();
 
+    me.eventedQuery = function(sql, callback){
+        var that = this;
+
+        Step(
+            function(){
+                that.sanitize(sql, this);
+            },
+            function(err, clean){
+                if (err) throw err;
+                pg.connect(that.conString, this);
+            },
+            function(err, client, done){
+                if (err) throw err;
+                var query = client.query(sql);
+                // NOTE: for some obscure reason passing "done" directly
+                //       as the listener works but can be slower
+                //      (by x2 factor!)
+                query.on('end', function() { done(); }); 
+                return query;
+            },
+            function(err, query){
+                callback(err, query)
+            }
+        );
+    },
+
     me.query = function(sql, callback){
         var that = this;
         var finish;
