@@ -2,6 +2,7 @@
 -----
 * Add arraybuffer format
 * Fix filesystem access conflict among clustered processes
+* Fix discard of queued export requests on error
 
 1.3.10
 ------
