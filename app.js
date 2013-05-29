@@ -13,9 +13,9 @@ var _ = require('underscore');
 
 // sanity check arguments
 var ENV = process.argv[2];
-if (ENV != 'development' && ENV != 'production' && ENV != 'test') {
+if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging' ) {
   console.error("\n./app [environment]");
-  console.error("environments: [development, test, production]");
+  console.error("environments: [development, staging, production, test]");
   process.exit(1);
 }
 
