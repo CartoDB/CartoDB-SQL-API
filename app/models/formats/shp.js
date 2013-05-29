@@ -25,7 +25,7 @@ p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) 
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ 'shp', dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + reqKey; 
+  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey; 
   var zipfile = outdirpath + '.zip';
   var shapefile = outdirpath + '/' + filename + '.shp';
 
