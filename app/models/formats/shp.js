@@ -87,11 +87,14 @@ p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) 
           unlinkall(outdirpath, files, function(err) {
             fs.rmdir(outdirpath, function(err) {
               if ( err ) console.log("Removing dir " + path + ": " + err);
-              callback(topError, zipfile);
+              next(topError, zipfile);
             });
           });
         }
       });
+    },
+    function finalStep(err, zipfile) {
+      callback(err, zipfile);
     }
   );
 };

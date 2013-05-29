@@ -178,12 +178,8 @@ ogr.prototype.sendResponse = function(opts, callback) {
   } else {
     baking = bakingExports[reqKey] = { req: [ qElem ] };
     this.generate(opts, function(err, dumpfile) {
-      if(err) {
-        next(err);
-        return;
-      }
       Step (
-        function sendResults(err) {
+        function sendResults() {
           var nextPipe = function(finish) {
             var r = baking.req.shift();
             if ( ! r ) { finish(null); return; }
