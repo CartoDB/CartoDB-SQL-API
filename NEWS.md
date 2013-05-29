@@ -3,6 +3,7 @@
 * Add arraybuffer format
 * Fix filesystem access conflict among clustered processes
 * Fix discard of queued export requests on error
+* Really fix problem identifying OAuth requests
 
 1.3.10
 ------
