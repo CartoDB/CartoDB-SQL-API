@@ -1,5 +1,6 @@
-1.4.1
+1.5.0
 -----
+* Add --skipfields switch to cdbsql
 
 1.4.0
 -----
