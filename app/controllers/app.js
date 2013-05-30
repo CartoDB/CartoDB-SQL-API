@@ -47,6 +47,7 @@ var tableCache = LRU({
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
+app.set("trust proxy", true);
 
 // basic routing
 app.options('*', function(req,res) { setCrossDomain(res); res.end(); });
