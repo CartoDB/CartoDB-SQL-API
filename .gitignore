@@ -5,3 +5,6 @@ pids/*.pid
 test/tmp/*
 node_modules*
 .idea/*
+tools/munin/cdbsqlapi.conf
+test/redis.pid
+test/test.log

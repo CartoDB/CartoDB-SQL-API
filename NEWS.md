@@ -1,3 +1,20 @@
+1.4.0
+-----
+* Add arraybuffer format
+* Fix filesystem access conflict among clustered processes
+* Fix discard of queued export requests on error
+* Really fix problem identifying OAuth requests
+
+1.3.10
+------
+* Fixed problem identifying OAuth request protocol
+* Make base url configurable
+* Update underscore dependency 
+* Add munin plugin
+* Make PostgreSQL client pooling settings configurable (#47)
+* Do not execute queries on OPTIONS (#94)
+* Survive postgresql connection losses (#95)
+
 1.3.9
 -----
 * Do not choke on multiple `skipfields` parameter

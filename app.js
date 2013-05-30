@@ -13,9 +13,9 @@ var _ = require('underscore');
 
 // sanity check arguments
 var ENV = process.argv[2];
-if (ENV != 'development' && ENV != 'production' && ENV != 'test') {
+if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging' ) {
   console.error("\n./app [environment]");
-  console.error("environments: [development, test, production]");
+  console.error("environments: [development, staging, production, test]");
   process.exit(1);
 }
 
@@ -25,7 +25,10 @@ var env          = require(__dirname + '/config/environments/' + ENV);
 _.extend(global.settings, env);
  
 // kick off controller
+if ( ! global.settings.base_url ) global.settings.base_url = '/api/*';
 var app = require(global.settings.app_root + '/app/controllers/app');
 app.listen(global.settings.node_port, global.settings.node_host, function() {
-  console.log("CartoDB SQL API listening on " + global.settings.node_host + ":" + global.settings.node_port); 
+  console.log("CartoDB SQL API listening on " +
+      global.settings.node_host + ":" + global.settings.node_port +
+      " with base_url " + global.settings.base_url); 
 });

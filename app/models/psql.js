@@ -3,13 +3,30 @@ var _      = require('underscore')
     , pg     = require('pg');//.native; // disabled for now due to: https://github.com/brianc/node-postgres/issues/48
 _.mixin(require('underscore.string'));
 
+// Max database connections in the pool
+// Subsequent connections will block waiting for a free slot
+pg.defaults.poolSize = global.settings.db_pool_size || 16;
+
+// Milliseconds of idle time before removing connection from pool
+// TODO: make config setting ?
+pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
+
+// Frequency to check for idle clients within the pool, ms
+// TODO: make config setting ?
+pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
+
+pg.on('error', function(err, client) {
+  console.log("PostgreSQL connection error: " + err);
+});
+
+
 // PSQL
 //
 // A simple postgres wrapper with logic about username and database to connect
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db, limit, offset){
+var PSQL = function(user_id, db) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
@@ -18,9 +35,6 @@ var PSQL = function(user_id, db, limit, offset){
         public_user: "publicuser"
         , user_id: user_id
         , db: db
-        , limit: limit
-        , offset: offset
-        , client: null
     };
 
     me.username = function(){
@@ -39,23 +53,14 @@ var PSQL = function(user_id, db, limit, offset){
         return database;
     };
 
-    // memorizes connection in object. move to proper pool.
-    me.connect = function(callback){
-        var that = this
-        var conString = "tcp://" + this.username() + "@" + global.settings.db_host + ":" + global.settings.db_port + "/" + this.database();
+    me.conString = "tcp://" + me.username() + "@" +
+                    global.settings.db_host + ":" +
+                    global.settings.db_port + "/" +
+                    me.database();
 
-        if (that.client) {
-            return callback(null, that.client);
-        } else {
-            pg.connect(conString, function(err, client){
-                that.client = client;
-                return callback(err, client);
-            });
-        }
-    };
-
-    me.query = function(sql, callback, skip_window){
+    me.query = function(sql, callback){
         var that = this;
+        var finish;
 
         Step(
             function(){
@@ -63,40 +68,25 @@ var PSQL = function(user_id, db, limit, offset){
             },
             function(err, clean){
                 if (err) throw err;
-                that.connect(this);
+                pg.connect(that.conString, this);
             },
-            function(err, client){
-                if (err) return callback(err, null);
-                client.query(skip_window ? sql : that.window_sql(sql), this);
+            function(err, client, done){
+                if (err) throw err;
+                finish = done;
+                client.query(sql, this);
             },
             function(err, res){
-                //if (err) console.log(err);
+
+                // Release client to the pool
+                // should this be postponed to after the callback ?
+                // NOTE: if we pass a true value to finish() the client
+                //       will be removed from the pool.
+                //       We don't want this. Not now.
+                if ( finish ) finish();
+
                 callback(err, res)
             }
         );
-    };
-
-    /// @deprecated -- should not be called
-    me.end = function(){
-      // NOTE: clients created via the pg#connect method will be                                                                                                     //       automatically disconnected or placed back into the
-      //       connection pool and should NOT have their #end
-      //       method called
-      // REF: https://github.com/brianc/node-postgres/wiki/Client#method-end
-      // See me.connect()
-    
-      // if ( this.client ) { this.client.end(); this.client = null; }
-
-      // NOTE: maybe provide a function resumeDrain, but change its name
-    };
-
-    // little hack for UI
-    me.window_sql = function(sql){
-        // only window select functions
-        if (_.isNumber(this.limit) && _.isNumber(this.offset) && /^\s*SELECT.*$/.test(sql.toUpperCase())){
-            return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + this.limit + " OFFSET " + this.offset;
-        } else {
-            return sql;
-        }
     };
 
     // throw exception if illegal operations are detected

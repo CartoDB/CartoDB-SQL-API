@@ -73,9 +73,10 @@ test('can return user for verified signature', function(done){
     };
 
     oAuth.verifyRequest(req, function(err, data){
+        assert.ok(!err, err);
         assert.equal(data, 1);
         done();
-    }, true);
+    }, 'http');
 });
 
 test('returns null user for unverified signatures', function(done){
@@ -88,7 +89,7 @@ test('returns null user for unverified signatures', function(done){
     oAuth.verifyRequest(req, function(err, data){
         assert.equal(data, null);
         done();
-    }, true);
+    }, 'http');
 });
 
 test('returns null user for no oauth', function(done){

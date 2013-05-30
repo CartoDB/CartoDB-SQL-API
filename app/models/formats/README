@@ -1,0 +1,18 @@
+Format classes are required to expose a constructor with no arguments
+and a sendResponse(opts,callback) method.
+
+The ``opts`` parameter contains:
+
+ sink        Output stream to send the reponse to
+ sql         SQL query requested by the user
+ skipfields  Comma separate list of fields to skip from output
+             really only needed with "SELECT *" queries
+ gn          Name of the geometry column (for formats requiring one)
+ dp          Number of decimal points of precision for geometries (if used)
+ database    Name of the database to connect to
+ user_id     Identifier of the user
+ filename    Name to use for attachment disposition
+ 
+The ``callback`` parameter is a function that is invoked when the
+format object finished with sending the result to the sink.
+If an error occurs the callback is invoked with an Error argument.
