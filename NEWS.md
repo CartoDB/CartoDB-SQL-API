@@ -1,6 +1,7 @@
 1.4.1
 -----
 * Fix windowing support for non-uppercased SELECT queries
+* Fix oAuth testcase
 
 1.4.0
 -----
