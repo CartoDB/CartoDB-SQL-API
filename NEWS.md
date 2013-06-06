@@ -1,6 +1,7 @@
 1.5.0
 -----
 * Add --skipfields switch to cdbsql
+* Fix windowing with non-uppercased SELECTs
 
 1.4.0
 -----
