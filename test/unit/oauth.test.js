@@ -69,7 +69,7 @@ test('can return user for verified signature', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testhost.lan' },
         method: 'GET',
-        route: {path: '/api/v1/tables'}
+        path: '/api/v1/tables'
     };
 
     oAuth.verifyRequest(req, function(err, data){
@@ -83,7 +83,7 @@ test('returns null user for unverified signatures', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testyhost.lan' },
         method: 'GET',
-        route: {path: '/api/v1/tables'}
+        path: '/api/v1/tables'
     };
 
     oAuth.verifyRequest(req, function(err, data){
@@ -97,7 +97,7 @@ test('returns null user for no oauth', function(done){
         query:{},
         headers:{},
         method: 'GET',
-        route: {path: '/api/v1/tables'}
+        path: '/api/v1/tables'
     };
 
     oAuth.verifyRequest(req,function(err,data){
