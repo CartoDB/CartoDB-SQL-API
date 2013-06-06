@@ -163,10 +163,11 @@ function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        var parsed = JSON.parse(res.body);
+        assert.equal(parsed.rows.length, 1);
         done();
     });
 });
-
 
 test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {

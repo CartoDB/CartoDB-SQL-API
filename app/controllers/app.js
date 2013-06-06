@@ -81,8 +81,8 @@ function sanitize_filename(filename) {
 // TODO:drop, fix in the UI (it's not documented in doc/API)
 //
 function window_sql (sql, limit, offset) {
-    // only window select functions
-    if (_.isNumber(limit) && _.isNumber(offset) && sql.match(/^\s*SELECT\s/) ) {
+    // only window select functions (NOTE: "values" will be broken, "with" will be broken)
+    if (_.isNumber(limit) && _.isNumber(offset) && sql.match(/^\s*SELECT\s/i) ) {
         return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
     } 
     return sql;

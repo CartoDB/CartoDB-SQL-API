@@ -1,3 +1,7 @@
+1.4.1
+-----
+* Fix windowing support for non-uppercased SELECT queries
+
 1.4.0
 -----
 * Add arraybuffer format
