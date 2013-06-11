@@ -160,7 +160,7 @@ console.log(['ogr2ogr',
 ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + reqKey;
+  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
   // TODO: following tests:
@@ -178,12 +178,8 @@ ogr.prototype.sendResponse = function(opts, callback) {
   } else {
     baking = bakingExports[reqKey] = { req: [ qElem ] };
     this.generate(opts, function(err, dumpfile) {
-      if(err) {
-        next(err);
-        return;
-      }
       Step (
-        function sendResults(err) {
+        function sendResults() {
           var nextPipe = function(finish) {
             var r = baking.req.shift();
             if ( ! r ) { finish(null); return; }
