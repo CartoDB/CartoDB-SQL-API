@@ -1,5 +1,6 @@
 1.5.0
 -----
+* Add "fields" member in JSON return (#97)
 * Add --skipfields switch to cdbsql
 * Fix windowing with non-uppercased SELECTs
 

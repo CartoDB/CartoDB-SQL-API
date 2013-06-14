@@ -836,6 +836,31 @@ test('numeric arrays are rendered as such', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/97
+test('field names and types are exposed', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
+             "4::char as d, now() as e, 'POINT(0 0)'::geometry as the_geom " +
+             "LIMIT 0"
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        assert.equal(_.keys(parsedBody.fields).length, 6);
+        assert.equal(parsedBody.fields.a.type, 'number');
+        assert.equal(parsedBody.fields.b.type, 'number');
+        assert.equal(parsedBody.fields.c.type, 'string');
+        assert.equal(parsedBody.fields.d.type, 'string');
+        assert.equal(parsedBody.fields.e.type, 'date');
+        assert.equal(parsedBody.fields.the_geom.type, 'geometry');
+        done();
+    });
+});
+
+
 /**
  * CORS
  */
