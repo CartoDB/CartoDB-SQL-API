@@ -77,18 +77,6 @@ function sanitize_filename(filename) {
   return filename;
 }
 
-// little hack for UI
-//
-// TODO:drop, fix in the UI (it's not documented in doc/API)
-//
-function window_sql (sql, limit, offset) {
-    // only window select functions (NOTE: "values" will be broken, "with" will be broken)
-    if (_.isNumber(limit) && _.isNumber(offset) && sql.match(/^\s*SELECT\s/i) ) {
-        return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
-    } 
-    return sql;
-}
-
 // request handlers
 function handleQuery(req, res) {
 
@@ -267,7 +255,7 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // TODO: drop this, fix UI!
-                sql = window_sql(sql,limit,offset);
+                sql = PSQL.window_sql(sql,limit,offset);
 
                 var opts = {
                   sink: res,

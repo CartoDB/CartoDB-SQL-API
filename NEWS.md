@@ -2,7 +2,7 @@
 -----
 * Add "fields" member in JSON return (#97)
 * Add --skipfields switch to cdbsql
-* Fix windowing with non-uppercased SELECTs
+* Fix windowing with CTE
 
 1.4.0
 -----
