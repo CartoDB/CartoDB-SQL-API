@@ -860,6 +860,104 @@ test('field names and types are exposed', function(done){
     });
 });
 
+// Timezone information is retained with JSON output
+//
+// NOTE: results of these tests rely on the TZ env variable
+//       being set to 'Europe/Rome'. The env variable cannot
+//       be set within this test in a reliable way, see 
+//       https://github.com/joyent/node/issues/3286
+//
+// FIXME: we'd like to also test UTC outputs of these
+//        numbers, but it'd currently take running the
+//        test again (new mocha run) with a different TZ
+//
+test('timezone info in JSON output', function(done){
+  Step(
+    function testEuropeRomeExplicit() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'Europe/Rome'; SELECT '2000-01-01T00:00:00+01'::timestamptz as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testEuropeRomeImplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'Europe/Rome'; SELECT '2000-01-01T00:00:00'::timestamp as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testUTCExplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'UTC'; SELECT '2000-01-01T00:00:00+00'::timestamptz as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T01:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testUTCImplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'UTC'; SELECT '2000-01-01T00:00:00'::timestamp as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function finish(err) {
+      done(err);
+    }
+  );
+});
+
 
 /**
  * CORS

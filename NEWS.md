@@ -3,6 +3,7 @@
 * Add "fields" member in JSON return (#97)
 * Add --skipfields switch to cdbsql
 * Fix windowing with CTE
+* Retain UTC offset in JSON date output
 
 1.4.0
 -----
