@@ -4,6 +4,7 @@
 * Add --skipfields switch to cdbsql
 * Fix windowing with CTE
 * Retain UTC offset in JSON date output
+* Set max-age=0 in Cache-Control when using no-cache
 
 1.4.0
 -----

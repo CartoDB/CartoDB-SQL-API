@@ -30,7 +30,7 @@ app.setMaxListeners(0);
 
 suite('app.test', function() {
 
-var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
+var expected_cache_control = 'no-cache,max-age=0,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
 
 test('GET /api/v1/sql', function(done){
