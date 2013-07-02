@@ -32,6 +32,7 @@ var sql;
 var decimal_places;
 var echo_queries = false;
 var skipfields;
+var verbose = 0;
 
 function usage(exit_code) {
   console.log("Usage: " + me + " [OPTIONS] <query>");
@@ -181,7 +182,9 @@ function processQuery(sql, callback)
 
   var body = '';
   var request = 'http://' + opt.host + ':' + opt.port + opt.path;
-  //console.log("Sending request:", request);
+  if ( verbose ) {
+    console.log("Posting " + post_data + " to ", request);
+  }
 
   var req = http.request(opt, function(res) {
     //console.log("Response status: " + res.statusCode);
