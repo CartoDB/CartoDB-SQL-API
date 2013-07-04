@@ -103,19 +103,18 @@ function handleQuery(req, res) {
 
     // extract input
     var body      = (req.body) ? req.body : {};
-    _.extend(req.query, body);
-    var sql       = req.query.q;
-    var api_key   = req.query.api_key;
+    var sql       = req.query.q || body.q; // HTTP GET and POST store in different vars
+    var api_key   = req.query.api_key || body.api_key;
     var database  = req.query.database; // TODO: Deprecate
     var limit     = parseInt(req.query.rows_per_page);
     var offset    = parseInt(req.query.page);
-    var requestedFormat = req.query.format;
+    var requestedFormat = req.query.format || body.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
-    var requestedFilename = req.query.filename;
+    var requestedFilename = req.query.filename || body.filename
     var filename  = requestedFilename;
-    var requestedSkipfields = req.query.skipfields;
+    var requestedSkipfields = req.query.skipfields || body.skipfields;
     var skipfields;
-    var dp        = req.query.dp; // decimal point digits (defaults to 6)
+    var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;

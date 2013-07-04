@@ -5,7 +5,6 @@
 * Fix windowing with CTE
 * Retain UTC offset in JSON date output
 * Set max-age=0 in Cache-Control when using no-cache
-* Add support for GET params in POST requests
 
 1.4.0
 -----
