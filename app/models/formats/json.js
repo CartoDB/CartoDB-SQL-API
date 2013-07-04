@@ -14,6 +14,7 @@ var typeNames = {
     20: 'number',
     21: 'number',
     23: 'number',
+    25: 'string',
     26: 'number',
    114: 'object', // JSON
    701: 'number',
