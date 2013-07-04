@@ -131,7 +131,6 @@ function handleQuery(req, res) {
         database  = (database === "" || _.isUndefined(database)) ? null : database;
         limit     = (!_.isNaN(limit))  ? limit : null;
         offset    = (!_.isNaN(offset)) ? offset * limit : null;
-        console.log("offset", offset);
 
         // Accept both comma-separated string or array of comma-separated strings
         if ( requestedSkipfields ) {
