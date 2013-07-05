@@ -1,3 +1,6 @@
+1.5.1
+-----
+
 1.5.0
 -----
 * Add "fields" member in JSON return (#97)
