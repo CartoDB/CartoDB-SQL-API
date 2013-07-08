@@ -82,7 +82,7 @@ app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCac
 //
 function queryMayWrite(sql) {
   var mayWrite = false;
-  var pattern = RegExp("(alter|insert|update|delete|create|drop|truncate)", "i");
+  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|truncate)\\b", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
   }

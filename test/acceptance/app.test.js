@@ -391,6 +391,25 @@ test('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(d
     });
 });
 
+// Check X-Cache-Channel when querying "updated_at" fields
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/99
+test('Field name is not confused with UPDATE operation', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "SELECT min(updated_at) FROM private_table"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:private_table');
+        done();
+    });
+});
+
 test('CREATE TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
