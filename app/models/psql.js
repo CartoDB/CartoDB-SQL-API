@@ -19,6 +19,29 @@ pg.on('error', function(err, client) {
   console.log("PostgreSQL connection error: " + err);
 });
 
+// Workaround for https://github.com/Vizzuality/CartoDB-SQL-API/issues/100
+var types = require(__dirname + '/../../node_modules/pg/lib/types');
+var arrayParser = require(__dirname + '/../../node_modules/pg/lib/types/arrayParser');
+var floatParser = function(val) {
+  return parseFloat(val);
+};
+var floatArrayParser = function(val) {
+  if(!val) { return null; }
+  var p = arrayParser.create(val, function(entry) {
+    return floatParser(entry);
+  });
+  return p.parse();
+};
+types.setTypeParser(1700, floatParser);
+types.setTypeParser(700, floatParser);
+types.setTypeParser(701, floatParser);
+types.setTypeParser(1021, floatArrayParser);
+types.setTypeParser(1022, floatArrayParser);
+types.setTypeParser(1231, floatArrayParser);
+
+
+
+
 
 // PSQL
 //

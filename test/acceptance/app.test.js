@@ -881,6 +881,44 @@ test('field names and types are exposed', function(done){
     });
 });
 
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/100
+test('numeric fields are rendered as numbers in JSON', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "WITH inp AS ( SELECT 1::int2 as a, 2::int4 as b, " +
+                                  "3::int8 as c, 4::float4 as d, " +
+                                  "5::float8 as e, 6::numeric as f" +
+              ") SELECT a,b,c,d,e,f," +
+              " ARRAY[a] AS _a, " +
+              " ARRAY[b] AS _b, " +
+              " ARRAY[c] AS _c, " +
+              " ARRAY[d] AS _d, " +
+              " ARRAY[e] AS _e, " +
+              " ARRAY[f] AS _f " +
+              "FROM inp"
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        var row = parsedBody.rows[0];
+        assert.equal(typeof(row.a), 'number');
+        assert.equal(typeof(row.b), 'number');
+        assert.equal(typeof(row.c), 'number');
+        assert.equal(typeof(row.d), 'number');
+        assert.equal(typeof(row.e), 'number');
+        assert.equal(typeof(row.f), 'number');
+        assert.equal(typeof(row._a[0]), 'number');
+        assert.equal(typeof(row._b[0]), 'number');
+        assert.equal(typeof(row._c[0]), 'number');
+        assert.equal(typeof(row._d[0]), 'number');
+        assert.equal(typeof(row._e[0]), 'number');
+        assert.equal(typeof(row._f[0]), 'number');
+        done();
+    });
+});
+
 // Timezone information is retained with JSON output
 //
 // NOTE: results of these tests rely on the TZ env variable

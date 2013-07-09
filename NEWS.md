@@ -1,5 +1,6 @@
 1.5.2
 -----
+* Keep numbers as such in JSON output (#100)
 
 1.5.1
 -----
