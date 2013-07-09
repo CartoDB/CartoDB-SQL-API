@@ -1,3 +1,15 @@
+1.5.1
+-----
+* Improve cacheability of queries selecting "updated_at" fields (#99)
+
+1.5.0
+-----
+* Add "fields" member in JSON return (#97)
+* Add --skipfields switch to cdbsql
+* Fix windowing with CTE
+* Retain UTC offset in JSON date output
+* Set max-age=0 in Cache-Control when using no-cache
+
 1.4.1
 -----
 * Fix windowing support for non-uppercased SELECT queries

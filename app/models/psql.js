@@ -58,6 +58,32 @@ var PSQL = function(user_id, db) {
                     global.settings.db_port + "/" +
                     me.database();
 
+    me.eventedQuery = function(sql, callback){
+        var that = this;
+
+        Step(
+            function(){
+                that.sanitize(sql, this);
+            },
+            function(err, clean){
+                if (err) throw err;
+                pg.connect(that.conString, this);
+            },
+            function(err, client, done){
+                if (err) throw err;
+                var query = client.query(sql);
+                // NOTE: for some obscure reason passing "done" directly
+                //       as the listener works but can be slower
+                //      (by x2 factor!)
+                query.on('end', function() { done(); }); 
+                return query;
+            },
+            function(err, query){
+                callback(err, query)
+            }
+        );
+    },
+
     me.query = function(sql, callback){
         var that = this;
         var finish;
@@ -105,5 +131,68 @@ var PSQL = function(user_id, db) {
 
     return me;
 };
+
+// little hack for UI
+//
+// TODO:drop, fix in the UI (it's not documented in doc/API)
+//
+PSQL.window_sql = function(sql, limit, offset) {
+  // only window select functions (NOTE: "values" will be broken, "with" will be broken)
+  if (!_.isNumber(limit) || !_.isNumber(offset) ) return sql;
+
+  var cte = '';
+
+  if ( sql.match(/^\s*WITH\s/i) ) {
+
+    var rem = sql; // analyzed portion of sql
+    var q; // quote char
+    var n = 0; // nested parens level
+    var s = 0; // 0:outQuote, 1:inQuote
+    var l;
+    while (1) {
+      l = rem.search(/[("')]/);
+//console.log("REM Is " + rem);
+      if ( l < 0 ) {
+        console.log("Malformed SQL");
+        return sql;
+      }
+      var f = rem.charAt(l);
+//console.log("n:" + n + " s:" + s + " l:" + l + " charAt(l):" + f + " charAt(l+1):" + rem.charAt(l+1));
+      if ( s == 0 ) {
+        if ( f == '(' ) ++n; 
+        else if ( f == ')' ) {
+          if ( ! --n ) { // end of CTE
+            cte += rem.substr(0, l+1);
+            rem = rem.substr(l+1);
+  //console.log("Out of cte, rem is " + rem);
+            if ( rem.search(/^s*,/) < 0 ) break;
+            else continue; // cte and rem already updated
+          }
+        }
+        else { // enter quoting
+          s = 1; q = f;
+        }
+      }
+      else if ( f == q ) {
+        if ( rem.charAt(l+1) == f ) ++l; // escaped
+        else s = 0; // exit quoting
+      }
+      cte += rem.substr(0, l+1);
+      rem = rem.substr(l+1);
+    }
+/*
+console.log("cte: " + cte);
+console.log("rem: " + rem);
+*/
+    sql = rem; //sql.substr(l+1);
+  }
+
+
+  if ( sql.match(/^\s*SELECT\s/i) ) {
+      return cte + "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
+  } 
+
+  return cte + sql;
+}
 
 module.exports = PSQL;

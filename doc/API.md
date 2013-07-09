@@ -46,6 +46,13 @@ The JSON response is as follows:
     {
         time: 0.006,
         total_rows: 1,
+        fields: {
+                'year': { type:'string' },
+                'the_geom': { type:'geometry' },
+                'cartodb_id': { type:'number' },
+                'created_at': { type:'date' },
+                'updated_at': { type:'date' }
+        },
         rows: [
             {
                 year: "  2011",

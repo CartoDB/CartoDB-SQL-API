@@ -18,6 +18,22 @@ var tty = require('tty');
 
 var me = process.argv[1];
 
+process.argv.shift(); // this will be "node" (argv[0])
+process.argv.shift(); // this will be "benchmark.js" (argv[1])
+
+var batch_mode = false;
+var format = 'json';
+var username = 'dev';
+var domain = 'localhost';
+var port = 8080;
+var api_version = 2;
+var api_key;
+var sql;
+var decimal_places;
+var echo_queries = false;
+var skipfields;
+var verbose = 0;
+
 function usage(exit_code) {
   console.log("Usage: " + me + " [OPTIONS] <query>");
   if ( hasReadline ) {
@@ -26,33 +42,20 @@ function usage(exit_code) {
   console.log("Options:");
   console.log(" -v                      verbose operations (off)");
   console.log(" --help                  print this help");
-  console.log(" --user <string>         cartodb username (none)");
-  console.log(" --domain <string>       service domain (localhost)");
-  console.log(" --port <num>            service tcp port number (8080)");
-  console.log(" --api-version <num>     API version (1)");
-  console.log(" --key <string>          API authentication key (none)");
+  console.log(" --user <string>         cartodb username (" + username + ")");
+  console.log(" --domain <string>       service domain (" + domain + ")");
+  console.log(" --port <num>            service tcp port number (" + port + ")");
+  console.log(" --api-version <num>     API version (" + api_version +")");
+  console.log(" --key <string>          API authentication key (" + api_key + ")");
   console.log(" --format <string>       Response format (json)");
   console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
+  console.log(" --skipfields <string>   Comma-separated list of fields to skip (none)");
   console.log(" --echo-queries          echo commands sent to server");
   if ( hasReadline ) {
   console.log(" --batch                 Send all read queries at once (off)");
   }
   process.exit(exit_code);
 }
-
-process.argv.shift(); // this will be "node" (argv[0])
-process.argv.shift(); // this will be "benchmark.js" (argv[1])
-
-var batch_mode = false;
-var format = 'json';
-var username;
-var domain = 'localhost';
-var port = 8080;
-var api_version = 1;
-var api_key;
-var sql;
-var decimal_places;
-var echo_queries = false;
 
 var arg;
 while ( arg = process.argv.shift() ) {
@@ -85,6 +88,9 @@ while ( arg = process.argv.shift() ) {
   }
   else if ( arg == '--batch' ) {
     batch_mode = true;
+  }
+  else if ( arg == '--skipfields' ) {
+    skipfields = process.argv.shift();
   }
   else if ( arg == '--echo-queries' ) {
     echo_queries = true;
@@ -172,10 +178,13 @@ function processQuery(sql, callback)
 
   if ( typeof(api_key) != 'undefined' ) opt.path += '&api_key=' + api_key;
   if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
+  if ( typeof(skipfields) != 'undefined' ) opt.path += '&skipfields=' + encodeURIComponent(skipfields);
 
   var body = '';
   var request = 'http://' + opt.host + ':' + opt.port + opt.path;
-  //console.log("Sending request:", request);
+  if ( verbose ) {
+    console.log("Posting " + post_data + " to ", request);
+  }
 
   var req = http.request(opt, function(res) {
     //console.log("Response status: " + res.statusCode);

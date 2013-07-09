@@ -45,6 +45,25 @@ var tableCache = LRU({
   maxAge: global.settings.tableCacheMaxAge || 1000*60*10
 });
 
+function pad(n) { return n < 10 ? '0' + n : n }
+Date.prototype.toJSON = function() {
+  var s = this.getFullYear() + '-'
+      + pad(this.getMonth() + 1) + '-'
+      + pad(this.getDate()) + 'T'
+      + pad(this.getHours()) + ':'
+      + pad(this.getMinutes()) + ':'
+      + pad(this.getSeconds());
+  var offset = this.getTimezoneOffset();
+  if (offset == 0) s += 'Z';
+  else {
+    s += ( offset < 0 ? '+' : '-' )
+      + pad(Math.abs(offset / 60))
+      + pad(Math.abs(offset % 60))
+        
+  }
+  return s;
+}
+
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 app.set("trust proxy", true);
@@ -63,7 +82,7 @@ app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCac
 //
 function queryMayWrite(sql) {
   var mayWrite = false;
-  var pattern = RegExp("(alter|insert|update|delete|create|drop|truncate)", "i");
+  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|truncate)\\b", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
   }
@@ -75,18 +94,6 @@ function sanitize_filename(filename) {
   filename = filename.replace(/[;()\[\]<>'"\s]/g, '_');
   //console.log("Sanitized: " + filename);
   return filename;
-}
-
-// little hack for UI
-//
-// TODO:drop, fix in the UI (it's not documented in doc/API)
-//
-function window_sql (sql, limit, offset) {
-    // only window select functions (NOTE: "values" will be broken, "with" will be broken)
-    if (_.isNumber(limit) && _.isNumber(offset) && sql.match(/^\s*SELECT\s/i) ) {
-        return "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
-    } 
-    return sql;
 }
 
 // request handlers
@@ -255,10 +262,13 @@ function handleQuery(req, res) {
                 if ( cache_policy == 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
-                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
-                  var ttl = 3600;
+                  // don't cache the result !
+                  // NOTE: both Varnish and Cloudfront ignore this header,
+                  //       X-Cache-Channel is for controlling Varnish
+                  //       Cloudfront can only be skipped perturbating the URL
+                  //       
                   res.header('Last-Modified', new Date().toUTCString());
-                  res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
+                  res.header('Cache-Control', 'no-cache,max-age=0,must-revalidate,public');
                 }
 
                 return result;
@@ -267,7 +277,7 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 // TODO: drop this, fix UI!
-                sql = window_sql(sql,limit,offset);
+                sql = PSQL.window_sql(sql,limit,offset);
 
                 var opts = {
                   sink: res,

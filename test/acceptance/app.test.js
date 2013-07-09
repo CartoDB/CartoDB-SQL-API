@@ -30,7 +30,7 @@ app.setMaxListeners(0);
 
 suite('app.test', function() {
 
-var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
+var expected_cache_control = 'no-cache,max-age=0,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
 
 test('GET /api/v1/sql', function(done){
@@ -391,6 +391,25 @@ test('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(d
     });
 });
 
+// Check X-Cache-Channel when querying "updated_at" fields
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/99
+test('Field name is not confused with UPDATE operation', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "SELECT min(updated_at) FROM private_table"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:private_table');
+        done();
+    });
+});
+
 test('CREATE TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
@@ -468,7 +487,7 @@ test('ALTER TABLE with GET and auth', function(done){
 test('multistatement insert, alter, select, begin, commit', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
-          q: 'BEGIN; DELETE FROM test_table; COMMIT; BEGIN; INSERT INTO test_table(b) values (5); COMMIT; ALTER TABLE test_table ALTER b TYPE float USING b::float/2; SELECT b FROM test_table; COMMIT;',
+          q: 'BEGIN; DELETE FROM test_table; COMMIT; BEGIN; INSERT INTO test_table(b) values (5); COMMIT; ALTER TABLE test_table ALTER b TYPE float USING b::float/2; SELECT b FROM test_table;',
           api_key: 1234
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -835,6 +854,131 @@ test('numeric arrays are rendered as such', function(done){
         done();
     });
 });
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/97
+test('field names and types are exposed', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
+             "4::char as d, now() as e, 'a'::text as f, " +
+              "'POINT(0 0)'::geometry as the_geom " +
+             "LIMIT 0"
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        assert.equal(_.keys(parsedBody.fields).length, 7);
+        assert.equal(parsedBody.fields.a.type, 'number');
+        assert.equal(parsedBody.fields.b.type, 'number');
+        assert.equal(parsedBody.fields.c.type, 'string');
+        assert.equal(parsedBody.fields.d.type, 'string');
+        assert.equal(parsedBody.fields.e.type, 'date');
+        assert.equal(parsedBody.fields.f.type, 'string');
+        assert.equal(parsedBody.fields.the_geom.type, 'geometry');
+        done();
+    });
+});
+
+// Timezone information is retained with JSON output
+//
+// NOTE: results of these tests rely on the TZ env variable
+//       being set to 'Europe/Rome'. The env variable cannot
+//       be set within this test in a reliable way, see 
+//       https://github.com/joyent/node/issues/3286
+//
+// FIXME: we'd like to also test UTC outputs of these
+//        numbers, but it'd currently take running the
+//        test again (new mocha run) with a different TZ
+//
+test('timezone info in JSON output', function(done){
+  Step(
+    function testEuropeRomeExplicit() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'Europe/Rome'; SELECT '2000-01-01T00:00:00+01'::timestamptz as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testEuropeRomeImplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'Europe/Rome'; SELECT '2000-01-01T00:00:00'::timestamp as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testUTCExplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'UTC'; SELECT '2000-01-01T00:00:00+00'::timestamptz as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T01:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function testUTCImplicit(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET timezone TO 'UTC'; SELECT '2000-01-01T00:00:00'::timestamp as d"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+            next();
+          } catch (err) {
+            next(err);
+          }
+      });
+    },
+    function finish(err) {
+      done(err);
+    }
+  );
+});
+
 
 /**
  * CORS

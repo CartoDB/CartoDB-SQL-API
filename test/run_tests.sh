@@ -4,6 +4,9 @@
 # TODO: read from there
 REDIS_PORT=6333
 
+# To make output dates deterministic
+export TZ='Europe/Rome'
+
 OPT_CREATE=yes # create the test environment
 OPT_DROP=yes   # drop the test environment
 
