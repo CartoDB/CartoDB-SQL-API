@@ -1,3 +1,6 @@
+1.5.2
+-----
+
 1.5.1
 -----
 * Improve cacheability of queries selecting "updated_at" fields (#99)
