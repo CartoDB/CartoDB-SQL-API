@@ -1,6 +1,7 @@
 1.5.2
 -----
 * Keep numbers as such in JSON output (#100)
+* Revert max-age=0 in Cache-Control when using no-cache
 
 1.5.1
 -----
