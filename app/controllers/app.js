@@ -262,13 +262,10 @@ function handleQuery(req, res) {
                 if ( cache_policy == 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
-                  // don't cache the result !
-                  // NOTE: both Varnish and Cloudfront ignore this header,
-                  //       X-Cache-Channel is for controlling Varnish
-                  //       Cloudfront can only be skipped perturbating the URL
-                  //       
+                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
+                  var ttl = 3600;
                   res.header('Last-Modified', new Date().toUTCString());
-                  res.header('Cache-Control', 'no-cache,max-age=0,must-revalidate,public');
+                  res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
 
                 return result;
