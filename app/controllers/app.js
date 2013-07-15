@@ -260,14 +260,21 @@ function handleQuery(req, res) {
                 res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy == 'persist' ) {
-                  res.header('Last-Modified', new Date(0).toUTCString()); // never expire
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
                   // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
                   var ttl = 3600;
-                  res.header('Last-Modified', new Date().toUTCString());
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
+
+                // Set Last-Modified header
+                //
+                // Currently sets it to NOW
+                //
+                // TODO: use a real value, querying for most recent change in
+                //       any of the source tables
+                //
+                res.header('Last-Modified', new Date().toUTCString());
 
                 return result;
             },
