@@ -1,5 +1,6 @@
 1.5.3
 -----
+* Set Last-Modified header with cache_policy=persist
 
 1.5.2
 -----

@@ -260,6 +260,7 @@ function handleQuery(req, res) {
                 res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy == 'persist' ) {
+                  res.header('Last-Modified', new Date(0).toUTCString()); // never expire
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
                   // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
