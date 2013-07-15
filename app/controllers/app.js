@@ -103,19 +103,20 @@ function handleQuery(req, res) {
 
     // extract input
     var body      = (req.body) ? req.body : {};
-    _.extend(req.query, body);
-    var sql       = req.query.q;
-    var api_key   = req.query.api_key;
-    var database  = req.query.database; // TODO: Deprecate
-    var limit     = parseInt(req.query.rows_per_page);
-    var offset    = parseInt(req.query.page);
-    var requestedFormat = req.query.format;
+    var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
+    var sql       = params.q;
+    var api_key   = params.api_key;
+    var database  = params.database; // TODO: Deprecate
+    var limit     = parseInt(params.rows_per_page);
+    var offset    = parseInt(params.page);
+    var requestedFormat = params.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
-    var requestedFilename = req.query.filename;
+    var requestedFilename = params.filename;
+    var cache_policy = params.cache_policy;
     var filename  = requestedFilename;
-    var requestedSkipfields = req.query.skipfields;
+    var requestedSkipfields = params.skipfields;
     var skipfields;
-    var dp        = req.query.dp; // decimal point digits (defaults to 6)
+    var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
@@ -259,8 +260,7 @@ function handleQuery(req, res) {
 
                 // set cache headers
                 res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
-                var cache_policy = req.query.cache_policy;
-                if ( cache_policy == 'persist' ) {
+                if ( cache_policy === 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
                   // don't cache the result !
