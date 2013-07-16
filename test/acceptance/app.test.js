@@ -980,44 +980,4 @@ test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS heade
     });
 });
 
-
-test("rows_per_page limit the number of results with get", 
-function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          q: 'selECT cartodb_id*3 FROM untitle_table_4 limit 10',
-          api_key: '1234',
-          rows_per_page: 2,
-          page: 0
-        }),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res) {
-        assert.equal(res.statusCode, 200, res.body);
-        var parsed = JSON.parse(res.body);
-        assert.equal(parsed.rows.length, 2);
-        done();
-    });
-});
-
-test("rows_per_page limit the number of results with post", 
-function(done){
-    assert.response(app, {
-        url: '/api/v1/sql',
-        data: querystring.stringify({
-          q: 'selECT cartodb_id*3 FROM untitle_table_4 limit 10',
-          api_key: '1234',
-          rows_per_page: 2,
-          page: 0
-        }),
-        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-        method: 'POST'
-    },{ }, function(res) {
-        assert.equal(res.statusCode, 200, res.body);
-        var parsed = JSON.parse(res.body);
-        assert.equal(parsed.rows.length, 2);
-        done();
-    });
-});
-
 });
