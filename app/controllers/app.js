@@ -82,7 +82,7 @@ app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCac
 //
 function queryMayWrite(sql) {
   var mayWrite = false;
-  var pattern = RegExp("(alter|insert|update|delete|create|drop|truncate)", "i");
+  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|truncate)\\b", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
   }
@@ -263,14 +263,19 @@ function handleQuery(req, res) {
                 if ( cache_policy === 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
                 } else {
-                  // don't cache the result !
-                  // NOTE: both Varnish and Cloudfront ignore this header,
-                  //       X-Cache-Channel is for controlling Varnish
-                  //       Cloudfront can only be skipped perturbating the URL
-                  //       
-                  res.header('Last-Modified', new Date().toUTCString());
-                  res.header('Cache-Control', 'no-cache,max-age=0,must-revalidate,public');
+                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
+                  var ttl = 3600;
+                  res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
+
+                // Set Last-Modified header
+                //
+                // Currently sets it to NOW
+                //
+                // TODO: use a real value, querying for most recent change in
+                //       any of the source tables
+                //
+                res.header('Last-Modified', new Date().toUTCString());
 
                 return result;
             },

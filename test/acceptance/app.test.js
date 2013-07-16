@@ -30,7 +30,7 @@ app.setMaxListeners(0);
 
 suite('app.test', function() {
 
-var expected_cache_control = 'no-cache,max-age=0,must-revalidate,public';
+var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
 
 test('GET /api/v1/sql', function(done){
@@ -387,6 +387,25 @@ test('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(d
         assert.deepEqual(JSON.parse(res.body), 
           {"error":["must be owner of relation untitle_table_4"]} 
         );
+        done();
+    });
+});
+
+// Check X-Cache-Channel when querying "updated_at" fields
+//
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/99
+test('Field name is not confused with UPDATE operation', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&"
+         + querystring.stringify({q:
+          "SELECT min(updated_at) FROM private_table"
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:private_table');
         done();
     });
 });
@@ -858,6 +877,44 @@ test('field names and types are exposed', function(done){
         assert.equal(parsedBody.fields.e.type, 'date');
         assert.equal(parsedBody.fields.f.type, 'string');
         assert.equal(parsedBody.fields.the_geom.type, 'geometry');
+        done();
+    });
+});
+
+// See https://github.com/Vizzuality/CartoDB-SQL-API/issues/100
+test('numeric fields are rendered as numbers in JSON', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "WITH inp AS ( SELECT 1::int2 as a, 2::int4 as b, " +
+                                  "3::int8 as c, 4::float4 as d, " +
+                                  "5::float8 as e, 6::numeric as f" +
+              ") SELECT a,b,c,d,e,f," +
+              " ARRAY[a] AS _a, " +
+              " ARRAY[b] AS _b, " +
+              " ARRAY[c] AS _c, " +
+              " ARRAY[d] AS _d, " +
+              " ARRAY[e] AS _e, " +
+              " ARRAY[f] AS _f " +
+              "FROM inp"
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        var row = parsedBody.rows[0];
+        assert.equal(typeof(row.a), 'number');
+        assert.equal(typeof(row.b), 'number');
+        assert.equal(typeof(row.c), 'number');
+        assert.equal(typeof(row.d), 'number');
+        assert.equal(typeof(row.e), 'number');
+        assert.equal(typeof(row.f), 'number');
+        assert.equal(typeof(row._a[0]), 'number');
+        assert.equal(typeof(row._b[0]), 'number');
+        assert.equal(typeof(row._c[0]), 'number');
+        assert.equal(typeof(row._d[0]), 'number');
+        assert.equal(typeof(row._e[0]), 'number');
+        assert.equal(typeof(row._f[0]), 'number');
         done();
     });
 });

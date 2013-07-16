@@ -11,29 +11,31 @@ p._contentType = "application/json; charset=utf-8";
 var typeNames = {
     16: 'string', // bool
     17: 'string', // bytea
-    20: 'number',
-    21: 'number',
-    23: 'number',
+    20: 'number', // int8
+    21: 'number', // int2
+    23: 'number', // int4
     25: 'string', // text
-    26: 'number',
+    26: 'number', // oid
    114: 'object', // JSON
-   701: 'number',
+   700: 'number', // float4
+   701: 'number', // float8
   1015: 'string[]', // _varchar
-  1042: 'string',
-  1043: 'string',
+  1042: 'string', // bpchar
+  1043: 'string', // varchar
   1005: 'number[]', // _int2
   1007: 'number[]', // _int4
   1014: 'string[]', // _bpchar
   1016: 'number[]', // _int8
   1021: 'number[]', // _float4
   1022: 'number[]', // _float8
-  1008: 'string[]', 
-  1009: 'string[]',
+  1008: 'string[]', // _regproc
+  1009: 'string[]', // _text
   1114: 'date', // timestamp without timezone
   1182: 'date', // date
   1184: 'date', // timestamp
   1186: 'string', // interval
   1231: 'number[]', // _numeric
+  1700: 'number', // numeric
 
 };
 

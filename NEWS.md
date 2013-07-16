@@ -1,3 +1,16 @@
+1.5.3
+-----
+* Set Last-Modified header with cache_policy=persist
+
+1.5.2
+-----
+* Keep numbers as such in JSON output (#100)
+* Revert max-age=0 in Cache-Control when using no-cache
+
+1.5.1
+-----
+* Improve cacheability of queries selecting "updated_at" fields (#99)
+
 1.5.0
 -----
 * Add "fields" member in JSON return (#97)
