@@ -27,7 +27,7 @@ var username = 'dev';
 var domain = 'localhost';
 var port = 8080;
 var api_version = 2;
-var api_key;
+var api_key = process.env['CDBSQL_APIKEY'];
 var sql;
 var decimal_places;
 var echo_queries = false;
@@ -46,7 +46,7 @@ function usage(exit_code) {
   console.log(" --domain <string>       service domain (" + domain + ")");
   console.log(" --port <num>            service tcp port number (" + port + ")");
   console.log(" --api-version <num>     API version (" + api_version +")");
-  console.log(" --key <string>          API authentication key (" + api_key + ")");
+  console.log(" --key <string>          API authentication key (CDBSQL_APIKEY)");
   console.log(" --format <string>       Response format (json)");
   console.log(" --dp <num>              Decimal places in geojson format (unspecified)");
   console.log(" --skipfields <string>   Comma-separated list of fields to skip (none)");
@@ -176,7 +176,7 @@ function processQuery(sql, callback)
     }
   };
 
-  if ( typeof(api_key) != 'undefined' ) opt.path += '&api_key=' + api_key;
+  if ( api_key ) opt.path += '&api_key=' + api_key;
   if ( typeof(decimal_places) != 'undefined' ) opt.path += '&dp=' + decimal_places;
   if ( typeof(skipfields) != 'undefined' ) opt.path += '&skipfields=' + encodeURIComponent(skipfields);
 
