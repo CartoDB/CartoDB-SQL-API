@@ -1,6 +1,8 @@
 1.5.3
 -----
 * Set Last-Modified header with cache_policy=persist
+* Raise max-age to one year for all cacheable queries
+* Set max-age to 0 for uncacheable (mutating) queries 
 
 1.5.2
 -----

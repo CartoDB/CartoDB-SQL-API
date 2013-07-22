@@ -257,13 +257,17 @@ function handleQuery(req, res) {
                 setCrossDomain(res);
 
                 // set cache headers
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
+                var ttl = 31536000; // 1 year time to live by default
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy == 'persist' ) {
-                  res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
+                  res.header('Cache-Control', 'public,max-age=' + ttl); 
+                  res.header('X-Cache-Channel', ''); // forever
                 } else {
-                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
-                  var ttl = 3600;
+                  if ( tableCacheItem.may_write ) {
+                    ttl = 0;
+                  } else {
+                    res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
+                  }
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
 
