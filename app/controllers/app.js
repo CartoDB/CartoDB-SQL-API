@@ -263,7 +263,7 @@ function handleQuery(req, res) {
                   res.header('Cache-Control', 'public,max-age=' + ttl); 
                   res.header('X-Cache-Channel', ''); // forever
                 } else {
-                  if ( tableCacheItem.may_write ) {
+                  if ( ! tableCacheItem || tableCacheItem.may_write ) {
                     ttl = 0;
                   } else {
                     res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
