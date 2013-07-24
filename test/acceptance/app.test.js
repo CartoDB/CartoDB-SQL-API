@@ -4,7 +4,8 @@
  * Ensure the user is present in the pgbouncer auth file too
  * TODO: Add OAuth tests.
  *
- * To run this test, ensure that cartodb_test_user_1_db metadata exists in Redis for the vizziality.cartodb.com domain
+ * To run this test, ensure that cartodb_test_user_1_db metadata exists
+ * in Redis for the vizzuality.cartodb.com domain
  *
  * SELECT 5
  * HSET rails:users:vizzuality id 1
@@ -533,6 +534,24 @@ test('TRUNCATE TABLE with GET and auth', function(done){
         assert.equal(pbody.rows[0]['count'], 0);
         done();
       });
+    });
+});
+
+test('REINDEX TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: ' ReINdEX TABLE test_table',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+      var pbody = JSON.parse(res.body);
+      assert.equal(pbody.rows.length, 0);
+      done();
     });
 });
 
