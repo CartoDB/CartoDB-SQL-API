@@ -46,9 +46,9 @@ test('KML format, unauthenticated', function(done){
         var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') != -1, "result does not include '" + f + "'");
           } else {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') == -1, "result includes '" + f + "'");
           }
         }
         done();
@@ -103,9 +103,9 @@ test('KML format, skipfields', function(done){
         var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') != -1, "result does not include '" + f + "'");
           } else {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') == -1, "result includes '" + f + "'");
           }
         }
         done();
