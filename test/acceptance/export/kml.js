@@ -190,8 +190,8 @@ test('GET /api/v1/sql as kml with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
-        assert.equal(res.body, body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>sql_statement</name></Folder></Document></kml>';
+        assert.equal(res.body.replace(/\n/g,''), body);
         done();
     });
 });
@@ -207,8 +207,8 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
-        assert.equal(res.body, body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>sql_statement</name></Folder></Document></kml>';
+        assert.equal(res.body.replace(/\n/g,''), body);
         done();
     });
 });
