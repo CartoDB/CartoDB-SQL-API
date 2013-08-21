@@ -26,5 +26,5 @@ module.exports.redisLog     = false;
 module.exports.tableCacheMax = 8192;
 // Max age of query table cache items, in milliseconds
 module.exports.tableCacheMaxAge = 1000*60*10;
-// Temporary directory
+// Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
