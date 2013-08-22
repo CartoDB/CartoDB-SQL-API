@@ -6,6 +6,7 @@
 * Add REINDEX to the list of uncacheable queries
 * Support all parameters with POST as well as GET
 * Ensure testsuite passes with both GDAL-0.9 and GDAL-0.10
+* JSON output: report boolean types as boolean, not string (#106)
 
 1.5.2
 -----

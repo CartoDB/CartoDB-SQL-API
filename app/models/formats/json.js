@@ -9,7 +9,7 @@ var p = json.prototype;
 p._contentType = "application/json; charset=utf-8";
 
 var typeNames = {
-    16: 'string', // bool
+    16: 'boolean', // bool
     17: 'string', // bytea
     20: 'number', // int8
     21: 'number', // int2
@@ -19,6 +19,7 @@ var typeNames = {
    114: 'object', // JSON
    700: 'number', // float4
    701: 'number', // float8
+  1000: 'boolean[]', // _bool
   1015: 'string[]', // _varchar
   1042: 'string', // bpchar
   1043: 'string', // varchar
