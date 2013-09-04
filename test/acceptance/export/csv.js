@@ -130,8 +130,8 @@ test('GET /api/v1/sql as csv', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = 'cartodb_id,geom\r\n1,"SRID=4326;POINT(-3.699732 40.423012)"\r\n';
-        assert.equal(body, res.body);
+        var expected = 'cartodb_id,geom\r\n1,"SRID=4326;POINT(-3.699732 40.423012)"\r\n';
+        assert.equal(res.body, expected);
         done();
     });
 });
@@ -144,8 +144,8 @@ test('GET /api/v1/sql as csv with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = "";
-        assert.equal(body, res.body);
+        var expected = "";
+        assert.equal(res.body, expected);
         done();
     });
 });
@@ -157,8 +157,8 @@ test('GET /api/v1/sql as csv, properly escaped', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
-        assert.equal(body, res.body);
+        var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
+        assert.equal(res.body, expected);
         done();
     });
 });
@@ -175,8 +175,8 @@ test('GET /api/v1/sql as csv, concurrently', function(done){
           method: 'GET'
       },{ }, function(res){
           assert.equal(res.statusCode, 200, res.body);
-          var body = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
-          assert.equal(body, res.body);
+          var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
+          assert.equal(res.body, expected);
           if ( ! --waiting ) done();
       });
 
