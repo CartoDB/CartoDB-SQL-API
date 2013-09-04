@@ -32,8 +32,8 @@ var checkDecimals = function(x, dec_sep){
 
 // Check if an attribute is in the KML output
 //
-// NOTE: "name" attribute is threated specially in that
-//       it's matched in case-insensitive way
+// NOTE: "name" and "description" attributes are threated specially
+//       in that they are matched in case-insensitive way
 //
 var hasAttribute = function(kml, att) {
 
@@ -52,7 +52,7 @@ var hasAttribute = function(kml, att) {
   if ( doc.get(xpath) ) return true;
 
   var lcatt = att.toLowerCase();
-  if ( lcatt == 'name' ) {
+  if ( lcatt == 'name' || lcatt == 'description' ) {
     xpath = "//Placemark/" + lcatt;
     if ( doc.get(xpath) ) return true;
   }
