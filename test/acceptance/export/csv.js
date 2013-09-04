@@ -144,8 +144,11 @@ test('GET /api/v1/sql as csv with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var expected = "";
-        assert.equal(res.body, expected);
+        var obtained_lines = res.body.split('\r\n');
+        assert.ok(obtained_lines.length <= 2, // may or may not have an header
+          // See http://trac.osgeo.org/gdal/ticket/5234
+          'Too many lines in output (' + obtained_lines.length + '): '
+          + obtained_lines.join('\n'));
         done();
     });
 });
