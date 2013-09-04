@@ -78,6 +78,12 @@ fi
 
 PATH=node_modules/.bin/:$PATH
 
+echo
+echo "Environment:"
+echo
+echo "  ogr2ogr version: "`ogr2ogr --version`
+echo
+
 echo "Running tests"
 mocha -t 5000 -u tdd ${TESTS}
 ret=$?
