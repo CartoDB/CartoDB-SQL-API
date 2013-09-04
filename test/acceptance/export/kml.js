@@ -30,6 +30,38 @@ var checkDecimals = function(x, dec_sep){
         return 0;
 }
 
+// Check if an attribute is in the KML output
+//
+// NOTE: "name" attribute is threated specially in that
+//       it's matched in case-insensitive way
+//
+var hasAttribute = function(kml, att) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  var xpath;
+
+  xpath = "//SimpleField[@name='" + att + "']";
+  if ( doc.get(xpath) ) return true;
+
+  xpath = "//Placemark/" + att;
+  if ( doc.get(xpath) ) return true;
+
+  var lcatt = att.toLowerCase();
+  if ( lcatt == 'name' ) {
+    xpath = "//Placemark/" + lcatt;
+    if ( doc.get(xpath) ) return true;
+  }
+
+  //if ( lowerkml.indexOf('simplefield name="'+ loweratt + '"') != -1 ) return true;
+  //if ( lowerkml.indexOf('<'+loweratt+'>') != -1 ) return true;
+  return false;
+}
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
@@ -46,9 +78,9 @@ test('KML format, unauthenticated', function(done){
         var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
-            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
         }
         done();
@@ -103,9 +135,9 @@ test('KML format, skipfields', function(done){
         var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
-            assert.ok(row0.indexOf('SimpleField name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
         }
         done();
