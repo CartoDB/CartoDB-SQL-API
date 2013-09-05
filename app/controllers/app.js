@@ -99,8 +99,6 @@ function sanitize_filename(filename) {
 // request handlers
 function handleQuery(req, res) {
 
-    //var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml', 'arraybuffer'];
-
     // extract input
     var body      = (req.body) ? req.body : {};
     var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
@@ -252,7 +250,7 @@ function handleQuery(req, res) {
 
                 // configure headers for given format
                 var use_inline = !requestedFormat && !requestedFilename;
-                res.header("Content-Disposition", getContentDisposition(format, filename, use_inline));
+                res.header("Content-Disposition", getContentDisposition(formatter, filename, use_inline));
                 res.header("Content-Type", formatter.getContentType());
 
                 // allow cross site post
@@ -321,27 +319,8 @@ function handleCacheStatus(req, res){
 }
 
 
-// TODO: delegate to formats
-function getContentDisposition(format, filename, inline) {
-    var ext = 'json';
-    if (format === 'geojson'){
-        ext = 'geojson';
-    }
-    else if (format === 'topojson'){
-        ext = 'topojson';
-    }
-    else if (format === 'csv'){
-        ext = 'csv';
-    }
-    else if (format === 'svg'){
-        ext = 'svg';
-    }
-    else if (format === 'shp'){
-        ext = 'zip';
-    }
-    else if (format === 'kml'){
-        ext = 'kml';
-    }
+function getContentDisposition(formatter, filename, inline) {
+    var ext = formatter.getFileExtension();
     var time = new Date().toUTCString();
     return ( inline ? 'inline' : 'attachment' ) +'; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
 }
