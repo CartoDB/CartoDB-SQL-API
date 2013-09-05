@@ -12,7 +12,7 @@ Supported query string parameters:
 
   'format':   Specifies which format to use for the response.
               Supported formats: JSON (the default), GeoJSON,
-              TopoJSON, CSV, SVG, SHP
+              TopoJSON, CSV, SVG, SHP, SQL
 
   'filename': Sets the filename to use for the query result 
               file attachment
@@ -97,7 +97,7 @@ The GeoJSON response is follows:
     }
 ```
 
-TODO: csv, kml, svg, topojson responses
+TODO: csv, kml, svg, topojson, sql responses
 
 Response errors
 ---------------

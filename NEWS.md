@@ -1,3 +1,7 @@
+1.6.0
+-----
+* SQL dump output format (#55)
+
 1.5.3
 -----
 * Set Last-Modified header with cache_policy=persist
