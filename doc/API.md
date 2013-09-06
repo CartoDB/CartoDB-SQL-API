@@ -52,6 +52,7 @@ The JSON response is as follows:
                 'cartodb_id': { type:'number' },
                 'created_at': { type:'date' },
                 'updated_at': { type:'date' }
+                'valid': { type:'boolean' }
         },
         rows: [
             {
@@ -59,7 +60,8 @@ The JSON response is as follows:
                 the_geom: "0101000020E610...",
                 cartodb_id: 1,
                 created_at: "2012-02-06T22:50:35.778Z",
-                updated_at: "2012-02-12T21:34:08.193Z"
+                updated_at: "2012-02-12T21:34:08.193Z",
+                valid: true
             }
         ]
     }

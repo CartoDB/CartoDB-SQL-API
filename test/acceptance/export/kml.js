@@ -30,6 +30,82 @@ var checkDecimals = function(x, dec_sep){
         return 0;
 }
 
+// Check if an attribute is in the KML output
+//
+// NOTE: "name" and "description" attributes are threated specially
+//       in that they are matched in case-insensitive way
+//
+var hasAttribute = function(kml, att) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  var xpath;
+
+  xpath = "//SimpleField[@name='" + att + "']";
+  if ( doc.get(xpath) ) return true;
+
+  xpath = "//Placemark/" + att;
+  if ( doc.get(xpath) ) return true;
+
+  var lcatt = att.toLowerCase();
+  if ( lcatt == 'name' || lcatt == 'description' ) {
+    xpath = "//Placemark/" + lcatt;
+    if ( doc.get(xpath) ) return true;
+  }
+
+  //if ( lowerkml.indexOf('simplefield name="'+ loweratt + '"') != -1 ) return true;
+  //if ( lowerkml.indexOf('<'+loweratt+'>') != -1 ) return true;
+  return false;
+}
+
+// Return the first coordinate array found in KML
+var extractCoordinates = function(kml) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  if ( ! doc ) return;
+  var coo = doc.get("//coordinates");
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.text();
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.split(' ');
+  //console.log("coo: " + coo);
+  for (var i=0; i<coo.length; ++i) {
+    coo[i] = coo[i].split(',');
+  }
+
+  return coo;
+}
+
+// Return the first folder name in KML
+var extractFolderName = function(kml) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  if ( ! doc ) return;
+  var coo = doc.get("//Document/Folder/name");
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.text();
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  return coo;
+}
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
@@ -46,9 +122,9 @@ test('KML format, unauthenticated', function(done){
         var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
         }
         done();
@@ -103,9 +179,9 @@ test('KML format, skipfields', function(done){
         var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
         for ( var f in checkfields ) {
           if ( checkfields[f] ) {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') != -1, "result does not include '" + f + "'");
+            assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
-            assert.ok(row0.indexOf('SimpleData name="'+ f + '"') == -1, "result includes '" + f + "'");
+            assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
         }
         done();
@@ -122,6 +198,8 @@ test('KML format, unauthenticated, custom filename', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        var name = extractFolderName(res.body);
+        assert.equal(name, "kmltest");
         done();
     });
 });
@@ -141,7 +219,7 @@ test('KML format, authenticated', function(done){
 
 test('KML format, unauthenticated, concurrent requests', function(done){
     var query = querystring.stringify({
-        q: "SELECT 'val', x, y, st_makepoint(x,y,4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
+        q: "SELECT 'val', x, y, st_setsrid(st_makepoint(x,y),4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
         format: 'kml',
         filename: 'multi'
       });
@@ -190,8 +268,8 @@ test('GET /api/v1/sql as kml with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
-        assert.equal(res.body, body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
+        assert.equal(res.body.replace(/\n/g,''), body);
         done();
     });
 });
@@ -207,8 +285,45 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><Folder><name>sql_statement</name>\n</Folder></Document></kml>\n';
-        assert.equal(res.body, body);
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
+        assert.equal(res.body.replace(/\n/g,''), body);
+        done();
+    });
+});
+
+// See https://github.com/CartoDB/cartodb/issues/276
+test('check point coordinates, unauthenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var coords = extractCoordinates(res.body);
+        assert(coords, 'No coordinates in ' + res.body);
+        assert.deepEqual(coords, [[33,16]]);
+        done();
+    });
+});
+
+// See https://github.com/CartoDB/cartodb/issues/276
+test('check point coordinates, authenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
+          api_key: 1234,
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var coords = extractCoordinates(res.body);
+        assert(coords, 'No coordinates in ' + res.body);
+        assert.deepEqual(coords, [[33,16]]);
         done();
     });
 });

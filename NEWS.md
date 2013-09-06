@@ -1,3 +1,45 @@
+1.6.4 - 2013-MM-DD
+------------------
+
+1.6.3 - 2013-11-10
+------------------
+* JSON format: correctly recognize "numeric" type columns (#119)
+
+1.6.2 - 2013-11-07
+------------------
+* JSON format: correctly recognize "date" type columns (#117)
+* Allow access to tables whose name contains (but does not start with)
+  the "pg_" substring (#118)
+
+1.6.1 - 2013-11-05
+------------------
+* Still set a meaningful X-Cache-Channel with cache_policy=persist (#105)
+* Fix wrong projection in KML exports for manually altered tables (#116)
+* Set KML folder name to the requested filename (#115)
+* Make public PostgreSQL user name a configuration parameter (#56)
+
+1.6.0 - 2013-10-02
+------------------
+* Fix shapefile export for non-linestring results starting with NULLs (#111)
+* Fix missing .prj in shapefile export (#110)
+* Improve recognition of non-standard field types names by db lookup (#112)
+* Upgrade node-pg dependency to 2.6.2
+* Drop support for cluster
+
+1.5.4 - 2013-10-01
+------------------
+* Honour skipfields in JSON schema response (#109)
+
+1.5.3
+-----
+* Set Last-Modified header with cache_policy=persist
+* Raise max-age to one year for all cacheable queries
+* Set max-age to 0 for uncacheable (mutating) queries 
+* Add REINDEX to the list of uncacheable queries
+* Support all parameters with POST as well as GET
+* Ensure testsuite passes with both GDAL-0.9 and GDAL-0.10
+* JSON output: report boolean types as boolean, not string (#106)
+
 1.5.2
 -----
 * Keep numbers as such in JSON output (#100)

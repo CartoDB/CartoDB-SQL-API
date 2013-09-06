@@ -42,6 +42,17 @@ pg.prototype.handleQueryEnd = function(result) {
   var end = Date.now();
   this.opts.total_time = (end - this.start_time)/1000;
 
+  // Drop field description for skipped fields
+  var sf = this.opts.skipfields;
+  if ( sf.length ){
+    var newfields = [];
+    for ( var j=0; j<result.fields.length; ++j ) {
+      var f = result.fields[j];
+      if ( sf.indexOf(f.name) == -1 ) newfields.push(f);
+    }
+    result.fields = newfields;
+  }
+
   var that = this;
 
   Step (
@@ -83,8 +94,8 @@ pg.prototype.sendResponse = function(opts, callback) {
 
   this.start_time = Date.now();
 
-  var client = new PSQL(opts.user_id, opts.database);
-  client.eventedQuery(sql, function(err, query) {
+  this.client = new PSQL(opts.user_id, opts.database);
+  this.client.eventedQuery(sql, function(err, query) {
       if (err) {
         callback(err);
         return;

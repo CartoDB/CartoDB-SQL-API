@@ -17,6 +17,9 @@ PGHOST=`grep \.db_host ${TESTENV} | sed "s/.*= *'\([^']*\)'.*/\1/"`
 echo "PGHOST: [$PGHOST]"
 PGPORT=`grep \.db_port ${TESTENV} | sed "s/.*=[\t ]*'\([^']*\)'.*/\1/"`
 echo "PGPORT: [$PGPORT]"
+public_user=`grep \.db_pubuser ${TESTENV} | sed "s/.*= *'\([^']*\)'.*/\1/"`
+[ -z "${public_user}" ] && public_user=publicuser
+echo "PUBLICUSER: [${public_user}]"
 
 
 TEST_DB="cartodb_test_user_1_db"
@@ -33,7 +36,7 @@ die() {
 echo "preparing postgres..."
 dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
 createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
-psql -f test.sql ${TEST_DB} 
+cat test.sql | sed "s/:PUBLICUSER/${public_user}/" | psql ${TEST_DB} 
 psql -f support/CDB_QueryStatements.sql ${TEST_DB} 
 psql -f support/CDB_QueryTables.sql ${TEST_DB} 
 

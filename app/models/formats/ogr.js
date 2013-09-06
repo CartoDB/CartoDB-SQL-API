@@ -14,7 +14,7 @@ var bakingExports = {};
 function userid_to_dbuser(user_id) {
   if ( _.isString(user_id) )
       return _.template(global.settings.db_user, {user_id: user_id});
-  return "publicuser" // FIXME: make configurable
+  return global.settings.db_pubuser;
 };
 
 
@@ -46,6 +46,7 @@ ogr.prototype = {
         options.dbname,
         options.user_id,
         options.gn,
+        this.generateMD5(options.filename),
         this.generateMD5(options.sql)].concat(options.skipfields).join(':');
   },
 
@@ -58,14 +59,18 @@ ogr.prototype = {
 };
 
 // Internal function usable by all OGR-driven outputs
-ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, callback) {
+ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, out_layername, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
 
+  var that = this;
+
   var columns = [];
+  var geocol;
+  var pg;
 
   // Drop ending semicolon (ogr doens't like it)
   sql = sql.replace(/;\s*$/, ''); 
@@ -73,32 +78,62 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
   Step (
 
     function fetchColumns() {
-      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
-      var pg = new PSQL(user_id, dbname, 1, 0);
+      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
+      pg = new PSQL(user_id, dbname, 1, 0);
       pg.query(colsql, this);
     },
-    function spawnDumper(err, result) {
+    function findSRS(err, result) {
       if (err) throw err;
 
       //if ( ! result.rows.length ) throw new Error("Query returns no rows");
 
-      // Skip system columns
-      if ( result.rows.length ) {
-        for (var k in result.rows[0]) {
-          if ( skipfields.indexOf(k) != -1 ) continue;
-          if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
-          if ( out_format == 'CSV' ) columns.push('"' + k + '"::text');
-          else columns.push('"' + k + '"');
+      var needSRS = that._needSRS;
+
+      // Skip system columns, find geom column
+      for (var i=0; i<result.fields.length; ++i) {
+        var field = result.fields[i];
+        var k = field.name;
+        if ( skipfields.indexOf(k) != -1 ) continue;
+        if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
+        if ( out_format == 'CSV' ) columns.push(pg.quoteIdentifier(k)+'::text');
+        else columns.push(pg.quoteIdentifier(k));
+
+        if ( needSRS ) {
+          if ( ! geocol && pg.typeName(field.dataTypeID) == 'geometry' ) {
+            geocol = k
+          }
         }
-      } else columns.push('*');
+      }
       //console.log(columns.join(','));
+
+      if ( ! needSRS || ! geocol ) return null;
 
       var next = this;
 
-      sql = 'SELECT ' + columns.join(',')
+      var qgeocol = pg.quoteIdentifier(geocol);
+      var sridsql = 'SELECT ST_Srid(' + qgeocol + ') as srid, GeometryType(' +
+                   qgeocol + ') as type FROM (' + sql + ') as _cartodbsqlapi WHERE ' +
+                   qgeocol + ' is not null limit 1';
+
+      pg.query(sridsql, function(err, result) {
+        if ( err ) { next(err); return; }
+        if ( result.rows.length ) {
+          var srid = result.rows[0].srid;
+          var type = result.rows[0].type;
+          next(null, srid, type);
+        }
+      });
+
+    },
+    function spawnDumper(err, srid, type) {
+      if (err) throw err;
+
+      var next = this;
+
+      var ogrsql = 'SELECT ' + columns.join(',')
           + ' FROM (' + sql + ') as _cartodbsqlapi';
 
-      var child = spawn(ogr2ogr, [
+      var ogrargs = [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
@@ -107,22 +142,27 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
          + " user=" + dbuser
          + " dbname=" + dbname
          + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns
+         + " tables=fake" // trick to skip query to geometry_columns (private)
+                          // in turn breaks knowing SRID with gdal-0.10.1:
+                          // http://github.com/CartoDB/CartoDB-SQL-API/issues/110
          + "",
-        '-sql', sql
-      ]);
+        '-sql', ogrsql
+      ];
+
+      if ( srid ) {
+        ogrargs.push('-a_srs', 'EPSG:'+srid);
+      }
+
+      if ( type ) {
+        ogrargs.push('-nlt', type);
+      }
+
+      ogrargs.push('-nln', out_layername);
+
+      var child = spawn(ogr2ogr, ogrargs);
 
 /*
-console.log(['ogr2ogr',
-        '-f', '"'+out_format+'"',
-        out_filename,
-        "'PG:host=" + dbhost
-         + " user=" + dbuser
-         + " dbname=" + dbname
-         + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns
-         + "'",
-        "-sql '", sql, "'"].join(' '));
+console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).join(' '));
 */
 
       var stdout = '';
@@ -157,15 +197,16 @@ console.log(['ogr2ogr',
   );
 };
 
-ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, callback) {
+// TODO: simplify to take an options object
+ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, layername, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
+  var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(layername), this.generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
-  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, callback);
+  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, layername, callback);
 };
 
 ogr.prototype.sendResponse = function(opts, callback) {

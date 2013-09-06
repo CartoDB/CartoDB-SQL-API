@@ -1,6 +1,8 @@
 SQL API for cartodb.com
 ========================
 
+[![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.png)](http://travis-ci.org/CartoDB/CartoDB-SQL-API)
+
 Provides a nodejs based API for running SQL queries against CartoDB.
 
 * Users are authenticated over OAuth or via an API KEY.
@@ -10,7 +12,10 @@ Provides a nodejs based API for running SQL queries against CartoDB.
 core requirements
 -------------
 * postgres 9.0+
+* postgis 2.0+
 * cartodb 0.9.5+ (for ``CDB_QueryTables``)
+* GDAL 1.9.2+ (bin utils)
+* zip commandline tool
 * redis
 * node 0.8+
 * npm
@@ -33,7 +38,8 @@ Make sure redis is running and knows about active cartodb user.
 
 Make sure your PostgreSQL server is running, is accessible on
 the host and port specified in the <environment> file, has
-a 'publicuser' role and trusts user authentication from localhost
+a 'publicuser' role (or whatever you set ``db_pubuser`` configuration
+directive to) and trusts user authentication from localhost
 connections.
 
 ``` bash
