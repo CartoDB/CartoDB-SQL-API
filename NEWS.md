@@ -1,3 +1,6 @@
+1.6.0
+-----
+
 1.5.3
 -----
 * Set Last-Modified header with cache_policy=persist
