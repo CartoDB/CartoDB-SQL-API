@@ -1,3 +1,13 @@
+1.5.3
+-----
+* Set Last-Modified header with cache_policy=persist
+* Raise max-age to one year for all cacheable queries
+* Set max-age to 0 for uncacheable (mutating) queries 
+* Add REINDEX to the list of uncacheable queries
+* Support all parameters with POST as well as GET
+* Ensure testsuite passes with both GDAL-0.9 and GDAL-0.10
+* JSON output: report boolean types as boolean, not string (#106)
+
 1.5.2
 -----
 * Keep numbers as such in JSON output (#100)

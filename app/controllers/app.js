@@ -82,7 +82,7 @@ app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCac
 //
 function queryMayWrite(sql) {
   var mayWrite = false;
-  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|truncate)\\b", "i");
+  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
   if ( pattern.test(sql) ) {
     mayWrite = true;
   }
@@ -99,22 +99,22 @@ function sanitize_filename(filename) {
 // request handlers
 function handleQuery(req, res) {
 
-    //var supportedFormats = ['json', 'geojson', 'topojson', 'csv', 'svg', 'shp', 'kml', 'arraybuffer'];
-
     // extract input
     var body      = (req.body) ? req.body : {};
-    var sql       = req.query.q || body.q; // HTTP GET and POST store in different vars
-    var api_key   = req.query.api_key || body.api_key;
-    var database  = req.query.database; // TODO: Deprecate
-    var limit     = parseInt(req.query.rows_per_page);
-    var offset    = parseInt(req.query.page);
-    var requestedFormat = req.query.format || body.format;
+    var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
+    var sql       = params.q;
+    var api_key   = params.api_key;
+    var database  = params.database; // TODO: Deprecate
+    var limit     = parseInt(params.rows_per_page);
+    var offset    = parseInt(params.page);
+    var requestedFormat = params.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
-    var requestedFilename = req.query.filename || body.filename
+    var requestedFilename = params.filename;
+    var cache_policy = params.cache_policy;
     var filename  = requestedFilename;
-    var requestedSkipfields = req.query.skipfields || body.skipfields;
+    var requestedSkipfields = params.skipfields;
     var skipfields;
-    var dp        = req.query.dp || body.dp; // decimal point digits (defaults to 6)
+    var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
@@ -250,23 +250,35 @@ function handleQuery(req, res) {
 
                 // configure headers for given format
                 var use_inline = !requestedFormat && !requestedFilename;
-                res.header("Content-Disposition", getContentDisposition(format, filename, use_inline));
+                res.header("Content-Disposition", getContentDisposition(formatter, filename, use_inline));
                 res.header("Content-Type", formatter.getContentType());
 
                 // allow cross site post
                 setCrossDomain(res);
 
                 // set cache headers
-                res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
+                var ttl = 31536000; // 1 year time to live by default
                 var cache_policy = req.query.cache_policy;
-                if ( cache_policy == 'persist' ) {
-                  res.header('Cache-Control', 'public,max-age=31536000'); // 1 year
+                if ( cache_policy === 'persist' ) {
+                  res.header('Cache-Control', 'public,max-age=' + ttl); 
+                  res.header('X-Cache-Channel', ''); // forever
                 } else {
-                  // TODO: set ttl=0 when tableCache[sql_md5].may_write is true ?
-                  var ttl = 3600;
-                  res.header('Last-Modified', new Date().toUTCString());
+                  if ( ! tableCacheItem || tableCacheItem.may_write ) {
+                    ttl = 0;
+                  } else {
+                    res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
+                  }
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
+
+                // Set Last-Modified header
+                //
+                // Currently sets it to NOW
+                //
+                // TODO: use a real value, querying for most recent change in
+                //       any of the source tables
+                //
+                res.header('Last-Modified', new Date().toUTCString());
 
                 return result;
             },
@@ -307,27 +319,8 @@ function handleCacheStatus(req, res){
 }
 
 
-// TODO: delegate to formats
-function getContentDisposition(format, filename, inline) {
-    var ext = 'json';
-    if (format === 'geojson'){
-        ext = 'geojson';
-    }
-    else if (format === 'topojson'){
-        ext = 'topojson';
-    }
-    else if (format === 'csv'){
-        ext = 'csv';
-    }
-    else if (format === 'svg'){
-        ext = 'svg';
-    }
-    else if (format === 'shp'){
-        ext = 'zip';
-    }
-    else if (format === 'kml'){
-        ext = 'kml';
-    }
+function getContentDisposition(formatter, filename, inline) {
+    var ext = formatter.getFileExtension();
     var time = new Date().toUTCString();
     return ( inline ? 'inline' : 'attachment' ) +'; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
 }

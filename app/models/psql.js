@@ -32,15 +32,14 @@ var floatArrayParser = function(val) {
   });
   return p.parse();
 };
-types.setTypeParser(1700, floatParser);
-types.setTypeParser(700, floatParser);
-types.setTypeParser(701, floatParser);
-types.setTypeParser(1021, floatArrayParser);
-types.setTypeParser(1022, floatArrayParser);
-types.setTypeParser(1231, floatArrayParser);
-
-
-
+types.setTypeParser(20, floatParser); // int8
+types.setTypeParser(700, floatParser); // float4
+types.setTypeParser(701, floatParser); // float8
+types.setTypeParser(1700, floatParser); // numeric
+types.setTypeParser(1021, floatArrayParser); // _float4
+types.setTypeParser(1022, floatArrayParser); // _float8
+types.setTypeParser(1231, floatArrayParser); // _numeric
+types.setTypeParser(1016, floatArrayParser); // _int8
 
 
 // PSQL

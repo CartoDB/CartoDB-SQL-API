@@ -1,5 +1,5 @@
-Format classes are required to expose a constructor with no arguments
-and a sendResponse(opts,callback) method.
+Format classes are required to expose a constructor with no arguments,
+a getFileExtension() and a sendResponse(opts, callback) method.
 
 The ``opts`` parameter contains:
 

@@ -1,13 +1,17 @@
 {
     "private": true,
-    "name": "cartodb_api",
+    "name": "cartodb_sql_api",
     "description": "high speed SQL api for cartodb",
-    "version": "1.5.2",
-    "author": {
-        "name": "Simon Tokumine, Sandro Santilli, Vizzuality",
-        "url": "http://vizzuality.com",
-        "email": "simon@vizzuality.com, strk@vizzuality.com"
+    "version": "1.5.3",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
     },
+    "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
+    "contributors": [
+      "Simon Tokumine <simon@vizzuality.com>",
+      "Sandro Santilli <strk@vizzuality.com>"
+    ],
     "dependencies": {
         "cluster2": "git://github.com/CartoDB/cluster2.git#cdb_production",
         "express": "~2.5.11",

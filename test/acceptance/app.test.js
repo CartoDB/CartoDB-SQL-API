@@ -4,7 +4,8 @@
  * Ensure the user is present in the pgbouncer auth file too
  * TODO: Add OAuth tests.
  *
- * To run this test, ensure that cartodb_test_user_1_db metadata exists in Redis for the vizziality.cartodb.com domain
+ * To run this test, ensure that cartodb_test_user_1_db metadata exists
+ * in Redis for the vizzuality.cartodb.com domain
  *
  * SELECT 5
  * HSET rails:users:vizzuality id 1
@@ -30,7 +31,8 @@ app.setMaxListeners(0);
 
 suite('app.test', function() {
 
-var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
+var expected_cache_control = 'no-cache,max-age=31536000,must-revalidate,public';
+var expected_rw_cache_control = 'no-cache,max-age=0,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
 
 test('GET /api/v1/sql', function(done){
@@ -114,7 +116,8 @@ test('cache_policy=persist', function(done){
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
+        assert.ok(res.headers.hasOwnProperty('x-cache-channel'));
+        assert.equal(res.headers['x-cache-channel'], '');
         assert.equal(res.headers['cache-control'], expected_cache_control_persist);
         done();
     });
@@ -243,8 +246,8 @@ test('INSERT returns affected rows', function(done){
         assert.equal(out.rows.length, 0);
         // Check cache headers
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-        assert.equal(res.headers['x-cache-channel'], 'NONE');
-        assert.equal(res.headers['cache-control'], expected_cache_control);
+        assert.ok(!res.hasOwnProperty('x-cache-channel'));
+        assert.equal(res.headers['cache-control'], expected_rw_cache_control);
         done();
     });
 });
@@ -269,8 +272,8 @@ test('UPDATE returns affected rows', function(done){
         assert.equal(out.rows.length, 0);
         // Check cache headers
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-        assert.equal(res.headers['x-cache-channel'], 'NONE');
-        assert.equal(res.headers['cache-control'], expected_cache_control);
+        assert.ok(!res.hasOwnProperty('x-cache-channel'));
+        assert.equal(res.headers['cache-control'], expected_rw_cache_control);
         done();
     });
 });
@@ -295,8 +298,8 @@ test('DELETE returns affected rows', function(done){
         assert.equal(out.rows.length, 0);
         // Check cache headers
         // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-        assert.equal(res.headers['x-cache-channel'], 'NONE');
-        assert.equal(res.headers['cache-control'], expected_cache_control);
+        assert.ok(!res.hasOwnProperty('x-cache-channel'));
+        assert.equal(res.headers['cache-control'], expected_rw_cache_control);
         done();
     });
 });
@@ -422,8 +425,8 @@ test('CREATE TABLE with GET and auth', function(done){
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       done();
     });
 });
@@ -478,8 +481,8 @@ test('ALTER TABLE with GET and auth', function(done){
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       done();
     });
 });
@@ -511,8 +514,8 @@ test('TRUNCATE TABLE with GET and auth', function(done){
         method: 'GET'
     },{}, function(res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       var pbody = JSON.parse(res.body);
       assert.equal(pbody.rows.length, 0);
       assert.response(app, {
@@ -534,6 +537,24 @@ test('TRUNCATE TABLE with GET and auth', function(done){
     });
 });
 
+test('REINDEX TABLE with GET and auth', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?" + querystring.stringify({
+          q: ' ReINdEX TABLE test_table',
+          api_key: 1234
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+      assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+      var pbody = JSON.parse(res.body);
+      assert.equal(pbody.rows.length, 0);
+      done();
+    });
+});
+
 test('DROP TABLE with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
@@ -546,8 +567,8 @@ test('DROP TABLE with GET and auth', function(done){
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       done();
     });
 });
@@ -564,8 +585,8 @@ test('CREATE FUNCTION with GET and auth', function(done){
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       done();
     });
 });
@@ -582,8 +603,8 @@ test('DROP FUNCTION with GET and auth', function(done){
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-      assert.equal(res.headers['x-cache-channel'], 'NONE');
-      assert.equal(res.headers['cache-control'], expected_cache_control);
+      assert.ok(!res.hasOwnProperty('x-cache-channel'));
+      assert.equal(res.headers['cache-control'], expected_rw_cache_control);
       done();
     });
 });
@@ -861,7 +882,8 @@ test('field names and types are exposed', function(done){
         url: '/api/v1/sql?' + querystring.stringify({
           q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
              "4::char as d, now() as e, 'a'::text as f, " +
-              "'POINT(0 0)'::geometry as the_geom " +
+             "'POINT(0 0)'::geometry as the_geom " +
+             ", 1::bool as g " +
              "LIMIT 0"
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -869,13 +891,14 @@ test('field names and types are exposed', function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
-        assert.equal(_.keys(parsedBody.fields).length, 7);
+        assert.equal(_.keys(parsedBody.fields).length, 8);
         assert.equal(parsedBody.fields.a.type, 'number');
         assert.equal(parsedBody.fields.b.type, 'number');
         assert.equal(parsedBody.fields.c.type, 'string');
         assert.equal(parsedBody.fields.d.type, 'string');
         assert.equal(parsedBody.fields.e.type, 'date');
         assert.equal(parsedBody.fields.f.type, 'string');
+        assert.equal(parsedBody.fields.g.type, 'boolean');
         assert.equal(parsedBody.fields.the_geom.type, 'geometry');
         done();
     });
