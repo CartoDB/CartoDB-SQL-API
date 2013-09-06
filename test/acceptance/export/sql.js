@@ -213,4 +213,36 @@ test('GET /api/v1/sql as sql with ending semicolon', function(done){
     });
 });
 
+test('check format', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql',
+        data: querystring.stringify({
+          q: 'SELECT 1::int as i, now() as d, true as b, st_setsrid(st_makepoint(0,0),4326) as g',
+          format: 'sql'
+        }),
+        headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /^attachment/.test(cd), 'SQL is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=cartodb-query.sql/gi.test(cd), 'Unexpected SQL filename: ' + cd);
+        var sql = res.body;
+        var re = new RegExp('CREATE TABLE "public"."sql_statement"');
+        assert.ok(sql.match(re), 'No match for ' + re + ' in ' + sql);
+        var re = new RegExp("INSERT");
+        assert.ok(sql.match(re), 'No match for ' + re + ' in ' + sql);
+        var re = new RegExp("AddGeometryColumn\\('([^']+)','([^']+)','([^']+)',([^,]+),'([^']+)',([^)]+)\\);");
+        var match = sql.match(re);
+        assert.ok(match, 'No match for ' + re + ' in ' + sql);
+        assert.equal(match[1], 'public');
+        assert.equal(match[2], 'sql_statement'); // table name
+        assert.equal(match[3], 'wkb_geometry'); // geometry column name
+        assert.equal(match[4], '-1'); // srid
+        assert.equal(match[5], 'GEOMETRY'); // type
+        done();
+    });
+});
+
+
 });
