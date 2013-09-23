@@ -63,7 +63,7 @@ test('SHP format, big size, POST', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
         data: querystring.stringify({
-          q: 'SELECT 0 as fname FROM generate_series(0,81920)',
+          q: 'SELECT 0 as fname, st_makepoint(i,i) FROM generate_series(0,81920) i',
           format: 'shp'
         }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
