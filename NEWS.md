@@ -1,5 +1,6 @@
 1.6.0
 -----
+* Honour skipfields in JSON schema response (#109)
 
 1.5.3
 -----
