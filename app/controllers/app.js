@@ -120,6 +120,7 @@ function handleQuery(req, res) {
     var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
+    var db_hostname;
     var tableCacheItem;
     var requestProtocol = req.protocol;
 
@@ -196,11 +197,18 @@ function handleQuery(req, res) {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
-            function queryExplain(err, data){
+            function getHostname(err, user_id) {
+                var next = this;
+                Meta.getHostname(req, function(err, hostname) {
+                  next(err, user_id, hostname);
+                });
+            },
+            function queryExplain(err, data, hostname){
                 if (err) throw err;
-                user_id = data;
                 // store postgres connection
-                pg = new PSQL(user_id, database);
+                user_id = data;
+                db_hostname = hostname;
+                pg = new PSQL(user_id, database, hostname);
 
                 authenticated = ! _.isNull(user_id);
 
@@ -303,7 +311,8 @@ function handleQuery(req, res) {
                   database: database,
                   user_id: user_id,
                   sql: sql,
-                  filename: filename
+                  filename: filename,
+                  db_hostname: db_hostname
                 }
 
                 formatter.sendResponse(opts, this);

@@ -59,9 +59,9 @@ ogr.prototype = {
 };
 
 // Internal function usable by all OGR-driven outputs
-ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, out_layername, callback) {
+ogr.prototype.toOGR = function(dbname, user_id, db_hostname, gcol, sql, skipfields, out_format, out_filename, out_layername, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
-  var dbhost = global.settings.db_host;
+  var dbhost = db_hostname;
   var dbport = global.settings.db_port;
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
@@ -78,8 +78,8 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
   Step (
 
     function fetchColumns() {
-      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
-      pg = new PSQL(user_id, dbname, 1, 0);
+      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
+      pg = new PSQL(user_id, dbname, dbhost, 1, 0);
       pg.query(colsql, this);
     },
     function findSRS(err, result) {
@@ -139,6 +139,7 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost
+         + " port=" + dbport
          + " user=" + dbuser
          + " dbname=" + dbname
          + " password=" + dbpass
@@ -198,7 +199,7 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
 };
 
 // TODO: simplify to take an options object
-ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, layername, callback) {
+ogr.prototype.toOGR_SingleFile = function(dbname, user_id, db_hostname, gcol, sql, skipfields, fmt, ext, layername, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(layername), this.generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
@@ -206,7 +207,7 @@ ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
-  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, layername, callback);
+  this.toOGR(dbname, user_id, db_hostname, gcol, sql, skipfields, fmt, dumpfile, layername, callback);
 };
 
 ogr.prototype.sendResponse = function(opts, callback) {

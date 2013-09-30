@@ -82,7 +82,7 @@ var extTypeName = {};
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db) {
+var PSQL = function(user_id, db, db_host) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
@@ -91,6 +91,7 @@ var PSQL = function(user_id, db) {
         public_user: global.settings.db_pubuser
         , user_id: user_id
         , db: db
+        , db_host: db_host
     };
 
     me.username = function(){
@@ -108,9 +109,16 @@ var PSQL = function(user_id, db) {
 
         return database;
     };
+    
+    me.hostname = function(){
+        var hostname = db_host;
+
+        return hostname;
+    };
+    
 
     me.conString = "tcp://" + me.username() + "@" +
-                    global.settings.db_host + ":" +
+                    me.hostname() + ":" +
                     global.settings.db_port + "/" +
                     me.database();
 

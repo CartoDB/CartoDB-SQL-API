@@ -45,6 +45,20 @@ module.exports = function() {
     };
     
     /**
+     * Get the databasee hostname for this particular subdomain/username
+     *
+     * @param req - standard express req object. importantly contains host information
+     * @param callback
+     */
+    me.getHostname = function(req, callback) {
+        // strip subdomain from header host
+        var username = req.headers.host.split('.')[0]
+        var redisKey = _.template(this.user_key, {username: username});
+
+        this.retrieve(redisKey, 'database_host', callback);
+    };
+    
+    /**
      * Make a data access call to Redis
      *
      * @param redisKey - the base redis key where the metadata hash lives

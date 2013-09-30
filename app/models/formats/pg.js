@@ -94,7 +94,7 @@ pg.prototype.sendResponse = function(opts, callback) {
 
   this.start_time = Date.now();
 
-  this.client = new PSQL(opts.user_id, opts.database);
+  this.client = new PSQL(opts.user_id, opts.database, opts.db_hostname);
   this.client.eventedQuery(sql, function(err, query) {
       if (err) {
         callback(err);

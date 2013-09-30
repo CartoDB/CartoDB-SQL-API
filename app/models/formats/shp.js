@@ -24,10 +24,10 @@ p._needSRS = true;
 
 p.generate = function(options, callback) {
   var o = options;
-  this.toSHP(o.database, o.user_id, o.gn, o.sql, o.skipfields, o.filename, callback);
+  this.toSHP(o.database, o.user_id, o.db_hostname, o.gn, o.sql, o.skipfields, o.filename, callback);
 };
 
-p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) {
+p.toSHP = function (dbname, user_id, db_hostname, gcol, sql, skipfields, filename, callback) {
   var fmtObj = this;
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
@@ -45,7 +45,7 @@ p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) 
     },
     function spawnDumper(err) {
       if ( err ) throw err;
-      fmtObj.toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, filename, this);
+      fmtObj.toOGR(dbname, user_id, db_hostname, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, filename, this);
     },
     function doZip(err) {
       if ( err ) throw err;
