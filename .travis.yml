@@ -1,7 +1,7 @@
 before_install:
   - sudo apt-add-repository --yes ppa:ubuntugis/ppa
   - sudo apt-get update -q
-  - sudo apt-get install -q postgresql-9.1-postgis
+  - sudo apt-get install -q postgresql-9.1-postgis gdal-bin
   - createdb template_postgis
   - psql -c "CREATE EXTENSION postgis" template_postgis
   - ./configure
