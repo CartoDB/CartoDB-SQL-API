@@ -12,6 +12,7 @@ Provides a nodejs based API for running SQL queries against CartoDB.
 core requirements
 -------------
 * postgres 9.0+
+* postgis 2.0+
 * cartodb 0.9.5+ (for ``CDB_QueryTables``)
 * redis
 * node 0.8+
