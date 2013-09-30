@@ -4,9 +4,7 @@ before_install:
   - sudo apt-get install -q postgresql-9.1-postgis
   - createdb template_postgis
   - psql -c "CREATE EXTENSION postgis" template_postgis
-
-env:
-  - NPROCS=1 JOBS=1
+  - ./configure
 
 language: node_js
 node_js:
