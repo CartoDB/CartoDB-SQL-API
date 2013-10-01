@@ -1,5 +1,5 @@
-1.5.4
------
+1.5.4 - 2013-10-01
+------------------
 * Honour skipfields in JSON schema response (#109)
 
 1.5.3
