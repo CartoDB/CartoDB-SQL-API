@@ -1,5 +1,6 @@
 1.6.0
 -----
+* Fix missing .prj in shapefile export (#110)
 * Improve recognition of non-standard field types names by db lookup (#112)
 
 1.5.4 - 2013-10-01

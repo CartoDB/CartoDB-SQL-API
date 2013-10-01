@@ -14,6 +14,7 @@ var p = shp.prototype;
 
 p._contentType = "application/zip; charset=utf-8";
 p._fileExtension = "zip";
+p._needSRS = true;
 
 p.generate = function(options, callback) {
   var o = options;

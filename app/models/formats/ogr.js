@@ -65,7 +65,11 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
   var dbuser = userid_to_dbuser(user_id);
   var dbpass = ''; // turn into a parameter..
 
+  var that = this;
+
   var columns = [];
+  var geocol;
+  var pg;
 
   // Drop ending semicolon (ogr doens't like it)
   sql = sql.replace(/;\s*$/, ''); 
@@ -73,32 +77,60 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
   Step (
 
     function fetchColumns() {
-      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 1';
-      var pg = new PSQL(user_id, dbname, 1, 0);
+      var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
+      pg = new PSQL(user_id, dbname, 1, 0);
       pg.query(colsql, this);
     },
-    function spawnDumper(err, result) {
+    function findSRS(err, result) {
       if (err) throw err;
 
       //if ( ! result.rows.length ) throw new Error("Query returns no rows");
 
-      // Skip system columns
-      if ( result.rows.length ) {
-        for (var k in result.rows[0]) {
-          if ( skipfields.indexOf(k) != -1 ) continue;
-          if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
-          if ( out_format == 'CSV' ) columns.push('"' + k + '"::text');
-          else columns.push('"' + k + '"');
+      var needSRS = that._needSRS;
+
+      // Skip system columns, find geom column
+      for (var i=0; i<result.fields.length; ++i) {
+        var field = result.fields[i];
+        var k = field.name;
+        if ( skipfields.indexOf(k) != -1 ) continue;
+        if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
+        if ( out_format == 'CSV' ) columns.push(pg.quoteIdentifier(k)+'::text');
+        else columns.push(pg.quoteIdentifier(k));
+
+        if ( needSRS ) {
+          if ( ! geocol && pg.typeName(field.dataTypeID) == 'geometry' ) {
+            geocol = k
+          }
         }
-      } else columns.push('*');
+      }
       //console.log(columns.join(','));
+
+      if ( ! needSRS || ! geocol ) return null;
 
       var next = this;
 
-      sql = 'SELECT ' + columns.join(',')
+      var sridsql = 'SELECT ST_Srid(' + pg.quoteIdentifier(geocol) +
+                   ') as srid FROM (' + sql + ') as _cartodbsqlapi WHERE ' +
+                   pg.quoteIdentifier(geocol) + ' is not null limit 1';
+
+      pg.query(sridsql, function(err, result) {
+        if ( err ) { next(err); return; }
+        if ( result.rows.length ) {
+          var srid = result.rows[0].srid;
+          next(null, srid);
+        }
+      });
+
+    },
+    function spawnDumper(err, srid) {
+      if (err) throw err;
+
+      var next = this;
+
+      var ogrsql = 'SELECT ' + columns.join(',')
           + ' FROM (' + sql + ') as _cartodbsqlapi';
 
-      var child = spawn(ogr2ogr, [
+      var ogrargs = [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
@@ -111,20 +143,17 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
                           // in turn breaks knowing SRID with gdal-0.10.1:
                           // http://github.com/CartoDB/CartoDB-SQL-API/issues/110
          + "",
-        '-sql', sql
-      ]);
+        '-sql', ogrsql
+      ];
+
+      if ( srid ) {
+        ogrargs.push('-a_srs', 'EPSG:'+srid);
+      }
+
+      var child = spawn(ogr2ogr, ogrargs);
 
 /*
-console.log(['ogr2ogr',
-        '-f', '"'+out_format+'"',
-        out_filename,
-        "'PG:host=" + dbhost
-         + " user=" + dbuser
-         + " dbname=" + dbname
-         + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns
-         + "'",
-        "-sql '", sql, "'"].join(' '));
+console.log('ogr2ogr' + ogrargs);
 */
 
       var stdout = '';

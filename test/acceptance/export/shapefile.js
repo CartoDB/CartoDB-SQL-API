@@ -36,8 +36,9 @@ test('SHP format, unauthenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // missing SRID, so no PRJ (TODO: add ?)
-        //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // This will fail with < GDAL-0.10.2
+        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
+        assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         // TODO: check DBF contents
         fs.unlinkSync(tmpfile);
         done();
@@ -96,8 +97,9 @@ test('SHP format, unauthenticated, with custom filename', function(done){
         assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'myshape.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'myshape.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // missing SRID, so no PRJ (TODO: add ?)
-        //assert.ok(_.contains(zf.names, 'myshape.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // This will fail with < GDAL-0.10.2
+        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
+        assert.ok(_.contains(zf.names, 'myshape.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         fs.unlinkSync(tmpfile);
         done();
     });
@@ -122,8 +124,9 @@ test('SHP format, unauthenticated, with custom, dangerous filename', function(do
         assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, fname + '.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, fname + '.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // missing SRID, so no PRJ (TODO: add ?)
-        //assert.ok(_.contains(zf.names, fname+ '.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // This will fail with < GDAL-0.10.2
+        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
+        assert.ok(_.contains(zf.names, fname+ '.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         fs.unlinkSync(tmpfile);
         done();
     });
@@ -146,8 +149,9 @@ test('SHP format, authenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // missing SRID, so no PRJ (TODO: add ?)
-        //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // This will fail with < GDAL-0.10.2
+        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
+        assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         // TODO: check contents of the DBF
         fs.unlinkSync(tmpfile);
         done();
@@ -276,8 +280,9 @@ test('SHP format, concurrently', function(done){
           assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
           assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
           assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-          // missing SRID, so no PRJ (TODO: add ?)
-          //assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+          // This will fail with < GDAL-0.10.2
+          // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
+          assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
           // TODO: check DBF contents
           fs.unlinkSync(tmpfile);
           if ( ! --waiting ) done();

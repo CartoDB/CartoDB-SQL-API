@@ -174,7 +174,34 @@ var PSQL = function(user_id, db) {
                 callback(err, query)
             }
         );
-    },
+    };
+
+    // Ported from PostgreSQL 9.2.4 source code in src/interfaces/libpq/fe-exec.c
+    me.quoteIdentifier = function(str) {
+
+      // TODO: delegate to node-postgresl (needs node-pg 2.2.0+!)
+
+      var escaped = '"';
+
+      for(var i = 0; i < str.length; i++) {
+        var c = str[i];
+        if(c === '"') {
+          escaped += c + c;
+        } else {
+          escaped += c;
+        }
+      }
+
+      escaped += '"';
+
+      return escaped;
+    };
+
+/*
+    me.escapeLiteral = function(s) {
+      return this.client.escapeLiteral(s);
+    };
+*/
 
     me.query = function(sql, callback){
         var that = this;
