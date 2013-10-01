@@ -14,6 +14,8 @@ core requirements
 * postgres 9.0+
 * postgis 2.0+
 * cartodb 0.9.5+ (for ``CDB_QueryTables``)
+* GDAL 1.9.2+ (bin utils)
+* zip commandline tool
 * redis
 * node 0.8+
 * npm
