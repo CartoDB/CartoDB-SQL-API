@@ -904,6 +904,26 @@ test('field names and types are exposed', function(done){
     });
 });
 
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/109
+test('schema response takes skipfields into account', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1 as a, 2 as b, 3 as c ",
+          skipfields: 'b'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        assert.equal(_.keys(parsedBody.fields).length, 2);
+        assert.ok(parsedBody.fields.hasOwnProperty('a'));
+        assert.ok(!parsedBody.fields.hasOwnProperty('b'));
+        assert.ok(parsedBody.fields.hasOwnProperty('c'));
+        done();
+    });
+});
+
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/100
 test('numeric fields are rendered as numbers in JSON', function(done){
     assert.response(app, {

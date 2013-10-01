@@ -1,3 +1,7 @@
+1.5.4
+-----
+* Honour skipfields in JSON schema response (#109)
+
 1.5.3
 -----
 * Set Last-Modified header with cache_policy=persist
