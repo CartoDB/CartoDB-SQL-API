@@ -1,3 +1,6 @@
+1.6.1 - 2013-MM-DD
+------------------
+
 1.6.0 - 2013-10-02
 ------------------
 * Fix shapefile export for non-linestring results starting with NULLs (#111)
