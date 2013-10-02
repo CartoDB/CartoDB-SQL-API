@@ -40,27 +40,35 @@ var typeNames = {
 
 };
 
-function formatResultFields(flds) {
+p.formatResultFields = function(flds) {
   var nfields = {};
   for (var i=0; i<flds.length; ++i) {
     var f = flds[i];
-/*
-    { name: 'the_geom',
-      tableID: 5528687,
-      columnID: 6,
-      dataTypeID: 77869,
-      dataTypeSize: -1,
-      dataTypeModifier: -1,
-      format: 'text' },
-*/
-    var tname = typeNames[f.dataTypeID];
-    if ( ! tname ) {
-      if ( f.name.match(/^the_geom/) ) {
-        tname = 'geometry';
-      } else {
-        tname = f.dataTypeID; // unknown
+    var cname = this.client.typeName(f.dataTypeID);
+    var tname;
+    if ( ! cname ) {
+      tname = 'unknown(' + f.dataTypeID + ')';
+    } else {
+      if ( cname.match('bool') ) {
+        tname = 'boolean';
+      }
+      else if ( cname.match(/int|float/) ) {
+        tname = 'number';
+      }
+      else if ( cname.match(/text|char|unknown/) ) {
+        tname = 'string';
+      }
+      else if ( cname.match(/date|time/) ) {
+        tname = 'date';
+      }
+      else {
+        tname = cname;
+      }
+      if ( tname && cname.match(/^_/) ) {
+        tname += '[]';
       }
     }
+    //console.log('cname:'+cname+' tname:'+tname);
     nfields[f.name] = { type: tname };
   }
   return nfields;
@@ -70,7 +78,7 @@ function formatResultFields(flds) {
 p.transform = function(result, options, callback) {
   var j = {
     time: options.total_time,
-    fields: formatResultFields(result.fields),
+    fields: this.formatResultFields(result.fields),
     total_rows: result.rowCount,
     rows: result.rows
   }

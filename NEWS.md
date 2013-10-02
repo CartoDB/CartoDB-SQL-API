@@ -1,5 +1,6 @@
 1.6.0
 -----
+* Improve recognition of non-standard field types names by db lookup (#112)
 * Honour skipfields in JSON schema response (#109)
 
 1.5.3

@@ -882,7 +882,7 @@ test('field names and types are exposed', function(done){
         url: '/api/v1/sql?' + querystring.stringify({
           q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
              "4::char as d, now() as e, 'a'::text as f, " +
-             "'POINT(0 0)'::geometry as the_geom " +
+             "'POINT(0 0)'::geometry as h " +
              ", 1::bool as g " +
              "LIMIT 0"
         }),
@@ -899,7 +899,7 @@ test('field names and types are exposed', function(done){
         assert.equal(parsedBody.fields.e.type, 'date');
         assert.equal(parsedBody.fields.f.type, 'string');
         assert.equal(parsedBody.fields.g.type, 'boolean');
-        assert.equal(parsedBody.fields.the_geom.type, 'geometry');
+        assert.equal(parsedBody.fields.h.type, 'geometry');
         done();
     });
 });
