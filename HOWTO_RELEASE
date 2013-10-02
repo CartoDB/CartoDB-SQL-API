@@ -1,5 +1,5 @@
 1. Ensure proper version in package.json 
-2. Ensure NEWS section exists for the new version, review it
+2. Ensure NEWS section exists for the new version, review it, add release date
 3. Drop npm-shrinkwrap.json
 4. Run npm install
 5. Test (make check or npm test), fix if broken before proceeding
