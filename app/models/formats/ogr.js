@@ -109,20 +109,22 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
 
       var next = this;
 
-      var sridsql = 'SELECT ST_Srid(' + pg.quoteIdentifier(geocol) +
-                   ') as srid FROM (' + sql + ') as _cartodbsqlapi WHERE ' +
-                   pg.quoteIdentifier(geocol) + ' is not null limit 1';
+      var qgeocol = pg.quoteIdentifier(geocol);
+      var sridsql = 'SELECT ST_Srid(' + qgeocol + ') as srid, GeometryType(' +
+                   qgeocol + ') as type FROM (' + sql + ') as _cartodbsqlapi WHERE ' +
+                   qgeocol + ' is not null limit 1';
 
       pg.query(sridsql, function(err, result) {
         if ( err ) { next(err); return; }
         if ( result.rows.length ) {
           var srid = result.rows[0].srid;
-          next(null, srid);
+          var type = result.rows[0].type;
+          next(null, srid, type);
         }
       });
 
     },
-    function spawnDumper(err, srid) {
+    function spawnDumper(err, srid, type) {
       if (err) throw err;
 
       var next = this;
@@ -148,6 +150,10 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
 
       if ( srid ) {
         ogrargs.push('-a_srs', 'EPSG:'+srid);
+      }
+
+      if ( type ) {
+        ogrargs.push('-nlt', type);
       }
 
       var child = spawn(ogr2ogr, ogrargs);

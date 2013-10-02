@@ -1,5 +1,6 @@
 1.6.0
 -----
+* Fix shapefile export for non-linestring results starting with NULLs (#111)
 * Fix missing .prj in shapefile export (#110)
 * Improve recognition of non-standard field types names by db lookup (#112)
 

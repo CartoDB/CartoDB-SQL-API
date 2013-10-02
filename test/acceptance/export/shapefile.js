@@ -36,8 +36,6 @@ test('SHP format, unauthenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // This will fail with < GDAL-0.10.2
-        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
         assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         // TODO: check DBF contents
         fs.unlinkSync(tmpfile);
@@ -97,8 +95,6 @@ test('SHP format, unauthenticated, with custom filename', function(done){
         assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'myshape.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'myshape.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // This will fail with < GDAL-0.10.2
-        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
         assert.ok(_.contains(zf.names, 'myshape.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         fs.unlinkSync(tmpfile);
         done();
@@ -124,8 +120,6 @@ test('SHP format, unauthenticated, with custom, dangerous filename', function(do
         assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, fname + '.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, fname + '.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // This will fail with < GDAL-0.10.2
-        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
         assert.ok(_.contains(zf.names, fname+ '.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         fs.unlinkSync(tmpfile);
         done();
@@ -149,8 +143,6 @@ test('SHP format, authenticated', function(done){
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
         assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-        // This will fail with < GDAL-0.10.2
-        // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
         assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
         // TODO: check contents of the DBF
         fs.unlinkSync(tmpfile);
@@ -280,14 +272,41 @@ test('SHP format, concurrently', function(done){
           assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
           assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
           assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-          // This will fail with < GDAL-0.10.2
-          // https://github.com/CartoDB/CartoDB-SQL-API/issues/110
           assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
           // TODO: check DBF contents
           fs.unlinkSync(tmpfile);
           if ( ! --waiting ) done();
       });
     }
+});
+
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/111
+test('point with null first', function(done){
+    var query = querystring.stringify({
+        q: "SELECT null::geometry as g UNION ALL SELECT 'SRID=4326;POINT(0 0)'::geometry",
+        format: 'shp'
+      });
+    assert.response(app, {
+        url: '/api/v1/sql?' + query,
+        headers: {host: 'vizzuality.cartodb.com'},
+        encoding: 'binary',
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var cd = res.header('Content-Disposition');
+        assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+        var tmpfile = '/tmp/myshape.zip';
+        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (err) { done(err); return }
+        var zf = new zipfile.ZipFile(tmpfile);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
+        assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+        // TODO: check contents of the DBF
+        fs.unlinkSync(tmpfile);
+        done();
+    });
 });
 
 });
