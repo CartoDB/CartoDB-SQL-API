@@ -8,11 +8,9 @@ _.mixin(require('underscore.string'));
 pg.defaults.poolSize = global.settings.db_pool_size || 16;
 
 // Milliseconds of idle time before removing connection from pool
-// TODO: make config setting ?
 pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
 
 // Frequency to check for idle clients within the pool, ms
-// TODO: make config setting ?
 pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
 
 pg.on('error', function(err, client) {
