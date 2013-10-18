@@ -261,14 +261,18 @@ function handleQuery(req, res) {
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy === 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=' + ttl); 
-                  res.header('X-Cache-Channel', ''); // forever
                 } else {
                   if ( ! tableCacheItem || tableCacheItem.may_write ) {
+                    // Tell clients this response is already expired
+                    // TODO: prevent cache_policy from overriding this ?
                     ttl = 0;
-                  } else {
-                    res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
-                  }
+                  } 
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
+                }
+
+                // Only set an X-Cache-Channel for responses we want Varnish to cache.
+                if ( tableCacheItem && ! tableCacheItem.may_write ) {
+                  res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 }
 
                 // Set Last-Modified header

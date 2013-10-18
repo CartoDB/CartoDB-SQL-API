@@ -101,7 +101,6 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
@@ -115,9 +114,9 @@ test('cache_policy=persist', function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.ok(res.headers.hasOwnProperty('x-cache-channel'));
-        assert.equal(res.headers['x-cache-channel'], '');
+        // See https://github.com/CartoDB/CartoDB-SQL-API/issues/105
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control_persist);
         done();
     });
@@ -143,7 +142,6 @@ function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
@@ -1071,7 +1069,6 @@ test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS heade
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         assert.equal(res.headers['access-control-allow-origin'], '*');
