@@ -14,7 +14,7 @@ var bakingExports = {};
 function userid_to_dbuser(user_id) {
   if ( _.isString(user_id) )
       return _.template(global.settings.db_user, {user_id: user_id});
-  return "publicuser" // FIXME: make configurable
+  return global.settings.db_pubuser;
 };
 
 

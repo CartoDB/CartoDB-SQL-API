@@ -112,15 +112,15 @@ CREATE INDEX test_table_the_geom_webmercator_idx_p ON private_table USING gist (
 
 
 
-CREATE USER publicuser WITH PASSWORD '';
+CREATE USER :PUBLICUSER WITH PASSWORD '';
 CREATE USER test_cartodb_user_1 WITH PASSWORD '';
 
 GRANT ALL ON TABLE untitle_table_4 TO test_cartodb_user_1;
-GRANT SELECT ON TABLE untitle_table_4 TO publicuser;
+GRANT SELECT ON TABLE untitle_table_4 TO :PUBLICUSER;
 GRANT ALL ON TABLE private_table TO test_cartodb_user_1;
 GRANT ALL ON SEQUENCE test_table_cartodb_id_seq_p TO test_cartodb_user_1;
 
-GRANT ALL ON TABLE spatial_ref_sys TO test_cartodb_user_1, publicuser;
+GRANT ALL ON TABLE spatial_ref_sys TO test_cartodb_user_1, :PUBLICUSER;
 
 REVOKE ALL ON geometry_columns FROM public;
 GRANT ALL ON geometry_columns TO test_cartodb_user_1;

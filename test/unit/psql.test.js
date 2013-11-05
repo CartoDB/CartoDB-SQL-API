@@ -4,6 +4,8 @@ var _      = require('underscore')
   , PSQL   = require('../../app/models/psql')
   , assert = require('assert');
 
+var public_user = global.settings.db_pubuser;
+
 suite('psql', function() {
 
 test('test throws error if no args passed to constructor', function(){  
@@ -28,7 +30,7 @@ test('test instantiate with just db constructor', function(){
 
 test('test username returns default user if not set', function(){  
   var pg = new PSQL(null, 'my_database');
-  assert.equal(pg.username(), "publicuser");
+  assert.equal(pg.username(), public_user);
 });
 
 test('test username returns interpolated user if set', function(){  
@@ -76,9 +78,9 @@ test('test private user can execute INSERT on db', function(done){
   });
 });
 
-test('test publicuser can execute SELECT on enabled tables', function(done){  
+test('test public user can execute SELECT on enabled tables', function(done){  
   var pg = new PSQL("1");
-  var sql = "DROP TABLE IF EXISTS distributors2; CREATE TABLE distributors2 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors2 TO publicuser;";
+  var sql = "DROP TABLE IF EXISTS distributors2; CREATE TABLE distributors2 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors2 TO " + public_user + ";";
   pg.query(sql, function(err, result){
     pg = new PSQL(null, 'cartodb_test_user_1_db');
     pg.query("SELECT count(*) FROM distributors2", function(err, result){
@@ -88,9 +90,9 @@ test('test publicuser can execute SELECT on enabled tables', function(done){
   });
 });
 
-test('test publicuser cannot execute INSERT on db', function(done){
+test('test public user cannot execute INSERT on db', function(done){
   var pg = new PSQL("1");
-  var sql = "DROP TABLE IF EXISTS distributors3; CREATE TABLE distributors3 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors3 TO publicuser;";
+  var sql = "DROP TABLE IF EXISTS distributors3; CREATE TABLE distributors3 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors3 TO " + public_user + ";";
   pg.query(sql, function(err, result){    
     
     pg = new PSQL(null, 'cartodb_test_user_1_db'); //anonymous user

@@ -6,6 +6,8 @@ module.exports.node_socket_timeout    = 600000;
 module.exports.environment  = 'production';
 module.exports.db_base_name = 'cartodb_user_<%= user_id %>_db';
 module.exports.db_user      = 'cartodb_user_<%= user_id %>';
+// Name of the anonymous PostgreSQL user
+module.exports.db_pubuser   = 'publicuser';
 module.exports.db_host      = 'localhost';
 module.exports.db_port      = '6432';
 // Max database connections in the pool

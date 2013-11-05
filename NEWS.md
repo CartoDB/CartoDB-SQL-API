@@ -3,6 +3,7 @@
 * Still set a meaningful X-Cache-Channel with cache_policy=persist (#105)
 * Fix wrong projection in KML exports for manually altered tables (#116)
 * Set KML folder name to the requested filename (#115)
+* Make public PostgreSQL user name a configuration parameter (#56)
 
 1.6.0 - 2013-10-02
 ------------------

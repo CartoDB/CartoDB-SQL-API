@@ -38,6 +38,9 @@ var express = require('express')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
 
+// Set default configuration 
+global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
+
 var tableCache = LRU({
   // store no more than these many items in the cache
   max: global.settings.tableCacheMax || 8192,

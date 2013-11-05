@@ -87,7 +87,7 @@ var PSQL = function(user_id, db) {
     if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
 
     var me = {
-        public_user: "publicuser"
+        public_user: global.settings.db_pubuser
         , user_id: user_id
         , db: db
     };
