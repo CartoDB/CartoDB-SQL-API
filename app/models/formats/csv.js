@@ -11,7 +11,7 @@ p._fileExtension = "csv";
 
 p.generate = function(options, callback) {
     var o = options;
-    this.toOGR_SingleFile(o.database, o.user_id, o.gn, o.sql, o.skipfields, 'CSV', 'csv', callback);
+    this.toOGR_SingleFile(o.database, o.user_id, o.gn, o.sql, o.skipfields, 'CSV', 'csv', o.filename, callback);
 };
 
 module.exports = csv;

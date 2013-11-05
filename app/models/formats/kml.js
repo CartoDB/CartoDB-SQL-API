@@ -18,7 +18,7 @@ p._needSRS = true;
 
 p.generate = function(options, callback) {
     var o = options;
-    this.toOGR_SingleFile(o.database, o.user_id, o.gn, o.sql, o.skipfields, 'KML', 'kml', callback);
+    this.toOGR_SingleFile(o.database, o.user_id, o.gn, o.sql, o.skipfields, 'KML', 'kml', o.filename, callback);
 };
 
 module.exports = kml;

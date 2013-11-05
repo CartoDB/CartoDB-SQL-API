@@ -87,6 +87,25 @@ var extractCoordinates = function(kml) {
   return coo;
 }
 
+// Return the first folder name in KML
+var extractFolderName = function(kml) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  if ( ! doc ) return;
+  var coo = doc.get("//Document/Folder/name");
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.text();
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  return coo;
+}
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
@@ -179,6 +198,8 @@ test('KML format, unauthenticated, custom filename', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        var name = extractFolderName(res.body);
+        assert.equal(name, "kmltest");
         done();
     });
 });
@@ -247,7 +268,7 @@ test('GET /api/v1/sql as kml with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>sql_statement</name></Folder></Document></kml>';
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
         assert.equal(res.body.replace(/\n/g,''), body);
         done();
     });
@@ -264,7 +285,7 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>sql_statement</name></Folder></Document></kml>';
+        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
         assert.equal(res.body.replace(/\n/g,''), body);
         done();
     });

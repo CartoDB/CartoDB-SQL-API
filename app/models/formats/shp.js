@@ -45,7 +45,7 @@ p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) 
     },
     function spawnDumper(err) {
       if ( err ) throw err;
-      fmtObj.toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
+      fmtObj.toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, filename, this);
     },
     function doZip(err) {
       if ( err ) throw err;

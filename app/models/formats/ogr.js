@@ -46,6 +46,7 @@ ogr.prototype = {
         options.dbname,
         options.user_id,
         options.gn,
+        this.generateMD5(options.filename),
         this.generateMD5(options.sql)].concat(options.skipfields).join(':');
   },
 
@@ -58,7 +59,7 @@ ogr.prototype = {
 };
 
 // Internal function usable by all OGR-driven outputs
-ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, callback) {
+ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, out_layername, callback) {
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
@@ -156,6 +157,8 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
         ogrargs.push('-nlt', type);
       }
 
+      ogrargs.push('-nln', out_layername);
+
       var child = spawn(ogr2ogr, ogrargs);
 
 /*
@@ -194,15 +197,16 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
   );
 };
 
-ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, callback) {
+// TODO: simplify to take an options object
+ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, layername, callback) {
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
+  var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(layername), this.generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
-  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, callback);
+  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, layername, callback);
 };
 
 ogr.prototype.sendResponse = function(opts, callback) {
