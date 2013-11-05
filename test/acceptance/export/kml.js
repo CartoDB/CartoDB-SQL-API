@@ -62,6 +62,31 @@ var hasAttribute = function(kml, att) {
   return false;
 }
 
+// Return the first coordinate array found in KML
+var extractCoordinates = function(kml) {
+
+  // Strip namespace:
+  //https://github.com/polotek/libxmljs/issues/212
+  kml = kml.replace(/ xmlns=[^>]*>/, '>');
+
+  var doc = libxmljs.parseXmlString(kml);
+  //console.log("doc: " + doc);
+  if ( ! doc ) return;
+  var coo = doc.get("//coordinates");
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.text();
+  //console.log("coo: " + coo);
+  if ( ! coo ) return;
+  coo = coo.split(' ');
+  //console.log("coo: " + coo);
+  for (var i=0; i<coo.length; ++i) {
+    coo[i] = coo[i].split(',');
+  }
+
+  return coo;
+}
+
 // KML tests
 
 test('KML format, unauthenticated', function(done){
@@ -173,7 +198,7 @@ test('KML format, authenticated', function(done){
 
 test('KML format, unauthenticated, concurrent requests', function(done){
     var query = querystring.stringify({
-        q: "SELECT 'val', x, y, st_makepoint(x,y,4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
+        q: "SELECT 'val', x, y, st_setsrid(st_makepoint(x,y),4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
         format: 'kml',
         filename: 'multi'
       });
@@ -241,6 +266,43 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
         assert.equal(res.statusCode, 200, res.body);
         var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>sql_statement</name></Folder></Document></kml>';
         assert.equal(res.body.replace(/\n/g,''), body);
+        done();
+    });
+});
+
+// See https://github.com/CartoDB/cartodb/issues/276
+test('check point coordinates, unauthenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var coords = extractCoordinates(res.body);
+        assert(coords, 'No coordinates in ' + res.body);
+        assert.deepEqual(coords, [[33,16]]);
+        done();
+    });
+});
+
+// See https://github.com/CartoDB/cartodb/issues/276
+test('check point coordinates, authenticated', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
+          api_key: 1234,
+          format: 'kml'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var coords = extractCoordinates(res.body);
+        assert(coords, 'No coordinates in ' + res.body);
+        assert.deepEqual(coords, [[33,16]]);
         done();
     });
 });

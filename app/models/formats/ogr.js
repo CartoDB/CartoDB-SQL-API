@@ -159,7 +159,7 @@ ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_forma
       var child = spawn(ogr2ogr, ogrargs);
 
 /*
-console.log('ogr2ogr' + ogrargs);
+console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).join(' '));
 */
 
       var stdout = '';

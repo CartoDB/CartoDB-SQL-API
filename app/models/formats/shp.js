@@ -14,6 +14,12 @@ var p = shp.prototype;
 
 p._contentType = "application/zip; charset=utf-8";
 p._fileExtension = "zip";
+// As of GDAL 1.10 SRID detection is bogus, so we use
+// our own method. See:
+//  http://trac.osgeo.org/gdal/ticket/5131
+//  http://trac.osgeo.org/gdal/ticket/5287
+//  http://github.com/CartoDB/CartoDB-SQL-API/issues/110
+//  http://github.com/CartoDB/CartoDB-SQL-API/issues/116
 p._needSRS = true;
 
 p.generate = function(options, callback) {
