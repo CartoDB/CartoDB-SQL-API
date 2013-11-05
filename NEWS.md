@@ -1,3 +1,6 @@
+1.6.2 - 2013-MM-DD
+------------------
+
 1.6.1 - 2013-11-05
 ------------------
 * Still set a meaningful X-Cache-Channel with cache_policy=persist (#105)
