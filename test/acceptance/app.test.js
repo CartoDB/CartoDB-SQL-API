@@ -879,17 +879,19 @@ test('field names and types are exposed', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
-             "4::char as d, now() as e, 'a'::text as f, " +
-             "'POINT(0 0)'::geometry as h " +
-             ", 1::bool as g " +
-             "LIMIT 0"
+             "4::char as d, now() as e, 'a'::text as f" +
+             ", 1::bool as g" +
+             ", 'POINT(0 0)'::geometry as h" +
+             // See https://github.com/CartoDB/CartoDB-SQL-API/issues/117
+             ", now()::date as i" +
+             " LIMIT 0"
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
-        assert.equal(_.keys(parsedBody.fields).length, 8);
+        assert.equal(_.keys(parsedBody.fields).length, 9);
         assert.equal(parsedBody.fields.a.type, 'number');
         assert.equal(parsedBody.fields.b.type, 'number');
         assert.equal(parsedBody.fields.c.type, 'string');
@@ -898,6 +900,7 @@ test('field names and types are exposed', function(done){
         assert.equal(parsedBody.fields.f.type, 'string');
         assert.equal(parsedBody.fields.g.type, 'boolean');
         assert.equal(parsedBody.fields.h.type, 'geometry');
+        assert.equal(parsedBody.fields.i.type, 'date');
         done();
     });
 });
