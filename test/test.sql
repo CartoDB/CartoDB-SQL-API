@@ -124,3 +124,9 @@ GRANT ALL ON TABLE spatial_ref_sys TO test_cartodb_user_1, :PUBLICUSER;
 
 REVOKE ALL ON geometry_columns FROM public;
 GRANT ALL ON geometry_columns TO test_cartodb_user_1;
+
+-- For https://github.com/CartoDB/CartoDB-SQL-API/issues/118
+DROP TABLE IF EXISTS cpg_test;
+CREATE TABLE cpg_test (a int);
+GRANT ALL ON TABLE cpg_test TO test_cartodb_user_1;
+GRANT SELECT ON TABLE cpg_test TO :PUBLICUSER;

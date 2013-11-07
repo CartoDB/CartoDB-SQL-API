@@ -238,7 +238,7 @@ function handleQuery(req, res) {
                     var affected_tables = tableCacheItem.affected_tables.split(/^\{(.*)\}$/)[1].split(',');
                     for ( var i=0; i<affected_tables.length; ++i ) {
                       var t = affected_tables[i];
-                      if ( t.match(/\.?pg_/) ) {
+                      if ( t.match(/\bpg_/) ) {
                         var e = new SyntaxError("system tables are forbidden");
                         e.http_status = 403;
                         throw(e);

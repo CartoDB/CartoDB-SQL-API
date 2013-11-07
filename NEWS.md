@@ -1,6 +1,8 @@
 1.6.2 - 2013-MM-DD
 ------------------
 * JSON format: correctly recognize "date" type columns (#117)
+* Allow access to tables whose name contains (but does not start with)
+  the "pg_" substring (#118)
 
 1.6.1 - 2013-11-05
 ------------------

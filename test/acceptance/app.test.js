@@ -791,10 +791,18 @@ test('cannot GET system tables', function(done){
         req.url = pre + querystring.stringify({q: "SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f"});
         assert.response(app, req, function(res) { next(null, res); });
       },
+      // See http://github.com/CartoDB/CartoDB-SQL-API/issues/118
+      function chkValidPg1_tryValidPg3_b(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
+        req.url = pre + querystring.stringify({q: "SELECT * FROM cpg_test"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
       function chkValidPg2_trySet1(err, res) {
         if ( err ) throw err;
         var next = this;
-        assert.equal(res.statusCode, 200);
+        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
         req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
         assert.response(app, req, function(res) { next(null, res); });
       },
