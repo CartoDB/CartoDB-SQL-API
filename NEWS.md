@@ -1,3 +1,6 @@
+1.6.3 - 2013-MM-DD
+------------------
+
 1.6.2 - 2013-11-07
 ------------------
 * JSON format: correctly recognize "date" type columns (#117)
