@@ -1,4 +1,4 @@
-1.6.2 - 2013-MM-DD
+1.6.2 - 2013-11-07
 ------------------
 * JSON format: correctly recognize "date" type columns (#117)
 * Allow access to tables whose name contains (but does not start with)
