@@ -52,7 +52,7 @@ p.formatResultFields = function(flds) {
       if ( cname.match('bool') ) {
         tname = 'boolean';
       }
-      else if ( cname.match(/int|float/) ) {
+      else if ( cname.match(/int|float|numeric/) ) {
         tname = 'number';
       }
       else if ( cname.match(/text|char|unknown/) ) {
@@ -68,7 +68,7 @@ p.formatResultFields = function(flds) {
         tname += '[]';
       }
     }
-    //console.log('cname:'+cname+' tname:'+tname);
+    console.log('cname:'+cname+' tname:'+tname);
     nfields[f.name] = { type: tname };
   }
   return nfields;
@@ -76,6 +76,7 @@ p.formatResultFields = function(flds) {
 
 
 p.transform = function(result, options, callback) {
+  //console.log(result.fields, this.formatResultFields(result.fields));
   var j = {
     time: options.total_time,
     fields: this.formatResultFields(result.fields),

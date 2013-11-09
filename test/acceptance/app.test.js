@@ -892,6 +892,7 @@ test('field names and types are exposed', function(done){
              ", 'POINT(0 0)'::geometry as h" +
              // See https://github.com/CartoDB/CartoDB-SQL-API/issues/117
              ", now()::date as i" +
+             ", '1'::numeric as j" + 
              " LIMIT 0"
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -899,7 +900,7 @@ test('field names and types are exposed', function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
-        assert.equal(_.keys(parsedBody.fields).length, 9);
+        assert.equal(_.keys(parsedBody.fields).length, 10);
         assert.equal(parsedBody.fields.a.type, 'number');
         assert.equal(parsedBody.fields.b.type, 'number');
         assert.equal(parsedBody.fields.c.type, 'string');
@@ -909,6 +910,7 @@ test('field names and types are exposed', function(done){
         assert.equal(parsedBody.fields.g.type, 'boolean');
         assert.equal(parsedBody.fields.h.type, 'geometry');
         assert.equal(parsedBody.fields.i.type, 'date');
+        assert.equal(parsedBody.fields.j.type, 'number');
         done();
     });
 });
