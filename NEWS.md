@@ -1,5 +1,6 @@
 1.6.3 - 2013-MM-DD
 ------------------
+* JSON format: correctly recognize "numeric" type columns (#119)
 
 1.6.2 - 2013-11-07
 ------------------
