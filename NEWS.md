@@ -1,4 +1,4 @@
-1.6.3 - 2013-MM-DD
+1.6.3 - 2013-11-10
 ------------------
 * JSON format: correctly recognize "numeric" type columns (#119)
 
