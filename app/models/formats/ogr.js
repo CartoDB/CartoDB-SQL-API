@@ -59,7 +59,15 @@ ogr.prototype = {
 };
 
 // Internal function usable by all OGR-driven outputs
-ogr.prototype.toOGR = function(dbname, user_id, gcol, sql, skipfields, out_format, out_filename, out_layername, callback) {
+ogr.prototype.toOGR = function(options, out_format, out_filename, callback) {
+
+  var dbname = options.database;
+  var user_id = options.user_id;
+  var gcol = options.gn;
+  var sql = options.sql;
+  var skipfields = options.skipfields;
+  var out_layername = options.filename;
+
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
   var dbhost = global.settings.db_host;
   var dbport = global.settings.db_port;
@@ -197,8 +205,16 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
   );
 };
 
-// TODO: simplify to take an options object
-ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields, fmt, ext, layername, callback) {
+ogr.prototype.toOGR_SingleFile = function(options, fmt, callback) {
+
+  var dbname = options.database;
+  var user_id = options.user_id;
+  var gcol = options.gcol;
+  var sql = options.sql;
+  var skipfields = options.skipfields;
+  var ext = this._fileExtension;
+  var layername = options.filename;
+
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(layername), this.generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
@@ -206,7 +222,7 @@ ogr.prototype.toOGR_SingleFile = function(dbname, user_id, gcol, sql, skipfields
 
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
-  this.toOGR(dbname, user_id, gcol, sql, skipfields, fmt, dumpfile, layername, callback);
+  this.toOGR(options, fmt, dumpfile, callback);
 };
 
 ogr.prototype.sendResponse = function(opts, callback) {
