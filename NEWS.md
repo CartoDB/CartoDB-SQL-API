@@ -1,5 +1,6 @@
 1.7.0 - 2013-MM-DD
 ------------------
+* CartoDB redis interaction delegated to "cartodb-redis" module
 
 1.6.3 - 2013-11-10
 ------------------

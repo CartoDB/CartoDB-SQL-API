@@ -1,5 +1,8 @@
 // too bound to the request object, but ok for now
-var RedisPool = require("./redis_pool")
+var RedisPool = require("../../node_modules/cartodb-redis/lib/redis_pool.js")({
+    host: global.settings.redis_host,
+    port: global.settings.redis_port,
+  })
   , _         = require('underscore')
   , OAuthUtil = require('oauth-client')
   , url       = require('url')
@@ -137,13 +140,16 @@ var oAuth = function(){
     );
   };
 
+  // TODO: move to cartodb-redis !
   me.getOAuthHash = function(access_key, callback){
     var that = this;
     RedisPool.acquire(this.oauth_database, function(err, client){
       if ( err ) { callback(err); return; }
       var redisClient = client;
-      redisClient.HGETALL(_.template(that.oauth_user_key, {oauth_access_key: access_key}), function(err, data){
+      var key = _.template(that.oauth_user_key, {oauth_access_key: access_key});
+      redisClient.HGETALL(key, function(err, data){
         RedisPool.release(that.oauth_database, redisClient);
+        if ( ! err && data === null ) data = {}; 
         callback(err, data);
       });
     });

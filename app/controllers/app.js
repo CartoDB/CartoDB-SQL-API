@@ -29,7 +29,11 @@ var express = require('express')
     , zlib        = require('zlib')
     , util        = require('util')
     , spawn       = require('child_process').spawn
-    , Meta        = require(global.settings.app_root + '/app/models/metadata')
+    , Meta        = require('cartodb-redis')({
+        host: global.settings.redis_host,
+        port: global.settings.redis_port
+      })
+ // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
@@ -178,17 +182,16 @@ function handleQuery(req, res) {
                 }
             },
             function setDBGetUser(err, data) {
-                if (err) throw err;
+                if (err) {
+                  // If the database could not be found, the user is non-existant
+                  if ( err.message.match('missing') ) {
+                    err.message = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
+                    err.http_status = 404;
+                  }
+                  throw err;
+                }
 
                 database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
-
-                // If the database could not be found, the user is non-existant
-                if (_.isNull(database)) {
-                    var msg = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
-                    err = new Error(msg);
-                    err.http_status = 404;
-                    throw err;
-                }
 
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);

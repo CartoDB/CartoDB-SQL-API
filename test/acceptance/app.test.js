@@ -829,9 +829,8 @@ test('GET decent error if domain is incorrect', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzualinot.cartodb.com'},
         method: 'GET'
-    },{
-        status: 404
-    }, function(res){
+    }, {}, function(res){
+        assert.equal(res.statusCode, 404, res.statusCode + ( res.statusCode != 200 ? ( ': ' + res.body ) : ''));
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         var result = JSON.parse(res.body);

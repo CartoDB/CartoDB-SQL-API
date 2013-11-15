@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "dependencies": {
     "express": {
       "version": "2.5.11",
@@ -59,17 +59,14 @@
         }
       }
     },
-    "generic-pool": {
-      "version": "2.0.4"
-    },
-    "redis": {
-      "version": "0.7.1"
-    },
-    "hiredis": {
-      "version": "0.1.15",
+    "cartodb-redis": {
+      "version": "0.1.0",
       "dependencies": {
-        "bindings": {
-          "version": "1.1.1"
+        "strftime": {
+          "version": "0.6.2"
+        },
+        "generic-pool": {
+          "version": "2.0.4"
         }
       }
     },
@@ -103,6 +100,9 @@
     "lru-cache": {
       "version": "2.2.4"
     },
+    "redis": {
+      "version": "0.7.1"
+    },
     "zipfile": {
       "version": "0.3.4"
     },
@@ -135,7 +135,7 @@
           "version": "1.0.2"
         },
         "debug": {
-          "version": "0.7.2"
+          "version": "0.7.4"
         }
       }
     }
