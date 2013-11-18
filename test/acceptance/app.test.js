@@ -1142,7 +1142,7 @@ test('notice and warning info in JSON output', function(done){
       var next = this;
       assert.response(app, {
           url: '/api/v1/sql?' + querystring.stringify({
-            q: "select raise('notice', 'hello notice')"
+            q: "SET client_min_messages TO 'notice'; select raise('notice', 'hello notice')"
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
@@ -1163,7 +1163,7 @@ test('notice and warning info in JSON output', function(done){
       var next = this;
       assert.response(app, {
           url: '/api/v1/sql?' + querystring.stringify({
-            q: "select raise('warning', 'hello warning')"
+            q: "SET client_min_messages TO 'notice'; select raise('warning', 'hello warning')"
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
@@ -1184,7 +1184,7 @@ test('notice and warning info in JSON output', function(done){
       var next = this;
       assert.response(app, {
           url: '/api/v1/sql?' + querystring.stringify({
-            q: "select raise('warning', 'hello again warning'), raise('notice', 'hello again notice');"
+            q: "SET client_min_messages TO 'notice'; select raise('warning', 'hello again warning'), raise('notice', 'hello again notice');"
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
