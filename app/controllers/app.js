@@ -163,6 +163,9 @@ function handleQuery(req, res) {
         // placeholder for connection
         var pg;
 
+        // Database options
+        var dbopts;
+
         var authenticated;
 
         var formatter;
@@ -202,8 +205,22 @@ function handleQuery(req, res) {
             function queryExplain(err, data){
                 if (err) throw err;
                 user_id = data;
+
                 // store postgres connection
-                pg = new PSQL(user_id, database);
+                var dbuser = user_id ? 
+                  _.template(global.settings.db_user, {user_id: user_id})
+                  :
+                  global.settings.db_pubuser;
+
+                dbopts = {
+                  user: dbuser, 
+                  dbname: database,
+                  host: global.settings.db_host,
+                  port: global.settings.db_port,
+                };
+                // TODO: add password
+              
+                pg = new PSQL(dbopts);
 
                 authenticated = ! _.isNull(user_id);
 
@@ -299,12 +316,11 @@ function handleQuery(req, res) {
                 sql = PSQL.window_sql(sql,limit,offset);
 
                 var opts = {
+                  dbopts: dbopts,
                   sink: res,
                   gn: gn,
                   dp: dp,
                   skipfields: skipfields,
-                  database: database,
-                  user_id: user_id,
                   sql: sql,
                   filename: filename
                 }

@@ -82,36 +82,46 @@ var extTypeName = {};
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db) {
+//
+// @param opts connection options:
+//    user: database username
+//    pass: database user password
+//    host: database host
+//    port: database port
+//    dbname: database name
+//
+var PSQL = function(dbopts) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
-    if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
+    if ( ! dbopts || ( !_.isString(dbopts.user) && !_.isString(dbopts.dbname)))
+    {
+      // console.log("DBOPTS: "); console.dir(dbopts);
+      throw new Error(error_text);
+    }
 
     var me = {
-        public_user: global.settings.db_pubuser
-        , user_id: user_id
-        , db: db
+        dbopts: dbopts
     };
 
     me.username = function(){
-        var username = this.public_user;
-        if (_.isString(this.user_id))
-            username = _.template(global.settings.db_user, {user_id: this.user_id});
-
-        return username;
+        return this.dbopts.user;
     };
 
     me.database = function(){
-        var database = db;
-        if (_.isString(this.user_id))
-            database = _.template(global.settings.db_base_name, {user_id: this.user_id});
+        return this.dbopts.dbname;
+    };
 
-        return database;
+    me.dbhost = function(){
+        return this.dbopts.host;
+    };
+
+    me.dbport = function(){
+        return this.dbopts.port;
     };
 
     me.conString = "tcp://" + me.username() + "@" +
-                    global.settings.db_host + ":" +
-                    global.settings.db_port + "/" +
+                    me.dbhost() + ":" +
+                    me.dbport() + "/" +
                     me.database();
 
     me.ensureTypeCache = function(cb) {

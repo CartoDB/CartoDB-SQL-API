@@ -9,16 +9,6 @@ var spawn       = require('child_process').spawn
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
 
-// Return database username from user_id
-// NOTE: a "null" user_id is a request to use the public user
-function userid_to_dbuser(user_id) {
-  if ( _.isString(user_id) )
-      return _.template(global.settings.db_user, {user_id: user_id});
-  return global.settings.db_pubuser;
-};
-
-
-
 function ogr(id) {
   this.id = id;
 }
@@ -43,8 +33,8 @@ ogr.prototype = {
 
   getKey: function(options) {
     return [this.id,
-        options.dbname,
-        options.user_id,
+        options.dbopts.dbname,
+        options.dbopts.user,
         options.gn,
         this.generateMD5(options.filename),
         this.generateMD5(options.sql)].concat(options.skipfields).join(':');
@@ -61,18 +51,19 @@ ogr.prototype = {
 // Internal function usable by all OGR-driven outputs
 ogr.prototype.toOGR = function(options, out_format, out_filename, callback) {
 
-  var dbname = options.database;
-  var user_id = options.user_id;
   var gcol = options.gn;
   var sql = options.sql;
   var skipfields = options.skipfields;
   var out_layername = options.filename;
 
+  var dbopts = options.dbopts;
+
   var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
-  var dbhost = global.settings.db_host;
-  var dbport = global.settings.db_port;
-  var dbuser = userid_to_dbuser(user_id);
-  var dbpass = ''; // turn into a parameter..
+  var dbhost = dbopts.host;
+  var dbport = dbopts.port; 
+  var dbuser = dbopts.user; 
+  var dbpass = dbopts.pass;
+  var dbname = dbopts.dbname; 
 
   var that = this;
 
@@ -87,7 +78,7 @@ ogr.prototype.toOGR = function(options, out_format, out_filename, callback) {
 
     function fetchColumns() {
       var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
-      pg = new PSQL(user_id, dbname, 1, 0);
+      pg = new PSQL(dbopts);
       pg.query(colsql, this);
     },
     function findSRS(err, result) {
@@ -207,8 +198,8 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
 
 ogr.prototype.toOGR_SingleFile = function(options, fmt, callback) {
 
-  var dbname = options.database;
-  var user_id = options.user_id;
+  var dbname = options.dbopts.dbname;
+  var user_id = options.dbopts.user;
   var gcol = options.gcol;
   var sql = options.sql;
   var skipfields = options.skipfields;
