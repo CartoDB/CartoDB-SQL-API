@@ -1,6 +1,8 @@
 1.7.0 - 2013-MM-DD
 ------------------
 * CartoDB redis interaction delegated to "cartodb-redis" module
+* Optionally read user-specific database_host from redis
+  as per CartoDB-2.5.0 model (#121)
 
 1.6.3 - 2013-11-10
 ------------------

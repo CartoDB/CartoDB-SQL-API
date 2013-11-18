@@ -22,7 +22,8 @@ public_user=`grep \.db_pubuser ${TESTENV} | sed "s/.*= *'\([^']*\)'.*/\1/"`
 echo "PUBLICUSER: [${public_user}]"
 
 
-TEST_DB="cartodb_test_user_1_db"
+TESTUSERID=1
+TEST_DB="cartodb_test_user_1_db" # TODO: read from config ?
 REDIS_PORT=6333 # TODO: read from environment file
 
 export PGHOST PGPORT
@@ -45,6 +46,14 @@ echo "HSET rails:users:vizzuality id 1" | redis-cli -p ${REDIS_PORT} -n 5
 echo "HSET rails:users:vizzuality database_name ${TEST_DB}" | redis-cli -p ${REDIS_PORT} -n 5
 echo "HSET rails:users:vizzuality" "map_key" "1234" | redis-cli -p ${REDIS_PORT} -n 5
 echo "SADD rails:users:vizzuality:map_key 1235" | redis-cli -p ${REDIS_PORT} -n 5
+
+# A user configured as with cartodb-2.5.0+
+echo "HSET rails:users:cartodb250user id ${TESTUSERID}" | redis-cli -p ${REDIS_PORT} -n 5
+echo 'HSET rails:users:cartodb250user database_name "'${TEST_DB}'"' | redis-cli -p ${REDIS_PORT} -n 5
+echo 'HSET rails:users:cartodb250user database_host "localhost"' | redis-cli -p ${REDIS_PORT} -n 5
+#echo 'HSET rails:users:cartodb250user database_password "'${TESTPASS}'"' | redis-cli -p ${REDIS_PORT} -n 5
+echo "HSET rails:users:cartodb250user map_key 1235" | redis-cli -p ${REDIS_PORT} -n 5
+
 echo "hset rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR consumer_key fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2" | redis-cli -p ${REDIS_PORT} -n 3
 echo "hset rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR consumer_secret IBLCvPEefxbIiGZhGlakYV4eM8AbVSwsHxwEYpzx" | redis-cli -p ${REDIS_PORT} -n 3
 echo "hset rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR access_token_token l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR" | redis-cli -p ${REDIS_PORT} -n 3

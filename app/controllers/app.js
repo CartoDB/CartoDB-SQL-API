@@ -164,7 +164,9 @@ function handleQuery(req, res) {
         var pg;
 
         // Database options
-        var dbopts;
+        var dbopts = {
+          port: global.settings.db_port
+        };
 
         var authenticated;
 
@@ -195,6 +197,7 @@ function handleQuery(req, res) {
                 }
 
                 database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
+                dbopts.dbname = database;
 
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
@@ -202,24 +205,25 @@ function handleQuery(req, res) {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
-            function queryExplain(err, data){
+            function setUserGetDBHost(err, data){
                 if (err) throw err;
-                user_id = data;
+                user_id = data; // used to determine authentication later, TODO: use "authenticated" directly
 
-                // store postgres connection
                 var dbuser = user_id ? 
                   _.template(global.settings.db_user, {user_id: user_id})
                   :
                   global.settings.db_pubuser;
 
-                dbopts = {
-                  user: dbuser, 
-                  dbname: database,
-                  host: global.settings.db_host,
-                  port: global.settings.db_port,
-                };
-                // TODO: add password
-              
+                dbopts.user = dbuser;
+
+                Meta.getDatabaseHost(req, this);
+            },
+            function queryExplain(err, data){
+                if (err) throw err;
+
+                dbopts.host = data || global.settings.db_host;
+                //dbopts.pass = '' // TODO: add password
+
                 pg = new PSQL(dbopts);
 
                 authenticated = ! _.isNull(user_id);

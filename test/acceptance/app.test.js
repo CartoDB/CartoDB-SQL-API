@@ -133,6 +133,28 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just
     });
 });
 
+test('SELECT from user-specific database', function(done){
+    var backupDBHost = global.settings.db_host;
+    global.settings.db_host = '6.6.6.6';
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT+2+as+n',
+        headers: {host: 'cartodb250user.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+        global.settings.db_host = backupDBHost;
+        var err = null;
+        try {
+          assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, 1);
+          assert.equal(parsed.rows[0].n, 2);
+        } catch (e) {
+          err = e;
+        }
+        done(err);
+    });
+});
+
 test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers. Authenticated.',
 function(done){
     assert.response(app, {
