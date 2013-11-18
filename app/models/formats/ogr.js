@@ -181,7 +181,8 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
 
       child.on('exit', function(code) {
         if ( code ) {
-          var emsg = stderr.split('\n')[0];
+          console.log("ogr2ogr exited with code " + code);
+          var emsg = stderr ? stderr.split('\n')[0] : ( "unknown ogr2ogr error (code " + code + ")" );
           // TODO: add more info about this error ?
           //if ( RegExp(/attempt to write non-.*geometry.*to.*type shapefile/i).exec(emsg) )
           next(new Error(emsg));
