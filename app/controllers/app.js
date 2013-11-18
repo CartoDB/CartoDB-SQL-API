@@ -165,7 +165,8 @@ function handleQuery(req, res) {
 
         // Database options
         var dbopts = {
-          port: global.settings.db_port
+          port: global.settings.db_port,
+          pass: global.settings.db_pubuser_pass
         };
 
         var authenticated;
@@ -207,7 +208,8 @@ function handleQuery(req, res) {
             },
             function setUserGetDBHost(err, data){
                 if (err) throw err;
-                user_id = data; // used to determine authentication later, TODO: use "authenticated" directly
+                user_id = data; 
+                authenticated = ! _.isNull(user_id);
 
                 var dbuser = user_id ? 
                   _.template(global.settings.db_user, {user_id: user_id})
@@ -218,15 +220,27 @@ function handleQuery(req, res) {
 
                 Meta.getDatabaseHost(req, this);
             },
-            function queryExplain(err, data){
+            function setDBHostGetPassword(err, data){
                 if (err) throw err;
 
                 dbopts.host = data || global.settings.db_host;
-                //dbopts.pass = '' // TODO: add password
+
+                // by-pass redis lookup for password if not authenticated
+                if ( ! authenticated ) return null;
+
+                Meta.getDatabasePassword(req, this);
+            },
+            function queryExplain(err, data){
+                if (err) throw err;
+
+                if ( authenticated ) {
+                  dbopts.pass = _.template(global.settings.db_user_pass, {
+                    user_id: user_id,
+                    user_password: data
+                  });
+                }
 
                 pg = new PSQL(dbopts);
-
-                authenticated = ! _.isNull(user_id);
 
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);

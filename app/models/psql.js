@@ -107,6 +107,10 @@ var PSQL = function(dbopts) {
         return this.dbopts.user;
     };
 
+    me.password = function(){
+        return this.dbopts.pass;
+    };
+
     me.database = function(){
         return this.dbopts.dbname;
     };
@@ -119,7 +123,9 @@ var PSQL = function(dbopts) {
         return this.dbopts.port;
     };
 
-    me.conString = "tcp://" + me.username() + "@" +
+    me.conString = "tcp://" + me.username() +
+                    ":" + me.password() + // this line only if not-null ?
+                    "@" +
                     me.dbhost() + ":" +
                     me.dbport() + "/" +
                     me.database();

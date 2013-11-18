@@ -10,11 +10,13 @@ var dbopts_auth = {
   host: global.settings.db_host,
   port: global.settings.db_port,
   user: _.template(global.settings.db_user, {user_id: 1}),
-  dbname: _.template(global.settings.db_base_name, {user_id: 1})
+  dbname: _.template(global.settings.db_base_name, {user_id: 1}),
+  pass: _.template(global.settings.db_user_pass, {user_id: 1})
 }
 
 var dbopts_anon = _.clone(dbopts_auth);
 dbopts_anon.user = global.settings.db_pubuser;
+dbopts_anon.pass = global.settings.db_pubuser_pass;
 
 suite('psql', function() {
 

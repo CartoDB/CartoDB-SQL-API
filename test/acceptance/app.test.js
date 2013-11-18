@@ -133,6 +133,7 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just
     });
 });
 
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/121
 test('SELECT from user-specific database', function(done){
     var backupDBHost = global.settings.db_host;
     global.settings.db_host = '6.6.6.6';
@@ -142,6 +143,29 @@ test('SELECT from user-specific database', function(done){
         method: 'GET'
     },{}, function(res) {
         global.settings.db_host = backupDBHost;
+        var err = null;
+        try {
+          assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, 1);
+          assert.equal(parsed.rows[0].n, 2);
+        } catch (e) {
+          err = e;
+        }
+        done(err);
+    });
+});
+
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/120
+test('SELECT with user-specific password', function(done){
+    var backupDBUserPass = global.settings.db_user_pass;
+    global.settings.db_user_pass = '<%= user_password %>';
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT+2+as+n&api_key=1234',
+        headers: {host: 'cartodb250user.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+        global.settings.db_user_pass = backupDBUserPass;
         var err = null;
         try {
           assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
