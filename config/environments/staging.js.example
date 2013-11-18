@@ -9,7 +9,7 @@ module.exports.db_base_name = 'cartodb_staging_user_<%= user_id %>_db';
 // Supported labels: 'user_id' (read from redis)
 module.exports.db_user      = 'cartodb_staging_user_<%= user_id %>';
 // Supported labels: 'user_id', 'user_password' (both read from redis)
-module.exports.db_user_pass: '<%= user_password %>'
+module.exports.db_user_pass = '<%= user_password %>'
 // Name of the anonymous PostgreSQL user
 module.exports.db_pubuser   = 'publicuser';
 // Password for the anonymous PostgreSQL user
