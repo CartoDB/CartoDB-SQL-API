@@ -63,7 +63,9 @@ The JSON response is as follows:
                 updated_at: "2012-02-12T21:34:08.193Z",
                 valid: true
             }
-        ]
+        ],
+        notices: [ 'notice1', 'notice2' ], // optional
+        warnings: [ 'warning1', 'warning2' ] // optional
     }
 ```
 

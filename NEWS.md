@@ -3,6 +3,7 @@
 * CartoDB redis interaction delegated to "cartodb-redis" module
 * Optionally read user-specific database_host and database_password
   from redis, as per CartoDB-2.5.0 model (#120, #121)
+* Add warnings and notices to JSON response (#104)
 
 1.6.3 - 2013-11-10
 ------------------

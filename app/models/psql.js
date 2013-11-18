@@ -179,10 +179,20 @@ var PSQL = function(dbopts) {
             function(err, client, done){
                 if (err) throw err;
                 var query = client.query(sql);
+
+                // forward notices to query
+                var noticeListener = function() {
+                  query.emit('notice', arguments); 
+                };
+                client.on('notice', noticeListener);
+
                 // NOTE: for some obscure reason passing "done" directly
                 //       as the listener works but can be slower
                 //      (by x2 factor!)
-                query.on('end', function() { done(); }); 
+                query.on('end', function() {
+                  client.removeListener('notice', noticeListener);
+                  done();
+                }); 
                 return query;
             },
             function(err, query){

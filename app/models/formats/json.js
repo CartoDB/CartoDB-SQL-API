@@ -82,6 +82,14 @@ p.transform = function(result, options, callback) {
     total_rows: result.rowCount,
     rows: result.rows
   }
+  if ( result.notices ) {
+    for (var i=0; i<result.notices.length; ++i) {
+      var m = result.notices[i];
+      var l = m.severity.toLowerCase() + 's';
+      if ( ! j[l] ) j[l] = [];
+      j[l].push(m.message);
+    }
+  }
   callback(null, j);
 };
 

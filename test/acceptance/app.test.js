@@ -1116,6 +1116,115 @@ test('timezone info in JSON output', function(done){
   );
 });
 
+// WARNING and NOTICE in JSON output
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/104
+test('notice and warning info in JSON output', function(done){
+  Step(
+    function addRaiseFunction() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "create or replace function raise(lvl text, msg text) returns void as $$ begin if lvl = 'notice' then raise notice '%', msg; elsif lvl = 'warning' then raise warning '%', msg; else raise exception '%', msg; end if; end; $$ language plpgsql;",
+            api_key: '1234'
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseNotice(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "select raise('notice', 'hello notice')"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
+            assert.equal(parsedBody.notices.length, 1);
+            assert.equal(parsedBody.notices[0], 'hello notice');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseWarning(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "select raise('warning', 'hello warning')"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
+            assert.equal(parsedBody.warnings.length, 1);
+            assert.equal(parsedBody.warnings[0], 'hello warning');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseBothWarningAndNotice(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "select raise('warning', 'hello again warning'), raise('notice', 'hello again notice');"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
+            assert.equal(parsedBody.warnings.length, 1);
+            assert.equal(parsedBody.warnings[0], 'hello again warning');
+            assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
+            assert.equal(parsedBody.notices.length, 1);
+            assert.equal(parsedBody.notices[0], 'hello again notice');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function delRaiseFunction(err) {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "DROP function raise(text, text)",
+            api_key: '1234'
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+          } catch (e) { err = new Error(err + ',' + e); }
+          next(err);
+      });
+    },
+    function finish(err) {
+      done(err);
+    }
+  );
+});
 
 /**
  * CORS

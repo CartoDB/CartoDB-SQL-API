@@ -31,6 +31,14 @@ pg.prototype.handleQueryRow = function(row, result) {
   result.addRow(row);
 };
 
+pg.prototype.handleNotice = function(msg, result) {
+  if ( ! result.notices ) result.notices = [];
+  for (var i=0; i<msg.length; ++i) {
+    var m = msg[i];
+    result.notices.push(m);
+  }
+};
+
 pg.prototype.handleQueryEnd = function(result) {
   if ( this.error ) {
     this.callback(this.error);
@@ -104,6 +112,9 @@ pg.prototype.sendResponse = function(opts, callback) {
       query.on('row', that.handleQueryRow.bind(that));
       query.on('end', that.handleQueryEnd.bind(that));
       query.on('error', function(err) { that.error = err; });
+      query.on('notice', function(msg) {
+        that.handleNotice(msg, query._result);
+      });
   });
 };
 
