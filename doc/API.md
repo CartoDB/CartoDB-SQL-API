@@ -111,9 +111,9 @@ The GeoJSON response is follows:
 ### CSV
 
 CSV export format has field names in first line (header),
-uses CR/NL line endings and EWKT format for geometri fields.
+uses CR/NL line endings and HEXEWKB format for geometry fields.
 
-See https://github.com/postgis/postgis/blob/svn-trunk/doc/ZMSgeoms.txt#L173
+See https://github.com/postgis/postgis/blob/svn-trunk/doc/ZMSgeoms.txt#L42
 
 ### KML
 
