@@ -22,7 +22,7 @@ module.exports.db_pool_idleTimeout = 30000;
 // Milliseconds between idle client checking
 module.exports.db_pool_reapInterval = 1000;
 module.exports.redis_host   = '127.0.0.1';
-module.exports.redis_port   = 6333;
+module.exports.redis_port   = 6336;
 module.exports.redisPool    = 50;
 module.exports.redisIdleTimeoutMillis   = 1;
 module.exports.redisReapIntervalMillis  = 1;
