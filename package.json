@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "redis": "0.7.1",
-        "mocha": "1.2.1",
+        "mocha": "~1.14.0",
         "zipfile": "~0.3.2",
         "libxmljs": "~0.6.1"
     },
