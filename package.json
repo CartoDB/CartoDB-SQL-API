@@ -2,6 +2,9 @@
     "private": true,
     "name": "cartodb_sql_api",
     "description": "high speed SQL api for cartodb",
+    "keywords": [
+      "cartodb"
+    ],
     "version": "1.7.1",
     "repository": {
         "type": "git",
