@@ -1,4 +1,4 @@
-1.7.1 - 2013-MM-DD
+1.7.1 - 2013-12-02
 ------------------
 
 * Fix documentation for CSV export format: geoms are in hexewkb, not ewkt.
