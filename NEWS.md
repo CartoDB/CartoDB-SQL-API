@@ -2,6 +2,8 @@
 ------------------
 
 * Fix documentation for CSV export format: geoms are in hexewkb, not ewkt.
+* Fix field types names lookup after PSQL model refactoring
+  NOTE: fixes missing .prj in shapefile export regression (#122)
 
 1.7.0 - 2013-11-19
 ------------------

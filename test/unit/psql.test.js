@@ -120,4 +120,19 @@ test('Windowed SQL with complex CTE and insane quoting', function(){
   assert.equal(out, cte + "SELECT * FROM (" + sel + ") AS cdbq_1 LIMIT 1 OFFSET 0");
 });
 
+test('dbkey depends on dbopts', function(){
+  var opt1 = _.clone(dbopts_anon);
+  opt1.dbname = 'dbname1';
+  var pg1 = new PSQL(opt1);
+
+  var opt2 = _.clone(dbopts_anon);
+  opt2.dbname = 'dbname2';
+  var pg2 = new PSQL(opt2);
+
+  assert.ok(pg1.dbkey() !== pg2.dbkey(),
+    'both PSQL object using same dbkey ' + pg1.dbkey());
+
+  assert.ok(_.isString(pg1.dbkey()), "pg1 dbkey is " + pg1.dbkey());
+});
+
 });

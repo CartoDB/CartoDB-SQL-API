@@ -130,8 +130,12 @@ var PSQL = function(dbopts) {
                     me.dbport() + "/" +
                     me.database();
 
+    me.dbkey = function(){
+      return this.database(); // + ":" + this.dbhost() + ":" + me.dbport();
+    };
+
     me.ensureTypeCache = function(cb) {
-      var db = this.db;
+      var db = this.dbkey();
       if ( extTypeName[db] ) { cb(); return; }
       pg.connect(this.conString, function(err, client, done) {
         if ( err ) { cb(err); return; }
@@ -154,7 +158,7 @@ var PSQL = function(dbopts) {
     // Possibly returns undefined, for unkonwn (uncached)
     //
     me.typeName = function(typeId) {
-      return stdTypeName[typeId] ? stdTypeName[typeId] : extTypeName[this.db][typeId];
+      return stdTypeName[typeId] ? stdTypeName[typeId] : extTypeName[this.dbkey()][typeId];
     }
 
     me.connect = function(cb){
