@@ -34,6 +34,15 @@ Supported query string parameters:
               timestamp value in cache_buster for manual control of
               updates.
 
+  'rows_per_page':
+              Limit the number of rows in output. Affects all formats,
+              see also 'page'.
+
+  'page':
+              When 'rows_per_page' is used to limit rows, 'page' can be
+              used to specify which page to start returning rows from.
+              First page has index 0.
+
 Response formats
 ----------------
 

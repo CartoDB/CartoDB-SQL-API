@@ -216,6 +216,28 @@ function(done){
     });
 });
 
+// Test page and rows_per_page params
+test("paging", function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          // note: select casing intentionally mixed
+          q: 'SELECT * FROM (VALUES(1),(2),(3),(4),(5),(6),(7),(8),(9)) t(v)',
+          rows_per_page: 3,
+          page: 2
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed = JSON.parse(res.body);
+        assert.equal(parsed.rows.length, 3);
+        assert.equal(parsed.rows[0].v, 7);
+        assert.equal(parsed.rows[1].v, 8);
+        assert.equal(parsed.rows[2].v, 9);
+        done();
+    });
+});
+
 test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
