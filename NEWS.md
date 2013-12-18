@@ -1,7 +1,12 @@
-1.8.0 - 2013-MM-DD
+1.8.0 - 2013-12-18
 ------------------
 
+New features:
+
 * Add 'user_from_host' directive to generalize username extraction (#124)
+
+Improvements:
+
 * Enhance error message on unknown cartodb username (#126)
 
 1.7.1 - 2013-12-02
