@@ -36,11 +36,15 @@ var express = require('express')
  // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
+    , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
+
+var cdbReq = new CdbRequest(Meta);
+var apiKeyAuth = new ApiKeyAuth(Meta, cdbReq);
 
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -173,6 +177,8 @@ function handleQuery(req, res) {
 
         var formatter;
 
+        var cdbuser = cdbReq.userByReq(req);
+
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -181,7 +187,7 @@ function handleQuery(req, res) {
         Step(
             function getDatabaseName() {
                 if (_.isNull(database)) {
-                    Meta.getDatabase(req, this);
+                    Meta.getUserDBName(cdbuser, this);
                 } else {
                     // database hardcoded in query string (deprecated??): don't use redis
                     return database;
@@ -201,7 +207,7 @@ function handleQuery(req, res) {
                 dbopts.dbname = database;
 
                 if(api_key) {
-                    ApiKeyAuth.verifyRequest(req, this);
+                    apiKeyAuth.verifyRequest(req, this);
                 } else {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
@@ -218,7 +224,7 @@ function handleQuery(req, res) {
 
                 dbopts.user = dbuser;
 
-                Meta.getDatabaseHost(req, this);
+                Meta.getUserDBHost(cdbuser, this);
             },
             function setDBHostGetPassword(err, data){
                 if (err) throw err;
@@ -228,7 +234,7 @@ function handleQuery(req, res) {
                 // by-pass redis lookup for password if not authenticated
                 if ( ! authenticated ) return null;
 
-                Meta.getDatabasePassword(req, this);
+                Meta.getUserDBPass(cdbuser, this);
             },
             function queryExplain(err, data){
                 if (err) throw err;

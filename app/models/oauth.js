@@ -1,5 +1,5 @@
 // too bound to the request object, but ok for now
-var RedisPool = require("../../node_modules/cartodb-redis/lib/redis_pool.js")({
+var RedisPool = require("../../node_modules/cartodb-redis/node_modules/redis-mpool/")({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
   })
