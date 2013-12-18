@@ -101,7 +101,6 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
@@ -115,9 +114,9 @@ test('cache_policy=persist', function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.ok(res.headers.hasOwnProperty('x-cache-channel'));
-        assert.equal(res.headers['x-cache-channel'], '');
+        // See https://github.com/CartoDB/CartoDB-SQL-API/issues/105
+        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control_persist);
         done();
     });
@@ -134,6 +133,52 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just
     });
 });
 
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/121
+test('SELECT from user-specific database', function(done){
+    var backupDBHost = global.settings.db_host;
+    global.settings.db_host = '6.6.6.6';
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT+2+as+n',
+        headers: {host: 'cartodb250user.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+        global.settings.db_host = backupDBHost;
+        var err = null;
+        try {
+          assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, 1);
+          assert.equal(parsed.rows[0].n, 2);
+        } catch (e) {
+          err = e;
+        }
+        done(err);
+    });
+});
+
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/120
+test('SELECT with user-specific password', function(done){
+    var backupDBUserPass = global.settings.db_user_pass;
+    global.settings.db_user_pass = '<%= user_password %>';
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT+2+as+n&api_key=1234',
+        headers: {host: 'cartodb250user.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+        global.settings.db_user_pass = backupDBUserPass;
+        var err = null;
+        try {
+          assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, 1);
+          assert.equal(parsed.rows[0].n, 2);
+        } catch (e) {
+          err = e;
+        }
+        done(err);
+    });
+});
+
 test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers. Authenticated.',
 function(done){
     assert.response(app, {
@@ -143,7 +188,6 @@ function(done){
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         done();
@@ -168,6 +212,28 @@ function(done){
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         var parsed = JSON.parse(res.body);
         assert.equal(parsed.rows.length, 1);
+        done();
+    });
+});
+
+// Test page and rows_per_page params
+test("paging", function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          // note: select casing intentionally mixed
+          q: 'SELECT * FROM (VALUES(1),(2),(3),(4),(5),(6),(7),(8),(9)) t(v)',
+          rows_per_page: 3,
+          page: 2
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed = JSON.parse(res.body);
+        assert.equal(parsed.rows.length, 3);
+        assert.equal(parsed.rows[0].v, 7);
+        assert.equal(parsed.rows[1].v, 8);
+        assert.equal(parsed.rows[2].v, 9);
         done();
     });
 });
@@ -793,10 +859,18 @@ test('cannot GET system tables', function(done){
         req.url = pre + querystring.stringify({q: "SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f"});
         assert.response(app, req, function(res) { next(null, res); });
       },
+      // See http://github.com/CartoDB/CartoDB-SQL-API/issues/118
+      function chkValidPg1_tryValidPg3_b(err, res) {
+        if ( err ) throw err;
+        var next = this;
+        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
+        req.url = pre + querystring.stringify({q: "SELECT * FROM cpg_test"});
+        assert.response(app, req, function(res) { next(null, res); });
+      },
       function chkValidPg2_trySet1(err, res) {
         if ( err ) throw err;
         var next = this;
-        assert.equal(res.statusCode, 200);
+        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
         req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
         assert.response(app, req, function(res) { next(null, res); });
       },
@@ -823,9 +897,8 @@ test('GET decent error if domain is incorrect', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzualinot.cartodb.com'},
         method: 'GET'
-    },{
-        status: 404
-    }, function(res){
+    }, {}, function(res){
+        assert.equal(res.statusCode, 404, res.statusCode + ( res.statusCode != 200 ? ( ': ' + res.body ) : ''));
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         var result = JSON.parse(res.body);
@@ -881,17 +954,20 @@ test('field names and types are exposed', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: "SELECT 1::int as a, 2::float8 as b, 3::varchar as c, " +
-             "4::char as d, now() as e, 'a'::text as f, " +
-             "'POINT(0 0)'::geometry as the_geom " +
-             ", 1::bool as g " +
-             "LIMIT 0"
+             "4::char as d, now() as e, 'a'::text as f" +
+             ", 1::bool as g" +
+             ", 'POINT(0 0)'::geometry as h" +
+             // See https://github.com/CartoDB/CartoDB-SQL-API/issues/117
+             ", now()::date as i" +
+             ", '1'::numeric as j" + 
+             " LIMIT 0"
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
-        assert.equal(_.keys(parsedBody.fields).length, 8);
+        assert.equal(_.keys(parsedBody.fields).length, 10);
         assert.equal(parsedBody.fields.a.type, 'number');
         assert.equal(parsedBody.fields.b.type, 'number');
         assert.equal(parsedBody.fields.c.type, 'string');
@@ -899,7 +975,29 @@ test('field names and types are exposed', function(done){
         assert.equal(parsedBody.fields.e.type, 'date');
         assert.equal(parsedBody.fields.f.type, 'string');
         assert.equal(parsedBody.fields.g.type, 'boolean');
-        assert.equal(parsedBody.fields.the_geom.type, 'geometry');
+        assert.equal(parsedBody.fields.h.type, 'geometry');
+        assert.equal(parsedBody.fields.i.type, 'date');
+        assert.equal(parsedBody.fields.j.type, 'number');
+        done();
+    });
+});
+
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/109
+test('schema response takes skipfields into account', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: "SELECT 1 as a, 2 as b, 3 as c ",
+          skipfields: 'b'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsedBody = JSON.parse(res.body);
+        assert.equal(_.keys(parsedBody.fields).length, 2);
+        assert.ok(parsedBody.fields.hasOwnProperty('a'));
+        assert.ok(!parsedBody.fields.hasOwnProperty('b'));
+        assert.ok(parsedBody.fields.hasOwnProperty('c'));
         done();
     });
 });
@@ -1040,6 +1138,115 @@ test('timezone info in JSON output', function(done){
   );
 });
 
+// WARNING and NOTICE in JSON output
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/104
+test('notice and warning info in JSON output', function(done){
+  Step(
+    function addRaiseFunction() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "create or replace function raise(lvl text, msg text) returns void as $$ begin if lvl = 'notice' then raise notice '%', msg; elsif lvl = 'warning' then raise warning '%', msg; else raise exception '%', msg; end if; end; $$ language plpgsql;",
+            api_key: '1234'
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseNotice(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET client_min_messages TO 'notice'; select raise('notice', 'hello notice')"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
+            assert.equal(parsedBody.notices.length, 1);
+            assert.equal(parsedBody.notices[0], 'hello notice');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseWarning(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET client_min_messages TO 'notice'; select raise('warning', 'hello warning')"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
+            assert.equal(parsedBody.warnings.length, 1);
+            assert.equal(parsedBody.warnings[0], 'hello warning');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function raiseBothWarningAndNotice(err) {
+      if ( err ) throw err;
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "SET client_min_messages TO 'notice'; select raise('warning', 'hello again warning'), raise('notice', 'hello again notice');"
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{}, function(res) {
+          var err = null;
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+            assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
+            assert.equal(parsedBody.warnings.length, 1);
+            assert.equal(parsedBody.warnings[0], 'hello again warning');
+            assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
+            assert.equal(parsedBody.notices.length, 1);
+            assert.equal(parsedBody.notices[0], 'hello again notice');
+          } catch (e) { err = e; }
+          next(err);
+      });
+    },
+    function delRaiseFunction(err) {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?' + querystring.stringify({
+            q: "DROP function raise(text, text)",
+            api_key: '1234'
+          }),
+          headers: {host: 'vizzuality.cartodb.com'},
+          method: 'GET'
+      },{ }, function(res) {
+          try {
+            assert.equal(res.statusCode, 200, res.body);
+            var parsedBody = JSON.parse(res.body);
+          } catch (e) { err = new Error(err + ',' + e); }
+          next(err);
+      });
+    },
+    function finish(err) {
+      done(err);
+    }
+  );
+});
 
 /**
  * CORS
@@ -1051,7 +1258,6 @@ test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS heade
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
-        // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:untitle_table_4');
         assert.equal(res.headers['cache-control'], expected_cache_control);
         assert.equal(res.headers['access-control-allow-origin'], '*');

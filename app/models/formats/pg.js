@@ -31,6 +31,14 @@ pg.prototype.handleQueryRow = function(row, result) {
   result.addRow(row);
 };
 
+pg.prototype.handleNotice = function(msg, result) {
+  if ( ! result.notices ) result.notices = [];
+  for (var i=0; i<msg.length; ++i) {
+    var m = msg[i];
+    result.notices.push(m);
+  }
+};
+
 pg.prototype.handleQueryEnd = function(result) {
   if ( this.error ) {
     this.callback(this.error);
@@ -41,6 +49,17 @@ pg.prototype.handleQueryEnd = function(result) {
 
   var end = Date.now();
   this.opts.total_time = (end - this.start_time)/1000;
+
+  // Drop field description for skipped fields
+  var sf = this.opts.skipfields;
+  if ( sf.length ){
+    var newfields = [];
+    for ( var j=0; j<result.fields.length; ++j ) {
+      var f = result.fields[j];
+      if ( sf.indexOf(f.name) == -1 ) newfields.push(f);
+    }
+    result.fields = newfields;
+  }
 
   var that = this;
 
@@ -83,8 +102,8 @@ pg.prototype.sendResponse = function(opts, callback) {
 
   this.start_time = Date.now();
 
-  var client = new PSQL(opts.user_id, opts.database);
-  client.eventedQuery(sql, function(err, query) {
+  this.client = new PSQL(opts.dbopts);
+  this.client.eventedQuery(sql, function(err, query) {
       if (err) {
         callback(err);
         return;
@@ -93,6 +112,9 @@ pg.prototype.sendResponse = function(opts, callback) {
       query.on('row', that.handleQueryRow.bind(that));
       query.on('end', that.handleQueryEnd.bind(that));
       query.on('error', function(err) { that.error = err; });
+      query.on('notice', function(msg) {
+        that.handleNotice(msg, query._result);
+      });
   });
 };
 

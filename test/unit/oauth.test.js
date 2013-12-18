@@ -60,6 +60,7 @@ test('test non existant oauth hash for a user based on oauth_token returns empty
     var tokens = oAuth.parseTokens(req);
 
     oAuth.getOAuthHash(tokens.oauth_token, function(err, data){
+        assert.ok(!err, err);
         assert.deepEqual(data, {});
         done();
     });

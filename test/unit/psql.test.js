@@ -4,6 +4,20 @@ var _      = require('underscore')
   , PSQL   = require('../../app/models/psql')
   , assert = require('assert');
 
+var public_user = global.settings.db_pubuser;
+
+var dbopts_auth = {
+  host: global.settings.db_host,
+  port: global.settings.db_port,
+  user: _.template(global.settings.db_user, {user_id: 1}),
+  dbname: _.template(global.settings.db_base_name, {user_id: 1}),
+  pass: _.template(global.settings.db_user_pass, {user_id: 1})
+}
+
+var dbopts_anon = _.clone(dbopts_auth);
+dbopts_anon.user = global.settings.db_pubuser;
+dbopts_anon.pass = global.settings.db_pubuser_pass;
+
 suite('psql', function() {
 
 test('test throws error if no args passed to constructor', function(){  
@@ -16,47 +30,18 @@ test('test throws error if no args passed to constructor', function(){
   assert.equal(msg, "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published.");
 });
 
-test('test instantiate with just user constructor', function(){  
-  var pg = new PSQL("1", null);
-  assert.equal(pg.user_id, "1");
-});
-
-test('test instantiate with just db constructor', function(){  
-  var pg = new PSQL(null, 'my_database');
-  assert.equal(pg.db, "my_database");
-});
-
-test('test username returns default user if not set', function(){  
-  var pg = new PSQL(null, 'my_database');
-  assert.equal(pg.username(), "publicuser");
-});
-
-test('test username returns interpolated user if set', function(){  
-  var pg = new PSQL('simon', 'my_database');
-  assert.equal(pg.username(), "test_cartodb_user_simon");
-});
-
-test('test username returns default db if user not set', function(){  
-  var pg = new PSQL(null, 'my_database');
-  assert.equal(pg.database(), "my_database");
-});
-
-test('test username returns interpolated db if user set', function(){  
-  var pg = new PSQL('simon');
-  assert.equal(pg.database(), "cartodb_test_user_simon_db");
-});
-
 test('test private user can execute SELECTS on db', function(done){  
-  var pg = new PSQL('1');
+  var pg = new PSQL(dbopts_auth);
   var sql = "SELECT 1 as test_sum";
   pg.query(sql, function(err, result){
+    assert.ok(!err, err);
     assert.equal(result.rows[0].test_sum, 1);
     done();
   });
 });
 
 test('test private user can execute CREATE on db', function(done){  
-  var pg = new PSQL('1');
+  var pg = new PSQL(dbopts_auth);
   var sql = "DROP TABLE IF EXISTS distributors; CREATE TABLE distributors (id integer, name varchar(40), UNIQUE(name))";
   pg.query(sql, function(err, result){
     assert.ok(_.isNull(err));
@@ -65,7 +50,7 @@ test('test private user can execute CREATE on db', function(done){
 });
 
 test('test private user can execute INSERT on db', function(done){  
-  var pg = new PSQL('1');
+  var pg = new PSQL(dbopts_auth);
   var sql = "DROP TABLE IF EXISTS distributors1; CREATE TABLE distributors1 (id integer, name varchar(40), UNIQUE(name))";
   pg.query(sql, function(err, result){
     sql = "INSERT INTO distributors1 (id, name) VALUES (1, 'fish')";
@@ -76,11 +61,11 @@ test('test private user can execute INSERT on db', function(done){
   });
 });
 
-test('test publicuser can execute SELECT on enabled tables', function(done){  
-  var pg = new PSQL("1");
-  var sql = "DROP TABLE IF EXISTS distributors2; CREATE TABLE distributors2 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors2 TO publicuser;";
+test('test public user can execute SELECT on enabled tables', function(done){  
+  var pg = new PSQL(dbopts_auth);
+  var sql = "DROP TABLE IF EXISTS distributors2; CREATE TABLE distributors2 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors2 TO " + public_user + ";";
   pg.query(sql, function(err, result){
-    pg = new PSQL(null, 'cartodb_test_user_1_db');
+    pg = new PSQL(dbopts_anon)
     pg.query("SELECT count(*) FROM distributors2", function(err, result){
       assert.equal(result.rows[0].count, 0);
       done();
@@ -88,12 +73,12 @@ test('test publicuser can execute SELECT on enabled tables', function(done){
   });
 });
 
-test('test publicuser cannot execute INSERT on db', function(done){
-  var pg = new PSQL("1");
-  var sql = "DROP TABLE IF EXISTS distributors3; CREATE TABLE distributors3 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors3 TO publicuser;";
+test('test public user cannot execute INSERT on db', function(done){
+  var pg = new PSQL(dbopts_auth);
+  var sql = "DROP TABLE IF EXISTS distributors3; CREATE TABLE distributors3 (id integer, name varchar(40), UNIQUE(name)); GRANT SELECT ON distributors3 TO " + public_user + ";";
   pg.query(sql, function(err, result){    
     
-    pg = new PSQL(null, 'cartodb_test_user_1_db'); //anonymous user
+    pg = new PSQL(dbopts_anon);
     pg.query("INSERT INTO distributors3 (id, name) VALUES (1, 'fishy')", function(err, result){
       assert.equal(err.message, 'permission denied for relation distributors3');
       done();
@@ -133,6 +118,21 @@ test('Windowed SQL with complex CTE and insane quoting', function(){
   var sql = cte + sel;
   var out = PSQL.window_sql(sql, 1, 0);
   assert.equal(out, cte + "SELECT * FROM (" + sel + ") AS cdbq_1 LIMIT 1 OFFSET 0");
+});
+
+test('dbkey depends on dbopts', function(){
+  var opt1 = _.clone(dbopts_anon);
+  opt1.dbname = 'dbname1';
+  var pg1 = new PSQL(opt1);
+
+  var opt2 = _.clone(dbopts_anon);
+  opt2.dbname = 'dbname2';
+  var pg2 = new PSQL(opt2);
+
+  assert.ok(pg1.dbkey() !== pg2.dbkey(),
+    'both PSQL object using same dbkey ' + pg1.dbkey());
+
+  assert.ok(_.isString(pg1.dbkey()), "pg1 dbkey is " + pg1.dbkey());
 });
 
 });

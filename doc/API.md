@@ -12,7 +12,7 @@ Supported query string parameters:
 
   'format':   Specifies which format to use for the response.
               Supported formats: JSON (the default), GeoJSON,
-              TopoJSON, CSV, SVG, SHP
+              TopoJSON, CSV, SVG, SHP, arraybuffer
 
   'filename': Sets the filename to use for the query result 
               file attachment
@@ -34,8 +34,20 @@ Supported query string parameters:
               timestamp value in cache_buster for manual control of
               updates.
 
+  'rows_per_page':
+              Limit the number of rows in output. Affects all formats,
+              see also 'page'.
+
+  'page':
+              When 'rows_per_page' is used to limit rows, 'page' can be
+              used to specify which page to start returning rows from.
+              First page has index 0.
+
 Response formats
 ----------------
+
+
+### JSON
 
 The standard response from the CartoDB SQL API is JSON. If you are
 building a web-application, the lightweight JSON format allows you to
@@ -63,9 +75,17 @@ The JSON response is as follows:
                 updated_at: "2012-02-12T21:34:08.193Z",
                 valid: true
             }
-        ]
+        ],
+        notices: [ 'notice1', 'notice2' ], // optional
+        warnings: [ 'warning1', 'warning2' ] // optional
     }
 ```
+
+Note that values of numerical fields will be rounded to at most 16 significant
+digits due to a limit in the JSON format itself. If more precision is needed
+the caller can cast those fields to text using SQL constructs.
+
+### GeoJSON
 
 Alternatively, you can use the GeoJSON specification for returning data
 from the API. To do so, simply supply the format parameter as GeoJSON.
@@ -97,7 +117,37 @@ The GeoJSON response is follows:
     }
 ```
 
-TODO: csv, kml, svg, topojson responses
+### CSV
+
+CSV export format has field names in first line (header),
+uses CR/NL line endings and HEXEWKB format for geometry fields.
+
+See https://github.com/postgis/postgis/blob/svn-trunk/doc/ZMSgeoms.txt#L42
+
+### KML
+
+See http://en.wikipedia.org/wiki/KML
+
+### SVG
+
+See http://en.wikipedia.org/wiki/SVG
+
+### TopoJSON
+
+See http://en.wikipedia.org/wiki/Topojson
+
+### SHP
+
+Shapefile output composed by .shp, .shx, .dbf and .prj files
+compressed in a .zip.
+
+See http://en.wikipedia.org/wiki/Shapefile
+
+### Arraybuffer
+
+An octet stream binary-encoding each field as a typed array of value.
+TODO: write more about this format
+See http://github.com/CartoDB/CartoDB-SQL-API/issues/96
 
 Response errors
 ---------------

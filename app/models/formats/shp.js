@@ -14,13 +14,26 @@ var p = shp.prototype;
 
 p._contentType = "application/zip; charset=utf-8";
 p._fileExtension = "zip";
+// As of GDAL 1.10 SRID detection is bogus, so we use
+// our own method. See:
+//  http://trac.osgeo.org/gdal/ticket/5131
+//  http://trac.osgeo.org/gdal/ticket/5287
+//  http://github.com/CartoDB/CartoDB-SQL-API/issues/110
+//  http://github.com/CartoDB/CartoDB-SQL-API/issues/116
+p._needSRS = true;
 
 p.generate = function(options, callback) {
-  var o = options;
-  this.toSHP(o.database, o.user_id, o.gn, o.sql, o.skipfields, o.filename, callback);
+  this.toSHP(options, callback);
 };
 
-p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) {
+p.toSHP = function (options, callback) {
+  var dbname = options.database;
+  var user_id = options.user_id;
+  var gcol = options.gn;
+  var sql = options.sql;
+  var skipfields = options.skipfields;
+  var filename = options.filename;
+
   var fmtObj = this;
   var zip = 'zip'; // FIXME: make configurable
   var tmpdir = global.settings.tmpDir || '/tmp';
@@ -38,7 +51,7 @@ p.toSHP = function (dbname, user_id, gcol, sql, skipfields, filename, callback) 
     },
     function spawnDumper(err) {
       if ( err ) throw err;
-      fmtObj.toOGR(dbname, user_id, gcol, sql, skipfields, 'ESRI Shapefile', shapefile, this);
+      fmtObj.toOGR(options, 'ESRI Shapefile', shapefile, this);
     },
     function doZip(err) {
       if ( err ) throw err;

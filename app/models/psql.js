@@ -8,11 +8,9 @@ _.mixin(require('underscore.string'));
 pg.defaults.poolSize = global.settings.db_pool_size || 16;
 
 // Milliseconds of idle time before removing connection from pool
-// TODO: make config setting ?
 pg.defaults.poolIdleTimeout = global.settings.db_pool_idleTimeout || 30000;
 
 // Frequency to check for idle clients within the pool, ms
-// TODO: make config setting ?
 pg.defaults.reapIntervalMillis = global.settings.db_pool_reapInterval || 1000;
 
 pg.on('error', function(err, client) {
@@ -41,6 +39,42 @@ types.setTypeParser(1022, floatArrayParser); // _float8
 types.setTypeParser(1231, floatArrayParser); // _numeric
 types.setTypeParser(1016, floatArrayParser); // _int8
 
+// Standard type->name mappnig (up to oid=2000)
+var stdTypeName = {
+    16: 'bool',
+    17: 'bytea',
+    20: 'int8',
+    21: 'int2',
+    23: 'int4',
+    25: 'text',
+    26: 'oid',
+   114: 'JSON',
+   700: 'float4',
+   701: 'float8',
+  1000: '_bool',
+  1015: '_varchar',
+  1042: 'bpchar',
+  1043: 'varchar',
+  1005: '_int2',
+  1007: '_int4',
+  1014: '_bpchar',
+  1016: '_int8',
+  1021: '_float4',
+  1022: '_float8',
+  1008: '_regproc',
+  1009: '_text',
+  1082: 'date',
+  1114: 'timestamp',
+  1182: '_date',
+  1184: 'timestampz',
+  1186: 'interval',
+  1231: '_numeric',
+  1700: 'numeric'
+};
+
+// Holds a typeId->typeName mapping for each
+// database ever connected to
+var extTypeName = {};
 
 // PSQL
 //
@@ -48,37 +82,92 @@ types.setTypeParser(1016, floatArrayParser); // _int8
 //
 // * intended for use with pg_bouncer
 // * defaults to connecting with a "READ ONLY" user to given DB if not passed a specific user_id
-var PSQL = function(user_id, db) {
+//
+// @param opts connection options:
+//    user: database username
+//    pass: database user password
+//    host: database host
+//    port: database port
+//    dbname: database name
+//
+var PSQL = function(dbopts) {
 
     var error_text = "Incorrect access parameters. If you are accessing via OAuth, please check your tokens are correct. For public users, please ensure your table is published."
-    if (!_.isString(user_id) && !_.isString(db)) throw new Error(error_text);
+    if ( ! dbopts || ( !_.isString(dbopts.user) && !_.isString(dbopts.dbname)))
+    {
+      // console.log("DBOPTS: "); console.dir(dbopts);
+      throw new Error(error_text);
+    }
 
     var me = {
-        public_user: "publicuser"
-        , user_id: user_id
-        , db: db
+        dbopts: dbopts
     };
 
     me.username = function(){
-        var username = this.public_user;
-        if (_.isString(this.user_id))
-            username = _.template(global.settings.db_user, {user_id: this.user_id});
+        return this.dbopts.user;
+    };
 
-        return username;
+    me.password = function(){
+        return this.dbopts.pass;
     };
 
     me.database = function(){
-        var database = db;
-        if (_.isString(this.user_id))
-            database = _.template(global.settings.db_base_name, {user_id: this.user_id});
-
-        return database;
+        return this.dbopts.dbname;
     };
 
-    me.conString = "tcp://" + me.username() + "@" +
-                    global.settings.db_host + ":" +
-                    global.settings.db_port + "/" +
+    me.dbhost = function(){
+        return this.dbopts.host;
+    };
+
+    me.dbport = function(){
+        return this.dbopts.port;
+    };
+
+    me.conString = "tcp://" + me.username() +
+                    ":" + me.password() + // this line only if not-null ?
+                    "@" +
+                    me.dbhost() + ":" +
+                    me.dbport() + "/" +
                     me.database();
+
+    me.dbkey = function(){
+      return this.database(); // + ":" + this.dbhost() + ":" + me.dbport();
+    };
+
+    me.ensureTypeCache = function(cb) {
+      var db = this.dbkey();
+      if ( extTypeName[db] ) { cb(); return; }
+      pg.connect(this.conString, function(err, client, done) {
+        if ( err ) { cb(err); return; }
+        var types = ["'geometry'","'raster'"]; // types of interest
+        client.query("SELECT oid, typname FROM pg_type where typname in (" + types.join(',') + ")", function(err,res) {
+          done();
+          if ( err ) { cb(err); return; }
+          var cache = {};
+          res.rows.map(function(r) {
+            cache[r.oid] = r.typname;
+          });
+          extTypeName[db] = cache;
+          cb();
+        });
+      });
+    }
+
+    // Return type name for a type identifier
+    //
+    // Possibly returns undefined, for unkonwn (uncached)
+    //
+    me.typeName = function(typeId) {
+      return stdTypeName[typeId] ? stdTypeName[typeId] : extTypeName[this.dbkey()][typeId];
+    }
+
+    me.connect = function(cb){
+      var that = this;
+      this.ensureTypeCache(function(err) {
+        if ( err ) cb(err);
+        else pg.connect(that.conString, cb);
+      });
+    };
 
     me.eventedQuery = function(sql, callback){
         var that = this;
@@ -89,22 +178,40 @@ var PSQL = function(user_id, db) {
             },
             function(err, clean){
                 if (err) throw err;
-                pg.connect(that.conString, this);
+                that.connect(this);
             },
             function(err, client, done){
                 if (err) throw err;
                 var query = client.query(sql);
+
+                // forward notices to query
+                var noticeListener = function() {
+                  query.emit('notice', arguments); 
+                };
+                client.on('notice', noticeListener);
+
                 // NOTE: for some obscure reason passing "done" directly
                 //       as the listener works but can be slower
                 //      (by x2 factor!)
-                query.on('end', function() { done(); }); 
+                query.on('end', function() {
+                  client.removeListener('notice', noticeListener);
+                  done();
+                }); 
                 return query;
             },
             function(err, query){
                 callback(err, query)
             }
         );
-    },
+    };
+
+    me.quoteIdentifier = function(str) {
+      return pg.Client.prototype.escapeIdentifier(str);
+    };
+
+    me.escapeLiteral = function(s) {
+      return pg.Client.prototype.escapeLiteral(str);
+    };
 
     me.query = function(sql, callback){
         var that = this;
@@ -116,7 +223,7 @@ var PSQL = function(user_id, db) {
             },
             function(err, clean){
                 if (err) throw err;
-                pg.connect(that.conString, this);
+                that.connect(this);
             },
             function(err, client, done){
                 if (err) throw err;

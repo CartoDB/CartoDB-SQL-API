@@ -29,7 +29,11 @@ var express = require('express')
     , zlib        = require('zlib')
     , util        = require('util')
     , spawn       = require('child_process').spawn
-    , Meta        = require(global.settings.app_root + '/app/models/metadata')
+    , Meta        = require('cartodb-redis')({
+        host: global.settings.redis_host,
+        port: global.settings.redis_port
+      })
+ // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
@@ -37,6 +41,9 @@ var express = require('express')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
+
+// Set default configuration 
+global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
 
 var tableCache = LRU({
   // store no more than these many items in the cache
@@ -156,6 +163,12 @@ function handleQuery(req, res) {
         // placeholder for connection
         var pg;
 
+        // Database options
+        var dbopts = {
+          port: global.settings.db_port,
+          pass: global.settings.db_pubuser_pass
+        };
+
         var authenticated;
 
         var formatter;
@@ -175,17 +188,17 @@ function handleQuery(req, res) {
                 }
             },
             function setDBGetUser(err, data) {
-                if (err) throw err;
+                if (err) {
+                  // If the database could not be found, the user is non-existant
+                  if ( err.message.match('missing') ) {
+                    err.message = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
+                    err.http_status = 404;
+                  }
+                  throw err;
+                }
 
                 database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
-
-                // If the database could not be found, the user is non-existant
-                if (_.isNull(database)) {
-                    var msg = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
-                    err = new Error(msg);
-                    err.http_status = 404;
-                    throw err;
-                }
+                dbopts.dbname = database;
 
                 if(api_key) {
                     ApiKeyAuth.verifyRequest(req, this);
@@ -193,13 +206,41 @@ function handleQuery(req, res) {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
+            function setUserGetDBHost(err, data){
+                if (err) throw err;
+                user_id = data; 
+                authenticated = ! _.isNull(user_id);
+
+                var dbuser = user_id ? 
+                  _.template(global.settings.db_user, {user_id: user_id})
+                  :
+                  global.settings.db_pubuser;
+
+                dbopts.user = dbuser;
+
+                Meta.getDatabaseHost(req, this);
+            },
+            function setDBHostGetPassword(err, data){
+                if (err) throw err;
+
+                dbopts.host = data || global.settings.db_host;
+
+                // by-pass redis lookup for password if not authenticated
+                if ( ! authenticated ) return null;
+
+                Meta.getDatabasePassword(req, this);
+            },
             function queryExplain(err, data){
                 if (err) throw err;
-                user_id = data;
-                // store postgres connection
-                pg = new PSQL(user_id, database);
 
-                authenticated = ! _.isNull(user_id);
+                if ( authenticated ) {
+                  dbopts.pass = _.template(global.settings.db_user_pass, {
+                    user_id: user_id,
+                    user_password: data
+                  });
+                }
+
+                pg = new PSQL(dbopts);
 
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
@@ -235,7 +276,7 @@ function handleQuery(req, res) {
                     var affected_tables = tableCacheItem.affected_tables.split(/^\{(.*)\}$/)[1].split(',');
                     for ( var i=0; i<affected_tables.length; ++i ) {
                       var t = affected_tables[i];
-                      if ( t.match(/\.?pg_/) ) {
+                      if ( t.match(/\bpg_/) ) {
                         var e = new SyntaxError("system tables are forbidden");
                         e.http_status = 403;
                         throw(e);
@@ -261,14 +302,18 @@ function handleQuery(req, res) {
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy === 'persist' ) {
                   res.header('Cache-Control', 'public,max-age=' + ttl); 
-                  res.header('X-Cache-Channel', ''); // forever
                 } else {
                   if ( ! tableCacheItem || tableCacheItem.may_write ) {
+                    // Tell clients this response is already expired
+                    // TODO: prevent cache_policy from overriding this ?
                     ttl = 0;
-                  } else {
-                    res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
-                  }
+                  } 
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
+                }
+
+                // Only set an X-Cache-Channel for responses we want Varnish to cache.
+                if ( tableCacheItem && ! tableCacheItem.may_write ) {
+                  res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
                 }
 
                 // Set Last-Modified header
@@ -289,12 +334,11 @@ function handleQuery(req, res) {
                 sql = PSQL.window_sql(sql,limit,offset);
 
                 var opts = {
+                  dbopts: dbopts,
                   sink: res,
                   gn: gn,
                   dp: dp,
                   skipfields: skipfields,
-                  database: database,
-                  user_id: user_id,
                   sql: sql,
                   filename: filename
                 }
