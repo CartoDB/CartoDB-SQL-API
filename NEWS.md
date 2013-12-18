@@ -2,6 +2,7 @@
 ------------------
 
 * Add 'user_from_host' directive to generalize username extraction (#124)
+* Enhance error message on unknown cartodb username (#126)
 
 1.7.1 - 2013-12-02
 ------------------

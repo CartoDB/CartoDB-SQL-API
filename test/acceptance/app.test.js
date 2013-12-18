@@ -902,7 +902,7 @@ test('GET decent error if domain is incorrect', function(done){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         var result = JSON.parse(res.body);
-        assert.equal(result.error[0],"Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.");
+        assert.equal(result.error[0],"Sorry, we can't find CartoDB user 'vizzualinot'. Please check that you have entered the correct domain.");
         done();
     });
 });

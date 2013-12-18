@@ -197,7 +197,8 @@ function handleQuery(req, res) {
                 if (err) {
                   // If the database could not be found, the user is non-existant
                   if ( err.message.match('missing') ) {
-                    err.message = "Sorry, we can't find this CartoDB. Please check that you have entered the correct domain.";
+                    err.message = "Sorry, we can't find CartoDB user '" + cdbuser
+                      + "'. Please check that you have entered the correct domain.";
                     err.http_status = 404;
                   }
                   throw err;
