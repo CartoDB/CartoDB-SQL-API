@@ -43,7 +43,7 @@ directive to) and trusts user authentication from localhost
 connections.
 
 ``` bash
-node [cluster.js|app.js] <environment>
+node app.js <environment>
 ```
 
 Supported <environment> values are developement, test, production
