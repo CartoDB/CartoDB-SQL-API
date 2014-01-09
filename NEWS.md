@@ -1,6 +1,11 @@
 1.8.1 - 2013-12-DD
 ------------------
 
+Bug fixes:
+
+ * Fix use of "SELECT .. INTO" with windowing params (#127)
+
+
 1.8.0 - 2013-12-18
 ------------------
 

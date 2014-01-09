@@ -497,6 +497,62 @@ test('CREATE TABLE with GET and auth', function(done){
     });
 });
 
+// See http://github.com/CartoDB/CartoDB-SQL-API/issues/127
+test('SELECT INTO with paging ', function(done){
+    var esc_tabname = 'test ""select into""'; // escaped ident
+    Step(
+      function select_into() {
+        var next = this;
+        assert.response(app, {
+            url: "/api/v1/sql?" + querystring.stringify({
+              q: 'SELECT generate_series(1,10) InTO "' + esc_tabname + '"',
+              rows_per_page: 1, page: 1,
+              api_key: 1234
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(res) { next(null, res); });
+      },
+      function check_res_test_fake_into_1(err, res) {
+        if ( err ) throw err;
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var next = this;
+        assert.response(app, {
+            url: "/api/v1/sql?" + querystring.stringify({
+              q: 'SELECT \' INTO "c"\' FROM "' + esc_tabname + '"',
+              rows_per_page: 1, page: 1,
+              api_key: 1234
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(res) { next(null, res); });
+      },
+      function check_res_drop_table(err, res) {
+        if ( err ) throw err;
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.equal(out.total_rows, 1); // windowing works
+        var next = this;
+        assert.response(app, {
+            url: "/api/v1/sql?" + querystring.stringify({
+              q: 'DROP TABLE "' + esc_tabname + '"',
+              api_key: 1234
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(res) { next(null, res); });
+      },
+      function check_drop(err, res) {
+        if ( err ) throw err;
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        return null;
+      },
+      function finish(err) {
+        done(err)
+      }
+    );
+});
+
 // Test effects of COPY
 // See https://github.com/Vizzuality/cartodb-management/issues/1502
 test('COPY TABLE with GET and auth', function(done){

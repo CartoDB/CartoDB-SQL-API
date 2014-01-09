@@ -317,7 +317,18 @@ console.log("rem: " + rem);
   }
 
 
-  if ( sql.match(/^\s*SELECT\s/i) ) {
+  var re_SELECT = RegExp(/^\s*SELECT\s/i);
+  var re_INTO = RegExp(/\sINTO\s+([^\s]+|"([^"]|"")*")\s*$/i);
+
+  //console.log("SQL " + sql);
+  //console.log(" does " + ( sql.match(re_SELECT) ? '' : 'not ' ) + "match re_SELECT " + re_SELECT);
+  //console.log(" does " + ( sql.match(re_INTO) ? '' : 'not ' ) + "match re_INTO " + re_INTO);
+
+  if (
+         sql.match(re_SELECT) &&
+       ! sql.match(re_INTO)
+     )
+  {
       return cte + "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
   } 
 
