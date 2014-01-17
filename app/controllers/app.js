@@ -241,10 +241,13 @@ function handleQuery(req, res) {
                 if (err) throw err;
 
                 if ( authenticated ) {
-                  dbopts.pass = _.template(global.settings.db_user_pass, {
-                    user_id: user_id,
-                    user_password: data
-                  });
+                  if ( global.settings.hasOwnProperty('db_user_pass') ) {
+                    dbopts.pass = _.template(global.settings.db_user_pass, {
+                      user_id: user_id,
+                      user_password: data
+                    });
+                  }
+                  else delete dbopts.pass;
                 }
 
                 pg = new PSQL(dbopts);

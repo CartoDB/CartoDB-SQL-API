@@ -1,6 +1,10 @@
 1.8.2 - 2014-MM-DD
 ------------------
 
+Bug fixes:
+
+ * Restore compatibility with 1.6.x configuration
+
 1.8.1 - 2014-01-10
 ------------------
 
