@@ -138,6 +138,7 @@ ogr.prototype.toOGR = function(options, out_format, out_filename, callback) {
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost
+         + " port=" + dbport
          + " user=" + dbuser
          + " dbname=" + dbname
          + " password=" + dbpass
