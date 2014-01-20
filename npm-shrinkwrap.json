@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.8.0",
+  "version": "1.8.2",
   "dependencies": {
     "express": {
       "version": "2.5.11",

@@ -1,9 +1,10 @@
-1.8.2 - 2014-MM-DD
+1.8.2 - 2014-01-20
 ------------------
 
 Bug fixes:
 
  * Restore compatibility with 1.6.x configuration
+ * Use db_port in ogr2ogr
 
 1.8.1 - 2014-01-10
 ------------------
