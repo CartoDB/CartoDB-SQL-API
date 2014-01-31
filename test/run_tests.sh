@@ -110,7 +110,7 @@ cd ${BASEDIR}
 sh prepare_db.sh ${PREPARE_DB_OPTS} || die "database preparation failure"
 cd -
 
-PATH=node_modules/.bin/:$PATH
+PATH=node_modules/.bin/:node_modules/mocha/bin:$PATH
 
 echo
 echo "Environment:"
