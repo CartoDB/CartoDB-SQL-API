@@ -139,6 +139,11 @@ assert.response = function(server, req, res, msg){
 
         if (data) request.write(data);
 
+        request.on('error', function(err){
+          check();
+          callback(null, err);
+        });
+
         request.on('response', function(response){
             response.body = '';
             response.setEncoding(encoding);

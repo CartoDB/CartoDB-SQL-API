@@ -1,0 +1,60 @@
+/**
+ *
+ * Requires the database and tables setup in config/environments/test.js to exist
+ * Ensure the user is present in the pgbouncer auth file too
+ * TODO: Add OAuth tests.
+ *
+ * To run this test, ensure that cartodb_test_user_1_db metadata exists
+ * in Redis for the vizzuality.cartodb.com domain
+ *
+ * SELECT 5
+ * HSET rails:users:vizzuality id 1
+ * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
+ *
+ */
+require('../helper');
+require('../support/assert');
+
+var assert = require('assert')
+    , App = require(global.settings.app_root + '/app/controllers/app')
+    , querystring = require('querystring')
+    , _ = require('underscore')
+    , Step = require('step')
+    ;
+
+suite('timeout', function() {
+
+// See https://github.com/CartoDB/CartoDB-SQL-API/issues/128
+test('after configured milliseconds', function(done){
+  var testTimeout = 10;
+//console.log("settings:"); console.dir(global.settings);
+  var timeoutBackup = global.settings.node_socket_timeout;
+  global.settings.node_socket_timeout = testTimeout;
+  var app = App();
+  Step(
+    function sendLongQuery() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
+          method: 'GET',
+          headers: {host: 'vizzuality.localhost' }
+      },{}, function(res, err) {
+          next(err, res);
+      });
+    },
+    function checkResponse(err, res) {
+      assert.ok(err);
+      assert.ok(err.message.match(/hang up/), err);
+      return null;
+    },
+    function finish(err) {
+      global.settings.node_socket_timeout = timeoutBackup;
+      done(err);
+    }
+  );
+});
+
+// TODO: check that the query is interrupted on timeout!
+//See #129
+
+});

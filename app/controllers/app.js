@@ -15,6 +15,8 @@
 //
 //
 
+function App() {
+
 var path = require('path');
 
 var express = require('express')
@@ -73,6 +75,15 @@ Date.prototype.toJSON = function() {
         
   }
   return s;
+}
+
+// Set connection timeout
+if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
+  var timeout = parseInt(global.settings.node_socket_timeout);
+  app.use(function(req, res, next) {
+    req.connection.setTimeout(timeout);
+    next()
+  });
 }
 
 app.use(express.bodyParser());
@@ -422,4 +433,8 @@ function handleException(err, res){
     }
 }
 
-module.exports = app;
+return app;
+
+}
+
+module.exports = App;

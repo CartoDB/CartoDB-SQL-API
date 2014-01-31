@@ -2,7 +2,7 @@ require('../../helper');
 require('../../support/assert');
 
 
-var app    = require(global.settings.app_root + '/app/controllers/app')
+var app    = require(global.settings.app_root + '/app/controllers/app')()
     , assert = require('assert')
     , querystring = require('querystring')
     , _ = require('underscore')

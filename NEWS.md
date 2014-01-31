@@ -1,6 +1,14 @@
 1.8.3 - 2014-MM-DD
 ------------------
 
+Bug fixes:
+
+ * Honour the 'node_socket_timeout' configuration directive (#128)
+
+Enhancements:
+
+ * Add support for error handling in assert.request
+
 1.8.2 - 2014-01-20
 ------------------
 
