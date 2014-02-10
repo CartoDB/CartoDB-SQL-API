@@ -1,6 +1,10 @@
 1.9.0 - 2014-MM-DD
 ------------------
 
+Enhancements:
+
+ * Allow configuring log_format (#131)
+
 1.8.3 - 2014-02-10
 ------------------
 

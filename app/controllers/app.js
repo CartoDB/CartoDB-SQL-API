@@ -20,11 +20,7 @@ function App() {
 var path = require('path');
 
 var express = require('express')
-    , app      = express.createServer(
-    express.logger({
-        buffer: true,
-        format: '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
-    }))
+    , app      = express.createServer()
     , Step        = require('step')
     , crypto      = require('crypto')
     , fs          = require('fs')
@@ -76,6 +72,12 @@ Date.prototype.toJSON = function() {
   }
   return s;
 }
+
+app.use(express.logger({
+  buffer: true,
+  format: global.settings.log_format ||
+          '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
+}))
 
 // Set connection timeout
 if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
