@@ -23,7 +23,7 @@ var express = require('express')
     , app      = express.createServer(
     express.logger({
         buffer: true,
-        format: '[:date] :req[X-Real-IP] \033[90m:method\033[0m \033[36m:req[Host]:url\033[0m \033[90m:status :response-time ms -> :res[Content-Type]\033[0m'
+        format: '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
     }))
     , Step        = require('step')
     , crypto      = require('crypto')

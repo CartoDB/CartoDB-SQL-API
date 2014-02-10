@@ -8,6 +8,7 @@ Bug fixes:
 Enhancements:
 
  * Add support for error handling in assert.request
+ * Stop using ANSI colors in the logs (#130)
 
 1.8.2 - 2014-01-20
 ------------------
