@@ -80,7 +80,7 @@ var loggerOpts = {
 };
 
 if ( global.log4js ) {
-  app.use(log4js.connectLogger(log4js.getLogger(), _.defaults(loggerOpts, {level:'auto'})));
+  app.use(log4js.connectLogger(log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
 } else {
   app.use(express.logger(loggerOpts));
 }
