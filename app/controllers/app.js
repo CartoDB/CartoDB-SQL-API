@@ -94,6 +94,13 @@ if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
   });
 }
 
+// Version extracting function
+function getVersion() {
+  var version = {};
+  version.cartodb_sql_api = require(__dirname + '/../../package.json').version;
+  return version;
+}
+
 app.use(express.bodyParser());
 app.enable('jsonp callback');
 app.set("trust proxy", true);
@@ -103,6 +110,9 @@ app.options('*', function(req,res) { setCrossDomain(res); res.end(); });
 app.all(global.settings.base_url+'/sql',     function(req, res) { handleQuery(req, res) } );
 app.all(global.settings.base_url+'/sql.:f',  function(req, res) { handleQuery(req, res) } );
 app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
+app.get(global.settings.base_url+'/version', function(req, res) {
+  res.send(getVersion());
+});
 
 // Return true of the given query may write to the database
 //

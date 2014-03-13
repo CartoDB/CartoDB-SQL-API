@@ -33,6 +33,20 @@ var expected_cache_control = 'no-cache,max-age=31536000,must-revalidate,public';
 var expected_rw_cache_control = 'no-cache,max-age=0,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
 
+test('GET /api/v1/version', function(done){
+    assert.response(app, {
+        url: '/api/v1/version',
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200);
+        var parsed = JSON.parse(res.body);
+        var sqlapi_version = require(__dirname + '/../../package.json').version;
+        assert.ok(parsed.hasOwnProperty('cartodb_sql_api'), "No 'cartodb_sql_api' version in " + parsed);
+        assert.equal(parsed.cartodb_sql_api, sqlapi_version);
+        done();
+    });
+});
+
 test('GET /api/v1/sql', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
