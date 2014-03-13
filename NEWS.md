@@ -10,6 +10,7 @@ Enhancements:
 
  * Allow configuring log_format (#131)
  * Use log4js for logging (#136)
+ * Include version in startup log
 
 1.8.3 - 2014-02-10
 ------------------

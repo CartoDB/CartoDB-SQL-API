@@ -45,9 +45,12 @@ global.logger = log4js.getLogger();
  
 // kick off controller
 if ( ! global.settings.base_url ) global.settings.base_url = '/api/*';
+
+var version = require("./package").version;
+
 var app = require(global.settings.app_root + '/app/controllers/app')();
 app.listen(global.settings.node_port, global.settings.node_host, function() {
-  console.log("CartoDB SQL API listening on " +
+  console.log("CartoDB SQL API " + version + " listening on " +
       global.settings.node_host + ":" + global.settings.node_port +
       " with base_url " + global.settings.base_url); 
 });
