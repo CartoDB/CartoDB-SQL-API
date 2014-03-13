@@ -31,7 +31,16 @@ log4js_config = {
   ],
   replaceConsole:true
 };
+
+if ( global.settings.rollbar ) {
+  log4js_config.appenders.push({
+    type: __dirname + "/app/models/log4js_rollbar.js",
+    options: global.settings.rollbar
+  });
+}
+
 log4js.configure(log4js_config);
+global.logger = log4js.getLogger();
 
  
 // kick off controller
@@ -41,4 +50,8 @@ app.listen(global.settings.node_port, global.settings.node_host, function() {
   console.log("CartoDB SQL API listening on " +
       global.settings.node_host + ":" + global.settings.node_port +
       " with base_url " + global.settings.base_url); 
+});
+
+process.on('uncaughtException', function(err) {
+  logger.error('Uncaught exception: ' + err.stack);
 });

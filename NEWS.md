@@ -1,6 +1,10 @@
 1.9.0 - 2014-MM-DD
 ------------------
 
+New features:
+
+ - Add optional support for rollbar (#137)
+
 Enhancements:
 
  * Allow configuring log_format (#131)

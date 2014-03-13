@@ -40,3 +40,11 @@ module.exports.tableCacheMax = 8192;
 module.exports.tableCacheMaxAge = 1000*60*10;
 // Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
+// Optional rollbar support
+module.exports.rollbar = {
+    token: 'secret',
+    // See http://github.com/rollbar/node_rollbar#configuration-reference
+    options: {
+      handler: 'inline'
+    }
+}
