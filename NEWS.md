@@ -11,6 +11,8 @@ Enhancements:
  * Allow configuring log_format (#131)
  * Use log4js for logging (#136)
  * Include version in startup log
+ * Allow passing environment configuration name via NODE_ENV to app.js
+ * Print environment configuration name on app start
 
 1.8.3 - 2014-02-10
 ------------------

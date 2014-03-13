@@ -11,11 +11,14 @@
 */
 var _ = require('underscore');
 
+if ( process.argv[2] ) ENV = process.argv[2];
+else if ( process.env['NODE_ENV'] ) ENV = process.env['NODE_ENV'];
+else ENV = 'development';
+
 // sanity check arguments
-var ENV = process.argv[2];
 if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging' ) {
-  console.error("\n./app [environment]");
-  console.error("environments: [development, staging, production, test]");
+  console.error("\nnode app.js [environment]");
+  console.error("environments: development, staging, production, test");
   process.exit(1);
 }
 
@@ -52,7 +55,8 @@ var app = require(global.settings.app_root + '/app/controllers/app')();
 app.listen(global.settings.node_port, global.settings.node_host, function() {
   console.log("CartoDB SQL API " + version + " listening on " +
       global.settings.node_host + ":" + global.settings.node_port +
-      " with base_url " + global.settings.base_url); 
+      " with base_url " + global.settings.base_url
+      + " (" + ENV + ")");
 });
 
 process.on('uncaughtException', function(err) {
