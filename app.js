@@ -23,6 +23,16 @@ if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'stag
 global.settings  = require(__dirname + '/config/settings');
 var env          = require(__dirname + '/config/environments/' + ENV);
 _.extend(global.settings, env);
+
+global.log4js = require('log4js')
+log4js_config = {
+  appenders: [
+    { type: "console", layout: { type:'basic' } }
+  ],
+  replaceConsole:true
+};
+log4js.configure(log4js_config);
+
  
 // kick off controller
 if ( ! global.settings.base_url ) global.settings.base_url = '/api/*';

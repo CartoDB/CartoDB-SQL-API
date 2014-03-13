@@ -73,11 +73,17 @@ Date.prototype.toJSON = function() {
   return s;
 }
 
-app.use(express.logger({
-  buffer: true,
-  format: global.settings.log_format ||
-          '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
-}))
+var loggerOpts = {
+    buffer: true,
+    format: global.settings.log_format ||
+            ':req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
+};
+
+if ( global.log4js ) {
+  app.use(log4js.connectLogger(log4js.getLogger(), _.defaults(loggerOpts, {level:'auto'})));
+} else {
+  app.use(express.logger(loggerOpts));
+}
 
 // Set connection timeout
 if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
