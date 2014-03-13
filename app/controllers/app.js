@@ -296,8 +296,7 @@ function handleQuery(req, res) {
                       };
                       tableCache.set(sql_md5, tableCacheItem);
                     } else {
-                      console.log("[ERROR] Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$)");
-                      console.dir(result);
+                      console.error("Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + util.inspect(result));
                     }
                 }
 
@@ -379,7 +378,6 @@ function handleQuery(req, res) {
             }
         );
     } catch (err) {
-        console.log('[ERROR]\n' + err);
         handleException(err, res);
     }
 }
@@ -422,9 +420,7 @@ function handleException(err, res){
     var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
     if (global.settings.environment !== 'test'){
         // TODO: email this Exception report
-        console.log("EXCEPTION REPORT")
-        console.log(err.message);
-        console.log(err.stack);
+        console.error("EXCEPTION REPORT: " + err.stack)
     }
 
     // allow cross site post

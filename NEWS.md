@@ -3,7 +3,7 @@
 
 New features:
 
- - Add optional support for rollbar (#137)
+ * Add optional support for rollbar (#137)
 
 Enhancements:
 
