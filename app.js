@@ -15,6 +15,8 @@ if ( process.argv[2] ) ENV = process.argv[2];
 else if ( process.env['NODE_ENV'] ) ENV = process.env['NODE_ENV'];
 else ENV = 'development';
 
+process.env['NODE_ENV'] = ENV;
+
 // sanity check arguments
 if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging' ) {
   console.error("\nnode app.js [environment]");
