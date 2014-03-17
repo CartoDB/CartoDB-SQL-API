@@ -13,6 +13,8 @@ Enhancements:
  * Include version in startup log
  * Allow passing environment configuration name via NODE_ENV to app.js
  * Print environment configuration name on app start
+ * Upgrade node-zipfile to ~0.5.0
+ * 
 
 1.8.3 - 2014-02-10
 ------------------

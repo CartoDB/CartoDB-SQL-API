@@ -133,11 +133,8 @@
     "redis": {
       "version": "0.7.1"
     },
-    "zipfile": {
-      "version": "0.3.4"
-    },
     "libxmljs": {
-      "version": "0.6.1",
+      "version": "0.8.1",
       "dependencies": {
         "bindings": {
           "version": "1.0.0"
@@ -189,6 +186,210 @@
             },
             "inherits": {
               "version": "2.0.1"
+            }
+          }
+        }
+      }
+    },
+    "zipfile": {
+      "version": "0.5.0",
+      "dependencies": {
+        "node-pre-gyp": {
+          "version": "0.5.5",
+          "dependencies": {
+            "nopt": {
+              "version": "2.2.0",
+              "dependencies": {
+                "abbrev": {
+                  "version": "1.0.4"
+                }
+              }
+            },
+            "npmlog": {
+              "version": "0.0.6",
+              "dependencies": {
+                "ansi": {
+                  "version": "0.2.1"
+                }
+              }
+            },
+            "request": {
+              "version": "2.34.0",
+              "dependencies": {
+                "qs": {
+                  "version": "0.6.6"
+                },
+                "json-stringify-safe": {
+                  "version": "5.0.0"
+                },
+                "forever-agent": {
+                  "version": "0.5.2"
+                },
+                "node-uuid": {
+                  "version": "1.4.1"
+                },
+                "mime": {
+                  "version": "1.2.11"
+                },
+                "tough-cookie": {
+                  "version": "0.12.1",
+                  "dependencies": {
+                    "punycode": {
+                      "version": "1.2.4"
+                    }
+                  }
+                },
+                "form-data": {
+                  "version": "0.1.2",
+                  "dependencies": {
+                    "combined-stream": {
+                      "version": "0.0.4",
+                      "dependencies": {
+                        "delayed-stream": {
+                          "version": "0.0.5"
+                        }
+                      }
+                    },
+                    "async": {
+                      "version": "0.2.10"
+                    }
+                  }
+                },
+                "tunnel-agent": {
+                  "version": "0.3.0"
+                },
+                "http-signature": {
+                  "version": "0.10.0",
+                  "dependencies": {
+                    "assert-plus": {
+                      "version": "0.1.2"
+                    },
+                    "asn1": {
+                      "version": "0.1.11"
+                    },
+                    "ctype": {
+                      "version": "0.5.2"
+                    }
+                  }
+                },
+                "oauth-sign": {
+                  "version": "0.3.0"
+                },
+                "hawk": {
+                  "version": "1.0.0",
+                  "dependencies": {
+                    "hoek": {
+                      "version": "0.9.1"
+                    },
+                    "boom": {
+                      "version": "0.4.2"
+                    },
+                    "cryptiles": {
+                      "version": "0.2.2"
+                    },
+                    "sntp": {
+                      "version": "0.2.4"
+                    }
+                  }
+                },
+                "aws-sign2": {
+                  "version": "0.5.0"
+                }
+              }
+            },
+            "semver": {
+              "version": "2.2.1"
+            },
+            "tar": {
+              "version": "0.1.19",
+              "dependencies": {
+                "inherits": {
+                  "version": "2.0.1"
+                },
+                "block-stream": {
+                  "version": "0.0.7"
+                },
+                "fstream": {
+                  "version": "0.1.25",
+                  "dependencies": {
+                    "graceful-fs": {
+                      "version": "2.0.2"
+                    }
+                  }
+                }
+              }
+            },
+            "tar-pack": {
+              "version": "2.0.0",
+              "dependencies": {
+                "uid-number": {
+                  "version": "0.0.3"
+                },
+                "once": {
+                  "version": "1.1.1"
+                },
+                "debug": {
+                  "version": "0.7.4"
+                },
+                "fstream": {
+                  "version": "0.1.25",
+                  "dependencies": {
+                    "graceful-fs": {
+                      "version": "2.0.2"
+                    },
+                    "inherits": {
+                      "version": "2.0.1"
+                    }
+                  }
+                },
+                "fstream-ignore": {
+                  "version": "0.0.7",
+                  "dependencies": {
+                    "minimatch": {
+                      "version": "0.2.14",
+                      "dependencies": {
+                        "sigmund": {
+                          "version": "1.0.0"
+                        }
+                      }
+                    },
+                    "inherits": {
+                      "version": "2.0.1"
+                    }
+                  }
+                },
+                "readable-stream": {
+                  "version": "1.0.26-2",
+                  "dependencies": {
+                    "string_decoder": {
+                      "version": "0.10.25-1"
+                    }
+                  }
+                },
+                "graceful-fs": {
+                  "version": "1.2.3"
+                }
+              }
+            },
+            "mkdirp": {
+              "version": "0.3.5"
+            },
+            "rc": {
+              "version": "0.3.4",
+              "dependencies": {
+                "minimist": {
+                  "version": "0.0.8"
+                },
+                "deep-extend": {
+                  "version": "0.2.8"
+                },
+                "ini": {
+                  "version": "1.1.0"
+                }
+              }
+            },
+            "rimraf": {
+              "version": "2.2.6"
             }
           }
         }
