@@ -239,12 +239,15 @@ test('KML format, unauthenticated, concurrent requests', function(done){
             agent: false // or should this be true ?
         }).on('response', function(res) {
             //console.log("Response started");
-            //res.body = '';
+            res.body = '';
             //res.setEncoding('binary');
-            //res.on('data', function(chunk){ res.body += chunk; });
+            res.on('data', function(chunk){ res.body += chunk; });
             res.on('end', function(){
               //console.log("Response ended");
               assert.equal(res.statusCode, 200, res.body);
+              assert.ok(res.body);
+              var snippet = res.body.substr(0, 5);
+              assert.equal(snippet, "<?xml");
               var cd = res.headers['content-disposition'];
               assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
               assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
