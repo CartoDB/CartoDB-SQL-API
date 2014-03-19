@@ -221,13 +221,14 @@ ogr.prototype.toOGR_SingleFile = function(options, fmt, callback) {
 ogr.prototype.sendResponse = function(opts, callback) {
   var next = callback;
   var reqKey = this.getKey(opts);
-  var qElem = new ExportRequest(opts.sink, callback);
+  var qElem = new ExportRequest(opts.sink, callback, opts.beforeSink);
   var baking = bakingExports[reqKey];
   if ( baking ) {
     baking.req.push( qElem );
   } else {
     baking = bakingExports[reqKey] = { req: [ qElem ] };
     this.generate(opts, function(err, dumpfile) {
+      if ( opts.profiler ) opts.profiler.done('generate');
       Step (
         function sendResults() {
           var nextPipe = function(finish) {
@@ -266,8 +267,9 @@ ogr.prototype.sendResponse = function(opts, callback) {
 
 // TODO: put in an ExportRequest.js ----- {
 
-function ExportRequest(ostream, callback) {
+function ExportRequest(ostream, callback, beforeSink) {
   this.cb = callback;
+  this.beforeSink = beforeSink;
   this.ostream = ostream;
   this.istream = null;
   this.canceled = false;
@@ -289,6 +291,7 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
     //console.log("Creating readable stream out of dumpfile");
     this.istream = fs.createReadStream(filename)
     .on('open', function(fd) {
+      if ( that.beforeSink ) that.beforeSink();
       that.istream.pipe(that.ostream);
       callback();
     })

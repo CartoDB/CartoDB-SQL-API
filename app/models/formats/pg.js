@@ -45,6 +45,8 @@ pg.prototype.handleQueryEnd = function(result) {
     return;
   }
 
+  if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+
   //console.log("Got query end, result is "); console.dir(result);
 
   var end = Date.now();
@@ -74,8 +76,11 @@ pg.prototype.handleQueryEnd = function(result) {
 
         if (err) throw err;
 
+        if ( that.opts.profiler ) that.opts.profiler.done('packageResult');
+
         // return to browser
         if ( out ) {
+          if ( that.opts.beforeSink ) that.opts.beforeSink();
           that.opts.sink.send(out);
         } else {
 console.error("No output from transform, doing nothing ?!");
@@ -111,6 +116,7 @@ pg.prototype.sendResponse = function(opts, callback) {
         callback(err);
         return;
       }
+      if ( that.opts.profiler ) that.opts.profiler.done('eventedQuery');
 
       query.on('row', that.handleQueryRow.bind(that));
       query.on('end', that.handleQueryEnd.bind(that));

@@ -5,6 +5,7 @@ New features:
 
  * Add optional support for rollbar (#137)
  * Add '/version' endpoint (#138)
+ * Add profiler support (#142)
 
 Enhancements:
 

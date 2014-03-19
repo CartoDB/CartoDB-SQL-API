@@ -1,5 +1,6 @@
 module.exports.base_url     = '/api/:version';
-module.exports.log_format   = '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]';
+module.exports.useProfiler = true;
+module.exports.log_format   = '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler])';
 // Regular expression pattern to extract username
 // from hostname. Must have a single grabbing block.
 module.exports.user_from_host = '^([^.]*)\\.';

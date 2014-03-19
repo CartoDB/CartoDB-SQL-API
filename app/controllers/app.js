@@ -27,6 +27,7 @@ var express = require('express')
     , zlib        = require('zlib')
     , util        = require('util')
     , spawn       = require('child_process').spawn
+    , Profiler    = require('step-profiler')
     , Meta        = require('cartodb-redis')({
         host: global.settings.redis_host,
         port: global.settings.redis_port
@@ -83,6 +84,14 @@ if ( global.log4js ) {
   app.use(log4js.connectLogger(log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
 } else {
   app.use(express.logger(loggerOpts));
+}
+
+// Use step-profiler
+if ( global.settings.useProfiler ) {
+  app.use(function(req, res, next) {
+    req.profiler = new Profiler({});
+    next();
+  });
 }
 
 // Set connection timeout
@@ -160,6 +169,8 @@ function handleQuery(req, res) {
     var tableCacheItem;
     var requestProtocol = req.protocol;
 
+    if ( req.profiler ) req.profiler.start('sqlapi.query');
+
     req.aborted = false;
     req.on("close", function() {
       console.log("Request closed unexpectedly (aborted?)");
@@ -224,6 +235,8 @@ function handleQuery(req, res) {
 
         var cdbuser = cdbReq.userByReq(req);
 
+        if ( req.profiler ) req.profiler.start('init');
+
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -249,6 +262,7 @@ function handleQuery(req, res) {
                   }
                   throw err;
                 }
+                if ( req.profiler ) req.profiler.done('getDatabaseName');
 
                 database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
                 dbopts.dbname = database;
@@ -261,6 +275,7 @@ function handleQuery(req, res) {
             },
             function setUserGetDBHost(err, data){
                 if (err) throw err;
+                if ( req.profiler ) req.profiler.done('verifyRequest_' + ( api_key ? 'apikey' : 'oauth' ) );
                 user_id = data; 
                 authenticated = ! _.isNull(user_id);
 
@@ -275,6 +290,7 @@ function handleQuery(req, res) {
             },
             function setDBHostGetPassword(err, data){
                 if (err) throw err;
+                if ( req.profiler ) req.profiler.done('getUserDBHost');
 
                 dbopts.host = data || global.settings.db_host;
 
@@ -285,6 +301,7 @@ function handleQuery(req, res) {
             },
             function queryExplain(err, data){
                 if (err) throw err;
+                if ( req.profiler ) req.profiler.done('getUserDBPass');
                 checkAborted('queryExplain');
 
                 if ( authenticated ) {
@@ -310,6 +327,7 @@ function handleQuery(req, res) {
             },
             function setHeaders(err, result){
                 if (err) throw err;
+                if ( req.profiler ) req.profiler.done('queryExplain');
                 checkAborted('setHeaders');
 
                 // store explain result in local Cache
@@ -386,6 +404,7 @@ function handleQuery(req, res) {
             },
             function generateFormat(err, result){
                 if (err) throw err;
+                if ( req.profiler ) req.profiler.done('setHeaders');
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
@@ -399,13 +418,25 @@ function handleQuery(req, res) {
                   skipfields: skipfields,
                   sql: sql,
                   filename: filename,
-                  abortChecker: checkAborted
+                  abortChecker: checkAborted,
+                }
+
+                if ( req.profiler ) {
+                  opts.profiler = req.profiler;
+                  opts.beforeSink = function() {
+                    req.profiler.done('sendResponse');
+                    var report = req.profiler.toString();
+                    res.header('X-SQLAPI-Profiler', report);
+                  };
                 }
 
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
                 if ( err ) handleException(err, res);
+                if ( req.profiler ) {
+                  req.profiler.sendStats(); // TODO: do on nextTick ?
+                }
             }
         );
     } catch (err) {
@@ -460,11 +491,23 @@ function handleException(err, res){
     // Force inline content disposition
     res.header("Content-Disposition", 'inline');
 
+    if ( res.req && res.req.profiler ) {
+      var req = res.req;
+      req.profiler.done('finish');
+      var report = req.profiler.toString();
+      res.header('X-SQLAPI-Profiler', report);
+    }
+
     // if the exception defines a http status code, use that, else a 400
     if (!_.isUndefined(err.http_status)){
         res.send(msg, err.http_status);
     } else {
         res.send(msg, 400);
+    }
+
+    if ( res.req && res.req.profiler ) {
+      var req = res.req;
+      req.profiler.sendStats();
     }
 }
 
