@@ -27,9 +27,10 @@ test('invalid api key should NOT allow insert in protected tables', function(don
 
         headers: {host: 'vizzuality.cartodb.com' },
         method: 'GET'
-    },{
-        status: 400
-    }, function() { done(); });
+    },{}, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        done();
+    });
 });
 
 test('invalid api key (old redis location) should NOT allow insert in protected tables', function(done){
@@ -39,9 +40,10 @@ test('invalid api key (old redis location) should NOT allow insert in protected 
 
         headers: {host: 'vizzuality.cartodb.com' },
         method: 'GET'
-    },{
-        status: 400
-    }, function() { done(); });
+    },{}, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        done();
+    });
 });
 
 test('no api key should NOT allow insert in protected tables', function(done){
@@ -51,9 +53,10 @@ test('no api key should NOT allow insert in protected tables', function(done){
 
         headers: {host: 'vizzuality.cartodb.com' },
         method: 'GET'
-    },{
-        status: 400
-    }, function() { done(); });
+    },{}, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        done();
+    });
 });
 
 test('no api key should NOT allow insert in public tables', function(done){
@@ -63,9 +66,10 @@ test('no api key should NOT allow insert in public tables', function(done){
 
         headers: {host: 'vizzuality.cartodb.com' },
         method: 'GET'
-    },{
-        status: 400
-    }, function() { done(); });
+    },{}, function(res) {
+        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        done();
+    });
 });
 
 });
