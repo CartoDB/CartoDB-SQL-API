@@ -65,6 +65,9 @@ pg.prototype.handleQueryEnd = function(result) {
 
   Step (
     function packageResult() {
+      if ( that.opts.abortChecker ) {
+        that.opts.abortChecker('packageResult');
+      }
       that.transform(result, that.opts, this);
     },
     function sendResults(err, out){

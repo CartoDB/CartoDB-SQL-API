@@ -133,7 +133,7 @@ assert.response = function(server, req, res, msg){
             timer = setTimeout(function(){
                 check();
                 delete req.timeout;
-                assert.fail(msg + 'Request timed out after ' + requestTimeout + 'ms.');
+                request.destroy(); // will trigger 'error' event
             }, requestTimeout);
         }
 

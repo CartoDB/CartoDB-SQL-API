@@ -160,6 +160,22 @@ function handleQuery(req, res) {
     var tableCacheItem;
     var requestProtocol = req.protocol;
 
+    req.aborted = false;
+    req.on("close", function() {
+      console.log("Request closed unexpectedly (aborted?)");
+      req.aborted = true; // TODO: there must be a builtin way to check this
+    });
+
+    function checkAborted(step) {
+      if ( req.aborted ) {
+        var err = new Error("Request aborted during " + step);
+        // We'll use status 499, same as ngnix in these cases
+        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
+        err.http_status = 499;
+        throw err;
+      }
+    }
+
     try {
 
         // sanitize and apply defaults to input
@@ -215,6 +231,7 @@ function handleQuery(req, res) {
         // 5. Send formatted results back
         Step(
             function getDatabaseName() {
+                checkAborted('getDatabaseName');
                 if (_.isNull(database)) {
                     Meta.getUserDBName(cdbuser, this);
                 } else {
@@ -268,6 +285,7 @@ function handleQuery(req, res) {
             },
             function queryExplain(err, data){
                 if (err) throw err;
+                checkAborted('queryExplain');
 
                 if ( authenticated ) {
                   if ( global.settings.hasOwnProperty('db_user_pass') ) {
@@ -292,6 +310,7 @@ function handleQuery(req, res) {
             },
             function setHeaders(err, result){
                 if (err) throw err;
+                checkAborted('setHeaders');
 
                 // store explain result in local Cache
                 if ( ! tableCacheItem ) {
@@ -367,6 +386,7 @@ function handleQuery(req, res) {
             },
             function generateFormat(err, result){
                 if (err) throw err;
+                checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
                 sql = PSQL.window_sql(sql,limit,offset);
@@ -378,7 +398,8 @@ function handleQuery(req, res) {
                   dp: dp,
                   skipfields: skipfields,
                   sql: sql,
-                  filename: filename
+                  filename: filename,
+                  abortChecker: checkAborted
                 }
 
                 formatter.sendResponse(opts, this);
