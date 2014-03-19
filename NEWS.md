@@ -15,6 +15,7 @@ Enhancements:
  * Print environment configuration name on app start
  * Upgrade node-zipfile to ~0.5.0
  * Add support for node-0.10 (#132)
+ * Fix lack of response on backend crash (#135)
 
 1.8.3 - 2014-02-10
 ------------------
