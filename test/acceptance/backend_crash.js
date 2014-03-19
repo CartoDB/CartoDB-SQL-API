@@ -26,7 +26,7 @@ suiteSetup(function(done){
 });
 
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/135
-test.skip('does not hang server', function(done){
+test('does not hang server', function(done){
 //console.log("settings:"); console.dir(global.settings);
   var db_host_backup = global.settings.db_host;
   var db_port_backup = global.settings.db_port;
@@ -45,8 +45,31 @@ test.skip('does not hang server', function(done){
       });
     },
     function checkResponse(err, res) {
-      assert.ok(err);
-      assert.ok(err.message.match(/hang up/), err);
+      if ( err ) throw err;
+      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      var parsed = JSON.parse(res.body);
+      assert.ok(parsed.error);
+      var msg = parsed.error[0];
+      assert.ok(msg.match(/unexpected.*end/), msg);
+      return null;
+    },
+    function sendAnotherQuery() {
+      var next = this;
+      assert.response(app, {
+          url: '/api/v1/sql?q=SELECT+2',
+          method: 'GET',
+          headers: {host: 'vizzuality.localhost' }
+      },{}, function(res, err) {
+          next(err, res);
+      });
+    },
+    function checkResponse(err, res) {
+      if ( err ) throw err;
+      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      var parsed = JSON.parse(res.body);
+      assert.ok(parsed.error);
+      var msg = parsed.error[0];
+      assert.ok(msg.match(/connect/), msg);
       return null;
     },
     function finish(err) {
