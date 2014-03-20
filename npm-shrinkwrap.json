@@ -98,9 +98,6 @@
         }
       }
     },
-    "node-uuid": {
-      "version": "1.3.3"
-    },
     "lru-cache": {
       "version": "2.2.4"
     },
