@@ -20,6 +20,10 @@ Enhancements:
  * Fix lack of response on backend crash (#135)
  * Reduce work on aborted requests (#129)
 
+Other changes:
+
+ * Switch to 3-clause BSD license (#143)
+
 1.8.3 - 2014-02-10
 ------------------
 
