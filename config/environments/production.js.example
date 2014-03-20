@@ -1,4 +1,7 @@
 module.exports.base_url     = '/api/:version';
+// If useProfiler is true every response will be served with an
+// X-SQLAPI-Profile header containing elapsed timing for various
+// steps taken for producing the response.
 module.exports.useProfiler = true;
 module.exports.log_format   = '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler])';
 // Regular expression pattern to extract username
