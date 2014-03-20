@@ -110,9 +110,12 @@ ALTER TABLE ONLY private_table ADD CONSTRAINT test_table_pkey_p PRIMARY KEY (car
 CREATE INDEX test_table_the_geom_idx_p ON private_table USING gist (the_geom);
 CREATE INDEX test_table_the_geom_webmercator_idx_p ON private_table USING gist (the_geom_webmercator);
 
-
-
+-- public user role
+DROP USER IF EXISTS :PUBLICUSER;
 CREATE USER :PUBLICUSER WITH PASSWORD ':PUBLICPASS';
+
+-- db owner role
+DROP USER IF EXISTS :TESTUSER;
 CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
 
 GRANT ALL ON TABLE untitle_table_4 TO :TESTUSER;
