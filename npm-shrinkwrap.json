@@ -132,6 +132,9 @@
       "version": "0.0.1",
       "from": "git://github.com/CartoDB/node-step-profiler.git#0.0.1"
     },
+    "node-statsd": {
+      "version": "0.0.7"
+    },
     "redis": {
       "version": "0.7.1"
     },

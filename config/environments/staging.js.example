@@ -52,3 +52,11 @@ module.exports.rollbar = {
       handler: 'inline'
     }
 }
+// Optional statsd support
+module.exports.statsd = {
+  host: 'localhost',
+  port: 8125,
+  prefix: 'dev.:host.',
+  cacheDns: true
+  // support all allowed node-statsd options
+}

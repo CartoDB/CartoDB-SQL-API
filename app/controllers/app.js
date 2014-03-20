@@ -24,10 +24,12 @@ var express = require('express')
     , Step        = require('step')
     , crypto      = require('crypto')
     , fs          = require('fs')
+    , os          = require('os')
     , zlib        = require('zlib')
     , util        = require('util')
     , spawn       = require('child_process').spawn
     , Profiler    = require('step-profiler')
+    , StatsD      = require('node-statsd').StatsD
     , Meta        = require('cartodb-redis')({
         host: global.settings.redis_host,
         port: global.settings.redis_port
@@ -86,10 +88,50 @@ if ( global.log4js ) {
   app.use(express.logger(loggerOpts));
 }
 
+// Initialize statsD client if requested
+var statsd_client;
+if ( global.settings.statsd ) {
+
+  // Perform keyword substitution in statsd
+  if ( global.settings.statsd.prefix ) {
+    var host_token = os.hostname().split('.').reverse().join('.');
+    global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, host_token);
+  }
+
+  statsd_client = new StatsD(global.settings.statsd);
+  statsd_client.last_error = { msg:'', count:0 };
+  statsd_client.socket.on('error', function(err) {
+    var last_err = statsd_client.last_error;
+    var last_msg = last_err.msg;
+    var this_msg = ''+err;
+    if ( this_msg != last_msg ) {
+      console.error("statsd client socket error: " + err);
+      statsd_client.last_error.count = 1;
+      statsd_client.last_error.msg = this_msg;
+    } else {
+        ++last_err.count;
+        if ( ! last_err.interval ) {
+          //console.log("Installing interval");
+          statsd_client.last_error.interval = setInterval(function() {
+            var count = statsd_client.last_error.count
+            if ( count > 1 ) {
+              console.error("last statsd client socket error repeated " + count + " times");
+              statsd_client.last_error.count = 1;
+              //console.log("Clearing interval");
+              clearInterval(statsd_client.last_error.interval);
+              statsd_client.last_error.interval = null;
+            }
+          }, 1000);
+        }
+    }
+  });
+}
+
+
 // Use step-profiler
 if ( global.settings.useProfiler ) {
   app.use(function(req, res, next) {
-    req.profiler = new Profiler({});
+    req.profiler = new Profiler({statsd_client:statsd_client});
     next();
   });
 }
@@ -235,7 +277,7 @@ function handleQuery(req, res) {
 
         var cdbuser = cdbReq.userByReq(req);
 
-        if ( req.profiler ) req.profiler.start('init');
+        if ( req.profiler ) req.profiler.done('init');
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
@@ -437,10 +479,15 @@ function handleQuery(req, res) {
                 if ( req.profiler ) {
                   req.profiler.sendStats(); // TODO: do on nextTick ?
                 }
+                if (statsd_client) {
+                  if ( err ) statsd_client.increment('sqlapi.query.error');
+                  else statsd_client.increment('sqlapi.query.success');
+                }
             }
         );
     } catch (err) {
         handleException(err, res);
+        if (statsd_client) statsd_client.increment('sqlapi.query.error');
     }
 }
 
