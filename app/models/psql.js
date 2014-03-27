@@ -269,6 +269,9 @@ PSQL.window_sql = function(sql, limit, offset) {
   // only window select functions (NOTE: "values" will be broken, "with" will be broken)
   if (!_.isNumber(limit) || !_.isNumber(offset) ) return sql;
 
+  // Strip comments
+  sql = sql.replace(/(^|\n)\s*--.*\n/g, '');
+
   var cte = '';
 
   if ( sql.match(/^\s*WITH\s/i) ) {

@@ -1,6 +1,9 @@
 1.9.1 - 2014-MM-DD
 ------------------
 
+Bug fixes:
+
+ * Fix paging with queries starting with comments (#144)
 
 1.9.0 - 2014-03-20
 ------------------
