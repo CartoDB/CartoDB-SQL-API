@@ -292,6 +292,33 @@ test("paging", function(done){
     testNext();
 });
 
+// Test paging with WITH queries
+test("paging starting with comment", function(done){
+    var sql = "-- this is a comment\n" +
+              "SELECT * FROM (VALUES(1),(2),(3),(4),(5),(6),(7),(8),(9)) t(v)";
+    var nrows = 3;
+    var page = 2;
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+          q: sql,
+          rows_per_page: nrows,
+          page: page
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+      }, {}, function(res) {
+          assert.equal(res.statusCode, 200, res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, 3);
+          for (var i=0; i<nrows; ++i) {
+            var obt = parsed.rows[i].v;
+            var exp = page * nrows + i + 1;
+            assert.equal(obt, exp, "Value " + i + " in page " + page + " is " + obt + ", expected " + exp);
+          }
+          done();
+      });
+});
+
 test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
