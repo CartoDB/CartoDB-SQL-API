@@ -230,24 +230,66 @@ function(done){
 
 // Test page and rows_per_page params
 test("paging", function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          // note: select casing intentionally mixed
-          q: 'SELECT * FROM (VALUES(1),(2),(3),(4),(5),(6),(7),(8),(9)) t(v)',
-          rows_per_page: 3,
-          page: 2
-        }),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res) {
-        assert.equal(res.statusCode, 200, res.body);
-        var parsed = JSON.parse(res.body);
-        assert.equal(parsed.rows.length, 3);
-        assert.equal(parsed.rows[0].v, 7);
-        assert.equal(parsed.rows[1].v, 8);
-        assert.equal(parsed.rows[2].v, 9);
-        done();
-    });
+    var sql = 'SELECT * FROM (VALUES(1),(2),(3),(4),(5),(6),(7),(8),(9)) t(v)';
+    var pr = [ [2,3], [0,4] ]; // page and rows
+    var methods = [ 'GET', 'POST' ];
+    var authorized = 0;
+    var testing = 0;
+    var method = 0;
+    var testNext = function() {
+      if ( testing >= pr.length ) {
+        if ( method+1 >= methods.length ) {
+          if ( authorized ) {
+            done();
+            return;
+          } else {
+            authorized = 1;
+            method = 0;
+            testing = 0;
+          }
+        } else {
+          testing = 0;
+          ++method;
+        }
+      }
+      var prcur = pr[testing++];
+      console.log("Test " + testing + "/" + pr.length
+                + " method " + methods[method] + " "
+                + ( authorized ? "authenticated" : "" ) );
+      var page = prcur[0];
+      var nrows = prcur[1];
+      var data_obj = {
+            q: sql,
+            rows_per_page: nrows,
+            page: page
+          };
+      if ( authorized ) data_obj['api_key'] = '1234';
+      var data = querystring.stringify(data_obj);
+      var req = {
+          url: '/api/v1/sql',
+          headers: {host: 'vizzuality.cartodb.com'}
+      };
+      if ( methods[method] == 'GET' ) {
+        req.method = 'GET';
+        req.url += '?' + data;
+      } else {
+        req.method = 'POST';
+        req.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        req.data = data;
+      }
+      assert.response(app, req, {}, function(res) {
+          assert.equal(res.statusCode, 200, res.body);
+          var parsed = JSON.parse(res.body);
+          assert.equal(parsed.rows.length, nrows);
+          for (var i=0; i<nrows; ++i) {
+            var obt = parsed.rows[i].v;
+            var exp = page * nrows + i + 1;
+            assert.equal(obt, exp, "Value " + i + " in page " + page + " is " + obt + ", expected " + exp);
+          }
+          testNext();
+      });
+    };
+    testNext();
 });
 
 test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
