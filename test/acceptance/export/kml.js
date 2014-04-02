@@ -271,8 +271,11 @@ test('GET /api/v1/sql as kml with no rows', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
-        assert.equal(res.body.replace(/\n/g,''), body);
+        // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
+        var pat = RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var body = res.body.replace(/\n/g,'');
+        assert.ok(body.match(pat),
+          "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
         done();
     });
 });
@@ -288,8 +291,11 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
         method: 'GET'
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
-        var body = '<?xml version="1.0" encoding="utf-8" ?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Folder><name>cartodb_query</name></Folder></Document></kml>';
-        assert.equal(res.body.replace(/\n/g,''), body);
+        // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
+        var pat = RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var body = res.body.replace(/\n/g,'');
+        assert.ok(body.match(pat),
+          "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
         done();
     });
 });
