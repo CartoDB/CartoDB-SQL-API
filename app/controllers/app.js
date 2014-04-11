@@ -71,7 +71,7 @@ Date.prototype.toJSON = function() {
     s += ( offset < 0 ? '+' : '-' )
       + pad(Math.abs(offset / 60))
       + pad(Math.abs(offset % 60))
-        
+
   }
   return s;
 }
@@ -165,19 +165,16 @@ app.get(global.settings.base_url+'/version', function(req, res) {
   res.send(getVersion());
 });
 
-// Return true of the given query may write to the database
-//
-// NOTE: this is a fuzzy check, the return could be true even
-//       if the query doesn't really write anything.
-//       But you can be pretty sure of a false return.
-//
+var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
+/**
+ * This is a fuzzy check, the return could be true even if the query doesn't really write anything. But you can be
+ * pretty sure of a false return.
+ *
+ * @param sql
+ * @returns {boolean} Return true of the given query may write to the database
+ */
 function queryMayWrite(sql) {
-  var mayWrite = false;
-  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
-  if ( pattern.test(sql) ) {
-    mayWrite = true;
-  }
-  return mayWrite;
+    return sqlQueryMayWriteRegex.test(sql);
 }
 
 function sanitize_filename(filename) {
