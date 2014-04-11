@@ -170,7 +170,7 @@ var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|dr
  * This is a fuzzy check, the return could be true even if the query doesn't really write anything. But you can be
  * pretty sure of a false return.
  *
- * @param sql
+ * @param sql The SQL statement to check against
  * @returns {boolean} Return true of the given query may write to the database
  */
 function queryMayWrite(sql) {
