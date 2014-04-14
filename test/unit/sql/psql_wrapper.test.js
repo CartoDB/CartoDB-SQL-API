@@ -55,8 +55,8 @@ suite('psql_wrapper', function() {
         assert.notEqual(aWrapper.query(), bWrapper.query(), 'queries should be different');
     });
 
-    test('Order by SQL with simple select and empty column name', function() {
-        var expectedSql = 'SELECT * FROM (' + simpleSql + ') AS cdbq_1';
+    test('Order by SQL with simple select and empty column name returns original query', function() {
+        var expectedSql = simpleSql;
 
         var outputSql = new PSQLWrapper(simpleSql).orderBy('').query();
 

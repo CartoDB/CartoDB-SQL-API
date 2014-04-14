@@ -56,6 +56,9 @@ PSQLWrapper.prototype.orderBy = function (column, sortOrder) {
  * @returns {string} The SQL query with the extra clauses
  */
 PSQLWrapper.prototype.query = function () {
+    if (_.isEmpty(this.sqlClauses.orderBy) && _.isEmpty(this.sqlClauses.limit)) {
+        return this.sqlQuery;
+    }
     // Strip comments
     this.sqlQuery = this.sqlQuery.replace(/(^|\n)\s*--.*\n/g, '');
 
