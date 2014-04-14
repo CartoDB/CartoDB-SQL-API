@@ -86,40 +86,6 @@ test('test public user cannot execute INSERT on db', function(done){
   });
 });
 
-test('Windowed SQL with simple select', function(){
-  // NOTE: intentionally mixed-case and space-padded
-  var sql = "\n \tSEleCT * from table1";
-  var out = PSQL.window_sql(sql, 1, 0);
-  assert.equal(out, "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT 1 OFFSET 0");
-});
-
-test('Windowed SQL with CTE select', function(){
-  // NOTE: intentionally mixed-case and space-padded
-  var cte = "\n \twiTh  x as( update test set x=x+1)";
-  var select = "\n \tSEleCT * from x";
-  var sql = cte + select;
-  var out = PSQL.window_sql(sql, 1, 0);
-  assert.equal(out, cte + "SELECT * FROM (" + select + ") AS cdbq_1 LIMIT 1 OFFSET 0");
-});
-
-test('Windowed SQL with CTE update', function(){
-  // NOTE: intentionally mixed-case and space-padded
-  var cte = "\n \twiTh  a as( update test set x=x+1)";
-  var upd = "\n \tupdate tost set y=x from x";
-  var sql = cte + upd;
-  var out = PSQL.window_sql(sql, 1, 0);
-  assert.equal(out, sql);
-});
-
-test('Windowed SQL with complex CTE and insane quoting', function(){
-  // NOTE: intentionally mixed-case and space-padded
-  var cte = "\n \twiTh \"('a\" as( update \"\"\"test)\" set x='x'+1), \")b(\" as ( select ')))\"' from z )";
-  var sel = "\n \tselect '\"' from x";
-  var sql = cte + sel;
-  var out = PSQL.window_sql(sql, 1, 0);
-  assert.equal(out, cte + "SELECT * FROM (" + sel + ") AS cdbq_1 LIMIT 1 OFFSET 0");
-});
-
 test('dbkey depends on dbopts', function(){
   var opt1 = _.clone(dbopts_anon);
   opt1.dbname = 'dbname1';
