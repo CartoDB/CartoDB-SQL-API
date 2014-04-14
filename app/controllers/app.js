@@ -37,6 +37,7 @@ var express = require('express')
  // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
+    , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
@@ -195,6 +196,8 @@ function handleQuery(req, res) {
     var database  = params.database; // TODO: Deprecate
     var limit     = parseInt(params.rows_per_page);
     var offset    = parseInt(params.page);
+    var orderBy   = params.order_by;
+    var sortOrder = params.sort_order;
     var requestedFormat = params.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
@@ -447,7 +450,7 @@ function handleQuery(req, res) {
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
-                sql = PSQL.window_sql(sql,limit,offset);
+                sql = new PSQLWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
                   dbopts: dbopts,
