@@ -94,4 +94,22 @@ suite('psql_wrapper', function() {
 
         assert.equal(outputSql, expectedSql);
     });
+
+    test('Query with ending semicolon returns without it', function() {
+        var expectedSql = 'select a, ( a - min(a) over() ) / ( ( max(a) over () - min(a) over () ) / 4 ) as interval from ( select test as a from quantile_test ) as f',
+            query = expectedSql + ';';
+
+        var outputSql = new PSQLWrapper(query).query();
+
+        assert.equal(outputSql, expectedSql);
+    });
+
+    test('Several queries with semicolon get only last semicolon removed', function() {
+        var expectedSql = 'SELECT 1; SELECT 2; SELECT 3',
+            query = expectedSql + ';';
+
+        var outputSql = new PSQLWrapper(query).query();
+
+        assert.equal(outputSql, expectedSql);
+    });
 });
