@@ -7,7 +7,7 @@ var _    = require('underscore'),
     REGEX_INTO = /\sINTO\s+([^\s]+|"([^"]|"")*")\s*$/i;
 
 function PSQLWrapper(sql) {
-    this.sqlQuery = sql;
+    this.sqlQuery = sql.replace(/;\s*$/, '');
     this.sqlClauses = {
         orderBy: '',
         limit: ''
