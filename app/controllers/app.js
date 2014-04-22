@@ -27,7 +27,6 @@ var express = require('express')
     , os          = require('os')
     , zlib        = require('zlib')
     , util        = require('util')
-    , spawn       = require('child_process').spawn
     , Profiler    = require('step-profiler')
     , StatsD      = require('node-statsd').StatsD
     , Meta        = require('cartodb-redis')({
