@@ -16,7 +16,7 @@
 //
 
 if ( ! process.env['PGAPPNAME'] )
-  process.env['PGAPPNAME']='cartodb_sqlapi_XXX';
+  process.env['PGAPPNAME']='cartodb_sqlapi';
 
 function App() {
 
