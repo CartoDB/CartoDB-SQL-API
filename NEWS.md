@@ -9,6 +9,7 @@ Enhancements:
 
  * Stream JSON responses
  * Pre-compiling may write regex
+ * Set default PostgreSQL application name to "cartodb_sqlapi"
 
 Bug fixes:
 
