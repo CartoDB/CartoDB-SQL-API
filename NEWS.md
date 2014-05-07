@@ -1,9 +1,18 @@
 1.10.0 - 2014-MM-DD
 -------------------
 
+New features:
+
+ * Order by and sort order through http query params
+
 Enhancements:
 
  * Stream JSON responses
+ * Pre-compiling may write regex
+
+Bug fixes:
+
+ * Support trailing semicolons (#147)
 
 1.9.1 - 2014-03-27
 ------------------
