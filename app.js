@@ -9,7 +9,9 @@
 * environments: [development, test, production]
 *
 */
-var _ = require('underscore');
+var _ = require('underscore'),
+    fs = require('fs'),
+    path = require('path');
 
 if ( process.argv[2] ) ENV = process.argv[2];
 else if ( process.env['NODE_ENV'] ) ENV = process.env['NODE_ENV'];
@@ -31,11 +33,27 @@ _.extend(global.settings, env);
 
 global.log4js = require('log4js')
 log4js_config = {
-  appenders: [
-    { type: "console", layout: { type:'basic' } }
-  ],
+  appenders: [],
   replaceConsole:true
 };
+
+if ( env.log_filename ) {
+    var logdir = path.dirname(env.log_filename);
+    // See cwd inlog4js.configure call below
+    logdir = path.resolve(__dirname, logdir);
+    if ( ! fs.existsSync(logdir) ) {
+        console.error("Log filename directory does not exist: " + logdir);
+        process.exit(1);
+    }
+    console.log("Logs will be written to " + env.log_filename);
+    log4js_config.appenders.push(
+        { type: "file", filename: env.log_filename }
+    );
+} else {
+    log4js_config.appenders.push(
+        { type: "console", layout: { type:'basic' } }
+    );
+}
 
 if ( global.settings.rollbar ) {
   log4js_config.appenders.push({
@@ -44,7 +62,7 @@ if ( global.settings.rollbar ) {
   });
 }
 
-log4js.configure(log4js_config);
+log4js.configure(log4js_config, { cwd: __dirname });
 global.logger = log4js.getLogger();
 
  
@@ -63,4 +81,9 @@ app.listen(global.settings.node_port, global.settings.node_host, function() {
 
 process.on('uncaughtException', function(err) {
   logger.error('Uncaught exception: ' + err.stack);
+});
+
+process.on('SIGHUP', function() {
+    log4js.configure(log4js_config);
+    console.log('Log files reloaded');
 });
