@@ -1,6 +1,7 @@
 CartoDB-SQL-API metrics
 =======================
 
+## Timers
 - **sqlapi.query**: time to return a query resultset from the API, splitted into:
     + **sqlapi.query.init**: time to prepare params from the request
     + **sqlapi.query.getDatabaseName**: time to retrieve the database associated to the query
@@ -24,5 +25,7 @@ CartoDB-SQL-API metrics
     + **sqlapi.query.packageResult**: (pg) Time to transform between different formats
         * It's not getting into graphite right now.
     + **sqlapi.query.eventedQuery**: (pg) Time to prepare and execute the query
+
+## Counters
 - **sqlapi.query.success**: number of successful queries
 - **sqlapi.query.error**: number of failed queries
