@@ -182,6 +182,7 @@ var PSQL = function(dbopts) {
                 that.connect(this);
             },
             function(err, client, done){
+                var next = this;
                 if (err) throw err;
                 var query = client.query(sql);
 
@@ -198,10 +199,13 @@ var PSQL = function(dbopts) {
                   client.removeListener('notice', noticeListener);
                   done();
                 }); 
-                return query;
+                next(null, query, client);
             },
-            function(err, query){
-                callback(err, query)
+            function(err, query, client){
+                var queryCanceller = function() {
+                    pg.cancel(undefined, client, query);
+                };
+                callback(err, query, queryCanceller);
             }
         );
     };

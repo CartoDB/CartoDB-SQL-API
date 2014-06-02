@@ -40,6 +40,8 @@ pg.prototype.handleNotice = function(msg, result) {
 };
 
 pg.prototype.handleQueryEnd = function(result) {
+  this.queryCanceller = undefined;
+
   if ( this.error ) {
     this.callback(this.error);
     return;
@@ -111,7 +113,8 @@ pg.prototype.sendResponse = function(opts, callback) {
   this.start_time = Date.now();
 
   this.client = new PSQL(opts.dbopts);
-  this.client.eventedQuery(sql, function(err, query) {
+  this.client.eventedQuery(sql, function(err, query, queryCanceller) {
+      that.queryCanceller = queryCanceller;
       if (err) {
         callback(err);
         return;
@@ -125,6 +128,12 @@ pg.prototype.sendResponse = function(opts, callback) {
         that.handleNotice(msg, query._result);
       });
   });
+};
+
+pg.prototype.cancel = function() {
+    if (this.queryCanceller) {
+        this.queryCanceller.call();
+    }
 };
 
 module.exports = pg;
