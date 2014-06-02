@@ -15,7 +15,7 @@ pg.prototype = {
 
   getFileExtension: function() {
     return this.id;
-  },
+  }
 
 };
 
