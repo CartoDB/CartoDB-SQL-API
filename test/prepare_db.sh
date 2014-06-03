@@ -72,11 +72,11 @@ if test x"$PREPARE_PGSQL" = xyes; then
     sed "s/:PUBLICPASS/${PUBLICPASS}/" |
     sed "s/:TESTUSER/${TESTUSER}/" |
     sed "s/:TESTPASS/${TESTPASS}/" |
-    psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+    psql -U postgres -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
 
   # TODO: send in a single run, togheter with test.sql
-  psql -f support/CDB_QueryStatements.sql ${TEST_DB} 
-  psql -f support/CDB_QueryTables.sql ${TEST_DB} 
+  psql -U postgres -f support/CDB_QueryStatements.sql ${TEST_DB}
+  psql -U postgres -f support/CDB_QueryTables.sql ${TEST_DB}
 
 fi
 
