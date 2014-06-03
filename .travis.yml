@@ -1,7 +1,9 @@
-before_install:
+addons:
+  postgresql: "9.3"
+
+before_script:
   - psql -c 'create database template_postgis;' -U postgres
   - psql -c 'CREATE EXTENSION postgis;' -U postgres -d template_postgis
-  - psql -c 'CREATE EXTENSION postgis_topology;' -U postgres -d template_postgis
   - ./configure
 
 language: node_js
