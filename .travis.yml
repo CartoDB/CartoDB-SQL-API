@@ -1,13 +1,7 @@
 before_install:
-  #- sudo apt-add-repository --yes ppa:ubuntugis/ppa
-  - sudo apt-get update -q
-  # Removal of postgresql-9.1-postgis-scripts is needed due to a
-  # bug in some upstream package.
-  # See http://trac.osgeo.org/ubuntugis/ticket/39
-  - sudo apt-get remove --purge -q postgresql-9.3-postgis-scripts
-  - sudo apt-get install -q postgresql-9.3-postgis gdal-bin
-  - createdb template_postgis
-  - psql -c "CREATE EXTENSION postgis" template_postgis
+  - psql -c 'create database template_postgis;' -U postgres
+  - psql -c 'CREATE EXTENSION postgis;' -U postgres -d template_postgis
+  - psql -c 'CREATE EXTENSION postgis_topology;' -U postgres -d template_postgis
   - ./configure
 
 language: node_js
