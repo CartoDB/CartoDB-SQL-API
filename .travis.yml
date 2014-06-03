@@ -4,8 +4,8 @@ before_install:
   # Removal of postgresql-9.1-postgis-scripts is needed due to a
   # bug in some upstream package.
   # See http://trac.osgeo.org/ubuntugis/ticket/39
-  - sudo apt-get remove --purge -q postgresql-9.1-postgis-scripts 
-  - sudo apt-get install -q postgresql-9.1-postgis gdal-bin
+  - sudo apt-get remove --purge -q postgresql-9.3-postgis-scripts
+  - sudo apt-get install -q postgresql-9.3-postgis gdal-bin
   - createdb template_postgis
   - psql -c "CREATE EXTENSION postgis" template_postgis
   - ./configure
