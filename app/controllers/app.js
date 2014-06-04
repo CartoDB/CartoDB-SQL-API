@@ -217,8 +217,10 @@ function handleQuery(req, res) {
 
     req.aborted = false;
     req.on("close", function() {
-      console.log("Request closed unexpectedly (aborted?)");
-      req.aborted = true; // TODO: there must be a builtin way to check this
+        if (req.formatter && _.isFunction(req.formatter.cancel)) {
+            req.formatter.cancel();
+        }
+        req.aborted = true; // TODO: there must be a builtin way to check this
     });
 
     function checkAborted(step) {
@@ -404,8 +406,9 @@ function handleQuery(req, res) {
                 }
 
 
-                var fClass = formats[format]
+                var fClass = formats[format];
                 formatter = new fClass();
+                req.formatter = formatter;
 
 
                 // configure headers for given format

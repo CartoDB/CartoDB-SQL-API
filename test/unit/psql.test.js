@@ -101,4 +101,12 @@ test('dbkey depends on dbopts', function(){
   assert.ok(_.isString(pg1.dbkey()), "pg1 dbkey is " + pg1.dbkey());
 });
 
+    test('eventedQuery provisions a cancel mechanism to abort queries', function (done) {
+        var psql = new PSQL(dbopts_auth);
+        psql.eventedQuery("SELECT 1 as foo", function(err, query, queryCanceller) {
+            assert.ok(_.isFunction(queryCanceller));
+            done();
+        });
+    });
+
 });
