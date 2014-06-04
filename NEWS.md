@@ -1,5 +1,8 @@
 1.10.1 - 2014-mm-dd
 -------------------
+Bug fixes:
+
+ * Backing out Stream JSON responses
 
 1.10.0 - 2014-06-04
 -------------------
