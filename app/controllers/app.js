@@ -15,6 +15,9 @@
 //
 //
 
+if ( ! process.env['PGAPPNAME'] )
+  process.env['PGAPPNAME']='cartodb_sqlapi';
+
 function App() {
 
 var path = require('path');
