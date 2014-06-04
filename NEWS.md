@@ -4,6 +4,7 @@
 New features:
 
  * Order by and sort order through http query params
+ * Cancelling queries in Postgresql when HTTP request is aborted/closed
 
 Enhancements:
 
