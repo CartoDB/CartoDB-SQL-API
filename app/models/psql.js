@@ -1,6 +1,7 @@
-var _      = require('underscore')
-    , Step   = require('step')
-    , pg     = require('pg');//.native; // disabled for now due to: https://github.com/brianc/node-postgres/issues/48
+var _      = require('underscore'),
+    PSQLWrapper = require('../sql/psql_wrapper'),
+    Step   = require('step'),
+    pg     = require('pg');//.native; // disabled for now due to: https://github.com/brianc/node-postgres/issues/48
 _.mixin(require('underscore.string'));
 
 // Max database connections in the pool
@@ -261,81 +262,19 @@ var PSQL = function(dbopts) {
     return me;
 };
 
-// little hack for UI
-//
-// TODO:drop, fix in the UI (it's not documented in doc/API)
-//
+
+/**
+ * Little hack for UI
+ * TODO: drop, fix in the UI (it's not documented in doc/API)
+ *
+ * @param {string} sql
+ * @param {number} limit
+ * @param {number} offset
+ * @returns {string} The wrapped SQL query with the limit window
+ */
 PSQL.window_sql = function(sql, limit, offset) {
-  // only window select functions (NOTE: "values" will be broken, "with" will be broken)
-  if (!_.isNumber(limit) || !_.isNumber(offset) ) return sql;
-
-  // Strip comments
-  sql = sql.replace(/(^|\n)\s*--.*\n/g, '');
-
-  var cte = '';
-
-  if ( sql.match(/^\s*WITH\s/i) ) {
-
-    var rem = sql; // analyzed portion of sql
-    var q; // quote char
-    var n = 0; // nested parens level
-    var s = 0; // 0:outQuote, 1:inQuote
-    var l;
-    while (1) {
-      l = rem.search(/[("')]/);
-//console.log("REM Is " + rem);
-      if ( l < 0 ) {
-        console.log("Malformed SQL");
-        return sql;
-      }
-      var f = rem.charAt(l);
-//console.log("n:" + n + " s:" + s + " l:" + l + " charAt(l):" + f + " charAt(l+1):" + rem.charAt(l+1));
-      if ( s == 0 ) {
-        if ( f == '(' ) ++n; 
-        else if ( f == ')' ) {
-          if ( ! --n ) { // end of CTE
-            cte += rem.substr(0, l+1);
-            rem = rem.substr(l+1);
-  //console.log("Out of cte, rem is " + rem);
-            if ( rem.search(/^s*,/) < 0 ) break;
-            else continue; // cte and rem already updated
-          }
-        }
-        else { // enter quoting
-          s = 1; q = f;
-        }
-      }
-      else if ( f == q ) {
-        if ( rem.charAt(l+1) == f ) ++l; // escaped
-        else s = 0; // exit quoting
-      }
-      cte += rem.substr(0, l+1);
-      rem = rem.substr(l+1);
-    }
-/*
-console.log("cte: " + cte);
-console.log("rem: " + rem);
-*/
-    sql = rem; //sql.substr(l+1);
-  }
-
-
-  var re_SELECT = RegExp(/^\s*SELECT\s/i);
-  var re_INTO = RegExp(/\sINTO\s+([^\s]+|"([^"]|"")*")\s*$/i);
-
-  //console.log("SQL " + sql);
-  //console.log(" does " + ( sql.match(re_SELECT) ? '' : 'not ' ) + "match re_SELECT " + re_SELECT);
-  //console.log(" does " + ( sql.match(re_INTO) ? '' : 'not ' ) + "match re_INTO " + re_INTO);
-
-  if (
-         sql.match(re_SELECT) &&
-       ! sql.match(re_INTO)
-     )
-  {
-      return cte + "SELECT * FROM (" + sql + ") AS cdbq_1 LIMIT " + limit + " OFFSET " + offset;
-  } 
-
-  return cte + sql;
-}
+    // keeping it here for backwards compatibility
+    return new PSQLWrapper(sql).window(limit, offset).query();
+};
 
 module.exports = PSQL;

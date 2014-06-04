@@ -5,7 +5,7 @@
     "keywords": [
       "cartodb"
     ],
-    "version": "1.9.1",
+    "version": "1.10.0",
     "repository": {
         "type": "git",
         "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
@@ -37,7 +37,7 @@
         "libxmljs": "~0.8.1"
     },
     "scripts": {
-        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/unit/model/*.js test/acceptance/*.js  test/acceptance/export/*.js"
+        "test": "test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/unit/model/*.js test/unit/sql/*.js test/acceptance/*.js  test/acceptance/export/*.js"
     },
     "engines": { "node": ">= 0.4.1 < 0.9" }
 }
