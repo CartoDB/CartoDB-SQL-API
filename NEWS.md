@@ -1,3 +1,27 @@
+1.10.1 - 2014-mm-dd
+-------------------
+Bug fixes:
+
+ * Backing out Stream JSON responses
+
+1.10.0 - 2014-06-04
+-------------------
+
+New features:
+
+ * Order by and sort order through http query params
+ * Cancelling queries in Postgresql when HTTP request is aborted/closed
+
+Enhancements:
+
+ * Stream JSON responses
+ * Pre-compiling may write regex
+ * Set default PostgreSQL application name to "cartodb_sqlapi"
+
+Bug fixes:
+
+ * Support trailing semicolons (#147)
+
 1.9.1 - 2014-03-27
 ------------------
 

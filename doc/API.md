@@ -43,6 +43,16 @@ Supported query string parameters:
               used to specify which page to start returning rows from.
               First page has index 0.
 
+  'order_by':
+              Causes the result rows to be sorted according to the specified
+              case sensitive column name. See also 'sort_order'.
+
+  'sort_order':
+              Optional param combined with 'order_by' one. Values are limited
+              to ASC (ascending) and DESC (descending), case insensitive. If
+              not specified or wrongly specified, ASC is assumed by default.
+
+
 Response formats
 ----------------
 

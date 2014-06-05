@@ -15,6 +15,9 @@
 //
 //
 
+if ( ! process.env['PGAPPNAME'] )
+  process.env['PGAPPNAME']='cartodb_sqlapi';
+
 function App() {
 
 var path = require('path');
@@ -27,7 +30,6 @@ var express = require('express')
     , os          = require('os')
     , zlib        = require('zlib')
     , util        = require('util')
-    , spawn       = require('child_process').spawn
     , Profiler    = require('step-profiler')
     , StatsD      = require('node-statsd').StatsD
     , Meta        = require('cartodb-redis')({
@@ -37,6 +39,7 @@ var express = require('express')
  // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
+    , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
     , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
     , _           = require('underscore')
@@ -71,7 +74,7 @@ Date.prototype.toJSON = function() {
     s += ( offset < 0 ? '+' : '-' )
       + pad(Math.abs(offset / 60))
       + pad(Math.abs(offset % 60))
-        
+
   }
   return s;
 }
@@ -165,19 +168,16 @@ app.get(global.settings.base_url+'/version', function(req, res) {
   res.send(getVersion());
 });
 
-// Return true of the given query may write to the database
-//
-// NOTE: this is a fuzzy check, the return could be true even
-//       if the query doesn't really write anything.
-//       But you can be pretty sure of a false return.
-//
+var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
+/**
+ * This is a fuzzy check, the return could be true even if the query doesn't really write anything. But you can be
+ * pretty sure of a false return.
+ *
+ * @param sql The SQL statement to check against
+ * @returns {boolean} Return true of the given query may write to the database
+ */
 function queryMayWrite(sql) {
-  var mayWrite = false;
-  var pattern = RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
-  if ( pattern.test(sql) ) {
-    mayWrite = true;
-  }
-  return mayWrite;
+    return sqlQueryMayWriteRegex.test(sql);
 }
 
 function sanitize_filename(filename) {
@@ -198,6 +198,8 @@ function handleQuery(req, res) {
     var database  = params.database; // TODO: Deprecate
     var limit     = parseInt(params.rows_per_page);
     var offset    = parseInt(params.page);
+    var orderBy   = params.order_by;
+    var sortOrder = params.sort_order;
     var requestedFormat = params.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
@@ -215,8 +217,10 @@ function handleQuery(req, res) {
 
     req.aborted = false;
     req.on("close", function() {
-      console.log("Request closed unexpectedly (aborted?)");
-      req.aborted = true; // TODO: there must be a builtin way to check this
+        if (req.formatter && _.isFunction(req.formatter.cancel)) {
+            req.formatter.cancel();
+        }
+        req.aborted = true; // TODO: there must be a builtin way to check this
     });
 
     function checkAborted(step) {
@@ -402,8 +406,9 @@ function handleQuery(req, res) {
                 }
 
 
-                var fClass = formats[format]
+                var fClass = formats[format];
                 formatter = new fClass();
+                req.formatter = formatter;
 
 
                 // configure headers for given format
@@ -450,7 +455,7 @@ function handleQuery(req, res) {
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
-                sql = PSQL.window_sql(sql,limit,offset);
+                sql = new PSQLWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
                   dbopts: dbopts,

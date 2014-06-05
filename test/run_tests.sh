@@ -2,6 +2,7 @@
 
 # To make output dates deterministic
 export TZ='Europe/Rome'
+export PGAPPNAME='cartodb_sqlapi_tester'
 
 OPT_CREATE_PGSQL=yes # create/prepare the postgresql test database
 OPT_CREATE_REDIS=yes # create/prepare the redis test databases
