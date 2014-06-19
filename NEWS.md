@@ -1,8 +1,13 @@
 1.10.2 - 2014-mm-dd
 -------------------
 
+Bug fixes:
+
+ * Fixes "make check" on systems with non-default PostgreSQL superuser (#152)
+
 1.10.1 - 2014-06-05
 -------------------
+
 Bug fixes:
 
  * Backing out Stream JSON responses
