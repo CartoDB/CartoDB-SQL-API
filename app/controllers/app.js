@@ -361,41 +361,66 @@ function handleQuery(req, res) {
                 }
 
                 pg = new PSQL(dbopts);
+                if (user_id === null) {
+                  var s = "SET search_path = " + cdbuser + ",cartodb, public";
+                  pg.query(s, this);
+                } else {
+                  return data;
+                }
+            },
 
+            function queryTables(err) {
+                if (err) throw err;
+                var self = this;
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
                 if (tableCacheItem) {
                    tableCacheItem.hits++;
                    return false;
                 } else {
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", this);
+                   //TODO: sanitize cdbuser
+                   console.log("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$");
+                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
+                      if (err) throw err;
+                      if ( result.rowCount === 1 ) {
+                        var raw_tables = result.rows[0].cdb_querytables;
+                        var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
+                        if (user_id === null) {
+                          tables = tables.map(function (t) {
+                            if (t.indexOf('.') === -1) {
+                              return cdbuser + "." + t;
+                            }
+                            return t;
+                          });
+                        }
+                        self(null, tables);
+                      } else {
+                        console.error("Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result);
+                        self(null, []);
+                      }
+                   });
                 }
             },
-            function setHeaders(err, result){
+            function setHeaders(err, tables){
                 if (err) throw err;
                 if ( req.profiler ) req.profiler.done('queryExplain');
                 checkAborted('setHeaders');
 
                 // store explain result in local Cache
-                if ( ! tableCacheItem ) {
-
-                    if ( result.rowCount === 1 ) {
-                      tableCacheItem = {
-                        affected_tables: result.rows[0].cdb_querytables, 
-                        // check if query may possibly write
-                        may_write: queryMayWrite(sql),
-                        // initialise hit counter
-                        hits: 1
-                      };
-                      tableCache.set(sql_md5, tableCacheItem);
-                    } else {
-                      console.error("Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + util.inspect(result));
-                    }
+                if ( ! tableCacheItem && tables.length ) {
+                    tableCacheItem = {
+                      affected_tables: tables,
+                      // check if query may possibly write
+                      may_write: queryMayWrite(sql),
+                      // initialise hit counter
+                      hits: 1
+                    };
+                    tableCache.set(sql_md5, tableCacheItem);
                 }
 
                 if ( tableCacheItem ) {
-                    var affected_tables = tableCacheItem.affected_tables.split(/^\{(.*)\}$/)[1].split(',');
-                    for ( var i=0; i<affected_tables.length; ++i ) {
+                    var affected_tables = tableCacheItem.affected_tables;
+                    for ( var i = 0; i < affected_tables.length; ++i ) {
                       var t = affected_tables[i];
                       if ( t.match(/\bpg_/) ) {
                         var e = new SyntaxError("system tables are forbidden");
@@ -447,9 +472,9 @@ function handleQuery(req, res) {
                 //
                 res.header('Last-Modified', new Date().toUTCString());
 
-                return result;
+                return null;
             },
-            function generateFormat(err, result){
+            function generateFormat(err){
                 if (err) throw err;
                 if ( req.profiler ) req.profiler.done('setHeaders');
                 checkAborted('generateFormat');
@@ -519,7 +544,7 @@ function generateCacheKey(database, query_info, is_authenticated){
     if ( ! query_info || ( is_authenticated && query_info.may_write ) ) {
       return "NONE";
     } else {
-      return database + ":" + query_info.affected_tables.split(/^\{(.*)\}$/)[1];
+      return database + ":" + query_info.affected_tables.join(',');
     }
 }
 
