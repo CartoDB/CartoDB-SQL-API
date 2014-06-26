@@ -385,14 +385,6 @@ function handleQuery(req, res) {
                       if ( result.rowCount === 1 ) {
                         var raw_tables = result.rows[0].cdb_querytables;
                         var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
-                        if (user_id === null) {
-                          tables = tables.map(function (t) {
-                            if (t.indexOf('.') === -1) {
-                              return cdbuser + "." + t;
-                            }
-                            return t;
-                          });
-                        }
                         self(null, tables);
                       } else {
                         console.error("Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result);
