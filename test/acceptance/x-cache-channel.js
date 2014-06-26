@@ -32,8 +32,8 @@ test('supports joins', function(done) {
         assert.equal(cc[0], 'cartodb_test_user_1_db');
         var tt = cc[1].split(',');
         assert.equal(tt.length, 2);
-        assert.contains(tt, 'private_table');
-        assert.contains(tt, 'untitle_table_4');
+        assert.contains(tt, 'public.private_table');
+        assert.contains(tt, 'public.untitle_table_4');
         done();
     });
 });
@@ -54,8 +54,8 @@ test('supports multistatements', function(done) {
         assert.equal(cc[0], 'cartodb_test_user_1_db');
         var tt = cc[1].split(',');
         assert.equal(tt.length, 2);
-        assert.contains(tt, 'private_table');
-        assert.contains(tt, 'untitle_table_4');
+        assert.contains(tt, 'public.private_table');
+        assert.contains(tt, 'public.untitle_table_4');
         done();
     });
 });
@@ -76,8 +76,8 @@ test('supports explicit transactions', function(done) {
         assert.equal(cc[0], 'cartodb_test_user_1_db');
         var tt = cc[1].split(',');
         assert.equal(tt.length, 2);
-        assert.contains(tt, 'private_table');
-        assert.contains(tt, 'untitle_table_4');
+        assert.contains(tt, 'public.private_table');
+        assert.contains(tt, 'public.untitle_table_4');
         done();
     });
 });
@@ -98,7 +98,7 @@ test('survives partial transactions', function(done) {
         assert.equal(cc[0], 'cartodb_test_user_1_db');
         var tt = cc[1].split(',');
         assert.equal(tt.length, 1);
-        assert.contains(tt, 'untitle_table_4');
+        assert.contains(tt, 'public.untitle_table_4');
         done();
     });
 });
