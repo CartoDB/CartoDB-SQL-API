@@ -381,7 +381,10 @@ function handleQuery(req, res) {
                    //TODO: sanitize cdbuser
                    console.log("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$");
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
-                      if (err) throw err;
+                      if (err) {
+                        self(err);
+                        return;
+                      }
                       if ( result.rowCount === 1 ) {
                         var raw_tables = result.rows[0].cdb_querytables;
                         var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
