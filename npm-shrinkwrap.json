@@ -48,7 +48,8 @@
       }
     },
     "cartodb-redis": {
-      "version": "0.3.0",
+      "version": "0.5.0",
+      "from": "git://github.com/CartoDB/node-cartodb-redis.git#0.5.0",
       "dependencies": {
         "strftime": {
           "version": "0.6.2"
