@@ -346,6 +346,8 @@ function handleQuery(req, res) {
                 Meta.getUserDBPass(cdbuser, this);
             },
             function queryExplain(err, data){
+                var self = this;
+
                 if (err) throw err;
                 if ( req.profiler ) req.profiler.done('getUserDBPass');
                 checkAborted('queryExplain');
@@ -361,17 +363,6 @@ function handleQuery(req, res) {
                 }
 
                 pg = new PSQL(dbopts);
-                if (user_id === null) {
-                  var s = "SET search_path = " + cdbuser + ",cartodb, public";
-                  pg.query(s, this);
-                } else {
-                  return data;
-                }
-            },
-
-            function queryTables(err) {
-                if (err) throw err;
-                var self = this;
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
                 if (tableCacheItem) {
