@@ -88,6 +88,7 @@ if test x"$PREPARE_REDIS" = xyes; then
 
   # delete previous publicuser
   cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+HDEL rails:users:vizzuality database_host
 HDEL rails:users:vizzuality database_publicuser
 EOF
 
@@ -95,6 +96,7 @@ EOF
 HMSET rails:users:vizzuality \
  id 1 \
  database_name ${TEST_DB} \
+ database_host localhost \
  map_key 1234 
 SADD rails:users:vizzuality:map_key 1235
 EOF
