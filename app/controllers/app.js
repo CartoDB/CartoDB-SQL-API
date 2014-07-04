@@ -195,7 +195,6 @@ function handleQuery(req, res) {
     var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql       = params.q;
     var api_key   = params.api_key;
-    var database  = params.database; // TODO: Deprecate
     var limit     = parseInt(params.rows_per_page);
     var offset    = parseInt(params.page);
     var orderBy   = params.order_by;
@@ -203,7 +202,6 @@ function handleQuery(req, res) {
     var requestedFormat = params.format;
     var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
-    var cache_policy = params.cache_policy;
     var filename  = requestedFilename;
     var requestedSkipfields = params.skipfields;
     var skipfields;
@@ -240,7 +238,6 @@ function handleQuery(req, res) {
         format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
         filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
         sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
-        database  = (database === "" || _.isUndefined(database)) ? null : database;
         limit     = (!_.isNaN(limit))  ? limit : null;
         offset    = (!_.isNaN(offset)) ? offset * limit : null;
 
@@ -258,10 +255,13 @@ function handleQuery(req, res) {
         }
 
         //if ( -1 === supportedFormats.indexOf(format) )
-        if ( ! formats.hasOwnProperty(format) ) 
-          throw new Error("Invalid format: " + format);
+        if ( ! formats.hasOwnProperty(format) ) {
+            throw new Error("Invalid format: " + format);
+        }
 
-        if (!_.isString(sql)) throw new Error("You must indicate a sql query");
+        if (!_.isString(sql)) {
+            throw new Error("You must indicate a sql query");
+        }
 
         // initialise MD5 key of sql for cache lookups
         var sql_md5 = generateMD5(sql);
@@ -289,78 +289,69 @@ function handleQuery(req, res) {
         // 4. Setup headers
         // 5. Send formatted results back
         Step(
-            function getDatabaseName() {
-                checkAborted('getDatabaseName');
-                if (_.isNull(database)) {
-                    Meta.getUserDBName(cdbuser, this);
-                } else {
-                    // database hardcoded in query string (deprecated??): don't use redis
-                    return database;
-                }
+            function getDatabaseConnectionParams() {
+                checkAborted('getDatabaseConnectionParams');
+                Meta.getUserDBConnectionParams(cdbuser, this);
             },
-            function setDBGetUser(err, data) {
+            function setDBConnectionParams(err, dbParams) {
+
                 if (err) {
-                  // If the database could not be found, the user is non-existant
-                  if ( err.message.match('missing') ) {
-                    err.message = "Sorry, we can't find CartoDB user '" + cdbuser
-                      + "'. Please check that you have entered the correct domain.";
                     err.http_status = 404;
-                  }
-                  throw err;
+                    err.message = "Sorry, we can't find CartoDB user '" + cdbuser
+                        + "'. Please check that you have entered the correct domain.";
+                    throw err;
                 }
-                if ( req.profiler ) req.profiler.done('getDatabaseName');
+                dbopts.host = dbParams.dbhost;
+                dbopts.dbname = dbParams.dbname;
+                dbopts.user = (!!dbParams.dbuser) ? dbParams.dbuser : global.settings.db_pubuser;
 
-                database = (data === "" || _.isNull(data) || _.isUndefined(data)) ? database : data;
-                dbopts.dbname = database;
-
-                if(api_key) {
+                return null;
+            },
+            function authenticate(err) {
+                if (err) {
+                    throw err;
+                }
+                if (api_key) {
                     apiKeyAuth.verifyRequest(req, this);
                 } else {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
-            function setUserGetDBHost(err, data){
-                if (err) throw err;
-                if ( req.profiler ) req.profiler.done('verifyRequest_' + ( api_key ? 'apikey' : 'oauth' ) );
-                user_id = data; 
-                authenticated = ! _.isNull(user_id);
-
-                var dbuser = user_id ? 
-                  _.template(global.settings.db_user, {user_id: user_id})
-                  :
-                  global.settings.db_pubuser;
-
-                dbopts.user = dbuser;
-
-                Meta.getUserDBHost(cdbuser, this);
+            function setUserGetDBPassword(err, userId) {
+                if (err) {
+                    throw err;
+                }
+                authenticated = userId !== null;
+                if (authenticated) {
+                    user_id = userId;
+                    dbopts.user = _.template(global.settings.db_user, {user_id: userId});
+                    Meta.getUserDBPass(cdbuser, this);
+                } else {
+                    return null
+                }
             },
-            function setDBHostGetPassword(err, data){
-                if (err) throw err;
-                if ( req.profiler ) req.profiler.done('getUserDBHost');
-
-                dbopts.host = data || global.settings.db_host;
-
-                // by-pass redis lookup for password if not authenticated
-                if ( ! authenticated ) return null;
-
-                Meta.getUserDBPass(cdbuser, this);
+            function setPassword(err, password) {
+                if (err) {
+                    throw err;
+                }
+                if ( authenticated ) {
+                    if ( global.settings.hasOwnProperty('db_user_pass') ) {
+                        dbopts.pass = _.template(global.settings.db_user_pass, {
+                            user_id: user_id,
+                            user_password: password
+                        });
+                    } else {
+                        delete dbopts.pass;
+                    }
+                }
+                return null;
             },
-            function queryExplain(err, data){
+            function queryExplain(err){
                 var self = this;
 
                 if (err) throw err;
                 if ( req.profiler ) req.profiler.done('getUserDBPass');
                 checkAborted('queryExplain');
-
-                if ( authenticated ) {
-                  if ( global.settings.hasOwnProperty('db_user_pass') ) {
-                    dbopts.pass = _.template(global.settings.db_user_pass, {
-                      user_id: user_id,
-                      user_password: data
-                    });
-                  }
-                  else delete dbopts.pass;
-                }
 
                 pg = new PSQL(dbopts);
                 // get all the tables from Cache or SQL
@@ -434,19 +425,19 @@ function handleQuery(req, res) {
                 var ttl = 31536000; // 1 year time to live by default
                 var cache_policy = req.query.cache_policy;
                 if ( cache_policy === 'persist' ) {
-                  res.header('Cache-Control', 'public,max-age=' + ttl); 
+                  res.header('Cache-Control', 'public,max-age=' + ttl);
                 } else {
                   if ( ! tableCacheItem || tableCacheItem.may_write ) {
                     // Tell clients this response is already expired
                     // TODO: prevent cache_policy from overriding this ?
                     ttl = 0;
-                  } 
+                  }
                   res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
                 if ( tableCacheItem && ! tableCacheItem.may_write ) {
-                  res.header('X-Cache-Channel', generateCacheKey(database, tableCacheItem, authenticated));
+                  res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, authenticated));
                 }
 
                 // Set Last-Modified header

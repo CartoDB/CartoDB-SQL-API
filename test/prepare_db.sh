@@ -86,6 +86,11 @@ if test x"$PREPARE_REDIS" = xyes; then
 
   echo "preparing redis..."
 
+  # delete previous publicuser
+  cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+HDEL rails:users:vizzuality database_publicuser
+EOF
+
   cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
 HMSET rails:users:vizzuality \
  id 1 \

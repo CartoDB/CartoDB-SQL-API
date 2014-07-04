@@ -89,7 +89,7 @@ test('GET /api/whatever/sql', function(done){
     });
 });
 
-// Test that OPTIONS does not run queries 
+// Test that OPTIONS does not run queries
 test('OPTIONS /api/x/sql', function(done){
     assert.response(app, {
         url: '/api/x/sql?q=syntax%20error',
@@ -109,6 +109,7 @@ test('OPTIONS /api/x/sql', function(done){
 test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
@@ -122,6 +123,7 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', fu
 test('cache_policy=persist', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db&cache_policy=persist',
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
@@ -207,7 +209,7 @@ function(done){
 });
 
 // Test for https://github.com/Vizzuality/CartoDB-SQL-API/issues/85
-test("paging doesn't break x-cache-channel", 
+test("paging doesn't break x-cache-channel",
 function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
@@ -334,14 +336,15 @@ test('POST /api/v1/sql with SQL parameter on SELECT only. no database param, jus
 test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(cartodb_id)%20VALUES%20(1e4)&database=cartodb_test_user_1_db",
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
     }, function(res) {
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
-        assert.deepEqual(JSON.parse(res.body), 
-          {"error":["permission denied for relation untitle_table_4"]} 
+        assert.deepEqual(JSON.parse(res.body),
+          {"error":["permission denied for relation untitle_table_4"]}
         );
         done();
     });
@@ -350,13 +353,14 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
 test('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&database=cartodb_test_user_1_db",
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
     }, function(res) {
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
-        assert.deepEqual(JSON.parse(res.body), 
+        assert.deepEqual(JSON.parse(res.body),
           {"error":["must be owner of relation untitle_table_4"]}
         );
         done();
@@ -373,7 +377,7 @@ test('GET /api/v1/sql with INSERT. header based db - should fail', function(){
     });
 });
 
-// Check results from INSERT 
+// Check results from INSERT
 //
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/13
 test('INSERT returns affected rows', function(done){
@@ -534,8 +538,8 @@ test('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(d
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
-        assert.deepEqual(JSON.parse(res.body), 
-          {"error":["must be owner of relation untitle_table_4"]} 
+        assert.deepEqual(JSON.parse(res.body),
+          {"error":["must be owner of relation untitle_table_4"]}
         );
         done();
     });
@@ -844,7 +848,7 @@ test('GET /api/v1/sql with SQL parameter and no format, ensuring content-disposi
 
 test('POST /api/v1/sql with SQL parameter and no format, ensuring content-disposition set to json', function(done){
     assert.response(app, {
-        url: '/api/v1/sql', 
+        url: '/api/v1/sql',
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4" }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
@@ -1097,7 +1101,7 @@ test('field names and types are exposed', function(done){
              ", 'POINT(0 0)'::geometry as h" +
              // See https://github.com/CartoDB/CartoDB-SQL-API/issues/117
              ", now()::date as i" +
-             ", '1'::numeric as j" + 
+             ", '1'::numeric as j" +
              " LIMIT 0"
         }),
         headers: {host: 'vizzuality.cartodb.com'},
@@ -1182,7 +1186,7 @@ test('numeric fields are rendered as numbers in JSON', function(done){
 //
 // NOTE: results of these tests rely on the TZ env variable
 //       being set to 'Europe/Rome'. The env variable cannot
-//       be set within this test in a reliable way, see 
+//       be set within this test in a reliable way, see
 //       https://github.com/joyent/node/issues/3286
 //
 // FIXME: we'd like to also test UTC outputs of these
@@ -1392,6 +1396,7 @@ test('notice and warning info in JSON output', function(done){
 test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS headers ', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
+        headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res) {
         assert.equal(res.statusCode, 200, res.body);
