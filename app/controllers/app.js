@@ -77,7 +77,7 @@ Date.prototype.toJSON = function() {
 
   }
   return s;
-}
+};
 
 var loggerOpts = {
     buffer: true,
@@ -116,7 +116,7 @@ if ( global.settings.statsd ) {
         if ( ! last_err.interval ) {
           //console.log("Installing interval");
           statsd_client.last_error.interval = setInterval(function() {
-            var count = statsd_client.last_error.count
+            var count = statsd_client.last_error.count;
             if ( count > 1 ) {
               console.error("last statsd client socket error repeated " + count + " times");
               statsd_client.last_error.count = 1;
@@ -476,8 +476,8 @@ function handleQuery(req, res) {
                   skipfields: skipfields,
                   sql: sql,
                   filename: filename,
-                  abortChecker: checkAborted,
-                }
+                  abortChecker: checkAborted
+                };
 
                 if ( req.profiler ) {
                   opts.profiler = req.profiler;
@@ -542,7 +542,9 @@ function generateMD5(data){
 
 
 function handleException(err, res){
-    var msg = (global.settings.environment == 'development') ? {error:[err.message], stack: err.stack} : {error:[err.message]}
+    var msg = (global.settings.environment == 'development')
+        ? {error:[err.message], stack: err.stack}
+        : {error:[err.message]};
     if (global.settings.environment !== 'test'){
         // TODO: email this Exception report
         console.error("EXCEPTION REPORT: " + err.stack)
@@ -555,9 +557,8 @@ function handleException(err, res){
     res.header("Content-Disposition", 'inline');
 
     if ( res.req && res.req.profiler ) {
-      var req = res.req;
-      req.profiler.done('finish');
-      var report = req.profiler.toString();
+      res.req.profiler.done('finish');
+      var report = res.req.profiler.toString();
       res.header('X-SQLAPI-Profiler', report);
     }
 
@@ -569,8 +570,7 @@ function handleException(err, res){
     }
 
     if ( res.req && res.req.profiler ) {
-      var req = res.req;
-      req.profiler.sendStats();
+      res.req.profiler.sendStats();
     }
 }
 
