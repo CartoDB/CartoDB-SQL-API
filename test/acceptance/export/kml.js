@@ -232,7 +232,7 @@ test('KML format, unauthenticated, concurrent requests', function(done){
       for (var i=0; i<concurrency; ++i) {
         //console.log("Sending request");
         var req = http.request({
-            host: '127.0.0.1',
+            host: 'localhost',
             port: port,
             path: '/api/v1/sql?' + query,
             headers: {host: 'vizzuality.cartodb.com'},
