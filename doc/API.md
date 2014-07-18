@@ -295,7 +295,7 @@ To make things easier for developers we provide client libraries for different p
   The PHP library handles basic OAuth and provides a wrapper around the SQL API to get PHP objects straight from SQL calls to CartoDB. [Fork it on GitHub!](https://github.com/Vizzuality/cartodbclient-php)
 
 - **PYTHON**  
-  Currently experimental, but serves as a good guide for those looking to get started. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
+  Provides API Key and xAuth access to SQL API. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
 
 - **JAVA**  
   Very basic example of how to access CartoDB SQL API using OAuth. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-java-client)
