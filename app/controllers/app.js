@@ -477,8 +477,7 @@ function handleQuery(req, res) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
                     req.profiler.done('sendResponse');
-                    var report = req.profiler.toString();
-                    res.header('X-SQLAPI-Profiler', report);
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
                   };
                 }
 
@@ -552,8 +551,7 @@ function handleException(err, res){
 
     if ( res.req && res.req.profiler ) {
       res.req.profiler.done('finish');
-      var report = res.req.profiler.toString();
-      res.header('X-SQLAPI-Profiler', report);
+      res.header('X-SQLAPI-Profiler', res.req.profiler.toJSONString());
     }
 
     // if the exception defines a http status code, use that, else a 400
