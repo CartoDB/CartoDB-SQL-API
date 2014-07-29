@@ -34,7 +34,10 @@ var express = require('express')
     , StatsD      = require('node-statsd').StatsD
     , Meta        = require('cartodb-redis')({
         host: global.settings.redis_host,
-        port: global.settings.redis_port
+        port: global.settings.redis_port,
+        max: global.settings.redisPool,
+        idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+        reapIntervalMillis: global.settings.redisReapIntervalMillis
       })
  // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
