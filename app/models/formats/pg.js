@@ -1,7 +1,9 @@
-var Step        = require('step')
-var PSQL = require(global.settings.app_root + '/app/models/psql')
+var Step        = require('step'),
+    PSQL = require(global.settings.app_root + '/app/models/psql');
 
-function pg(id) { this.id = id; }
+function pg(id) {
+    this.id = id;
+}
 
 pg.prototype = {
 
@@ -20,10 +22,8 @@ pg.prototype = {
 };
 
 pg.prototype.handleQueryRow = function(row, result) {
-  //console.log("Got query row, row is "); console.dir(row);
-  //console.log("opts are: "); console.dir(this.opts);
-  var sf = this.opts.skipfields;
-  if ( sf.length ){
+  if (this.hasSkipFields) {
+    var sf = this.opts.skipfields;
     for ( var j=0; j<sf.length; ++j ) {
       delete row[sf[j]];
     }
@@ -49,14 +49,11 @@ pg.prototype.handleQueryEnd = function(result) {
 
   if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
 
-  //console.log("Got query end, result is "); console.dir(result);
-
-  var end = Date.now();
-  this.opts.total_time = (end - this.start_time)/1000;
+  this.opts.total_time = (Date.now() - this.start_time)/1000;
 
   // Drop field description for skipped fields
-  var sf = this.opts.skipfields;
-  if ( sf.length ){
+  if (this.hasSkipFields) {
+    var sf = this.opts.skipfields;
     var newfields = [];
     for ( var j=0; j<result.fields.length; ++j ) {
       var f = result.fields[j];
@@ -85,7 +82,7 @@ pg.prototype.handleQueryEnd = function(result) {
           if ( that.opts.beforeSink ) that.opts.beforeSink();
           that.opts.sink.send(out);
         } else {
-console.error("No output from transform, doing nothing ?!");
+          console.error("No output from transform, doing nothing ?!");
         }
     },
     function errorHandle(err){
@@ -101,6 +98,8 @@ pg.prototype.sendResponse = function(opts, callback) {
   }
   this.callback = callback;
   this.opts = opts;
+
+  this.hasSkipFields = opts.skipfields.length;
 
   var sql = this.getQuery(opts.sql, {
     gn: opts.gn,
