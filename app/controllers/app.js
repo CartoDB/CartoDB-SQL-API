@@ -34,7 +34,10 @@ var express = require('express')
     , StatsD      = require('node-statsd').StatsD
     , Meta        = require('cartodb-redis')({
         host: global.settings.redis_host,
-        port: global.settings.redis_port
+        port: global.settings.redis_port,
+        max: global.settings.redisPool,
+        idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+        reapIntervalMillis: global.settings.redisReapIntervalMillis
       })
  // global.settings.app_root + '/app/models/metadata')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
@@ -474,8 +477,7 @@ function handleQuery(req, res) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
                     req.profiler.done('sendResponse');
-                    var report = req.profiler.toString();
-                    res.header('X-SQLAPI-Profiler', report);
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
                   };
                 }
 
@@ -549,8 +551,7 @@ function handleException(err, res){
 
     if ( res.req && res.req.profiler ) {
       res.req.profiler.done('finish');
-      var report = res.req.profiler.toString();
-      res.header('X-SQLAPI-Profiler', report);
+      res.header('X-SQLAPI-Profiler', res.req.profiler.toJSONString());
     }
 
     // if the exception defines a http status code, use that, else a 400
