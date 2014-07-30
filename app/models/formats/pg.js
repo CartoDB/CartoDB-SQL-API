@@ -22,13 +22,15 @@ PostgresFormat.prototype = {
 };
 
 PostgresFormat.prototype.handleQueryRow = function(row, result) {
-  if (this.hasSkipFields) {
+    result.addRow(row);
+};
+
+PostgresFormat.prototype.handleQueryRowWithSkipFields = function(row, result) {
     var sf = this.opts.skipfields;
     for ( var j=0; j<sf.length; ++j ) {
-      delete row[sf[j]];
+        delete row[sf[j]];
     }
-  }
-  result.addRow(row);
+    result.addRow(row);
 };
 
 PostgresFormat.prototype.handleNotice = function(msg, result) {
@@ -120,11 +122,15 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
       }
       if ( that.opts.profiler ) that.opts.profiler.done('eventedQuery');
 
-      query.on('row', that.handleQueryRow.bind(that));
+      if (that.hasSkipFields) {
+          query.on('row', that.handleQueryRowWithSkipFields.bind(that));
+      } else {
+          query.on('row', that.handleQueryRow.bind(that));
+      }
       query.on('end', that.handleQueryEnd.bind(that));
       query.on('error', function(err) { that.error = err; });
       query.on('notice', function(msg) {
-        that.handleNotice(msg, query._result);
+          that.handleNotice(msg, query._result);
       });
   });
 };
