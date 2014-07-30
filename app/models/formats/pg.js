@@ -1,11 +1,11 @@
 var Step        = require('step'),
     PSQL = require(global.settings.app_root + '/app/models/psql');
 
-function pg(id) {
+function PostgresFormat(id) {
     this.id = id;
 }
 
-pg.prototype = {
+PostgresFormat.prototype = {
 
   getQuery: function(sql, options) {
     return sql;
@@ -21,7 +21,7 @@ pg.prototype = {
 
 };
 
-pg.prototype.handleQueryRow = function(row, result) {
+PostgresFormat.prototype.handleQueryRow = function(row, result) {
   if (this.hasSkipFields) {
     var sf = this.opts.skipfields;
     for ( var j=0; j<sf.length; ++j ) {
@@ -31,7 +31,7 @@ pg.prototype.handleQueryRow = function(row, result) {
   result.addRow(row);
 };
 
-pg.prototype.handleNotice = function(msg, result) {
+PostgresFormat.prototype.handleNotice = function(msg, result) {
   if ( ! result.notices ) result.notices = [];
   for (var i=0; i<msg.length; ++i) {
     var m = msg[i];
@@ -39,7 +39,7 @@ pg.prototype.handleNotice = function(msg, result) {
   }
 };
 
-pg.prototype.handleQueryEnd = function(result) {
+PostgresFormat.prototype.handleQueryEnd = function(result) {
   this.queryCanceller = undefined;
 
   if ( this.error ) {
@@ -91,7 +91,7 @@ pg.prototype.handleQueryEnd = function(result) {
   );
 };
 
-pg.prototype.sendResponse = function(opts, callback) {
+PostgresFormat.prototype.sendResponse = function(opts, callback) {
   if ( this.callback ) {
     callback(new Error("Invalid double call to .sendResponse on a pg formatter"));
     return;
@@ -129,10 +129,10 @@ pg.prototype.sendResponse = function(opts, callback) {
   });
 };
 
-pg.prototype.cancel = function() {
+PostgresFormat.prototype.cancel = function() {
     if (this.queryCanceller) {
         this.queryCanceller.call();
     }
 };
 
-module.exports = pg;
+module.exports = PostgresFormat;
