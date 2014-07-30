@@ -481,6 +481,9 @@ function handleQuery(req, res) {
                   };
                 }
 
+                if (global.settings.api_hostname) {
+                  res.header('X-Served-By-Host', global.settings.api_hostname);
+                }
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
