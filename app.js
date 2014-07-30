@@ -29,6 +29,7 @@ if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'stag
 // set Node.js app settings and boot
 global.settings  = require(__dirname + '/config/settings');
 var env          = require(__dirname + '/config/environments/' + ENV);
+env.api_hostname = require('os').hostname().split('.')[0];
 _.extend(global.settings, env);
 
 global.log4js = require('log4js')
