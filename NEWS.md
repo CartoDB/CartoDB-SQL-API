@@ -1,6 +1,10 @@
 1.11.1 - 2014-mm-dd
 -------------------
 
+New features:
+
+ * Add header for host serving the request
+
 1.11.0 - 2014-07-30
 -------------------
 
