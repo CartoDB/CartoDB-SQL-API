@@ -1,5 +1,21 @@
-1.10.2 - 2014-mm-dd
+1.11.0 - 2014-07-30
 -------------------
+
+New features:
+
+ * Support for different schemas and different public users
+
+Enhancements:
+
+ * Profiler header sent as JSON string
+
+Other changes:
+
+ * Revamped documentation
+
+Bug fixes:
+
+ * Pick redis pool configuration values
 
 1.10.1 - 2014-06-05
 -------------------
