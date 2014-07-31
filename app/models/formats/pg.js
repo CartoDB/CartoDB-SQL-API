@@ -30,15 +30,14 @@ PostgresFormat.prototype.handleQueryRowWithSkipFields = function(row, result) {
     for ( var j=0; j<sf.length; ++j ) {
         delete row[sf[j]];
     }
-    result.addRow(row);
+    this.handleQueryRow(row, result);
 };
 
 PostgresFormat.prototype.handleNotice = function(msg, result) {
-  if ( ! result.notices ) result.notices = [];
-  for (var i=0; i<msg.length; ++i) {
-    var m = msg[i];
-    result.notices.push(m);
-  }
+    if ( ! result.notices ) result.notices = [];
+    for (var i=0; i<msg.length; i++) {
+        result.notices.push(msg[i]);
+    }
 };
 
 PostgresFormat.prototype.handleQueryEnd = function(result) {
