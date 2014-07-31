@@ -1,9 +1,11 @@
-var Step        = require('step')
-var PSQL = require(global.settings.app_root + '/app/models/psql')
+var Step        = require('step'),
+    PSQL = require(global.settings.app_root + '/app/models/psql');
 
-function pg(id) { this.id = id; }
+function PostgresFormat(id) {
+    this.id = id;
+}
 
-pg.prototype = {
+PostgresFormat.prototype = {
 
   getQuery: function(sql, options) {
     return sql;
@@ -19,27 +21,26 @@ pg.prototype = {
 
 };
 
-pg.prototype.handleQueryRow = function(row, result) {
-  //console.log("Got query row, row is "); console.dir(row);
-  //console.log("opts are: "); console.dir(this.opts);
-  var sf = this.opts.skipfields;
-  if ( sf.length ){
+PostgresFormat.prototype.handleQueryRow = function(row, result) {
+    result.addRow(row);
+};
+
+PostgresFormat.prototype.handleQueryRowWithSkipFields = function(row, result) {
+    var sf = this.opts.skipfields;
     for ( var j=0; j<sf.length; ++j ) {
-      delete row[sf[j]];
+        delete row[sf[j]];
     }
-  }
-  result.addRow(row);
+    this.handleQueryRow(row, result);
 };
 
-pg.prototype.handleNotice = function(msg, result) {
-  if ( ! result.notices ) result.notices = [];
-  for (var i=0; i<msg.length; ++i) {
-    var m = msg[i];
-    result.notices.push(m);
-  }
+PostgresFormat.prototype.handleNotice = function(msg, result) {
+    if ( ! result.notices ) result.notices = [];
+    for (var i=0; i<msg.length; i++) {
+        result.notices.push(msg[i]);
+    }
 };
 
-pg.prototype.handleQueryEnd = function(result) {
+PostgresFormat.prototype.handleQueryEnd = function(result) {
   this.queryCanceller = undefined;
 
   if ( this.error ) {
@@ -49,14 +50,11 @@ pg.prototype.handleQueryEnd = function(result) {
 
   if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
 
-  //console.log("Got query end, result is "); console.dir(result);
-
-  var end = Date.now();
-  this.opts.total_time = (end - this.start_time)/1000;
+  this.opts.total_time = (Date.now() - this.start_time)/1000;
 
   // Drop field description for skipped fields
-  var sf = this.opts.skipfields;
-  if ( sf.length ){
+  if (this.hasSkipFields) {
+    var sf = this.opts.skipfields;
     var newfields = [];
     for ( var j=0; j<result.fields.length; ++j ) {
       var f = result.fields[j];
@@ -85,7 +83,7 @@ pg.prototype.handleQueryEnd = function(result) {
           if ( that.opts.beforeSink ) that.opts.beforeSink();
           that.opts.sink.send(out);
         } else {
-console.error("No output from transform, doing nothing ?!");
+          console.error("No output from transform, doing nothing ?!");
         }
     },
     function errorHandle(err){
@@ -94,13 +92,15 @@ console.error("No output from transform, doing nothing ?!");
   );
 };
 
-pg.prototype.sendResponse = function(opts, callback) {
+PostgresFormat.prototype.sendResponse = function(opts, callback) {
   if ( this.callback ) {
     callback(new Error("Invalid double call to .sendResponse on a pg formatter"));
     return;
   }
   this.callback = callback;
   this.opts = opts;
+
+  this.hasSkipFields = opts.skipfields.length;
 
   var sql = this.getQuery(opts.sql, {
     gn: opts.gn,
@@ -121,19 +121,23 @@ pg.prototype.sendResponse = function(opts, callback) {
       }
       if ( that.opts.profiler ) that.opts.profiler.done('eventedQuery');
 
-      query.on('row', that.handleQueryRow.bind(that));
+      if (that.hasSkipFields) {
+          query.on('row', that.handleQueryRowWithSkipFields.bind(that));
+      } else {
+          query.on('row', that.handleQueryRow.bind(that));
+      }
       query.on('end', that.handleQueryEnd.bind(that));
       query.on('error', function(err) { that.error = err; });
       query.on('notice', function(msg) {
-        that.handleNotice(msg, query._result);
+          that.handleNotice(msg, query._result);
       });
   });
 };
 
-pg.prototype.cancel = function() {
+PostgresFormat.prototype.cancel = function() {
     if (this.queryCanceller) {
         this.queryCanceller.call();
     }
 };
 
-module.exports = pg;
+module.exports = PostgresFormat;

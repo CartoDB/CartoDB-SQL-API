@@ -55,6 +55,7 @@ var apiKeyAuth = new ApiKeyAuth(Meta, cdbReq);
 
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
+global.settings.bufferedRows = global.settings.bufferedRows || 1000;
 
 var tableCache = LRU({
   // store no more than these many items in the cache
@@ -470,6 +471,8 @@ function handleQuery(req, res) {
                   skipfields: skipfields,
                   sql: sql,
                   filename: filename,
+                  bufferedRows: global.settings.bufferedRows,
+                  callback: params.callback,
                   abortChecker: checkAborted
                 };
 

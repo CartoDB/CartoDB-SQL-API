@@ -1409,4 +1409,16 @@ test('GET /api/v1/sql with SQL parameter on SELECT only should return CORS heade
     });
 });
 
+test('GET with callback param returns wrapped result set with callback as jsonp', function(done) {
+    assert.response(app, {
+        url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&callback=foo_jsonp',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        assert.ok(res.body.match(/foo\_jsonp\(.*\)/));
+        done();
+    });
+});
+
 });
