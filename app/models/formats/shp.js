@@ -4,28 +4,26 @@ var crypto      = require('crypto'),
     spawn       = require('child_process').spawn,
     ogr         = require('./ogr');
 
-function shp() {
+function ShpFormat() {
 }
 
-shp.prototype = new ogr('shp');
+ShpFormat.prototype = new ogr('shp');
 
-var p = shp.prototype;
-
-p._contentType = "application/zip; charset=utf-8";
-p._fileExtension = "zip";
+ShpFormat.prototype._contentType = "application/zip; charset=utf-8";
+ShpFormat.prototype._fileExtension = "zip";
 // As of GDAL 1.10 SRID detection is bogus, so we use
 // our own method. See:
 //  http://trac.osgeo.org/gdal/ticket/5131
 //  http://trac.osgeo.org/gdal/ticket/5287
 //  http://github.com/CartoDB/CartoDB-SQL-API/issues/110
 //  http://github.com/CartoDB/CartoDB-SQL-API/issues/116
-p._needSRS = true;
+ShpFormat.prototype._needSRS = true;
 
-p.generate = function(options, callback) {
+ShpFormat.prototype.generate = function(options, callback) {
   this.toSHP(options, callback);
 };
 
-p.toSHP = function (options, callback) {
+ShpFormat.prototype.toSHP = function (options, callback) {
   var dbname = options.database;
   var user_id = options.user_id;
   var gcol = options.gn;
@@ -112,5 +110,5 @@ p.toSHP = function (options, callback) {
 };
 
 
-module.exports = shp;
+module.exports = ShpFormat;
 

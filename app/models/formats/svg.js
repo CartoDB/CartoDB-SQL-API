@@ -5,13 +5,11 @@ var svg_width  = 1024.0;
 var svg_height = 768.0;
 var svg_ratio = svg_width/svg_height;
 
-function svg() {}
+function SvgFormat() {}
 
-svg.prototype = new pg('svg');
+SvgFormat.prototype = new pg('svg');
 
-var p = svg.prototype;
-
-p.getQuery = function(sql, options) {
+SvgFormat.prototype.getQuery = function(sql, options) {
   var gn = options.gn;
   var dp = options.dp;
   return  'WITH source AS ( ' + sql + '), extent AS ( '
@@ -35,9 +33,9 @@ p.getQuery = function(sql, options) {
         + ' FROM trans, extent_info, source';
 };
 
-p._contentType = "image/svg+xml; charset=utf-8";
+SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
 
-p.transform = function(result, options, callback) {
+SvgFormat.prototype.transform = function(result, options, callback) {
   toSVG(result.rows, options.gn, callback);
 };
 
@@ -137,4 +135,4 @@ function toSVG(rows, gn, callback) {
     callback(null, out.join("\n"));
 }
 
-module.exports = svg;
+module.exports = SvgFormat;

@@ -2,13 +2,13 @@ var pg  = require('./pg'),
     ArrayBufferSer = require("../bin_encoder"),
     _ = require('underscore');
 
-function binary() {}
+function BinaryFormat() {}
 
-binary.prototype = new pg('arraybuffer');
+BinaryFormat.prototype = new pg('arraybuffer');
 
-binary.prototype._contentType = "application/octet-stream";
+BinaryFormat.prototype._contentType = "application/octet-stream";
 
-binary.prototype._extractTypeFromName = function(name) {
+BinaryFormat.prototype._extractTypeFromName = function(name) {
   var g = name.match(new RegExp(/.*__(uintclamp|uint|int|float)(8|16|32)/i))
   if(g && g.length == 3) {
     var typeName = g[1] + g[2];
@@ -16,7 +16,7 @@ binary.prototype._extractTypeFromName = function(name) {
   }
 };
 
-binary.prototype.transform = function(result, options, callback) {
+BinaryFormat.prototype.transform = function(result, options, callback) {
   var total_rows = result.rowCount;
   var rows = result.rows;
 
@@ -79,4 +79,4 @@ binary.prototype.transform = function(result, options, callback) {
   }
 };
 
-module.exports = binary;
+module.exports = BinaryFormat;

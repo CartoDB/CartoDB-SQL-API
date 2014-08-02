@@ -8,11 +8,11 @@ var crypto      = require('crypto'),
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
 
-function ogr(id) {
+function OgrFormat(id) {
   this.id = id;
 }
 
-ogr.prototype = {
+OgrFormat.prototype = {
 
   id: "ogr",
 
@@ -48,7 +48,7 @@ ogr.prototype = {
 };
 
 // Internal function usable by all OGR-driven outputs
-ogr.prototype.toOGR = function(options, out_format, out_filename, callback) {
+OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback) {
 
   var gcol = options.gn;
   var sql = options.sql;
@@ -197,7 +197,7 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
   );
 };
 
-ogr.prototype.toOGR_SingleFile = function(options, fmt, callback) {
+OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
 
   var dbname = options.dbopts.dbname;
   var user_id = options.dbopts.user;
@@ -217,7 +217,7 @@ ogr.prototype.toOGR_SingleFile = function(options, fmt, callback) {
   this.toOGR(options, fmt, dumpfile, callback);
 };
 
-ogr.prototype.sendResponse = function(opts, callback) {
+OgrFormat.prototype.sendResponse = function(opts, callback) {
   var next = callback;
   var reqKey = this.getKey(opts);
   var qElem = new ExportRequest(opts.sink, callback, opts.beforeSink);
@@ -307,4 +307,4 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
 
 //------ }
 
-module.exports = ogr;
+module.exports = OgrFormat;
