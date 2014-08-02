@@ -71,7 +71,7 @@ function toSVG(rows, gn, callback) {
         } else if ( gdims == '1' ) {
           // Avoid filling closed linestrings
           var linetag = '<path ';
-          if ( fill_color != 'none' ) linetag += 'fill="none" '
+          if ( fill_color != 'none' ) linetag += 'fill="none" ';
           linetag += 'd="' + g + '" />';
           lines.push(linetag);
         } else if ( gdims == '2' ) {

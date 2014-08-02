@@ -1,7 +1,7 @@
 
 function ArrayBufferSer(type, data, options) {
   if(type === undefined) throw "ArrayBufferSer should be created with a type";
-  this.options = options || {}
+  this.options = options || {};
   this._initFunctions();
   this.headerSize = 8;
   this.data = data;
@@ -63,7 +63,7 @@ ArrayBufferSer.prototype = {
   sizes: [NaN, 1, 1, 1, 2, 2, 4, 4, 4, 8],
 
   _paddingFor: function(off, type) {
-    var s = this.sizes[type]
+    var s = this.sizes[type];
     if(s) {
       var r = off % s;
       return r == 0 ? 0 : s - r;
@@ -73,7 +73,7 @@ ArrayBufferSer.prototype = {
 
   _sizeFor: function(offset, t) {
     var self = this;
-    var s = this.sizes[this.type]
+    var s = this.sizes[this.type];
     if(s) {
       return s*t.length;
     }
@@ -84,7 +84,7 @@ ArrayBufferSer.prototype = {
         var pad = self._paddingFor(offset, ArrayBufferSer.MAX_PADDING);
         s += pad;
         offset += pad;
-        var len = (self.headerSize + arr.length*2) 
+        var len = (self.headerSize + arr.length*2);
         s += len;
         offset += len;
       });
@@ -93,7 +93,7 @@ ArrayBufferSer.prototype = {
         var pad = self._paddingFor(offset, ArrayBufferSer.MAX_PADDING);
         s += pad;
         offset += pad;
-        s += arr.getSize()
+        s += arr.getSize();
         offset += arr.getSize();
       });
     }
@@ -138,7 +138,7 @@ ArrayBufferSer.prototype = {
   writteBuffer: function(b) {
     this.offset += this._paddingFor(this.offset, ArrayBufferSer.MAX_PADDING);
     // copy header
-    b.buffer.copy(this.buffer, this.offset)
+    b.buffer.copy(this.buffer, this.offset);
     this.offset += b.buffer.length;
   }
 

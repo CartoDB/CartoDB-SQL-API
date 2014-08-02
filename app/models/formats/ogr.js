@@ -237,7 +237,7 @@ ogr.prototype.sendResponse = function(opts, callback) {
             r.sendFile(err, dumpfile, function() {
               nextPipe(finish);
             });
-          }
+          };
 
           if ( ! err ) nextPipe(this);
           else {
@@ -262,7 +262,6 @@ ogr.prototype.sendResponse = function(opts, callback) {
       );
     })
   }
-  return;
 };
 
 // TODO: put in an ExportRequest.js ----- {
@@ -305,7 +304,7 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
     callback();
   }
   this.cb();
-}
+};
 
 //------ }
 

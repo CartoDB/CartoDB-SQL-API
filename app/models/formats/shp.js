@@ -88,7 +88,7 @@ p.toSHP = function (options, callback) {
           }
           else unlinkall(dir, files, finish)
         });
-      }
+      };
       fs.readdir(outdirpath, function(err, files) {
         if ( err ) {
           if ( err.code != 'ENOENT' ) {

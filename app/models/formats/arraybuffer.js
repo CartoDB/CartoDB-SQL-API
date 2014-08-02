@@ -18,7 +18,7 @@ binary.prototype._extractTypeFromName = function(name) {
 
 binary.prototype.transform = function(result, options, callback) {
   var total_rows = result.rowCount;
-  var rows = result.rows
+  var rows = result.rows;
 
   // get headers 
   if(!total_rows) {
@@ -64,7 +64,7 @@ binary.prototype.transform = function(result, options, callback) {
           row = new ArrayBufferSer(headerTypes[i] - ArrayBufferSer.BUFFER, row);
         }
         d.push(row);
-      };
+      }
       var b = new ArrayBufferSer(headerTypes[i], d);
       data.push(b);
     }
