@@ -1,4 +1,4 @@
-var ogr         = require('./ogr');
+var ogr = require('./ogr');
 
 function csv() {}
 

@@ -1,6 +1,6 @@
-var pg  = require('./pg');
-var ArrayBufferSer = require("../bin_encoder");
-var _ = require('underscore');
+var pg  = require('./pg'),
+    ArrayBufferSer = require("../bin_encoder"),
+    _ = require('underscore');
 
 function binary() {}
 

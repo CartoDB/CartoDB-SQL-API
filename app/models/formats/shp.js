@@ -1,9 +1,8 @@
-
-var crypto      = require('crypto');
-var Step        = require('step');
-var fs          = require('fs');
-var spawn       = require('child_process').spawn;
-var ogr         = require('./ogr');
+var crypto      = require('crypto'),
+    Step        = require('step'),
+    fs          = require('fs'),
+    spawn       = require('child_process').spawn,
+    ogr         = require('./ogr');
 
 function shp() {
 }

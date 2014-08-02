@@ -1,8 +1,8 @@
+var pg  = require('./pg'),
+    _ = require('underscore'),
+    geojson = require('./geojson'),
+    TopoJSON = require('topojson');
 
-var pg  = require('./pg');
-var _ = require('underscore')
-var geojson = require('./geojson');
-var TopoJSON = require('topojson');
 
 function topojson() { }
 

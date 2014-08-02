@@ -1,10 +1,9 @@
-
-var crypto      = require('crypto')
-var Step        = require('step')
-var fs          = require('fs')
-var _           = require('underscore')
-var PSQL        = require(global.settings.app_root + '/app/models/psql')
-var spawn       = require('child_process').spawn
+var crypto      = require('crypto'),
+    Step        = require('step'),
+    fs          = require('fs'),
+    _           = require('underscore'),
+    PSQL        = require(global.settings.app_root + '/app/models/psql'),
+    spawn       = require('child_process').spawn;
 
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
