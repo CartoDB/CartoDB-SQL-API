@@ -1428,10 +1428,13 @@ test('GET with callback must return 200 status error even if it is an error', fu
         method: 'GET'
     },{}, function(res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var didRunJsonCallback = false;
         function foo_jsonp(body) {
             assert.deepEqual(body, {"error":["must be owner of relation untitle_table_4"]});
+            didRunJsonCallback = true;
         }
         eval(res.body);
+        assert.ok(didRunJsonCallback);
         done();
     });
 });
