@@ -57,6 +57,11 @@ GeoJsonFormat.prototype.handleQueryEnd = function(result) {
         this.callback(this.error);
         return;
     }
+
+    if ( ! this._streamingStarted ) {
+        this.startStreaming();
+    }
+
     this.buffer += ']}'; // end of features
     if (this.opts.callback) {
         this.buffer += ')';

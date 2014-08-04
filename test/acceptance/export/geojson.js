@@ -200,4 +200,21 @@ test('stream response handle errors', function(done) {
     });
 });
 
+test('stream response with empty result set has valid output', function(done) {
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            q: "SELECT 1 as gid, null::geometry as the_geom limit 0",
+            format: 'geojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var geoJson = JSON.parse(res.body);
+        var expectedGeoJson = {"type": "FeatureCollection", "features": []};
+        assert.deepEqual(geoJson, expectedGeoJson);
+        done();
+    });
+});
+
 });
