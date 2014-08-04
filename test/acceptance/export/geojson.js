@@ -182,4 +182,39 @@ test('null geometries in geojson output', function(done){
       });
 });
 
+test('stream response handle errors', function(done) {
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            q: "SELECTT 1 as gid, null::geometry as the_geom ",
+            format: 'geojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        console.log(res);
+        assert.equal(res.statusCode, 400, res.body);
+        var geoJson = JSON.parse(res.body);
+        var expectedError = {"error":["syntax error at or near \"1\""]}
+        assert.deepEqual(geoJson, expectedError);
+        done();
+    });
+});
+
+test('stream response with empty result set has valid output', function(done) {
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            q: "SELECT 1 as gid, null::geometry as the_geom limit 0",
+            format: 'geojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var geoJson = JSON.parse(res.body);
+        var expectedGeoJson = {"type": "FeatureCollection", "features": []};
+        assert.deepEqual(geoJson, expectedGeoJson);
+        done();
+    });
+});
+
 });
