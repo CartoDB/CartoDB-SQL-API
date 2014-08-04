@@ -939,7 +939,7 @@ test('multiple skipfields parameter do not kill the backend', function(done){
     });
 });
 
-test.skip('GET /api/v1/sql ensure cross domain set on errors', function(done){
+test('GET /api/v1/sql ensure cross domain set on errors', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*gadfgadfg%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -1049,7 +1049,7 @@ test('GET decent error if domain is incorrect', function(done){
 });
 
 // this test does not make sense with the current CDB_QueryTables implementation
-test.skip('GET decent error if SQL is broken', function(done){
+test('GET decent error if SQL is broken', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({q:
           'SELECT star FROM this and that'
