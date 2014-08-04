@@ -53,6 +53,10 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
 };
 
 GeoJsonFormat.prototype.handleQueryEnd = function(result) {
+    if (this.error) {
+        this.callback(this.error);
+        return;
+    }
     this.buffer += ']}'; // end of features
     if (this.opts.callback) {
         this.buffer += ')';

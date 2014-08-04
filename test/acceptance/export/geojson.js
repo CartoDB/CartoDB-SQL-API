@@ -182,4 +182,22 @@ test('null geometries in geojson output', function(done){
       });
 });
 
+test('stream response handle errors', function(done) {
+    assert.response(app, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            q: "SELECTT 1 as gid, null::geometry as the_geom ",
+            format: 'geojson'
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        console.log(res);
+        assert.equal(res.statusCode, 400, res.body);
+        var geoJson = JSON.parse(res.body);
+        var expectedError = {"error":["syntax error at or near \"1\""]}
+        assert.deepEqual(geoJson, expectedError);
+        done();
+    });
+});
+
 });
