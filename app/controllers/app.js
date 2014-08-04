@@ -560,16 +560,22 @@ function handleException(err, res){
       res.header('X-SQLAPI-Profiler', res.req.profiler.toJSONString());
     }
 
-    // if the exception defines a http status code, use that, else a 400
-    if (!_.isUndefined(err.http_status)){
-        res.send(msg, err.http_status);
-    } else {
-        res.send(msg, 400);
-    }
+    res.send(msg, getStatusError(err, res.req));
 
     if ( res.req && res.req.profiler ) {
       res.req.profiler.sendStats();
     }
+}
+
+function getStatusError(err, req) {
+    var statusError = _.isUndefined(err.http_status) ? 400 : err.http_status;
+
+    // JSONP has to return 200 status error
+    if (req && req.query && req.query.callback) {
+        statusError = 200;
+    }
+
+    return statusError;
 }
 
 return app;

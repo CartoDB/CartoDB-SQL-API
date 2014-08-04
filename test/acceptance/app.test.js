@@ -1421,4 +1421,19 @@ test('GET with callback param returns wrapped result set with callback as jsonp'
     });
 });
 
+test('GET with callback must return 200 status error even if it is an error', function(done){
+    assert.response(app, {
+        url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&callback=foo_jsonp",
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        function foo_jsonp(body) {
+            assert.deepEqual(body, {"error":["must be owner of relation untitle_table_4"]});
+        }
+        eval(res.body);
+        done();
+    });
+});
+
 });
