@@ -1,9 +1,10 @@
-1.11.1 - 2014-mm-dd
+1.12.0 - 2014-08-04
 -------------------
 
 New features:
 
  * Add header for host serving the request
+ * Stream JSON/GeoJSON responses
 
 1.11.0 - 2014-07-30
 -------------------
