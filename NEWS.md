@@ -1,6 +1,16 @@
 1.12.1 - 2014-mm-dd
 -------------------
 
+Bug fixes:
+
+ * Fixes GeoJSON stream error responses
+ * Fixes GeoJSON stream empty responses
+ * JSONP callbacks return with 200 status error code
+
+Enhancements:
+
+ * Re-enables tests
+
 1.12.0 - 2014-08-04
 -------------------
 
