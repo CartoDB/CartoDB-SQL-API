@@ -303,7 +303,6 @@ function handleQuery(req, res) {
                 }
             },
             function authenticate(err, userDBParams) {
-                console.log(err);
                 if (err) {
                     err.http_status = 404;
                     err.message = "Sorry, we can't find CartoDB user '" + cdbUsername
