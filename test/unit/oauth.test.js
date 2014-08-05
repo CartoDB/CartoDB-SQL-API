@@ -2,7 +2,7 @@ require('../helper');
 
 var _        = require('underscore')
     , redis  = require("redis")
-    , oAuth  = require('../../app/models/oauth')
+    , oAuth  = require('../../app/auth/oauth')
     , assert = require('assert')
     , tests  = module.exports = {}
     , oauth_data_1 = {
