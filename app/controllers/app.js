@@ -32,14 +32,7 @@ var express = require('express')
     , util        = require('util')
     , Profiler    = require('step-profiler')
     , StatsD      = require('node-statsd').StatsD
-    , Meta        = require('cartodb-redis')({
-        host: global.settings.redis_host,
-        port: global.settings.redis_port,
-        max: global.settings.redisPool,
-        idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-        reapIntervalMillis: global.settings.redisReapIntervalMillis
-      })
- // global.settings.app_root + '/app/models/metadata')
+    , MetadataDB  = require('cartodb-redis')
     , oAuth       = require(global.settings.app_root + '/app/models/oauth')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
@@ -50,8 +43,15 @@ var express = require('express')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
 
-var cdbReq = new CdbRequest(Meta);
-var apiKeyAuth = new ApiKeyAuth(Meta, cdbReq);
+var metadataBackend = MetadataDB({
+    host: global.settings.redis_host,
+    port: global.settings.redis_port,
+    max: global.settings.redisPool,
+    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+    reapIntervalMillis: global.settings.redisReapIntervalMillis
+});
+var cdbReq = new CdbRequest();
+var apiKeyAuth = new ApiKeyAuth(metadataBackend, cdbReq);
 
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -287,6 +287,7 @@ function handleQuery(req, res) {
 
         if ( req.profiler ) req.profiler.done('init');
 
+        var dbParams;
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -295,54 +296,38 @@ function handleQuery(req, res) {
         Step(
             function getDatabaseConnectionParams() {
                 checkAborted('getDatabaseConnectionParams');
-                Meta.getUserDBConnectionParams(cdbuser, this);
+                metadataBackend.getAllUserDBParams(cdbuser, this);
             },
-            function setDBConnectionParams(err, dbParams) {
-
+            function authenticate(err, userDBParams) {
                 if (err) {
                     err.http_status = 404;
                     err.message = "Sorry, we can't find CartoDB user '" + cdbuser
                         + "'. Please check that you have entered the correct domain.";
                     throw err;
                 }
+
+                dbParams = userDBParams;
+
                 dbopts.host = dbParams.dbhost;
                 dbopts.dbname = dbParams.dbname;
-                dbopts.user = (!!dbParams.dbuser) ? dbParams.dbuser : global.settings.db_pubuser;
+                dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-                return null;
-            },
-            function authenticate(err) {
-                if (err) {
-                    throw err;
-                }
                 if (api_key) {
-                    apiKeyAuth.verifyRequest(req, this);
+                    apiKeyAuth.verifyRequest(req, dbParams.apikey, this);
                 } else {
                     oAuth.verifyRequest(req, this, requestProtocol);
                 }
             },
-            function setUserGetDBPassword(err, userId) {
+            function setDBAuth(err, isAuthenticated) {
                 if (err) {
                     throw err;
                 }
-                authenticated = userId !== null;
-                if (authenticated) {
-                    user_id = userId;
-                    dbopts.user = _.template(global.settings.db_user, {user_id: userId});
-                    Meta.getUserDBPass(cdbuser, this);
-                } else {
-                    return null
-                }
-            },
-            function setPassword(err, password) {
-                if (err) {
-                    throw err;
-                }
-                if ( authenticated ) {
+                if (_.isBoolean(isAuthenticated) && isAuthenticated) {
+                    dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
                     if ( global.settings.hasOwnProperty('db_user_pass') ) {
                         dbopts.pass = _.template(global.settings.db_user_pass, {
-                            user_id: user_id,
-                            user_password: password
+                            user_id: dbParams.dbuser,
+                            user_password: dbParams.dbpass
                         });
                     } else {
                         delete dbopts.pass;

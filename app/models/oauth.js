@@ -118,7 +118,6 @@ var oAuth = function(){
         signature = passed_tokens.oauth_signature;
         delete passed_tokens['oauth_signature'];
 
-        var base64;
         var joined = {};
 
         // remove oauth_signature from body
@@ -135,7 +134,7 @@ var oAuth = function(){
         if (err) throw err;
 
         //console.log(data + " should equal the provided signature: " + signature);
-        callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
+        callback(err, (signature === data && !_.isUndefined(data)) ? true : null);
       }
     );
   };
