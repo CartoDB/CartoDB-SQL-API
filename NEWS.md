@@ -1,5 +1,12 @@
-1.12.2 - 2014-mm-dd
+1.13.0 - 2014-mm-dd
 -------------------
+
+New features:
+
+ * New authentication mechanism: checks in advance if credentials are provided
+   in order to do a single request to redis to retrieve the required database
+   connection parameters.
+
 
 1.12.1 - 2014-08-05
 -------------------

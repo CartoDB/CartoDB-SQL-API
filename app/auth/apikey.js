@@ -1,10 +1,22 @@
 /**
  * this module allows to auth user using an pregenerated api key
  */
-function ApikeyAuth() {
+function ApikeyAuth(req) {
+    this.req = req;
 }
 
 module.exports = ApikeyAuth;
+
+ApikeyAuth.prototype.verifyCredentials = function(options, callback) {
+    verifyRequest(this.req, options.apiKey, callback);
+};
+
+ApikeyAuth.prototype.hasCredentials = function() {
+    return !!(this.req.query.api_key
+        || this.req.query.map_key
+        || (this.req.body && this.req.body.api_key)
+        || (this.req.body && this.req.body.map_key));
+};
 
 /**
  * Get id of authorized user
@@ -13,7 +25,7 @@ module.exports = ApikeyAuth;
  * @param {String} requiredApi - the API associated to the user, req must contain it
  * @param {Function} callback - err, boolean (whether the request is authenticated or not)
  */
-ApikeyAuth.prototype.verifyRequest = function (req, requiredApi, callback) {
+function verifyRequest(req, requiredApi, callback) {
 
     var valid = false;
 
@@ -31,4 +43,4 @@ ApikeyAuth.prototype.verifyRequest = function (req, requiredApi, callback) {
     }
 
     callback(null, valid);
-};
+}

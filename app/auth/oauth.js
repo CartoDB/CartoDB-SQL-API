@@ -157,4 +157,28 @@ var oAuth = function(){
   return me;
 }();
 
-module.exports = oAuth;
+function OAuthAuth(req) {
+    this.req = req;
+    this.isOAuthRequest = null;
+}
+
+OAuthAuth.prototype.verifyCredentials = function(options, callback) {
+    if (this.hasCredentials()) {
+        oAuth.verifyRequest(this.req, callback, options.requestProtocol);
+    } else {
+        callback(null, false);
+    }
+};
+
+OAuthAuth.prototype.hasCredentials = function() {
+    if (this.isOAuthRequest === null) {
+        var passed_tokens = oAuth.parseTokens(this.req);
+        this.isOAuthRequest = !_.isEmpty(passed_tokens);
+    }
+
+    return this.isOAuthRequest;
+};
+
+
+module.exports = OAuthAuth;
+module.exports.backend = oAuth;

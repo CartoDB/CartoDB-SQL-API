@@ -36,8 +36,7 @@ var express = require('express')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
-    , oAuth       = require(global.settings.app_root + '/app/auth/oauth')
-    , ApiKeyAuth  = require(global.settings.app_root + '/app/auth/apikey')
+    , AuthApi     = require(global.settings.app_root + '/app/auth/auth_api')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
@@ -51,7 +50,6 @@ var metadataBackend = MetadataDB({
     reapIntervalMillis: global.settings.redisReapIntervalMillis
 });
 var cdbReq = new CdbRequest();
-var apiKeyAuth = new ApiKeyAuth(metadataBackend, cdbReq);
 
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -283,11 +281,12 @@ function handleQuery(req, res) {
 
         var formatter;
 
-        var cdbuser = cdbReq.userByReq(req);
+        var cdbUsername = cdbReq.userByReq(req),
+            authApi = new AuthApi(req, params),
+            dbParams;
 
         if ( req.profiler ) req.profiler.done('init');
 
-        var dbParams;
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -296,12 +295,18 @@ function handleQuery(req, res) {
         Step(
             function getDatabaseConnectionParams() {
                 checkAborted('getDatabaseConnectionParams');
-                metadataBackend.getAllUserDBParams(cdbuser, this);
+                // If the request is providing credentials it may require every DB parameters
+                if (authApi.hasCredentials()) {
+                    metadataBackend.getAllUserDBParams(cdbUsername, this);
+                } else {
+                    metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
+                }
             },
             function authenticate(err, userDBParams) {
+                console.log(err);
                 if (err) {
                     err.http_status = 404;
-                    err.message = "Sorry, we can't find CartoDB user '" + cdbuser
+                    err.message = "Sorry, we can't find CartoDB user '" + cdbUsername
                         + "'. Please check that you have entered the correct domain.";
                     throw err;
                 }
@@ -312,11 +317,7 @@ function handleQuery(req, res) {
                 dbopts.dbname = dbParams.dbname;
                 dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-                if (api_key) {
-                    apiKeyAuth.verifyRequest(req, dbParams.apikey, this);
-                } else {
-                    oAuth.verifyRequest(req, this, requestProtocol);
-                }
+                authApi.verifyCredentials({apiKey: dbParams.apikey, requestProtocol: requestProtocol}, this);
             },
             function setDBAuth(err, isAuthenticated) {
                 if (err) {

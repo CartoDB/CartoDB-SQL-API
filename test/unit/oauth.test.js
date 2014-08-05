@@ -2,7 +2,8 @@ require('../helper');
 
 var _        = require('underscore')
     , redis  = require("redis")
-    , oAuth  = require('../../app/auth/oauth')
+    , OAuthAuth  = require('../../app/auth/oauth')
+    , oAuth  = require('../../app/auth/oauth').backend
     , assert = require('assert')
     , tests  = module.exports = {}
     , oauth_data_1 = {
@@ -106,5 +107,20 @@ test('returns null user for no oauth', function(done){
         done();
     });
 });
+
+test('OAuthAuth reports it has credentials', function(done) {
+    var req = {query:{}, headers:{authorization:real_oauth_header}};
+    var oAuthAuth = new OAuthAuth(req);
+    assert.ok(oAuthAuth.hasCredentials());
+    done();
+});
+
+test('OAuthAuth reports it has no credentials', function(done) {
+    var req = {query:{}, headers:{}};
+    var oAuthAuth = new OAuthAuth(req);
+    assert.equal(oAuthAuth.hasCredentials(), false);
+    done();
+});
+
 
 });
