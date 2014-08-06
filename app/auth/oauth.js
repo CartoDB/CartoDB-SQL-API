@@ -1,9 +1,5 @@
 // too bound to the request object, but ok for now
-var RedisPool = require("../../node_modules/cartodb-redis/node_modules/redis-mpool/")({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-  })
-  , _         = require('underscore')
+var _         = require('underscore')
   , OAuthUtil = require('oauth-client')
   , url       = require('url')
   , Step      = require('step');
@@ -66,10 +62,10 @@ var oAuth = function(){
 
 
   // do new fancy get User ID
-  me.verifyRequest = function(req, callback){
+  me.verifyRequest = function(req, metadataBackend, callback) {
     var that = this;
     //TODO: review this
-    var httpProto = arguments['2'];
+    var httpProto = req.protocol;
     var passed_tokens;
     var ohash;
     var signature;
@@ -86,7 +82,7 @@ var oAuth = function(){
 
         if (this.is_oauth_request) {
           passed_tokens = data;
-          that.getOAuthHash(passed_tokens.oauth_token, this);
+          that.getOAuthHash(metadataBackend, passed_tokens.oauth_token, this);
         } else {
           return null;
         }
@@ -118,7 +114,6 @@ var oAuth = function(){
         signature = passed_tokens.oauth_signature;
         delete passed_tokens['oauth_signature'];
 
-        var base64;
         var joined = {};
 
         // remove oauth_signature from body
@@ -135,27 +130,40 @@ var oAuth = function(){
         if (err) throw err;
 
         //console.log(data + " should equal the provided signature: " + signature);
-        callback(err, (signature === data && !_.isUndefined(data)) ? ohash.user_id : null);
+        callback(err, (signature === data && !_.isUndefined(data)) ? true : null);
       }
     );
   };
 
-  // TODO: move to cartodb-redis !
-  me.getOAuthHash = function(access_key, callback){
-    var that = this;
-    RedisPool.acquire(this.oauth_database, function(err, client){
-      if ( err ) { callback(err); return; }
-      var redisClient = client;
-      var key = _.template(that.oauth_user_key, {oauth_access_key: access_key});
-      redisClient.HGETALL(key, function(err, data){
-        RedisPool.release(that.oauth_database, redisClient);
-        if ( ! err && data === null ) data = {}; 
-        callback(err, data);
-      });
-    });
+  me.getOAuthHash = function(metadataBackend, oAuthAccessKey, callback){
+      metadataBackend.getOAuthHash(oAuthAccessKey, callback);
   };
 
   return me;
 }();
 
-module.exports = oAuth;
+function OAuthAuth(req) {
+    this.req = req;
+    this.isOAuthRequest = null;
+}
+
+OAuthAuth.prototype.verifyCredentials = function(options, callback) {
+    if (this.hasCredentials()) {
+        oAuth.verifyRequest(this.req, options.metadataBackend, callback);
+    } else {
+        callback(null, false);
+    }
+};
+
+OAuthAuth.prototype.hasCredentials = function() {
+    if (this.isOAuthRequest === null) {
+        var passed_tokens = oAuth.parseTokens(this.req);
+        this.isOAuthRequest = !_.isEmpty(passed_tokens);
+    }
+
+    return this.isOAuthRequest;
+};
+
+
+module.exports = OAuthAuth;
+module.exports.backend = oAuth;

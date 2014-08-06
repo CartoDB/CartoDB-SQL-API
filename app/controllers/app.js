@@ -32,26 +32,24 @@ var express = require('express')
     , util        = require('util')
     , Profiler    = require('step-profiler')
     , StatsD      = require('node-statsd').StatsD
-    , Meta        = require('cartodb-redis')({
-        host: global.settings.redis_host,
-        port: global.settings.redis_port,
-        max: global.settings.redisPool,
-        idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-        reapIntervalMillis: global.settings.redisReapIntervalMillis
-      })
- // global.settings.app_root + '/app/models/metadata')
-    , oAuth       = require(global.settings.app_root + '/app/models/oauth')
+    , MetadataDB  = require('cartodb-redis')
     , PSQL        = require(global.settings.app_root + '/app/models/psql')
     , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
-    , ApiKeyAuth  = require(global.settings.app_root + '/app/models/apikey_auth')
+    , AuthApi     = require(global.settings.app_root + '/app/auth/auth_api')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     ;
 
-var cdbReq = new CdbRequest(Meta);
-var apiKeyAuth = new ApiKeyAuth(Meta, cdbReq);
+var metadataBackend = MetadataDB({
+    host: global.settings.redis_host,
+    port: global.settings.redis_port,
+    max: global.settings.redisPool,
+    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+    reapIntervalMillis: global.settings.redisReapIntervalMillis
+});
+var cdbReq = new CdbRequest();
 
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -213,7 +211,6 @@ function handleQuery(req, res) {
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
-    var requestProtocol = req.protocol;
 
     if ( req.profiler ) req.profiler.start('sqlapi.query');
 
@@ -283,7 +280,9 @@ function handleQuery(req, res) {
 
         var formatter;
 
-        var cdbuser = cdbReq.userByReq(req);
+        var cdbUsername = cdbReq.userByReq(req),
+            authApi = new AuthApi(req, params),
+            dbParams;
 
         if ( req.profiler ) req.profiler.done('init');
 
@@ -295,54 +294,42 @@ function handleQuery(req, res) {
         Step(
             function getDatabaseConnectionParams() {
                 checkAborted('getDatabaseConnectionParams');
-                Meta.getUserDBConnectionParams(cdbuser, this);
+                // If the request is providing credentials it may require every DB parameters
+                if (authApi.hasCredentials()) {
+                    metadataBackend.getAllUserDBParams(cdbUsername, this);
+                } else {
+                    metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
+                }
             },
-            function setDBConnectionParams(err, dbParams) {
-
+            function authenticate(err, userDBParams) {
                 if (err) {
                     err.http_status = 404;
-                    err.message = "Sorry, we can't find CartoDB user '" + cdbuser
+                    err.message = "Sorry, we can't find CartoDB user '" + cdbUsername
                         + "'. Please check that you have entered the correct domain.";
                     throw err;
                 }
+
+                dbParams = userDBParams;
+
                 dbopts.host = dbParams.dbhost;
                 dbopts.dbname = dbParams.dbname;
-                dbopts.user = (!!dbParams.dbuser) ? dbParams.dbuser : global.settings.db_pubuser;
+                dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-                return null;
+                authApi.verifyCredentials({
+                    metadataBackend: metadataBackend,
+                    apiKey: dbParams.apikey
+                }, this);
             },
-            function authenticate(err) {
+            function setDBAuth(err, isAuthenticated) {
                 if (err) {
                     throw err;
                 }
-                if (api_key) {
-                    apiKeyAuth.verifyRequest(req, this);
-                } else {
-                    oAuth.verifyRequest(req, this, requestProtocol);
-                }
-            },
-            function setUserGetDBPassword(err, userId) {
-                if (err) {
-                    throw err;
-                }
-                authenticated = userId !== null;
-                if (authenticated) {
-                    user_id = userId;
-                    dbopts.user = _.template(global.settings.db_user, {user_id: userId});
-                    Meta.getUserDBPass(cdbuser, this);
-                } else {
-                    return null
-                }
-            },
-            function setPassword(err, password) {
-                if (err) {
-                    throw err;
-                }
-                if ( authenticated ) {
+                if (_.isBoolean(isAuthenticated) && isAuthenticated) {
+                    dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
                     if ( global.settings.hasOwnProperty('db_user_pass') ) {
                         dbopts.pass = _.template(global.settings.db_user_pass, {
-                            user_id: user_id,
-                            user_password: password
+                            user_id: dbParams.dbuser,
+                            user_password: dbParams.dbpass
                         });
                     } else {
                         delete dbopts.pass;
