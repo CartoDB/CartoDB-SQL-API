@@ -1,7 +1,10 @@
 // too bound to the request object, but ok for now
-var RedisPool = require("../../node_modules/cartodb-redis/node_modules/redis-mpool/")({
+var RedisPool = require('redis-mpool')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
+    max: global.settings.redisPool,
+    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+    reapIntervalMillis: global.settings.redisReapIntervalMillis
   })
   , _         = require('underscore')
   , OAuthUtil = require('oauth-client')

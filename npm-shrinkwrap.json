@@ -55,7 +55,8 @@
           "version": "0.6.2"
         },
         "redis-mpool": {
-          "version": "0.0.3",
+          "version": "0.0.4",
+          "from": "git://github.com/CartoDB/node-redis-mpool.git#0.0.4",
           "dependencies": {
             "generic-pool": {
               "version": "2.0.4"
@@ -70,6 +71,29 @@
                   "version": "1.2.0"
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "redis-mpool": {
+      "version": "0.0.4",
+      "from": "git://github.com/CartoDB/node-redis-mpool.git#0.0.4",
+      "dependencies": {
+        "generic-pool": {
+          "version": "2.0.4"
+        },
+        "redis": {
+          "version": "0.8.6"
+        },
+        "hiredis": {
+          "version": "0.1.17",
+          "dependencies": {
+            "bindings": {
+              "version": "1.2.1"
+            },
+            "nan": {
+              "version": "1.1.2"
             }
           }
         }
