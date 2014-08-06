@@ -211,7 +211,6 @@ function handleQuery(req, res) {
     var gn        = "the_geom"; // TODO: read from configuration file
     var user_id;
     var tableCacheItem;
-    var requestProtocol = req.protocol;
 
     if ( req.profiler ) req.profiler.start('sqlapi.query');
 
@@ -316,7 +315,10 @@ function handleQuery(req, res) {
                 dbopts.dbname = dbParams.dbname;
                 dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-                authApi.verifyCredentials({apiKey: dbParams.apikey, requestProtocol: requestProtocol}, this);
+                authApi.verifyCredentials({
+                    metadataBackend: metadataBackend,
+                    apiKey: dbParams.apikey
+                }, this);
             },
             function setDBAuth(err, isAuthenticated) {
                 if (err) {

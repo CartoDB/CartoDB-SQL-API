@@ -1,12 +1,5 @@
 // too bound to the request object, but ok for now
-var RedisPool = require('redis-mpool')({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-  })
-  , _         = require('underscore')
+var _         = require('underscore')
   , OAuthUtil = require('oauth-client')
   , url       = require('url')
   , Step      = require('step');
@@ -69,10 +62,10 @@ var oAuth = function(){
 
 
   // do new fancy get User ID
-  me.verifyRequest = function(req, callback){
+  me.verifyRequest = function(req, metadataBackend, callback) {
     var that = this;
     //TODO: review this
-    var httpProto = arguments['2'];
+    var httpProto = req.protocol;
     var passed_tokens;
     var ohash;
     var signature;
@@ -89,7 +82,7 @@ var oAuth = function(){
 
         if (this.is_oauth_request) {
           passed_tokens = data;
-          that.getOAuthHash(passed_tokens.oauth_token, this);
+          that.getOAuthHash(metadataBackend, passed_tokens.oauth_token, this);
         } else {
           return null;
         }
@@ -142,19 +135,8 @@ var oAuth = function(){
     );
   };
 
-  // TODO: move to cartodb-redis !
-  me.getOAuthHash = function(access_key, callback){
-    var that = this;
-    RedisPool.acquire(this.oauth_database, function(err, client){
-      if ( err ) { callback(err); return; }
-      var redisClient = client;
-      var key = _.template(that.oauth_user_key, {oauth_access_key: access_key});
-      redisClient.HGETALL(key, function(err, data){
-        RedisPool.release(that.oauth_database, redisClient);
-        if ( ! err && data === null ) data = {}; 
-        callback(err, data);
-      });
-    });
+  me.getOAuthHash = function(metadataBackend, oAuthAccessKey, callback){
+      metadataBackend.getOAuthHash(oAuthAccessKey, callback);
   };
 
   return me;
@@ -167,7 +149,7 @@ function OAuthAuth(req) {
 
 OAuthAuth.prototype.verifyCredentials = function(options, callback) {
     if (this.hasCredentials()) {
-        oAuth.verifyRequest(this.req, callback, options.requestProtocol);
+        oAuth.verifyRequest(this.req, options.metadataBackend, callback);
     } else {
         callback(null, false);
     }
