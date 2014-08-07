@@ -1,6 +1,11 @@
 1.14.0 - 2014-mm-dd
 -------------------
 
+Other changes:
+
+ * Removes sql statements restriction on pg_ queries
+
+
 1.13.0 - 2014-08-07
 -------------------
 
