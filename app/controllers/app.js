@@ -386,19 +386,6 @@ function handleQuery(req, res) {
                     tableCache.set(sql_md5, tableCacheItem);
                 }
 
-                if ( tableCacheItem ) {
-                    var affected_tables = tableCacheItem.affected_tables;
-                    for ( var i = 0; i < affected_tables.length; ++i ) {
-                      var t = affected_tables[i];
-                      if ( t.match(/\bpg_/) ) {
-                        var e = new SyntaxError("system tables are forbidden");
-                        e.http_status = 403;
-                        throw(e);
-                      }
-                    }
-                }
-
-
                 var fClass = formats[format];
                 formatter = new fClass();
                 req.formatter = formatter;
