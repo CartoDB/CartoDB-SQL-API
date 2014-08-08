@@ -955,84 +955,66 @@ test('GET /api/v1/sql ensure cross domain set on errors', function(done){
     });
 });
 
-test('cannot GET system tables', function(done){
-    var req = { headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET' };
-    var pre = '/api/v1/sql?';
-    Step(
-      function trySysTable1() {
-        req.url = pre + querystring.stringify({q: 'SELECT * FROM pg_attribute'});
-        var next = this;
-        assert.response( app, req, function(res) { next(null, res); } );
-      },
-      function chkSysTable1_trySysTable2(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200);
-        req.url = pre + querystring.stringify({q: 'SELECT * FROM PG_attribute'});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkSysTable2_trySysTable3(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200);
-        req.url = pre + querystring.stringify({q: 'SELECT * FROM "pg_attribute"'});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkSysTable3_trySysTable4(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200);
-        req.url = pre + querystring.stringify({q: 'SELECT a.* FROM untitle_table_4 a,pg_attribute'});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkSysTable4_tryValidPg1(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200);
-        req.url = pre + querystring.stringify({q: "SELECT 'pg_'"});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkValidPg1_tryValidPg2(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200);
-        req.url = pre + querystring.stringify({q: "SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f"});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      // See http://github.com/CartoDB/CartoDB-SQL-API/issues/118
-      function chkValidPg1_tryValidPg3_b(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
-        req.url = pre + querystring.stringify({q: "SELECT * FROM cpg_test"});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkValidPg2_trySet1(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 200, res.statusCode + ':' + res.body);
-        req.url = pre + querystring.stringify({q: ' set statement_timeout TO 400'});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkSet1_trySet2(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 403);
-        req.url = pre + querystring.stringify({q: ' SET work_mem TO 80000'});
-        assert.response(app, req, function(res) { next(null, res); });
-      },
-      function chkSet2(err, res) {
-        if ( err ) throw err;
-        var next = this;
-        assert.equal(res.statusCode, 403);
-        return true;
-      },
-      function finish(err) {
-        done(err);
-      }
-    );
-});
+var systemQueriesSuitesToTest = [
+    {
+        desc: 'pg_ queries work with api_key and fail otherwise',
+        queries: [
+            'SELECT * FROM pg_attribute',
+            'SELECT * FROM PG_attribute',
+            'SELECT * FROM "pg_attribute"',
+            'SELECT a.* FROM untitle_table_4 a,pg_attribute'
+        ],
+        api_key_works: true,
+        no_api_key_works: false
+    },
+    {
+        desc: 'Possible false positive queries will work with api_key and without it',
+        queries: [
+            "SELECT 'pg_'",
+            'SELECT pg_attribute FROM ( select 1 as pg_attribute ) as f',
+            'SELECT * FROM cpg_test'
+        ],
+        api_key_works: true,
+        no_api_key_works: true
+    },
+    {
+        desc: 'Set queries will FAIL for both api_key and no_api_key queries',
+        queries: [
+            ' SET work_mem TO 80000',
+            ' set statement_timeout TO 400'
+        ],
+        api_key_works: false,
+        no_api_key_works: false
+    }
+];
+
+    systemQueriesSuitesToTest.forEach(function(suiteToTest) {
+        var apiKeyStatusErrorCode = !!suiteToTest.api_key_works ? 200 : 403;
+        testSystemQueries(suiteToTest.desc + ' with api_key', suiteToTest.queries, apiKeyStatusErrorCode, '1234');
+        var noApiKeyStatusErrorCode = !!suiteToTest.no_api_key_works ? 200 : 403;
+        testSystemQueries(suiteToTest.desc, suiteToTest.queries, noApiKeyStatusErrorCode);
+    });
+
+
+function testSystemQueries(description, queries, statusErrorCode, apiKey) {
+    queries.forEach(function(query) {
+        test('[' + description + ']  query: ' + query, function(done) {
+            var queryStringParams = {q: query};
+            if (!!apiKey) {
+                queryStringParams.api_key = apiKey;
+            }
+            var request = {
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET',
+                url: '/api/v1/sql?' + querystring.stringify(queryStringParams)
+            };
+            assert.response(app, request, function(response) {
+                assert.equal(response.statusCode, statusErrorCode);
+                done();
+            });
+        });
+    });
+}
 
 test('GET decent error if domain is incorrect', function(done){
     assert.response(app, {

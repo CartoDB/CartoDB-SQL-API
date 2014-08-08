@@ -276,7 +276,7 @@ function handleQuery(req, res) {
           pass: global.settings.db_pubuser_pass
         };
 
-        var authenticated;
+        var authenticated = false;
 
         var formatter;
 
@@ -325,6 +325,7 @@ function handleQuery(req, res) {
                     throw err;
                 }
                 if (_.isBoolean(isAuthenticated) && isAuthenticated) {
+                    authenticated = isAuthenticated;
                     dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
                     if ( global.settings.hasOwnProperty('db_user_pass') ) {
                         dbopts.pass = _.template(global.settings.db_user_pass, {
@@ -384,6 +385,18 @@ function handleQuery(req, res) {
                       hits: 1
                     };
                     tableCache.set(sql_md5, tableCacheItem);
+                }
+
+                if ( !authenticated && tableCacheItem ) {
+                    var affected_tables = tableCacheItem.affected_tables;
+                    for ( var i = 0; i < affected_tables.length; ++i ) {
+                        var t = affected_tables[i];
+                        if ( t.match(/\bpg_/) ) {
+                            var e = new SyntaxError("system tables are forbidden");
+                            e.http_status = 403;
+                            throw(e);
+                        }
+                    }
                 }
 
                 var fClass = formats[format];

@@ -1,6 +1,9 @@
-1.15.0 - 2014-mm-dd
+1.14.1 - 2014-mm-dd
 -------------------
 
+Other changes:
+
+ * Constraint for pg_ queries if request is non authenticated
 
 1.14.0 - 2014-08-07
 -------------------
