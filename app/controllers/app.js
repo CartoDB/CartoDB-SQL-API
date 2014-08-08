@@ -196,7 +196,6 @@ function handleQuery(req, res) {
     var body      = (req.body) ? req.body : {};
     var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql       = params.q;
-    var api_key   = params.api_key;
     var limit     = parseInt(params.rows_per_page);
     var offset    = parseInt(params.page);
     var orderBy   = params.order_by;
@@ -209,7 +208,6 @@ function handleQuery(req, res) {
     var skipfields;
     var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
-    var user_id;
     var tableCacheItem;
 
     if ( req.profiler ) req.profiler.start('sqlapi.query');
