@@ -19,8 +19,8 @@ pg.on('error', function(err, client) {
 });
 
 // Workaround for https://github.com/Vizzuality/CartoDB-SQL-API/issues/100
-var types = require(__dirname + '/../../node_modules/pg/lib/types');
-var arrayParser = require(__dirname + '/../../node_modules/pg/lib/types/arrayParser');
+var types = pg.types;
+var arrayParser = require('pg-types').arrayParser;
 var floatParser = function(val) {
   return parseFloat(val);
 };
