@@ -48,7 +48,8 @@
       }
     },
     "cartodb-psql": {
-      "version": "0.3.2",
+      "version": "0.3.1",
+      "from": "git://github.com/CartoDB/node-cartodb-psql.git#0.3.1",
       "dependencies": {
         "pg": {
           "version": "2.6.2-cdb1",
