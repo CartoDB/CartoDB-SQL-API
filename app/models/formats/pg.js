@@ -1,5 +1,5 @@
 var Step        = require('step'),
-    PSQL = require(global.settings.app_root + '/app/models/psql');
+    PSQL        = require('cartodb-psql');
 
 function PostgresFormat(id) {
     this.id = id;
