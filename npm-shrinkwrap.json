@@ -57,21 +57,24 @@
       }
     },
     "cartodb-redis": {
-      "version": "0.8.0",
-      "from": "git://github.com/CartoDB/node-cartodb-redis.git#0.8.0",
+      "version": "0.9.0",
+      "from": "git://github.com/CartoDB/node-cartodb-redis.git#0.9.0",
       "dependencies": {
+        "underscore": {
+          "version": "1.6.0"
+        },
         "strftime": {
-          "version": "0.6.2"
+          "version": "0.8.2"
         },
         "redis-mpool": {
-          "version": "0.0.4",
-          "from": "git://github.com/CartoDB/node-redis-mpool.git#0.0.4",
+          "version": "0.1.0",
+          "from": "git://github.com/CartoDB/node-redis-mpool.git#0.1.0",
           "dependencies": {
             "generic-pool": {
-              "version": "2.0.4"
+              "version": "2.1.1"
             },
             "redis": {
-              "version": "0.8.6"
+              "version": "0.12.1"
             },
             "hiredis": {
               "version": "0.1.17",
