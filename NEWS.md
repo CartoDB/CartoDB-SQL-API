@@ -4,6 +4,7 @@
 Enhancements:
 
  * Upgrades cartodb-redis
+ * Upgrades underscore, removes underscore.string dependency
 
 
 1.14.1 - 2014-08-08

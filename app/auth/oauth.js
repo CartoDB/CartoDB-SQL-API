@@ -3,7 +3,6 @@ var _         = require('underscore')
   , OAuthUtil = require('oauth-client')
   , url       = require('url')
   , Step      = require('step');
-  _.mixin(require('underscore.string'));
 
 var oAuth = function(){
   var me = {

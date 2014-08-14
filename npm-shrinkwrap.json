@@ -59,9 +59,6 @@
     "underscore": {
       "version": "1.6.0"
     },
-    "underscore.string": {
-      "version": "2.3.3"
-    },
     "express": {
       "version": "2.5.11",
       "dependencies": {
