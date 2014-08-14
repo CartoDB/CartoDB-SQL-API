@@ -33,8 +33,7 @@ var express = require('express')
     , Profiler    = require('step-profiler')
     , StatsD      = require('node-statsd').StatsD
     , MetadataDB  = require('cartodb-redis')
-    , PSQL        = require(global.settings.app_root + '/app/models/psql')
-    , PSQLWrapper = require(global.settings.app_root + '/app/sql/psql_wrapper')
+    , PSQL        = require('cartodb-psql')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
     , AuthApi     = require(global.settings.app_root + '/app/auth/auth_api')
     , _           = require('underscore')
@@ -351,7 +350,7 @@ function handleQuery(req, res) {
                    return false;
                 } else {
                    //TODO: sanitize cdbuser
-                   console.log("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$");
+                   console.log("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)");
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
                       if (err) {
                         self(err);
@@ -446,7 +445,7 @@ function handleQuery(req, res) {
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
-                sql = new PSQLWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
+                sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
                   dbopts: dbopts,
