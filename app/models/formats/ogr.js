@@ -2,7 +2,7 @@ var crypto      = require('crypto'),
     Step        = require('step'),
     fs          = require('fs'),
     _           = require('underscore'),
-    PSQL        = require(global.settings.app_root + '/app/models/psql'),
+    PSQL        = require('cartodb-psql'),
     spawn       = require('child_process').spawn;
 
 // Keeps track of what's waiting baking for export
