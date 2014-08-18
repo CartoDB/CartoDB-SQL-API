@@ -41,7 +41,7 @@ Getting OAuth keys - For secure access to your application you will need to gene
 
 - Go to your dashboard.
 - Click on your username in the top right corner, and select "Your API keys."
-- Here, you can view and copy your OAuth Keys and Tokens, and you can request new OAuth Keys. Remember that requesting new OAuth Keys will affect all applications using OAuth for your CartDB application, and that your old keys will immediately become invalid.
+- Here, you can view and copy your OAuth Keys and Tokens, and you can request new OAuth Keys. Remember that requesting new OAuth Keys will affect all applications using OAuth for your CartoDB application, and that your old keys will immediately become invalid.
 
 There are many other resources to help you authenticate access via OAuth. For further reading, take a look at [this list](http://oauth.net/code/) or at the libraries available for [integrating CartoDB](#libraries-in-different-languages) with several programming languages.
 
@@ -251,7 +251,7 @@ http://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) 
 
 More advanced methods exist in the PostGIS library to extract meaningful data from your geometry. Explore the PostGIS documentation and get familiar with functions such as, [ST_XMin](http://www.postgis.org/docs/ST_XMin.html), [ST_XMax](http://www.postgis.org/docs/ST_XMax.html), [ST_AsText](http://www.postgis.org/docs/ST_AsText.html), and more.
 
-All data returned from *the_geom* column is in WGS 83 (EPSG:4326). You can change this quickly and easily on the fly using SQL. For example, if you desire geometries in the Hanoi 1972 (EPSG:4147) projection, you could [ST_Transform](http://www.postgis.org/docs/ST_Transform.html),
+All data returned from *the_geom* column is in WGS 84 (EPSG:4326). You can change this quickly and easily on the fly using SQL. For example, if you desire geometries in the Hanoi 1972 (EPSG:4147) projection, you could [ST_Transform](http://www.postgis.org/docs/ST_Transform.html),
 
 <div class="code-title code-request">ASTEXT</div>
 {% highlight bash %}
