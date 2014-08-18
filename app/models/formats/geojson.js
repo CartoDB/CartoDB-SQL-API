@@ -58,6 +58,8 @@ GeoJsonFormat.prototype.handleQueryEnd = function(result) {
         return;
     }
 
+    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+
     if ( ! this._streamingStarted ) {
         this.startStreaming();
     }

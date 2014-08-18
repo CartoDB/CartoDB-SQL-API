@@ -76,8 +76,6 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
 
         if (err) throw err;
 
-        if ( that.opts.profiler ) that.opts.profiler.done('packageResult');
-
         // return to browser
         if ( out ) {
           if ( that.opts.beforeSink ) that.opts.beforeSink();
