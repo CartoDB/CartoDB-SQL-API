@@ -109,7 +109,7 @@
       "version": "2.5.0"
     },
     "log4js": {
-      "version": "0.6.16",
+      "version": "0.6.17",
       "dependencies": {
         "async": {
           "version": "0.1.15"
@@ -137,7 +137,7 @@
       }
     },
     "rollbar": {
-      "version": "0.3.12",
+      "version": "0.3.13",
       "dependencies": {
         "node-uuid": {
           "version": "1.4.1"
