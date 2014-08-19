@@ -306,6 +306,8 @@ function handleQuery(req, res) {
                     throw err;
                 }
 
+                if ( req.profiler ) req.profiler.done('getDBParams');
+
                 dbParams = userDBParams;
 
                 dbopts.host = dbParams.dbhost;
@@ -321,6 +323,9 @@ function handleQuery(req, res) {
                 if (err) {
                     throw err;
                 }
+
+                if ( req.profiler ) req.profiler.done('authenticate');
+
                 if (_.isBoolean(isAuthenticated) && isAuthenticated) {
                     authenticated = isAuthenticated;
                     dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
@@ -339,7 +344,9 @@ function handleQuery(req, res) {
                 var self = this;
 
                 if (err) throw err;
-                if ( req.profiler ) req.profiler.done('getUserDBPass');
+
+                if ( req.profiler ) req.profiler.done('setDBAuth');
+
                 checkAborted('queryExplain');
 
                 pg = new PSQL(dbopts);
@@ -369,7 +376,9 @@ function handleQuery(req, res) {
             },
             function setHeaders(err, tables){
                 if (err) throw err;
+
                 if ( req.profiler ) req.profiler.done('queryExplain');
+
                 checkAborted('setHeaders');
 
                 // store explain result in local Cache
@@ -441,7 +450,6 @@ function handleQuery(req, res) {
             },
             function generateFormat(err){
                 if (err) throw err;
-                if ( req.profiler ) req.profiler.done('setHeaders');
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
@@ -463,7 +471,7 @@ function handleQuery(req, res) {
                 if ( req.profiler ) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
-                    req.profiler.done('sendResponse');
+                    req.profiler.done('beforeSink');
                     res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
                   };
                 }

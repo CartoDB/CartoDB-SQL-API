@@ -1,6 +1,9 @@
 1.16.0 - 2014-mm-dd
 -------------------
 
+Enhancements:
+
+ * Metrics revamp: removes and adds some metrics
 
 1.15.0 - 2014-08-18
 -------------------
