@@ -46,7 +46,7 @@ test('does not hang server', function(done){
     },
     function checkResponse(err, res) {
       if ( err ) throw err;
-      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
       var parsed = JSON.parse(res.body);
       assert.ok(parsed.error);
       var msg = parsed.error[0];
@@ -65,7 +65,7 @@ test('does not hang server', function(done){
     },
     function checkResponse(err, res) {
       if ( err ) throw err;
-      assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+      assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
       var parsed = JSON.parse(res.body);
       assert.ok(parsed.error);
       var msg = parsed.error[0];
