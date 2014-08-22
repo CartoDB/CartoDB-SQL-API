@@ -1,13 +1,16 @@
 1.16.1 - 2014-mm-dd
 -------------------
 
+New features:
+
+ * New header for database host serving the request
+
 Enhancements:
 
  * Upgrades dependencies:
     * cartodb-redis
     * cartodb-psql
     * log4js
-
 
 
 1.16.0 - 2014-08-19

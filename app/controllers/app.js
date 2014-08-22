@@ -479,6 +479,9 @@ function handleQuery(req, res) {
                 if (global.settings.api_hostname) {
                   res.header('X-Served-By-Host', global.settings.api_hostname);
                 }
+                if (dbopts.host) {
+                  res.header('X-Served-By-DB-Host', dbopts.host);
+                }
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
