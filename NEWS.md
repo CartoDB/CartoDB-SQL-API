@@ -4,6 +4,7 @@
 New features:
 
  * New header for database host serving the request
+ * Health check endpoint
 
 Enhancements:
 

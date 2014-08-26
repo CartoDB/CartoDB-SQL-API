@@ -53,4 +53,9 @@ module.exports.statsd = {
   prefix: 'dev.:host.',
   cacheDns: true
   // support all allowed node-statsd options
-}
+};
+module.exports.health = {
+    enabled: true,
+    username: 'development',
+    query: 'select 1'
+};
