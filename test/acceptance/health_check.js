@@ -17,15 +17,19 @@ suite('health checks', function() {
         done();
     });
 
+    var healthCheckRequest = {
+        url: '/api/v1/health',
+        method: 'GET',
+        headers: {
+            host: 'vizzuality.localhost'
+        }
+    };
+
     test('returns 200 and ok=true with disabled configuration', function(done) {
         global.settings.health.enabled = false;
 
         assert.response(app,
-            {
-                url: '/api/v1/health',
-                method: 'GET',
-                headers: {host: 'vizzuality.localhost' }
-            },
+            healthCheckRequest,
             {
                 status: 200
             },
@@ -44,11 +48,7 @@ suite('health checks', function() {
 
     test('returns 200 and ok=true with enabled configuration', function(done) {
         assert.response(app,
-            {
-                url: '/api/v1/health',
-                method: 'GET',
-                headers: {host: 'vizzuality.localhost' }
-            },
+            healthCheckRequest,
             {
                 status: 200
             },
@@ -69,11 +69,7 @@ suite('health checks', function() {
         global.settings.health.username = 'invalid';
 
         assert.response(app,
-            {
-                url: '/api/v1/health',
-                method: 'GET',
-                headers: {host: 'vizzuality.localhost' }
-            },
+            healthCheckRequest,
             {
                 status: 503
             },
@@ -96,11 +92,7 @@ suite('health checks', function() {
         global.settings.health.query = 'select wadus query';
 
         assert.response(app,
-            {
-                url: '/api/v1/health',
-                method: 'GET',
-                headers: {host: 'vizzuality.localhost' }
-            },
+            healthCheckRequest,
             {
                 status: 503
             },
