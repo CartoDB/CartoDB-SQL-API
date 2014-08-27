@@ -151,6 +151,8 @@ assert.response = function(server, req, res, msg){
             response.on('end', function(){
                 if (timer) clearTimeout(timer);
 
+                check();
+
                 // Assert response body
                 if (res.body !== undefined) {
                     var eql = res.body instanceof RegExp
@@ -194,7 +196,6 @@ assert.response = function(server, req, res, msg){
                     }
                 }
 
-                check();
                 callback(response);
             });
         });
