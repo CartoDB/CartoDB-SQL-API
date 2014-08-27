@@ -194,9 +194,8 @@ assert.response = function(server, req, res, msg){
                     }
                 }
 
-                // Callback
-                callback(response);
                 check();
+                callback(response);
             });
         });
 
