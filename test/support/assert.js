@@ -171,9 +171,10 @@ assert.response = function(server, req, res, msg){
                     assert.equal(
                         response.statusCode,
                         status,
-                        msg + 'Invalid response status code.\n'
+                        msg + colorize('Invalid response status code.\n'
                             + '    Expected: [green]{' + status + '}\n'
-                            + '    Got: [red]{' + response.statusCode + '}'
+                            + '    Got: [red]{' + response.statusCode + '}\n'
+                            + '    Response body: ' + response.body)
                     );
                 }
 
@@ -189,9 +190,10 @@ assert.response = function(server, req, res, msg){
                               : expected == actual;
                         assert.ok(
                             eql,
-                            msg + 'Invalid response header [bold]{' + name + '}.\n'
+                            msg + colorize('Invalid response header [bold]{' + name + '}.\n'
                                 + '    Expected: [green]{' + expected + '}\n'
-                                + '    Got: [red]{' + actual + '}'
+                                + '    Got: [red]{' + actual + '}\n'
+                                + '    Response body: ' + response.body)
                         );
                     }
                 }
@@ -204,3 +206,16 @@ assert.response = function(server, req, res, msg){
       }
 };
 
+/**
+ * Colorize the given string using ansi-escape sequences.
+ * Disabled when --boring is set.
+ *
+ * @param {String} str
+ * @return {String}
+ */
+function colorize(str) {
+    var colors = { bold: 1, red: 31, green: 32, yellow: 33 };
+    return str.replace(/\[(\w+)\]\{([^]*?)\}/g, function(_, color, str) {
+        return '\x1B[' + colors[color] + 'm' + str + '\x1B[0m';
+    });
+}
