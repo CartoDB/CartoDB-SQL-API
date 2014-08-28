@@ -39,6 +39,7 @@ var express = require('express')
     , _           = require('underscore')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
+    , HealthCheck = require(global.settings.app_root + '/app/monitoring/health_check')
     ;
 
 var metadataBackend = MetadataDB({
@@ -165,6 +166,7 @@ app.options('*', function(req,res) { setCrossDomain(res); res.end(); });
 app.all(global.settings.base_url+'/sql',     function(req, res) { handleQuery(req, res) } );
 app.all(global.settings.base_url+'/sql.:f',  function(req, res) { handleQuery(req, res) } );
 app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
+app.get(global.settings.base_url+'/health',  function(req, res) { handleHealthCheck(req, res) } );
 app.get(global.settings.base_url+'/version', function(req, res) {
   res.send(getVersion());
 });
@@ -508,6 +510,29 @@ function handleCacheStatus(req, res){
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
+var healthCheck = new HealthCheck(metadataBackend, PSQL);
+function handleHealthCheck(req, res) {
+    var healthConfig = global.settings.health || {};
+    if (!!healthConfig.enabled) {
+        var startTime = Date.now();
+        healthCheck.check(healthConfig.username, healthConfig.query, function(err, result) {
+            var ok = !err;
+            var response = {
+                enabled: true,
+                ok: ok,
+                elapsed: Date.now() - startTime,
+                result: result
+            };
+            if (err) {
+                response.err = err.message;
+            }
+            res.send(response, ok ? 200 : 503);
+
+        });
+    } else {
+        res.send({enabled: false, ok: true}, 200);
+    }
+}
 
 function getContentDisposition(formatter, filename, inline) {
     var ext = formatter.getFileExtension();
