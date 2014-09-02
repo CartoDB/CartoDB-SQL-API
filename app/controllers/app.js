@@ -590,6 +590,10 @@ function handleException(err, res){
 function getStatusError(err, req) {
     var statusError = _.isUndefined(err.http_status) ? 400 : err.http_status;
 
+    if (err.message && err.message.match(/permission denied/)) {
+        statusError = 401;
+    }
+
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
         statusError = 200;

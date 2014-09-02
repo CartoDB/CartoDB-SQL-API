@@ -1,6 +1,9 @@
 1.16.1 - 2014-mm-dd
 -------------------
 
+Bug fixes:
+ * Returns 401 Unauthorized for queries without permission
+
 New features:
 
  * New header for database host serving the request
