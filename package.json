@@ -16,7 +16,7 @@
       "Sandro Santilli <strk@vizzuality.com>"
     ],
     "dependencies": {
-        "cartodb-redis": "https://github.com/CartoDB/node-cartodb-redis/tarball/0.10.0",
+        "cartodb-redis": "https://github.com/CartoDB/node-cartodb-redis/tarball/0.11.0",
         "cartodb-psql": "https://github.com/CartoDB/node-cartodb-psql/tarball/0.4.0",
         "step-profiler": "https://github.com/CartoDB/node-step-profiler/tarball/0.1.0",
         "underscore": "~1.6.0",
