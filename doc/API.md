@@ -282,9 +282,6 @@ All CartoDB applications use **Version 2** of our APIs. All other APIs are depre
 
 To make things easier for developers we provide client libraries for different programming languages. These clients take care of handling OAuth to CartoDB and some of them provide some caching functionalities.
 
-- **RUBY**  
-  The Ruby library is our most mature CartoDB client and is being used in CartoSet. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-rb-client)
-
 - **R**  
   To help more researchers use CartoDB to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-r)
 
@@ -308,3 +305,6 @@ To make things easier for developers we provide client libraries for different p
 
 - **iOS**  
   Objective-C library for interacting with CartoDB in native iOS applications. [Fork it on GitHub!](https://github.com/jmnavarro/cartodb-objectivec-client)
+
+- **RUBY**  
+  The Ruby library is our most mature CartoDB client and is being used in CartoSet. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-rb-client)

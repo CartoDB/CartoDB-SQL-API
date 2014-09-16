@@ -1,3 +1,22 @@
+1.17.0 - 2014-09-17
+-------------------
+
+Bug fixes:
+ * Returns 401 Unauthorized for queries without permission
+
+New features:
+
+ * New header for database host serving the request
+ * Health check endpoint
+
+Enhancements:
+
+ * Upgrades dependencies:
+    * cartodb-redis
+    * cartodb-psql
+    * log4js
+
+
 1.16.0 - 2014-08-19
 -------------------
 

@@ -340,7 +340,7 @@ test('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail'
         method: 'GET'
     },{
     }, function(res) {
-        assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+        assert.equal(res.statusCode, 401, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body),

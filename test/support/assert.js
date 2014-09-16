@@ -1,41 +1,6 @@
-// Cribbed from the ever prolific Konstantin Kaefer
-// https://github.com/mapbox/tilelive-mapnik/blob/master/test/support/assert.js
-
-var fs = require('fs');
 var http = require('http');
-var path = require('path');
-var exec = require('child_process').exec;
 
 var assert = module.exports = exports = require('assert');
-
-assert.imageEqualsFile = function(buffer, file_b, callback) {
-    if (!callback) callback = function(err) { if (err) throw err; };
-    file_b = path.resolve(file_b);
-    var file_a = '/tmp/' + (Math.random() * 1e16);
-    var err = fs.writeFileSync(file_a, buffer, 'binary');
-    if (err) throw err;
-
-    exec('compare -metric PSNR "' + file_a + '" "' +
-            file_b + '" /dev/null', function(err, stdout, stderr) {
-        if (err) {
-            fs.unlinkSync(file_a);
-            callback(err);
-        } else {
-            stderr = stderr.trim();
-            if (stderr === 'inf') {
-                fs.unlinkSync(file_a);
-                callback(null);
-            } else {
-                var similarity = parseFloat(stderr);
-                var err = new Error('Images not equal(' + similarity + '): ' +
-                        file_a  + '    ' + file_b);
-                err.similarity = similarity;
-                callback(err);
-            }
-        }
-    });
-};
-
 
 /**
  * Assert response from `server` with
@@ -44,7 +9,7 @@ assert.imageEqualsFile = function(buffer, file_b, callback) {
  * @param {Server} server
  * @param {Object} req
  * @param {Object|Function} res
- * @param {String} msg
+ * @param {String|Function} msg
  */
 assert.response = function(server, req, res, msg){
     var port = 5555;
@@ -151,6 +116,8 @@ assert.response = function(server, req, res, msg){
             response.on('end', function(){
                 if (timer) clearTimeout(timer);
 
+                check();
+
                 // Assert response body
                 if (res.body !== undefined) {
                     var eql = res.body instanceof RegExp
@@ -169,9 +136,10 @@ assert.response = function(server, req, res, msg){
                     assert.equal(
                         response.statusCode,
                         status,
-                        msg + 'Invalid response status code.\n'
+                        msg + colorize('Invalid response status code.\n'
                             + '    Expected: [green]{' + status + '}\n'
-                            + '    Got: [red]{' + response.statusCode + '}'
+                            + '    Got: [red]{' + response.statusCode + '}\n'
+                            + '    Response body: ' + response.body)
                     );
                 }
 
@@ -187,16 +155,15 @@ assert.response = function(server, req, res, msg){
                               : expected == actual;
                         assert.ok(
                             eql,
-                            msg + 'Invalid response header [bold]{' + name + '}.\n'
+                            msg + colorize('Invalid response header [bold]{' + name + '}.\n'
                                 + '    Expected: [green]{' + expected + '}\n'
-                                + '    Got: [red]{' + actual + '}'
+                                + '    Got: [red]{' + actual + '}\n'
+                                + '    Response body: ' + response.body)
                         );
                     }
                 }
 
-                // Callback
                 callback(response);
-                check();
             });
         });
 
@@ -204,3 +171,16 @@ assert.response = function(server, req, res, msg){
       }
 };
 
+/**
+ * Colorize the given string using ansi-escape sequences.
+ * Disabled when --boring is set.
+ *
+ * @param {String} str
+ * @return {String}
+ */
+function colorize(str) {
+    var colors = { bold: 1, red: 31, green: 32, yellow: 33 };
+    return str.replace(/\[(\w+)\]\{([^]*?)\}/g, function(_, color, str) {
+        return '\x1B[' + colors[color] + 'm' + str + '\x1B[0m';
+    });
+}
