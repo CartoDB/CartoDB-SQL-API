@@ -359,7 +359,6 @@ function handleQuery(req, res) {
                    return false;
                 } else {
                    //TODO: sanitize cdbuser
-                   console.log("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)");
                    pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
                       if (err) {
                         self(err);
