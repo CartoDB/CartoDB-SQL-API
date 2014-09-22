@@ -65,21 +65,21 @@ export PGHOST PGPORT
 if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
-  dropdb -U postgres ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
-  createdb -U postgres -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
+  dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
+  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
   cat test.sql |
     sed "s/:PUBLICUSER/${PUBLICUSER}/" |
     sed "s/:PUBLICPASS/${PUBLICPASS}/" |
     sed "s/:TESTUSER/${TESTUSER}/" |
     sed "s/:TESTPASS/${TESTPASS}/" |
-    psql -U postgres -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+    psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
 
   # TODO: send in a single run, togheter with test.sql
-  psql -U postgres -c "CREATE EXTENSION plpythonu;" ${TEST_DB}
+  psql -c "CREATE EXTENSION plpythonu;" ${TEST_DB}
   curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/cdb/scripts-available/CDB_QueryStatements.sql -o support/CDB_QueryStatements.sql
   curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/cdb/scripts-available/CDB_QueryTables.sql -o support/CDB_QueryTables.sql
-  psql -U postgres -f support/CDB_QueryStatements.sql ${TEST_DB}
-  psql -U postgres -f support/CDB_QueryTables.sql ${TEST_DB}
+  psql -f support/CDB_QueryStatements.sql ${TEST_DB}
+  psql -f support/CDB_QueryTables.sql ${TEST_DB}
 
 fi
 

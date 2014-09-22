@@ -16,6 +16,9 @@ before_script:
   - psql -c 'CREATE EXTENSION postgis;' -U postgres -d template_postgis
   - ./configure
 
+env:
+  - PGUSER=postgres
+
 language: node_js
 node_js:
   - "0.8"
