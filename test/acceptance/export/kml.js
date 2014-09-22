@@ -10,25 +10,13 @@ var app    = require(global.settings.app_root + '/app/controllers/app')()
     , fs      = require('fs')
     , libxmljs = require('libxmljs')
     , http = require('http')
-    , server_utils = require('../../support/server_utils');
+    , server_utils = require('../../support/server_utils')
     ;
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
 
 suite('export.kml', function() {
-
-var expected_cache_control = 'no-cache,max-age=3600,must-revalidate,public';
-var expected_cache_control_persist = 'public,max-age=31536000';
-
-// use dec_sep for internationalization
-var checkDecimals = function(x, dec_sep){
-    var tmp='' + x;
-    if (tmp.indexOf(dec_sep)>-1)
-        return tmp.length-tmp.indexOf(dec_sep)-1;
-    else
-        return 0;
-}
 
 // Check if an attribute is in the KML output
 //
@@ -60,7 +48,7 @@ var hasAttribute = function(kml, att) {
   //if ( lowerkml.indexOf('simplefield name="'+ loweratt + '"') != -1 ) return true;
   //if ( lowerkml.indexOf('<'+loweratt+'>') != -1 ) return true;
   return false;
-}
+};
 
 // Return the first coordinate array found in KML
 var extractCoordinates = function(kml) {
@@ -85,7 +73,7 @@ var extractCoordinates = function(kml) {
   }
 
   return coo;
-}
+};
 
 // Return the first folder name in KML
 var extractFolderName = function(kml) {
@@ -104,7 +92,7 @@ var extractFolderName = function(kml) {
   //console.log("coo: " + coo);
   if ( ! coo ) return;
   return coo;
-}
+};
 
 // KML tests
 
@@ -120,13 +108,13 @@ test('KML format, unauthenticated', function(done){
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         var row0 = res.body;
         var checkfields = {'Name':1, 'address':1, 'cartodb_id':1, 'the_geom':0, 'the_geom_webmercator':0};
-        for ( var f in checkfields ) {
+        Object.keys(checkfields).forEach(function(f) {
           if ( checkfields[f] ) {
             assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
             assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
-        }
+        });
         done();
     });
 });
@@ -176,14 +164,14 @@ test('KML format, skipfields', function(done){
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         var row0 = res.body;
-        var checkfields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
-        for ( var f in checkfields ) {
-          if ( checkfields[f] ) {
+        var checkFields = {'Name':1, 'address':0, 'cartodb_id':0, 'the_geom':0, 'the_geom_webmercator':0};
+        Object.keys(checkFields).forEach(function(f) {
+          if ( checkFields[f] ) {
             assert.ok(hasAttribute(row0, f), "result does not include '" + f + "': " + row0);
           } else {
             assert.ok(!hasAttribute(row0, f), "result includes '" + f + "'");
           }
-        }
+        });
         done();
     });
 });
@@ -231,7 +219,7 @@ test('KML format, unauthenticated, concurrent requests', function(done){
       //console.log("Listening on port " + port);
       for (var i=0; i<concurrency; ++i) {
         //console.log("Sending request");
-        var req = http.request({
+        http.request({
             host: 'localhost',
             port: port,
             path: '/api/v1/sql?' + query,
@@ -272,7 +260,7 @@ test('GET /api/v1/sql as kml with no rows', function(done){
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
-        var pat = RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
         var body = res.body.replace(/\n/g,'');
         assert.ok(body.match(pat),
           "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
@@ -292,7 +280,7 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
-        var pat = RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
         var body = res.body.replace(/\n/g,'');
         assert.ok(body.match(pat),
           "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
