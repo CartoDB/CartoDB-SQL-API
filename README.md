@@ -57,3 +57,7 @@ tests
 
 Run ```make check``` or see test/README.md
 
+Note that the environment should be set to ensure the default
+PostgreSQL user is superuser (PGUSER=postgres make check). 
+
+

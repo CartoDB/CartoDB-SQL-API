@@ -1,5 +1,9 @@
 1.17.1 - 2014-mm-dd
 -------------------
+Bug fixes:
+
+ * Fixes "make check" on systems with non-default PostgreSQL superuser (#152)
+
 
 1.17.0 - 2014-09-17
 -------------------
