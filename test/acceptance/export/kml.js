@@ -337,4 +337,53 @@ test('check point coordinates, authenticated', function(done){
     });
 });
 
+    test('expects 1000 placemarks in public table', function(done){
+        var numberOfRowsInPublicTable = 6,
+            seriesLimit = 200,
+            expectedRows = numberOfRowsInPublicTable * seriesLimit;
+
+        assert.response(app, {
+                url: '/api/v1/sql',
+                data: querystring.stringify({
+                    q: "SELECT x, untitle_table_4.* FROM untitle_table_4, generate_series(1," + seriesLimit + ") x",
+                    format: 'kml'
+                }),
+                headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST'
+            },
+            {
+                status: 200
+            },
+            function(res) {
+                assert.equal(res.body.match(/<Placemark>/g).length, expectedRows);
+                done();
+            }
+        );
+    });
+
+    test('expects 1000 placemarks in private table using the API KEY', function(done){
+        var numberOfRowsInPrivateTable = 5,
+            seriesLimit = 200,
+            expectedRows = numberOfRowsInPrivateTable * seriesLimit;
+
+        assert.response(app, {
+                url: '/api/v1/sql',
+                data: querystring.stringify({
+                    q: "SELECT x, private_table.* FROM private_table, generate_series(1," + seriesLimit + ") x",
+                    api_key: 1234,
+                    format: 'kml'
+                }),
+                headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST'
+            },
+            {
+                status: 200
+            },
+            function(res) {
+                assert.equal(res.body.match(/<Placemark>/g).length, expectedRows);
+                done();
+            }
+        );
+    });
+
 });

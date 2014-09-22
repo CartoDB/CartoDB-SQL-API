@@ -962,7 +962,8 @@ var systemQueriesSuitesToTest = [
             'SELECT * FROM pg_attribute',
             'SELECT * FROM PG_attribute',
             'SELECT * FROM "pg_attribute"',
-            'SELECT a.* FROM untitle_table_4 a,pg_attribute'
+            'SELECT a.* FROM untitle_table_4 a,pg_attribute',
+            'SELECT * FROM geometry_columns'
         ],
         api_key_works: true,
         no_api_key_works: false

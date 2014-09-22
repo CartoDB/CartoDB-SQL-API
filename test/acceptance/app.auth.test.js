@@ -15,6 +15,11 @@ suite('app.auth', function() {
             statusCode: 200
         }
         ,{
+            desc: 'valid api key should allow delete in protected tables',
+            url: "/api/v1/sql?api_key=1234&q=DELETE%20FROM%20private_table%20WHERE%20name%3d'app_auth_test1'",
+            statusCode: 200
+        }
+        ,{
             desc: 'invalid api key should NOT allow insert in protected tables',
             url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
             statusCode: 401
