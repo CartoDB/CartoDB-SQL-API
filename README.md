@@ -17,8 +17,8 @@ core requirements
 * GDAL 1.9.2+ (bin utils)
 * zip commandline tool
 * redis
-* node 0.8+
-* npm
+* node >=0.8.18
+* npm >=1.2.1
 
 Install dependencies
 ---------------------

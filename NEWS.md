@@ -1,6 +1,11 @@
 1.17.2 - 2014-mm-dd
 -------------------
 
+Announcements:
+
+ * Minimum versions for node >=0.8.18 and npm >=1.2.1
+   npm-shrinkwrap.json is incompatible when generated with npm >=1.2.1 and consumed by npm <1.2.1
+
 
 1.17.1 - 2014-09-23
 -------------------
