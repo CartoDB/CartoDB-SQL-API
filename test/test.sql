@@ -127,6 +127,9 @@ GRANT ALL ON TABLE spatial_ref_sys TO :TESTUSER, :PUBLICUSER;
 
 REVOKE ALL ON geometry_columns FROM public;
 GRANT ALL ON geometry_columns TO :TESTUSER;
+GRANT ALL ON geography_columns TO :TESTUSER;
+GRANT SELECT ON geometry_columns TO :PUBLICUSER;
+GRANT SELECT ON geography_columns TO :PUBLICUSER;
 
 -- For https://github.com/CartoDB/CartoDB-SQL-API/issues/118
 DROP TABLE IF EXISTS cpg_test;

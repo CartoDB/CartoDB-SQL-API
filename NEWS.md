@@ -1,3 +1,17 @@
+1.17.1 - 2014-09-23
+-------------------
+
+Enhancements:
+
+ * Removes tables=fake wadus param in ogr2ogr command so it can go to geometry
+   columns view to retrieve the column data type. This requires to grant select
+   permission on geometry_columns and geography_columns to the public user.
+
+Bug fixes:
+
+ * Fixes "make check" on systems with non-default PostgreSQL superuser (#152)
+
+
 1.17.0 - 2014-09-17
 -------------------
 

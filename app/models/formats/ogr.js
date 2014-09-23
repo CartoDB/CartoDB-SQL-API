@@ -140,11 +140,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
          + " port=" + dbport
          + " user=" + dbuser
          + " dbname=" + dbname
-         + " password=" + dbpass
-         + " tables=fake" // trick to skip query to geometry_columns (private)
-                          // in turn breaks knowing SRID with gdal-0.10.1:
-                          // http://github.com/CartoDB/CartoDB-SQL-API/issues/110
-         + "",
+         + " password=" + dbpass,
         '-sql', ogrsql
       ];
 
