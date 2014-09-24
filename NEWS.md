@@ -15,6 +15,7 @@ Enhancements:
  * Removes tables=fake wadus param in ogr2ogr command so it can go to geometry
    columns view to retrieve the column data type. This requires to grant select
    permission on geometry_columns and geography_columns to the public user.
+ * Removes query tables console.log
 
 Bug fixes:
 
