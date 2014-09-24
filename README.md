@@ -4,14 +4,14 @@ SQL API for cartodb.com
 [![Build Status](http://travis-ci.org/CartoDB/CartoDB-SQL-API.png)]
 (http://travis-ci.org/CartoDB/CartoDB-SQL-API)
 
-Provides a nodejs based API for running SQL queries against CartoDB.
+Provides a node.js based API for running SQL queries against CartoDB.
 
 * Users are authenticated over OAuth or via an API KEY.
 * Authenticated requests to this API should always be made over SSL.
 
 
 core requirements
--------------
+-----------------
 * postgres 9.0+ (with plpythonu extension for ``CDB_QueryTables``)
 * postgis 2.0+
 * GDAL 1.9.2+ (bin utils)
@@ -20,12 +20,14 @@ core requirements
 * node >=0.8.18
 * npm >=1.2.1
 
-Install dependencies
----------------------
 
-```bash
+Install dependencies
+--------------------
+
+```sh
 npm install
 ```
+
 
 usage
 -----
@@ -42,22 +44,26 @@ a 'publicuser' role (or whatever you set ``db_pubuser`` configuration
 directive to) and trusts user authentication from localhost
 connections.
 
-``` bash
+```sh
 node app.js <environment>
 ```
 
-Supported <environment> values are developement, test, production
+Supported <environment> values are development, test, production
 
 See doc/API.md for API documentation.
 For examples of use, see under test/.
 
 
 tests
-------
+-----
 
-Run ```make check``` or see test/README.md
+Run with:
+
+```sh
+npm test
+```
+
+If any issue arise see test/README.md
 
 Note that the environment should be set to ensure the default
-PostgreSQL user is superuser (PGUSER=postgres make check). 
-
-
+PostgreSQL user is superuser (PGUSER=postgres make check).
