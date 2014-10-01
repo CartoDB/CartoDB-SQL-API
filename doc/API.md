@@ -307,4 +307,4 @@ To make things easier for developers we provide client libraries for different p
   Objective-C library for interacting with CartoDB in native iOS applications. [Fork it on GitHub!](https://github.com/jmnavarro/cartodb-objectivec-client)
 
 - **RUBY**  
-  The Ruby library is our most mature CartoDB client and is being used in CartoSet. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-rb-client)
+  The Ruby library was started for CartoSet. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-rb-client)
