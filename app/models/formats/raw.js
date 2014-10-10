@@ -28,7 +28,7 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
 
   // calculate the size
   var name = headerNames[0],
-      size = 0;
+      size = 0,
       v, r;
   for(r = 0; r < total_rows; ++r) {
     v = rows[r][name]; 
