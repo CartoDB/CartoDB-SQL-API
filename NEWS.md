@@ -6,6 +6,9 @@ Announcements:
  * Minimum versions for node >=0.8.18 and npm >=1.2.1
    npm-shrinkwrap.json is incompatible when generated with npm >=1.2.1 and consumed by npm <1.2.1
 
+Enhancements:
+
+ * Added raw format to export binary data from postgres bytea types
 
 1.17.1 - 2014-09-23
 -------------------
