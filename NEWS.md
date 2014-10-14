@@ -1,3 +1,12 @@
+1.18.0 - 2014-10-14
+-------------------
+
+Announcements:
+
+ * Dropping support for npm <1.2.1
+   npm-shrinkwrap.json is incompatible when generated with npm >=1.2.1 and consumed by npm <1.2.1
+
+
 1.17.1 - 2014-09-23
 -------------------
 
@@ -6,6 +15,7 @@ Enhancements:
  * Removes tables=fake wadus param in ogr2ogr command so it can go to geometry
    columns view to retrieve the column data type. This requires to grant select
    permission on geometry_columns and geography_columns to the public user.
+ * Removes query tables console.log
 
 Bug fixes:
 

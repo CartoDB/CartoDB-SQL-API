@@ -4,6 +4,14 @@
 export TZ='Europe/Rome'
 export PGAPPNAME='cartodb_sqlapi_tester'
 
+# In case PGUSER env variable does not exist we attempt to use `postgres`
+if test x"${PGUSER}" = x; then
+    echo "PGUSER not found"
+    PGUSER=postgres
+else
+    echo "PGUSER found = ${PGUSER}"
+fi
+
 OPT_CREATE_PGSQL=yes # create/prepare the postgresql test database
 OPT_CREATE_REDIS=yes # create/prepare the redis test databases
 OPT_DROP_PGSQL=yes   # drop the postgreql test environment
