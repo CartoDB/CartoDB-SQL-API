@@ -1,13 +1,31 @@
-var pg  = require('./pg');
-var _ = require('underscore')
+var pg  = require('./pg'),
+    _ = require('underscore');
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;
 var svg_ratio = svg_width/svg_height;
 
-function SvgFormat() {}
+var radius = 5; // in pixels (based on svg_width and svg_height)
+
+var stroke_width = 1; // in pixels (based on svg_width and svg_height)
+var stroke_color = 'black';
+// fill settings affect polygons and points (circles)
+var fill_opacity = 0.5; // 0.0 is fully transparent, 1.0 is fully opaque
+// unused if fill_color='none'
+var fill_color = 'none'; // affects polygons and circles
+
+function SvgFormat() {
+    this.totalRows = 0;
+
+    this.bbox = null; // will be computed during the results scan
+
+    this.polys = [];
+    this.lines = [];
+    this.points = [];
+}
 
 SvgFormat.prototype = new pg('svg');
+SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
 
 SvgFormat.prototype.getQuery = function(sql, options) {
   var gn = options.gn;
@@ -33,106 +51,100 @@ SvgFormat.prototype.getQuery = function(sql, options) {
         + ' FROM trans, extent_info, source';
 };
 
-SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
+SvgFormat.prototype.handleQueryRow = function(row) {
+    this.totalRows++;
 
-SvgFormat.prototype.transform = function(result, options, callback) {
-  toSVG(result.rows, options.gn, callback);
-};
+    if ( ! row.hasOwnProperty(this.opts.gn) ) {
+        this.error = new Error('column "' + this.opts.gn + '" does not exist');
+    }
 
+    var g = row[this.opts.gn];
+    if ( ! g ) return; // null or empty
 
-function toSVG(rows, gn, callback) {
+    var gdims = row[this.opts.gn + '_dimension'];
+    // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
+    // TODO: add "class" attribute to help with styling ?
+    if ( gdims == '0' ) {
+        this.points.push('<circle r="' + radius + '" ' + g + ' />');
+    } else if ( gdims == '1' ) {
+        // Avoid filling closed linestrings
+        this.lines.push('<path ' + ( fill_color != 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />');
+    } else if ( gdims == '2' ) {
+        this.polys.push('<path d="' + g + '" />');
+    }
 
-    var radius = 5; // in pixels (based on svg_width and svg_height)
-    var stroke_width = 1; // in pixels (based on svg_width and svg_height)
-    var stroke_color = 'black';
-    // fill settings affect polygons and points (circles)
-    var fill_opacity = 0.5; // 0.0 is fully transparent, 1.0 is fully opaque
-                            // unused if fill_color='none'
-    var fill_color = 'none'; // affects polygons and circles
-
-    var bbox; // will be computed during the results scan
-    var polys = [];
-    var lines = [];
-    var points = [];
-    _.each(rows, function(ele){
-        if ( ! ele.hasOwnProperty(gn) ) {
-          throw new Error('column "' + gn + '" does not exist');
-        }
-        var g = ele[gn];
-        if ( ! g ) return; // null or empty
-        var gdims = ele[gn + '_dimension'];
-
-        // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
-        // TODO: add "class" attribute to help with styling ?
-        if ( gdims == '0' ) {
-          points.push('<circle r="[RADIUS]" ' + g + ' />');
-        } else if ( gdims == '1' ) {
-          // Avoid filling closed linestrings
-          var linetag = '<path ';
-          if ( fill_color != 'none' ) linetag += 'fill="none" ';
-          linetag += 'd="' + g + '" />';
-          lines.push(linetag);
-        } else if ( gdims == '2' ) {
-          polys.push('<path d="' + g + '" />');
-        }
-
-        if ( ! bbox ) {
-          // Parse layer extent: "BOX(x y, X Y)"
-          // NOTE: the name of the extent field is
-          //       determined by the same code adding the
-          //       ST_AsSVG call (in queryResult)
-          //
-          bbox = ele[gn + '_box'];
-          bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
-          bbox = {
+    if ( ! this.bbox ) {
+        // Parse layer extent: "BOX(x y, X Y)"
+        // NOTE: the name of the extent field is
+        //       determined by the same code adding the
+        //       ST_AsSVG call (in queryResult)
+        //
+        var bbox = row[this.opts.gn + '_box'];
+        bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
+        this.bbox = {
             xmin: parseFloat(bbox[1]),
             ymin: parseFloat(bbox[2]),
             xmax: parseFloat(bbox[3]),
             ymax: parseFloat(bbox[4])
-           };
-        }
-    });
+        };
+    }
+};
 
-    // Set point radius
-    for (var i=0; i<points.length; ++i) {
-      points[i] = points[i].replace('[RADIUS]', radius);
+SvgFormat.prototype.handleQueryEnd = function() {
+    if ( this.error ) {
+        this.callback(this.error);
+        return;
     }
 
-    var header_tags = [
+    if (this.opts.beforeSink) {
+        this.opts.beforeSink();
+    }
+
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
+
+    var header = [
         '<?xml version="1.0" standalone="no"?>',
-        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
     ];
 
-    var root_tag = '<svg ';
-    if ( bbox ) {
-      // expand box by "radius" + "stroke-width"
-      // TODO: use a Box2d class for these ops
-      var growby = radius+stroke_width;
-      bbox.xmin -= growby;
-      bbox.ymin -= growby;
-      bbox.xmax += growby;
-      bbox.ymax += growby;
-      bbox.width = bbox.xmax - bbox.xmin;
-      bbox.height = bbox.ymax - bbox.ymin;
-      root_tag += 'viewBox="' + bbox.xmin + ' ' + (-bbox.ymax) + ' '
-               + bbox.width + ' ' + bbox.height + '" ';
+    var rootTag = '<svg ';
+    if ( this.bbox ) {
+        // expand box by "radius" + "stroke-width"
+        // TODO: use a Box2d class for these ops
+        var growby = radius + stroke_width;
+        this.bbox.xmin -= growby;
+        this.bbox.ymin -= growby;
+        this.bbox.xmax += growby;
+        this.bbox.ymax += growby;
+        this.bbox.width = this.bbox.xmax - this.bbox.xmin;
+        this.bbox.height = this.bbox.ymax - this.bbox.ymin;
+        rootTag += 'viewBox="' + this.bbox.xmin + ' ' + (-this.bbox.ymax) + ' '
+            + this.bbox.width + ' ' + this.bbox.height + '" ';
     }
-    root_tag += 'style="fill-opacity:' + fill_opacity
-              + '; stroke:' + stroke_color
-              + '; stroke-width:' + stroke_width
-              + '; fill:' + fill_color
-              + '" ';
-    root_tag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">';
+    rootTag += 'style="fill-opacity:' + fill_opacity
+        + '; stroke:' + stroke_color
+        + '; stroke-width:' + stroke_width
+        + '; fill:' + fill_color
+        + '" ';
+    rootTag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">';
 
-    header_tags.push(root_tag);
+    header.push(rootTag);
 
-    // Render points on top of lines and lines on top of polys
-    var out = header_tags.concat(polys, lines, points);
+    this.opts.sink.write(header.join('\n'));
 
-    out.push('</svg>');
+    this.opts.sink.write(this.points.join('\n'));
+    this.points = [];
+    this.opts.sink.write(this.lines.join('\n'));
+    this.lines = [];
+    this.opts.sink.write(this.polys.join('\n'));
+    this.polys = [];
+    // rootTag close
+    this.opts.sink.write('</svg>');
+    this.opts.sink.end();
 
-    // return payload
-    callback(null, out.join("\n"));
-}
+    this.callback();
+};
 
 module.exports = SvgFormat;
