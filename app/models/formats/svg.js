@@ -18,10 +18,9 @@ function SvgFormat() {
     this.totalRows = 0;
 
     this.bbox = null; // will be computed during the results scan
+    this.buffer = '';
 
-    this.polys = [];
-    this.lines = [];
-    this.points = [];
+    this._streamingStarted = false;
 }
 
 SvgFormat.prototype = new pg('svg');
@@ -48,60 +47,13 @@ SvgFormat.prototype.getQuery = function(sql, options) {
         + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
         + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
         //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
-        + ' FROM trans, extent_info, source';
+        + ' FROM trans, extent_info, source'
+        + ' ORDER BY the_geom_dimension ASC';
 };
 
-SvgFormat.prototype.handleQueryRow = function(row) {
-    this.totalRows++;
-
-    if ( ! row.hasOwnProperty(this.opts.gn) ) {
-        this.error = new Error('column "' + this.opts.gn + '" does not exist');
-    }
-
-    var g = row[this.opts.gn];
-    if ( ! g ) return; // null or empty
-
-    var gdims = row[this.opts.gn + '_dimension'];
-    // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
-    // TODO: add "class" attribute to help with styling ?
-    if ( gdims == '0' ) {
-        this.points.push('<circle r="' + radius + '" ' + g + ' />');
-    } else if ( gdims == '1' ) {
-        // Avoid filling closed linestrings
-        this.lines.push('<path ' + ( fill_color != 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />');
-    } else if ( gdims == '2' ) {
-        this.polys.push('<path d="' + g + '" />');
-    }
-
-    if ( ! this.bbox ) {
-        // Parse layer extent: "BOX(x y, X Y)"
-        // NOTE: the name of the extent field is
-        //       determined by the same code adding the
-        //       ST_AsSVG call (in queryResult)
-        //
-        var bbox = row[this.opts.gn + '_box'];
-        bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
-        this.bbox = {
-            xmin: parseFloat(bbox[1]),
-            ymin: parseFloat(bbox[2]),
-            xmax: parseFloat(bbox[3]),
-            ymax: parseFloat(bbox[4])
-        };
-    }
-};
-
-SvgFormat.prototype.handleQueryEnd = function() {
-    if ( this.error ) {
-        this.callback(this.error);
-        return;
-    }
-
+SvgFormat.prototype.startStreaming = function() {
     if (this.opts.beforeSink) {
         this.opts.beforeSink();
-    }
-
-    if ( this.opts.profiler ) {
-        this.opts.profiler.done('gotRows');
     }
 
     var header = [
@@ -128,20 +80,81 @@ SvgFormat.prototype.handleQueryEnd = function() {
         + '; stroke-width:' + stroke_width
         + '; fill:' + fill_color
         + '" ';
-    rootTag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">';
+    rootTag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">\n';
 
     header.push(rootTag);
 
     this.opts.sink.write(header.join('\n'));
 
-    this.opts.sink.write(this.points.join('\n'));
-    this.points = [];
-    this.opts.sink.write(this.lines.join('\n'));
-    this.lines = [];
-    this.opts.sink.write(this.polys.join('\n'));
-    this.polys = [];
+    this._streamingStarted = true;
+};
+
+SvgFormat.prototype.handleQueryRow = function(row) {
+    this.totalRows++;
+
+    if ( ! row.hasOwnProperty(this.opts.gn) ) {
+        this.error = new Error('column "' + this.opts.gn + '" does not exist');
+    }
+
+    var g = row[this.opts.gn];
+    if ( ! g ) return; // null or empty
+
+    var gdims = row[this.opts.gn + '_dimension'];
+    // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
+    // TODO: add "class" attribute to help with styling ?
+    if ( gdims == '0' ) {
+        this.buffer += '<circle r="' + radius + '" ' + g + ' />\n';
+    } else if ( gdims == '1' ) {
+        // Avoid filling closed linestrings
+        this.buffer += '<path ' + ( fill_color != 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />\n';
+    } else if ( gdims == '2' ) {
+        this.buffer += '<path d="' + g + '" />\n';
+    }
+
+    if ( ! this.bbox ) {
+        // Parse layer extent: "BOX(x y, X Y)"
+        // NOTE: the name of the extent field is
+        //       determined by the same code adding the
+        //       ST_AsSVG call (in queryResult)
+        //
+        var bbox = row[this.opts.gn + '_box'];
+        bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
+        this.bbox = {
+            xmin: parseFloat(bbox[1]),
+            ymin: parseFloat(bbox[2]),
+            xmax: parseFloat(bbox[3]),
+            ymax: parseFloat(bbox[4])
+        };
+    }
+
+    if (!this._streamingStarted && this.bbox) {
+        this.startStreaming();
+    }
+
+    if (this._streamingStarted && (this.totalRows % (this.opts.bufferedRows || 1000))) {
+        this.opts.sink.write(this.buffer);
+        this.buffer = '';
+    }
+};
+
+SvgFormat.prototype.handleQueryEnd = function() {
+    if ( this.error ) {
+        this.callback(this.error);
+        return;
+    }
+
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
+
+    if (!this._streamingStarted) {
+        this.startStreaming();
+    }
+
     // rootTag close
-    this.opts.sink.write('</svg>');
+    this.buffer += '</svg>\n';
+
+    this.opts.sink.write(this.buffer);
     this.opts.sink.end();
 
     this.callback();
