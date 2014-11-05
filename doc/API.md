@@ -295,7 +295,7 @@ To make things easier for developers we provide client libraries for different p
   Provides API Key and xAuth access to SQL API. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
 
 - **JAVA**  
-  Very basic example of how to access CartoDB SQL API using OAuth. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-java-client)
+  Very basic example of how to access CartoDB SQL API using OAuth. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
 
 - **NET**  
   .NET library for authenticating with CartoDB using OAuth based on work started by [The Data Republic](http://www.thedatarepublic.com/). [Fork it on GitHub!](https://github.com/thedatarepublic/CartoDBClientDotNET)
