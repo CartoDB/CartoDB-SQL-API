@@ -13,7 +13,9 @@ HealthCheck.prototype.check = function(username, query, callback) {
         startTime,
         result = {
             redis: {},
-            postgresql: {}
+            postgresql: {},
+            username: username,
+            query: query
         };
 
     Step(
