@@ -40,6 +40,7 @@ var express = require('express')
     , LRU         = require('lru-cache')
     , formats     = require(global.settings.app_root + '/app/models/formats')
     , HealthCheck = require(global.settings.app_root + '/app/monitoring/health_check')
+    , PgErrorHandler = require(global.settings.app_root + '/app/postgresql/error_handler')
     ;
 
 var metadataBackend = MetadataDB({
@@ -559,10 +560,17 @@ function generateMD5(data){
 }
 
 
-function handleException(err, res){
-    var msg = (global.settings.environment == 'development')
-        ? {error:[err.message], stack: err.stack}
-        : {error:[err.message]};
+function handleException(err, res) {
+    var pgErrorHandler = new PgErrorHandler(err);
+
+    var msg = {
+        error: [pgErrorHandler.getMessage()]
+    };
+
+    if (global.settings.environment == 'development') {
+        msg.stack = err.stack;
+    }
+
     if (global.settings.environment !== 'test'){
         // TODO: email this Exception report
         console.error("EXCEPTION REPORT: " + err.stack)
@@ -579,19 +587,16 @@ function handleException(err, res){
       res.header('X-SQLAPI-Profiler', res.req.profiler.toJSONString());
     }
 
-    res.send(msg, getStatusError(err, res.req));
+    res.send(msg, getStatusError(pgErrorHandler, res.req));
 
     if ( res.req && res.req.profiler ) {
       res.req.profiler.sendStats();
     }
 }
 
-function getStatusError(err, req) {
-    var statusError = _.isUndefined(err.http_status) ? 400 : err.http_status;
+function getStatusError(pgErrorHandler, req) {
 
-    if (err.message && err.message.match(/permission denied/)) {
-        statusError = 401;
-    }
+    var statusError = pgErrorHandler.getStatus();
 
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
