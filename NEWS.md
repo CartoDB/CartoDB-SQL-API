@@ -1,6 +1,10 @@
 1.18.1 - 2014-mm-dd
 -------------------
 
+Enhancements:
+
+ * Improve statement timeout error messages
+
 
 1.18.0 - 2014-10-14
 -------------------

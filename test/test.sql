@@ -113,6 +113,7 @@ CREATE INDEX test_table_the_geom_webmercator_idx_p ON private_table USING gist (
 -- public user role
 DROP USER IF EXISTS :PUBLICUSER;
 CREATE USER :PUBLICUSER WITH PASSWORD ':PUBLICPASS';
+ALTER ROLE :PUBLICUSER SET statement_timeout = 2000;
 
 -- db owner role
 DROP USER IF EXISTS :TESTUSER;

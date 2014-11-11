@@ -1423,4 +1423,19 @@ test('GET with callback must return 200 status error even if it is an error', fu
     });
 });
 
+    test('GET with slow query exceeding statement timeout returns proper error message', function(done){
+        assert.response(app, {
+                url: "/api/v1/sql?q=select%20pg_sleep(2.1)%20as%20sleep",
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            },
+            {
+                status: 400
+            },
+            function(res) {
+                assert.ok(res.body.match(/was not able to finish.*try again/i));
+                done();
+            });
+    });
+
 });
