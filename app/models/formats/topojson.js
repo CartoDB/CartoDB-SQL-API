@@ -3,7 +3,9 @@ var pg  = require('./pg'),
     geojson = require('./geojson'),
     TopoJSON = require('topojson');
 
-function TopoJsonFormat() { }
+function TopoJsonFormat() {
+    this.features = [];
+}
 
 TopoJsonFormat.prototype = new pg('topojson');
 
@@ -11,33 +13,120 @@ TopoJsonFormat.prototype.getQuery = function(sql, options) {
   return geojson.prototype.getQuery(sql, options) + ' where ' + options.gn + ' is not null';
 };
 
-TopoJsonFormat.prototype.transform = function(result, options, callback) {
-  toTopoJSON(result, options.gn, options.skipfields, callback);
+TopoJsonFormat.prototype.handleQueryRow = function(row) {
+    var _geojson = {
+        type: "Feature"
+    };
+    _geojson.geometry = JSON.parse(row[this.opts.gn]);
+    delete row[this.opts.gn];
+    delete row["the_geom_webmercator"];
+    _geojson.properties = row;
+    this.features.push(_geojson);
 };
 
-function toTopoJSON(data, gn, skipfields, callback){
-  geojson.toGeoJSON(data, gn, function(err, geojson) {
-    if ( err ) {
-      callback(err, null);
-      return;
+TopoJsonFormat.prototype.handleQueryEnd = function() {
+    if (this.error) {
+        this.callback(this.error);
+        return;
     }
-    var topology = TopoJSON.topology(geojson.features, {
-    /* TODO: expose option to API for requesting an identifier
-      "id": function(o) {
-        console.log("id called with obj: "); console.dir(o);
-        return o;
-      },
-    */
-      "quantization": 1e4, // TODO: expose option to API (use existing "dp" for this ?)
-      "force-clockwise": true,
-      "property-filter": function(d) {
-        // TODO: delegate skipfields handling to toGeoJSON
-        return skipfields.indexOf(d) != -1 ? null : d;
-      }
+
+    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+
+    var topology = TopoJSON.topology(this.features, {
+        "quantization": 1e4,
+        "force-clockwise": true,
+        "property-filter": function(d) {
+            return d;
+        }
     });
-    callback(err, topology);
-  });
-}
+
+    this.features = [];
+
+    var stream = this.opts.sink;
+    var jsonpCallback = this.opts.callback;
+    var bufferedRows = this.opts.bufferedRows;
+    var buffer = '';
+
+    function streamObjectSubtree(obj, key, done) {
+        buffer += '"' + key + '":';
+
+        var isObject = _.isObject(obj[key]),
+            isArray = _.isArray(obj[key]),
+            isIterable = isArray || isObject;
+
+        if (isIterable) {
+            buffer += isArray ? '[' : '{';
+            var subtreeKeys = Object.keys(obj[key]);
+            var pos = 0;
+            function streamNext() {
+                setImmediate(function() {
+                    var subtreeKey = subtreeKeys.shift();
+                    if (!isArray) {
+                        buffer += '"' + subtreeKey + '":';
+                    }
+                    buffer += JSON.stringify(obj[key][subtreeKey]);
+
+                    if (pos++ % (bufferedRows || 1000)) {
+                        stream.write(buffer);
+                        buffer = '';
+                    }
+
+                    if (subtreeKeys.length > 0) {
+                        delete obj[key][subtreeKey];
+                        buffer += ',';
+                        streamNext();
+                    } else {
+                        buffer += isArray ? ']' : '}';
+                        stream.write(buffer);
+                        buffer = '';
+                        done();
+                    }
+                });
+            }
+            streamNext();
+        } else {
+            buffer += JSON.stringify(obj[key]);
+            done();
+        }
+    }
+
+    if (jsonpCallback) {
+        buffer += jsonpCallback + '(';
+    }
+    buffer += '{';
+    var keys = Object.keys(topology);
+    function sendResponse() {
+        setImmediate(function () {
+            var key = keys.shift();
+            function done() {
+                if (keys.length > 0) {
+                    delete topology[key];
+                    buffer += ',';
+                    sendResponse();
+                } else {
+                    buffer += '}';
+                    if (jsonpCallback) {
+                        buffer += ')';
+                    }
+                    stream.write(buffer);
+                    stream.end();
+                    topology = null;
+                }
+            }
+            streamObjectSubtree(topology, key, done);
+        });
+    }
+    sendResponse();
+
+    this.callback();
+};
+
+TopoJsonFormat.prototype.cancel = function() {
+    if (this.queryCanceller) {
+        this.queryCanceller.call();
+    }
+};
+
 
 
 module.exports = TopoJsonFormat;
