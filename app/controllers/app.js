@@ -487,6 +487,8 @@ function handleQuery(req, res) {
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
+                formatter = null;
+
                 if ( err ) handleException(err, res);
                 if ( req.profiler ) {
                   req.profiler.sendStats(); // TODO: do on nextTick ?

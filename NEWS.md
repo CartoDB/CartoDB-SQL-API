@@ -2,8 +2,9 @@
 -------------------
 
 Enhancements:
-
+ * Don't loop twice over svg rows
  * Improve statement timeout error messages
+ * Improve topojson output by streaming json
 
 
 1.18.0 - 2014-10-14

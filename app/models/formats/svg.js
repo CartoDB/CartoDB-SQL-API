@@ -1,13 +1,30 @@
-var pg  = require('./pg');
-var _ = require('underscore')
+var pg  = require('./pg'),
+    _ = require('underscore');
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;
 var svg_ratio = svg_width/svg_height;
 
-function SvgFormat() {}
+var radius = 5; // in pixels (based on svg_width and svg_height)
+
+var stroke_width = 1; // in pixels (based on svg_width and svg_height)
+var stroke_color = 'black';
+// fill settings affect polygons and points (circles)
+var fill_opacity = 0.5; // 0.0 is fully transparent, 1.0 is fully opaque
+// unused if fill_color='none'
+var fill_color = 'none'; // affects polygons and circles
+
+function SvgFormat() {
+    this.totalRows = 0;
+
+    this.bbox = null; // will be computed during the results scan
+    this.buffer = '';
+
+    this._streamingStarted = false;
+}
 
 SvgFormat.prototype = new pg('svg');
+SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
 
 SvgFormat.prototype.getQuery = function(sql, options) {
   var gn = options.gn;
@@ -30,109 +47,117 @@ SvgFormat.prototype.getQuery = function(sql, options) {
         + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
         + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
         //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
-        + ' FROM trans, extent_info, source';
+        + ' FROM trans, extent_info, source'
+        + ' ORDER BY the_geom_dimension ASC';
 };
 
-SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
+SvgFormat.prototype.startStreaming = function() {
+    if (this.opts.beforeSink) {
+        this.opts.beforeSink();
+    }
 
-SvgFormat.prototype.transform = function(result, options, callback) {
-  toSVG(result.rows, options.gn, callback);
+    var header = [
+        '<?xml version="1.0" standalone="no"?>',
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+    ];
+
+    var rootTag = '<svg ';
+    if ( this.bbox ) {
+        // expand box by "radius" + "stroke-width"
+        // TODO: use a Box2d class for these ops
+        var growby = radius + stroke_width;
+        this.bbox.xmin -= growby;
+        this.bbox.ymin -= growby;
+        this.bbox.xmax += growby;
+        this.bbox.ymax += growby;
+        this.bbox.width = this.bbox.xmax - this.bbox.xmin;
+        this.bbox.height = this.bbox.ymax - this.bbox.ymin;
+        rootTag += 'viewBox="' + this.bbox.xmin + ' ' + (-this.bbox.ymax) + ' '
+            + this.bbox.width + ' ' + this.bbox.height + '" ';
+    }
+    rootTag += 'style="fill-opacity:' + fill_opacity
+        + '; stroke:' + stroke_color
+        + '; stroke-width:' + stroke_width
+        + '; fill:' + fill_color
+        + '" ';
+    rootTag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">\n';
+
+    header.push(rootTag);
+
+    this.opts.sink.write(header.join('\n'));
+
+    this._streamingStarted = true;
 };
 
+SvgFormat.prototype.handleQueryRow = function(row) {
+    this.totalRows++;
 
-function toSVG(rows, gn, callback) {
+    if ( ! row.hasOwnProperty(this.opts.gn) ) {
+        this.error = new Error('column "' + this.opts.gn + '" does not exist');
+    }
 
-    var radius = 5; // in pixels (based on svg_width and svg_height)
-    var stroke_width = 1; // in pixels (based on svg_width and svg_height)
-    var stroke_color = 'black';
-    // fill settings affect polygons and points (circles)
-    var fill_opacity = 0.5; // 0.0 is fully transparent, 1.0 is fully opaque
-                            // unused if fill_color='none'
-    var fill_color = 'none'; // affects polygons and circles
+    var g = row[this.opts.gn];
+    if ( ! g ) return; // null or empty
 
-    var bbox; // will be computed during the results scan
-    var polys = [];
-    var lines = [];
-    var points = [];
-    _.each(rows, function(ele){
-        if ( ! ele.hasOwnProperty(gn) ) {
-          throw new Error('column "' + gn + '" does not exist');
-        }
-        var g = ele[gn];
-        if ( ! g ) return; // null or empty
-        var gdims = ele[gn + '_dimension'];
+    var gdims = row[this.opts.gn + '_dimension'];
+    // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
+    // TODO: add "class" attribute to help with styling ?
+    if ( gdims == '0' ) {
+        this.buffer += '<circle r="' + radius + '" ' + g + ' />\n';
+    } else if ( gdims == '1' ) {
+        // Avoid filling closed linestrings
+        this.buffer += '<path ' + ( fill_color != 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />\n';
+    } else if ( gdims == '2' ) {
+        this.buffer += '<path d="' + g + '" />\n';
+    }
 
-        // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
-        // TODO: add "class" attribute to help with styling ?
-        if ( gdims == '0' ) {
-          points.push('<circle r="[RADIUS]" ' + g + ' />');
-        } else if ( gdims == '1' ) {
-          // Avoid filling closed linestrings
-          var linetag = '<path ';
-          if ( fill_color != 'none' ) linetag += 'fill="none" ';
-          linetag += 'd="' + g + '" />';
-          lines.push(linetag);
-        } else if ( gdims == '2' ) {
-          polys.push('<path d="' + g + '" />');
-        }
-
-        if ( ! bbox ) {
-          // Parse layer extent: "BOX(x y, X Y)"
-          // NOTE: the name of the extent field is
-          //       determined by the same code adding the
-          //       ST_AsSVG call (in queryResult)
-          //
-          bbox = ele[gn + '_box'];
-          bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
-          bbox = {
+    if ( ! this.bbox ) {
+        // Parse layer extent: "BOX(x y, X Y)"
+        // NOTE: the name of the extent field is
+        //       determined by the same code adding the
+        //       ST_AsSVG call (in queryResult)
+        //
+        var bbox = row[this.opts.gn + '_box'];
+        bbox = bbox.match(/BOX\(([^ ]*) ([^ ,]*),([^ ]*) ([^)]*)\)/);
+        this.bbox = {
             xmin: parseFloat(bbox[1]),
             ymin: parseFloat(bbox[2]),
             xmax: parseFloat(bbox[3]),
             ymax: parseFloat(bbox[4])
-           };
-        }
-    });
-
-    // Set point radius
-    for (var i=0; i<points.length; ++i) {
-      points[i] = points[i].replace('[RADIUS]', radius);
+        };
     }
 
-    var header_tags = [
-        '<?xml version="1.0" standalone="no"?>',
-        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
-    ];
-
-    var root_tag = '<svg ';
-    if ( bbox ) {
-      // expand box by "radius" + "stroke-width"
-      // TODO: use a Box2d class for these ops
-      var growby = radius+stroke_width;
-      bbox.xmin -= growby;
-      bbox.ymin -= growby;
-      bbox.xmax += growby;
-      bbox.ymax += growby;
-      bbox.width = bbox.xmax - bbox.xmin;
-      bbox.height = bbox.ymax - bbox.ymin;
-      root_tag += 'viewBox="' + bbox.xmin + ' ' + (-bbox.ymax) + ' '
-               + bbox.width + ' ' + bbox.height + '" ';
+    if (!this._streamingStarted && this.bbox) {
+        this.startStreaming();
     }
-    root_tag += 'style="fill-opacity:' + fill_opacity
-              + '; stroke:' + stroke_color
-              + '; stroke-width:' + stroke_width
-              + '; fill:' + fill_color
-              + '" ';
-    root_tag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">';
 
-    header_tags.push(root_tag);
+    if (this._streamingStarted && (this.totalRows % (this.opts.bufferedRows || 1000))) {
+        this.opts.sink.write(this.buffer);
+        this.buffer = '';
+    }
+};
 
-    // Render points on top of lines and lines on top of polys
-    var out = header_tags.concat(polys, lines, points);
+SvgFormat.prototype.handleQueryEnd = function() {
+    if ( this.error ) {
+        this.callback(this.error);
+        return;
+    }
 
-    out.push('</svg>');
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
 
-    // return payload
-    callback(null, out.join("\n"));
-}
+    if (!this._streamingStarted) {
+        this.startStreaming();
+    }
+
+    // rootTag close
+    this.buffer += '</svg>\n';
+
+    this.opts.sink.write(this.buffer);
+    this.opts.sink.end();
+
+    this.callback();
+};
 
 module.exports = SvgFormat;

@@ -19,18 +19,32 @@ suite('export.topojson', function() {
 
 // TOPOJSON tests
 
+    function getRequest(query, extraParams) {
+        var params = {
+            q: query,
+            format: 'topojson'
+        };
+
+        params = _.extend(params, extraParams || {});
+
+        return {
+            url: '/api/v1/sql?' + querystring.stringify(params),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        };
+    }
+
 test('GET two polygons sharing an edge as topojson', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          q: "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
-             " UNION ALL " +
-             "SELECT 2, 'D', 'POLYGON((0 -5,0 5,-5 0,0 -5))'::geometry as the_geom ",
-          format: 'topojson'
-        }),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
+    assert.response(app,
+        getRequest(
+            "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
+            " UNION ALL " +
+            "SELECT 2, 'D', 'POLYGON((0 -5,0 5,-5 0,0 -5))'::geometry as the_geom "
+        ),
+        {
+            status: 200
+        },
+        function(res) {
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -127,17 +141,15 @@ test('GET two polygons sharing an edge as topojson', function(done){
 });
 
 test('null geometries', function(done){
-    assert.response(app, {
-        url: '/api/v1/sql?' + querystring.stringify({
-          q: "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
-             " UNION ALL " +
-             "SELECT 2, 'D', null::geometry as the_geom ",
-          format: 'topojson'
-        }),
-        headers: {host: 'vizzuality.cartodb.com'},
-        method: 'GET'
-    },{ }, function(res){
-        assert.equal(res.statusCode, 200, res.body);
+    assert.response(app, getRequest(
+            "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
+            " UNION ALL " +
+            "SELECT 2, 'D', null::geometry as the_geom "
+        ),
+        {
+            status: 200
+        },
+        function(res) {
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -185,5 +197,50 @@ test('null geometries', function(done){
         done();
     });
 });
+
+    test('skipped fields are not returned', function(done) {
+        assert.response(app,
+            getRequest(
+                "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
+                {
+                    skipfields: 'name'
+                }
+            ),
+            {
+                status: 200
+            },
+            function(res) {
+                var parsedBody = JSON.parse(res.body);
+                assert.equal(parsedBody.objects[0].properties.gid, 1, 'gid was expected property');
+                assert.ok(!parsedBody.objects[0].properties.name);
+                done();
+            }
+        );
+    });
+
+    test('jsonp callback is invoked', function(done){
+        assert.response(
+            app,
+            getRequest(
+                "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
+                {
+                    callback: 'foo_jsonp'
+                }
+            ),
+            {
+                status: 200
+            },
+            function(res) {
+                assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+                var didRunJsonCallback = false;
+                function foo_jsonp(body) {
+                    didRunJsonCallback = true;
+                }
+                eval(res.body);
+                assert.ok(didRunJsonCallback);
+                done();
+            }
+        );
+    });
 
 });
