@@ -47,6 +47,8 @@ TopoJsonFormat.prototype.handleQueryEnd = function() {
     var bufferedRows = this.opts.bufferedRows;
     var buffer = '';
 
+    var immediately = global.setImmediate || process.nextTick;
+
     function streamObjectSubtree(obj, key, done) {
         buffer += '"' + key + '":';
 
@@ -59,7 +61,7 @@ TopoJsonFormat.prototype.handleQueryEnd = function() {
             var subtreeKeys = Object.keys(obj[key]);
             var pos = 0;
             function streamNext() {
-                setImmediate(function() {
+                immediately(function() {
                     var subtreeKey = subtreeKeys.shift();
                     if (!isArray) {
                         buffer += '"' + subtreeKey + '":';
@@ -96,7 +98,7 @@ TopoJsonFormat.prototype.handleQueryEnd = function() {
     buffer += '{';
     var keys = Object.keys(topology);
     function sendResponse() {
-        setImmediate(function () {
+        immediately(function () {
             var key = keys.shift();
             function done() {
                 if (keys.length > 0) {
