@@ -5,7 +5,7 @@
     "keywords": [
       "cartodb"
     ],
-    "version": "1.19.0",
+    "version": "1.19.1",
     "repository": {
         "type": "git",
         "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
