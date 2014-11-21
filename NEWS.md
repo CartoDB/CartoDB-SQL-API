@@ -1,3 +1,17 @@
+1.19.0 - 2014-11-21
+-------------------
+
+New features:
+
+ * Add more fields to error responses with hint, detail and context for SQL errors.
+
+Enhancements:
+
+ * Don't loop twice over svg rows
+ * Improve statement timeout error messages
+ * Improve topojson output by streaming json
+
+
 1.18.0 - 2014-10-14
 -------------------
 

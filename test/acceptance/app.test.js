@@ -671,7 +671,10 @@ test('COPY TABLE with GET and auth', function(done){
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
       assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
       assert.deepEqual(res.headers['content-disposition'], 'inline');
-      assert.deepEqual(JSON.parse(res.body), {"error":["must be superuser to COPY to or from a file"]});
+      assert.deepEqual(JSON.parse(res.body), {
+          error: ["must be superuser to COPY to or from a file"],
+          hint: "Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone."
+      });
       done();
     });
 });
@@ -1422,5 +1425,20 @@ test('GET with callback must return 200 status error even if it is an error', fu
         done();
     });
 });
+
+    test('GET with slow query exceeding statement timeout returns proper error message', function(done){
+        assert.response(app, {
+                url: "/api/v1/sql?q=select%20pg_sleep(2.1)%20as%20sleep",
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            },
+            {
+                status: 400
+            },
+            function(res) {
+                assert.ok(res.body.match(/was not able to finish.*try again/i));
+                done();
+            });
+    });
 
 });
