@@ -671,7 +671,10 @@ test('COPY TABLE with GET and auth', function(done){
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
       assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
       assert.deepEqual(res.headers['content-disposition'], 'inline');
-      assert.deepEqual(JSON.parse(res.body), {"error":["must be superuser to COPY to or from a file"]});
+      assert.deepEqual(JSON.parse(res.body), {
+          error: ["must be superuser to COPY to or from a file"],
+          hint: "Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone."
+      });
       done();
     });
 });

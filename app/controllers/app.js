@@ -569,6 +569,8 @@ function handleException(err, res) {
         error: [pgErrorHandler.getMessage()]
     };
 
+    _.defaults(msg, pgErrorHandler.getFields());
+
     if (global.settings.environment == 'development') {
         msg.stack = err.stack;
     }

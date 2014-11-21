@@ -23,6 +23,14 @@ ErrorHandler.prototype.getMessage = function() {
     return message;
 };
 
+ErrorHandler.prototype.getFields = function(fields) {
+    fields = fields || ['detail', 'hint', 'context'];
+    return fields.reduce(function (previousValue, current) {
+        previousValue[current] = this.err[current];
+        return previousValue;
+    }.bind(this), {});
+};
+
 ErrorHandler.prototype.getStatus = function() {
     var statusError = this.err.http_status || 400;
 
