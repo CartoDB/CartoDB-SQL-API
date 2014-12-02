@@ -4,6 +4,7 @@
 Bug fixes:
 
  * Closes stream responses on error (#188)
+ * Closes fd for log files on `kill -HUP` (#187)
 
 
 1.19.0 - 2014-11-21
