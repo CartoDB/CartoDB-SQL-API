@@ -67,7 +67,7 @@ JsonFormat.prototype.handleQueryRow = function(row, result) {
 
     this.buffer += (this.total_rows++ ? ',' : '') + JSON.stringify(row);
 
-    if (this.total_rows % (1||this.opts.bufferedRows || 1000)) {
+    if (this.total_rows % (this.opts.bufferedRows || 1000)) {
         this.opts.sink.write(this.buffer);
         this.buffer = '';
     }
