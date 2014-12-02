@@ -1441,7 +1441,7 @@ test('GET with callback must return 200 status error even if it is an error', fu
             });
     });
 
-    test('GET with callback must return 200 status error even if it is an error', function(done){
+    test('stream response is closed on error and error message is part of the response', function(done){
         assert.response(
             app,
             {
