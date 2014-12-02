@@ -106,8 +106,8 @@
     },
     "log4js": {
       "version": "0.6.21",
-      "from": "log4js@~0.6.18",
-      "resolved": "https://registry.npmjs.org/log4js/-/log4js-0.6.21.tgz",
+      "from": "https://github.com/CartoDB/log4js-node/tarball/cdb",
+      "resolved": "https://github.com/CartoDB/log4js-node/tarball/cdb",
       "dependencies": {
         "async": {
           "version": "0.2.10",
@@ -125,7 +125,8 @@
             },
             "isarray": {
               "version": "0.0.1",
-              "from": "isarray@0.0.1"
+              "from": "isarray@0.0.1",
+              "resolved": "https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz"
             },
             "string_decoder": {
               "version": "0.10.31",
@@ -202,6 +203,7 @@
         "optimist": {
           "version": "0.3.5",
           "from": "optimist@0.3.5",
+          "resolved": "https://registry.npmjs.org/optimist/-/optimist-0.3.5.tgz",
           "dependencies": {
             "wordwrap": {
               "version": "0.0.2",
