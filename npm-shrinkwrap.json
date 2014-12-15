@@ -35,8 +35,9 @@
           "resolved": "https://registry.npmjs.org/strftime/-/strftime-0.8.2.tgz"
         },
         "dot": {
-          "version": "1.0.2",
-          "from": "dot@~1.0.2"
+          "version": "1.0.3",
+          "from": "dot@~1.0.2",
+          "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
         },
         "redis-mpool": {
           "version": "0.1.0",
@@ -172,9 +173,9 @@
       "from": "rollbar@~0.3.2",
       "dependencies": {
         "node-uuid": {
-          "version": "1.4.1",
+          "version": "1.4.2",
           "from": "node-uuid@1.4.x",
-          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.1.tgz"
+          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.2.tgz"
         },
         "lru-cache": {
           "version": "2.2.4",
