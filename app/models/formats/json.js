@@ -1,9 +1,11 @@
 var pg  = require('./pg'),
     util = require('util'),
+    PgErrorHandler = require(global.settings.app_root + '/app/postgresql/error_handler'),
     _ = require('underscore');
 
 function JsonFormat() {
     this.buffer = '';
+    this.lastKnownResult = {};
 }
 
 JsonFormat.prototype = new pg('json');
@@ -11,6 +13,7 @@ JsonFormat.prototype = new pg('json');
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
 JsonFormat.prototype.formatResultFields = function(flds) {
+  flds = flds || [];
   var nfields = {};
   for (var i=0; i<flds.length; ++i) {
     var f = flds[i];
@@ -55,10 +58,12 @@ JsonFormat.prototype.startStreaming = function() {
     this._streamingStarted = true;
 };
 
-JsonFormat.prototype.handleQueryRow = function(row) {
+JsonFormat.prototype.handleQueryRow = function(row, result) {
     if ( ! this._streamingStarted ) {
         this.startStreaming();
     }
+
+    this.lastKnownResult = result;
 
     this.buffer += (this.total_rows++ ? ',' : '') + JSON.stringify(row);
 
@@ -69,7 +74,7 @@ JsonFormat.prototype.handleQueryRow = function(row) {
 };
 
 JsonFormat.prototype.handleQueryEnd = function(result) {
-    if ( this.error ) {
+    if (this.error && !this._streamingStarted) {
         this.callback(this.error);
         return;
     }
@@ -81,6 +86,8 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
     }
 
     this.opts.total_time = (Date.now() - this.start_time)/1000;
+
+    result = result || this.lastKnownResult || {};
 
     // Drop field description for skipped fields
     if (this.hasSkipFields) {
@@ -99,8 +106,13 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
         '],', // end of "rows" array
         '"time":', JSON.stringify(total_time),
         ',"fields":', JSON.stringify(this.formatResultFields(result.fields)),
-        ',"total_rows":', JSON.stringify(result.rowCount)
+        ',"total_rows":', JSON.stringify(result.rowCount || this.total_rows)
     ];
+
+    if (this.error) {
+        var pgErrorHandler = new PgErrorHandler(this.error);
+        out.push(',"error":', JSON.stringify([pgErrorHandler.getMessage()]));
+    }
 
 
     if ( result.notices && result.notices.length > 0 ) {

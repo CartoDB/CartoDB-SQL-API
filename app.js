@@ -85,6 +85,9 @@ process.on('uncaughtException', function(err) {
 });
 
 process.on('SIGHUP', function() {
-    log4js.configure(log4js_config);
-    console.log('Log files reloaded');
+    global.log4js.clearAndShutdownAppenders(function() {
+        global.log4js.configure(log4js_config);
+        global.logger = log4js.getLogger();
+        console.log('Log files reloaded');
+    });
 });

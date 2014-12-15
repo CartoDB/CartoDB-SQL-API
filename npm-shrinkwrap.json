@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "dependencies": {
     "cartodb-psql": {
       "version": "0.4.0",
@@ -35,8 +35,9 @@
           "resolved": "https://registry.npmjs.org/strftime/-/strftime-0.8.2.tgz"
         },
         "dot": {
-          "version": "1.0.2",
-          "from": "dot@~1.0.2"
+          "version": "1.0.3",
+          "from": "dot@~1.0.2",
+          "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
         },
         "redis-mpool": {
           "version": "0.1.0",
@@ -106,8 +107,8 @@
     },
     "log4js": {
       "version": "0.6.21",
-      "from": "log4js@~0.6.18",
-      "resolved": "https://registry.npmjs.org/log4js/-/log4js-0.6.21.tgz",
+      "from": "https://github.com/CartoDB/log4js-node/tarball/cdb",
+      "resolved": "https://github.com/CartoDB/log4js-node/tarball/cdb",
       "dependencies": {
         "async": {
           "version": "0.2.10",
@@ -125,7 +126,8 @@
             },
             "isarray": {
               "version": "0.0.1",
-              "from": "isarray@0.0.1"
+              "from": "isarray@0.0.1",
+              "resolved": "https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz"
             },
             "string_decoder": {
               "version": "0.10.31",
@@ -171,9 +173,9 @@
       "from": "rollbar@~0.3.2",
       "dependencies": {
         "node-uuid": {
-          "version": "1.4.1",
+          "version": "1.4.2",
           "from": "node-uuid@1.4.x",
-          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.1.tgz"
+          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.2.tgz"
         },
         "lru-cache": {
           "version": "2.2.4",
@@ -202,6 +204,7 @@
         "optimist": {
           "version": "0.3.5",
           "from": "optimist@0.3.5",
+          "resolved": "https://registry.npmjs.org/optimist/-/optimist-0.3.5.tgz",
           "dependencies": {
             "wordwrap": {
               "version": "0.0.2",
