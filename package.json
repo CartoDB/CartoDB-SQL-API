@@ -27,7 +27,8 @@
         "lru-cache":"~2.5.0",
         "log4js": "https://github.com/CartoDB/log4js-node/tarball/cdb",
         "rollbar": "~0.3.2",
-        "node-statsd": "~0.0.7"
+        "node-statsd": "~0.0.7",
+        "async": "^0.9.0",
     },
     "devDependencies": {
         "redis": "0.7.1",

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Map srs="+proj=merc +lon_0=0 +lat_ts=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs">
+
+  <Layer name="{{name}}" srs="+proj=merc +lon_0=0 +lat_ts=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs">
+    <Datasource>
+        <Parameter name="type">postgis</Parameter>
+        <Parameter name="dbname"><![CDATA[{{dbname}}]]></Parameter>
+        <Parameter name="host"><![CDATA[{{host}}]]></Parameter>
+        <Parameter name="user"><![CDATA[{{user}}]]></Parameter>
+        <Parameter name="password"><![CDATA[{{password}}]]></Parameter>
+        <Parameter name="port"><![CDATA[{{port}}]]></Parameter>
+        <Parameter name="geometry_field"><![CDATA[{{geometry_field}}]]></Parameter>
+        <Parameter name="srid">3857</Parameter>
+        <Parameter name="extent">-20037508.34,-20037508.34,20037508.34,20037508.34</Parameter>
+    </Datasource>
+</Layer>
+</Map>

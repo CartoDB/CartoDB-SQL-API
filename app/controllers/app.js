@@ -467,7 +467,8 @@ function handleQuery(req, res) {
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
-                  abortChecker: checkAborted
+                  abortChecker: checkAborted,
+                  params: params
                 };
 
                 if ( req.profiler ) {
