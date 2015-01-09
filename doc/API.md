@@ -127,7 +127,7 @@ http://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 }
 ```
 
-Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/geojson-spec.html) to return data from the API. To do so, simply supply the format parameter as GeoJSON:
+Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/geojson-spec.html) to return data from the API. To do so, simply supply the `format` parameter as GeoJSON:
 
 <div class="code-title code-request with-result">GEOJSON</div>
 ```bash
@@ -161,7 +161,15 @@ http://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_na
 }
 ```
 
-The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, GeoJSON.
+The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, and GeoJSON.
+
+### Output filename
+To customize the output filename, add the `filename` parameter to your URL:
+
+<div class="code-title code-request with-result">Customize filename</div>
+```bash
+http://{account}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
+```
 
 ### Getting table information
 
