@@ -33,6 +33,8 @@ module.exports.db_port      = '6432';
 module.exports.db_pool_size = 500;
 // Milliseconds before a connection is removed from pool
 module.exports.db_pool_idleTimeout = 30000;
+// Max bytes for a unique row returned by PG
+module.exports.db_max_row_size = 1000;
 // Milliseconds between idle client checking
 module.exports.db_pool_reapInterval = 1000;
 module.exports.redis_host   = '127.0.0.1';

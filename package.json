@@ -17,7 +17,7 @@
     ],
     "dependencies": {
         "cartodb-redis": "https://github.com/CartoDB/node-cartodb-redis/tarball/0.11.0",
-        "cartodb-psql": "https://github.com/CartoDB/node-cartodb-psql/tarball/0.4.0",
+        "cartodb-psql": "git://github.com/CartoDB/node-cartodb-psql#row_limit",
         "step-profiler": "https://github.com/CartoDB/node-step-profiler/tarball/0.1.0",
         "underscore": "~1.6.0",
         "express": "~2.5.11",
