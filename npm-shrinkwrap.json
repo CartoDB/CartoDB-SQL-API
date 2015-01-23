@@ -10,7 +10,7 @@
         "pg": {
           "version": "2.6.2-cdb1",
           "from": "pg@git://github.com/CartoDB/node-postgres.git#cdb-2.6-row_limit",
-          "resolved": "git://github.com/CartoDB/node-postgres.git#1de10851b5a3c7a6e972cfd03873f1f618767492",
+          "resolved": "git://github.com/CartoDB/node-postgres.git#41046a5b5542aeb2504b84d9d12c950ad5359e9c",
           "dependencies": {
             "generic-pool": {
               "version": "2.0.3",
@@ -84,8 +84,7 @@
         },
         "mime": {
           "version": "1.2.4",
-          "from": "mime@1.2.4",
-          "resolved": "https://registry.npmjs.org/mime/-/mime-1.2.4.tgz"
+          "from": "mime@1.2.4"
         },
         "qs": {
           "version": "0.4.2",
@@ -124,7 +123,7 @@
             },
             "inherits": {
               "version": "2.0.1",
-              "from": "inherits@~2.0.1"
+              "from": "inherits@2"
             }
           }
         },
@@ -145,12 +144,10 @@
     "oauth-client": {
       "version": "0.3.0",
       "from": "oauth-client@0.3.0",
-      "resolved": "https://registry.npmjs.org/oauth-client/-/oauth-client-0.3.0.tgz",
       "dependencies": {
         "node-uuid": {
           "version": "1.1.0",
-          "from": "node-uuid@1.1.0",
-          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.1.0.tgz"
+          "from": "node-uuid@1.1.0"
         }
       }
     },
@@ -184,12 +181,10 @@
     "topojson": {
       "version": "0.0.8",
       "from": "topojson@0.0.8",
-      "resolved": "https://registry.npmjs.org/topojson/-/topojson-0.0.8.tgz",
       "dependencies": {
         "optimist": {
           "version": "0.3.5",
           "from": "optimist@0.3.5",
-          "resolved": "https://registry.npmjs.org/optimist/-/optimist-0.3.5.tgz",
           "dependencies": {
             "wordwrap": {
               "version": "0.0.2",
