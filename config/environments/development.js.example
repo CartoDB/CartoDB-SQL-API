@@ -1,4 +1,10 @@
 module.exports.base_url     = '/api/:version';
+// if user_url is defined the api will respond to requests like:
+// user_url + base_url
+// for example
+// /u/:user/api/sql?q=....
+// needs to have :user parameter, if not it will fail on server startup
+module.exports.user_url     = '/u/:user';
 // If useProfiler is true every response will be served with an
 // X-SQLAPI-Profile header containing elapsed timing for various
 // steps taken for producing the response.
