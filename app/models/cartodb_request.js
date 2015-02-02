@@ -8,6 +8,9 @@ function CartodbRequest() {
 
 module.exports = CartodbRequest;
 
+/**
+ * If the request contains the user use it, if not guess from the host
+ */
 CartodbRequest.prototype.userByReq = function(req) {
     if (req.params.user) {
         return req.params.user;

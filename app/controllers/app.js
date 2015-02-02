@@ -210,7 +210,6 @@ function handleQuery(req, res) {
     var requestedFilename = params.filename;
     var filename  = requestedFilename;
     var requestedSkipfields = params.skipfields;
-    // if the request contains the user use it, if not guess from the host
     var cdbUsername = cdbReq.userByReq(req);
     var skipfields;
     var dp        = params.dp; // decimal point digits (defaults to 6)
