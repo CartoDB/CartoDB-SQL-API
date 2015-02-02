@@ -171,18 +171,6 @@ app.get(global.settings.base_url + '/cachestatus', handleCacheStatus);
 app.get(global.settings.base_url + '/health',  handleHealthCheck);
 app.get(global.settings.base_url + '/version', handleVersion);
 
-if (global.settings.user_url) {
-  var user_url = global.settings.user_url;
-  if (user_url.indexOf(':user') === -1) {
-    throw new Error("user_url setting must contain :user")
-  }
-  app.all(user_url + global.settings.base_url + '/sql', handleQuery);
-  app.all(user_url + global.settings.base_url + '/sql.:f', handleQuery);
-  app.get(user_url + global.settings.base_url + '/cachestatus', handleCacheStatus);
-  app.get(user_url + global.settings.base_url + '/health', handleHealthCheck);
-  app.get(user_url + global.settings.base_url + '/version', handleVersion);
-}
-
 var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate)\\b", "i");
 /**
  * This is a fuzzy check, the return could be true even if the query doesn't really write anything. But you can be
@@ -223,7 +211,7 @@ function handleQuery(req, res) {
     var filename  = requestedFilename;
     var requestedSkipfields = params.skipfields;
     // if the request contains the user use it, if not guess from the host
-    var cdbUsername = req.params.user || cdbReq.userByReq(req);
+    var cdbUsername = cdbReq.userByReq(req);
     var skipfields;
     var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file

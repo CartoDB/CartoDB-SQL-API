@@ -1,5 +1,6 @@
-module.exports.base_url     = '/api/:version';
-module.exports.user_url     = '/u/:user';
+// In case the base_url has a :user param the username will be the one specified in the URL,
+// otherwise it will fallback to extract the username from the host header.
+module.exports.base_url     = '(?:/api/:version|/u/:user/api/:version)';
 // If useProfiler is true every response will be served with an
 // X-SQLAPI-Profile header containing elapsed timing for various
 // steps taken for producing the response.
