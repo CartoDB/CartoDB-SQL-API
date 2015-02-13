@@ -28,6 +28,14 @@ Install dependencies
 npm install
 ```
 
+Add CartoDB functions to PostgreSQL database
+--------------------------------------------
+
+CartoDB adds some [extra database functions](https://github.com/CartoDB/cartodb-postgresql/tree/master/scripts-available):
+
+* CDB_QueryStatements.sql
+* CDB_QueryTables.sql
+
 
 usage
 -----

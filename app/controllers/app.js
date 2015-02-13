@@ -31,8 +31,6 @@ var express = require('express')
     , zlib        = require('zlib')
     , util        = require('util')
     , Profiler    = require('step-profiler')
-    , StatsD      = require('node-statsd').StatsD
-    , MetadataDB  = require('cartodb-redis')
     , PSQL        = require('cartodb-psql')
     , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
     , AuthApi     = require(global.settings.app_root + '/app/auth/auth_api')
@@ -43,13 +41,6 @@ var express = require('express')
     , PgErrorHandler = require(global.settings.app_root + '/app/postgresql/error_handler')
     ;
 
-var metadataBackend = MetadataDB({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
 var cdbReq = new CdbRequest();
 
 // Set default configuration 
@@ -209,7 +200,7 @@ function handleQuery(req, res) {
     var requestedSkipfields = params.skipfields;
     var skipfields;
     var dp        = params.dp; // decimal point digits (defaults to 6)
-    var gn        = "the_geom"; // TODO: read from configuration file
+    var gn        = "geom"; // TODO: read from configuration file
     var tableCacheItem;
 
     if ( req.profiler ) req.profiler.start('sqlapi.query');
@@ -276,7 +267,7 @@ function handleQuery(req, res) {
           pass: global.settings.db_pubuser_pass
         };
 
-        var authenticated = false;
+        var authenticated = true;
 
         var formatter;
 
@@ -292,15 +283,6 @@ function handleQuery(req, res) {
         // 4. Setup headers
         // 5. Send formatted results back
         Step(
-            function getDatabaseConnectionParams() {
-                checkAborted('getDatabaseConnectionParams');
-                // If the request is providing credentials it may require every DB parameters
-                if (authApi.hasCredentials()) {
-                    metadataBackend.getAllUserDBParams(cdbUsername, this);
-                } else {
-                    metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
-                }
-            },
             function authenticate(err, userDBParams) {
                 if (err) {
                     err.http_status = 404;
@@ -313,42 +295,23 @@ function handleQuery(req, res) {
 
                 dbParams = userDBParams;
 
-                dbopts.host = dbParams.dbhost;
-                dbopts.dbname = dbParams.dbname;
-                dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-                authApi.verifyCredentials({
-                    metadataBackend: metadataBackend,
-                    apiKey: dbParams.apikey
-                }, this);
+                dbopts.host = global.settings.db_host;
+                dbopts.dbname = global.settings.db_base_name;
+                dbopts.user = global.settings.db_pubuser;
+                return null;
             },
             function setDBAuth(err, isAuthenticated) {
                 if (err) {
                     throw err;
                 }
 
-                if ( req.profiler ) req.profiler.done('authenticate');
-
-                if (_.isBoolean(isAuthenticated) && isAuthenticated) {
-                    authenticated = isAuthenticated;
-                    dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-                    if ( global.settings.hasOwnProperty('db_user_pass') ) {
-                        dbopts.pass = _.template(global.settings.db_user_pass, {
-                            user_id: dbParams.dbuser,
-                            user_password: dbParams.dbpass
-                        });
-                    } else {
-                        delete dbopts.pass;
-                    }
-                }
+                dbopts.user = global.settings.db_user;
+                dbopts.pass = global.settings.db_user_pass;
                 return null;
             },
             function queryExplain(err){
                 var self = this;
-
                 if (err) throw err;
-
-                if ( req.profiler ) req.profiler.done('setDBAuth');
 
                 checkAborted('queryExplain');
 
@@ -512,7 +475,7 @@ function handleCacheStatus(req, res){
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
-var healthCheck = new HealthCheck(metadataBackend, PSQL);
+var healthCheck = new HealthCheck(PSQL);
 function handleHealthCheck(req, res) {
     var healthConfig = global.settings.health || {};
     if (!!healthConfig.enabled) {
