@@ -1,6 +1,11 @@
 1.19.2 - 2014-mm-dd
 -------------------
 
+Announcements:
+
+ * Upgrades cartodb-psql to 0.5.0
+ * Dependencies from npm registry when available
+
 
 1.19.1 - 2014-12-15
 -------------------
