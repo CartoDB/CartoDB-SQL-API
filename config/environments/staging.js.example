@@ -40,6 +40,15 @@ module.exports.redis_port   = 6379;
 module.exports.redisPool    = 50;
 module.exports.redisIdleTimeoutMillis   = 10000;
 module.exports.redisReapIntervalMillis  = 1000;
+// allows to use an object to connect with node-postgres instead of a connection string
+//module.exports.db_use_config_object = true;
+// requires enabling db_use_config_object=true
+// allows to enable/disable keep alive for database connections
+// by default is not enabled
+//module.exports.db_keep_alive = {
+//    enabled: true,
+//    initialDelay: 5000
+//};
 module.exports.redisLog     = false;
 // Max number of entries in the query tables cache
 module.exports.tableCacheMax = 8192;
