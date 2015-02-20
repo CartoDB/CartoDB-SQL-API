@@ -3,13 +3,13 @@
   "version": "1.19.2",
   "dependencies": {
     "cartodb-psql": {
-      "version": "0.5.0",
-      "from": "cartodb-psql@~0.5.0",
+      "version": "0.5.1",
+      "from": "cartodb-psql@~0.5.1",
       "dependencies": {
         "pg": {
-          "version": "2.6.2-cdb1",
-          "from": "pg@git://github.com/CartoDB/node-postgres.git#2.6.2-cdb2",
-          "resolved": "git://github.com/CartoDB/node-postgres.git#40f736a8bffe3f222a0a913c6bf54f5059051c15",
+          "version": "2.6.2-cdb3",
+          "from": "pg@git://github.com/CartoDB/node-postgres.git#2.6.2-cdb3",
+          "resolved": "git://github.com/CartoDB/node-postgres.git#069c5296d1a093077feff21719641bb9e71fc50e",
           "dependencies": {
             "generic-pool": {
               "version": "2.0.3",
@@ -133,7 +133,7 @@
             },
             "inherits": {
               "version": "2.0.1",
-              "from": "inherits@2"
+              "from": "inherits@~2.0.1"
             }
           }
         },

@@ -3,7 +3,7 @@
 
 Announcements:
 
- * Upgrades cartodb-psql to 0.5.0
+ * Upgrades cartodb-psql to 0.5.1 for keep alive configuration
  * Dependencies from npm registry when available
 
 
