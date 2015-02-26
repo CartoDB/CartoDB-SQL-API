@@ -32,6 +32,8 @@ module.exports.db_pool_size = 500;
 module.exports.db_pool_idleTimeout = 30000;
 // Milliseconds between idle client checking
 module.exports.db_pool_reapInterval = 1000;
+// max number of bytes for a row, when exceeded the query will throw an error
+//module.exports.db_max_row_size = 10 * 1024 * 1024;
 // allows to use an object to connect with node-postgres instead of a connection string
 //module.exports.db_use_config_object = true;
 // requires enabling db_use_config_object=true

@@ -35,11 +35,8 @@ module.exports.db_pool_size = 500;
 module.exports.db_pool_idleTimeout = 30000;
 // Milliseconds between idle client checking
 module.exports.db_pool_reapInterval = 1000;
-module.exports.redis_host   = '127.0.0.1';
-module.exports.redis_port   = 6379;
-module.exports.redisPool    = 50;
-module.exports.redisIdleTimeoutMillis   = 10000;
-module.exports.redisReapIntervalMillis  = 1000;
+// max number of bytes for a row, when exceeded the query will throw an error
+//module.exports.db_max_row_size = 10 * 1024 * 1024;
 // allows to use an object to connect with node-postgres instead of a connection string
 //module.exports.db_use_config_object = true;
 // requires enabling db_use_config_object=true
@@ -49,6 +46,11 @@ module.exports.redisReapIntervalMillis  = 1000;
 //    enabled: true,
 //    initialDelay: 5000
 //};
+module.exports.redis_host   = '127.0.0.1';
+module.exports.redis_port   = 6379;
+module.exports.redisPool    = 50;
+module.exports.redisIdleTimeoutMillis   = 10000;
+module.exports.redisReapIntervalMillis  = 1000;
 module.exports.redisLog     = false;
 // Max number of entries in the query tables cache
 module.exports.tableCacheMax = 8192;
