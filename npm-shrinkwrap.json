@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.19.2",
+  "version": "1.20.0",
   "dependencies": {
     "cartodb-psql": {
       "version": "0.5.1",
@@ -133,7 +133,7 @@
             },
             "inherits": {
               "version": "2.0.1",
-              "from": "inherits@~2.0.1"
+              "from": "inherits@2"
             }
           }
         },
