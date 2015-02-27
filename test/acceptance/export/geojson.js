@@ -194,7 +194,7 @@ test('stream response handle errors', function(done) {
         console.log(res);
         assert.equal(res.statusCode, 400, res.body);
         var geoJson = JSON.parse(res.body);
-        var expectedError = {"error":["syntax error at or near \"1\""]}
+        var expectedError = {"error":["syntax error at or near \"SELECTT\""]};
         assert.deepEqual(geoJson, expectedError);
         done();
     });
