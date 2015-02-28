@@ -1,8 +1,7 @@
 SQL API for cartodb.com
 ========================
 
-[![Build Status](http://travis-ci.org/CartoDB/CartoDB-SQL-API.png)]
-(http://travis-ci.org/CartoDB/CartoDB-SQL-API)
+[![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.png?branch=master)](https://travis-ci.org/CartoDB/CartoDB-SQL-API)
 
 Provides a node.js based API for running SQL queries against CartoDB.
 
