@@ -1,3 +1,11 @@
+1.21.0 - 2015-03-02
+-------------------
+
+New features:
+
+ * Logs with console.error too large row errors
+
+
 1.20.0 - 2015-02-26
 -------------------
 

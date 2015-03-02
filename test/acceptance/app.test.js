@@ -1464,4 +1464,43 @@ test('GET with callback must return 200 status error even if it is an error', fu
         );
     });
 
+    test('too large rows get into error log', function(done){
+
+        var dbMaxRowSize = global.settings.db_max_row_size;
+        global.settings.db_max_row_size = 4;
+
+        var consoleErrorFn = console.error;
+        var hit = false;
+        var consoleError;
+        console.error = function(what) {
+            hit = true;
+            consoleError = what;
+        };
+        assert.response(
+            app,
+            {
+                url: "/api/v1/sql?" + querystring.stringify({
+                    q: "SELECT * FROM untitle_table_4"
+                }),
+                headers: {
+                    host: 'vizzuality.cartodb.com'
+                },
+                method: 'GET'
+            },
+            {
+                status: 400
+            },
+            function() {
+                assert.equal(hit, true);
+                assert.ok(JSON.parse(consoleError).error.match(/^row too large.*/i), "Expecting row size limit error");
+
+                global.settings.db_max_row_size = dbMaxRowSize;
+                console.error = consoleErrorFn;
+
+                done();
+            }
+        );
+    });
+
+
 });
