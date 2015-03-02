@@ -1492,7 +1492,10 @@ test('GET with callback must return 200 status error even if it is an error', fu
             },
             function() {
                 assert.equal(hit, true);
-                assert.ok(JSON.parse(consoleError).error.match(/^row too large.*/i), "Expecting row size limit error");
+                var parsedError = JSON.parse(consoleError);
+                assert.ok(parsedError.error.match(/^row too large.*/i), "Expecting row size limit error");
+                assert.equal(parsedError.username, 'vizzuality');
+                assert.equal(parsedError.type, 'row_size_limit_exceeded');
 
                 global.settings.db_max_row_size = dbMaxRowSize;
                 console.error = consoleErrorFn;
