@@ -1,5 +1,9 @@
-1.20.1 - 2015-mm-dd
+1.21.0 - 2015-mm-dd
 -------------------
+
+New features:
+
+ * Logs with console.error too large row errors
 
 
 1.20.0 - 2015-02-26
