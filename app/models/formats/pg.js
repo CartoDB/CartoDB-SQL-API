@@ -33,6 +33,13 @@ PostgresFormat.prototype.handleQueryRowWithSkipFields = function(row, result) {
     this.handleQueryRow(row, result);
 };
 
+PostgresFormat.prototype.handleQueryError = function(err) {
+    this.error = err;
+    if (err.message && err.message.match(/row too large, was \d* bytes/i)) {
+        console.error(JSON.stringify({error: err.message}));
+    }
+};
+
 PostgresFormat.prototype.handleNotice = function(msg, result) {
     if ( ! result.notices ) result.notices = [];
     for (var i=0; i<msg.length; i++) {
@@ -125,7 +132,7 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
           query.on('row', that.handleQueryRow.bind(that));
       }
       query.on('end', that.handleQueryEnd.bind(that));
-      query.on('error', function(err) { that.error = err; });
+      query.on('error', that.handleQueryError.bind(that));
       query.on('notice', function(msg) {
           that.handleNotice(msg, query._result);
       });
