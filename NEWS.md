@@ -1,6 +1,10 @@
 1.21.1 - 2015-mm-dd
 -------------------
 
+Enhancements:
+
+ * Improve row size limit error message
+
 
 1.21.0 - 2015-03-02
 -------------------

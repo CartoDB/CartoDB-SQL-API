@@ -458,6 +458,7 @@ function handleQuery(req, res) {
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
+                  username: cdbUsername,
                   dbopts: dbopts,
                   sink: res,
                   gn: gn,
