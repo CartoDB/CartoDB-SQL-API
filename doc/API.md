@@ -28,7 +28,7 @@ To use your API key, pass it as a parameter in an URL call to the CartoDB API. F
 
 <div class="code-title code-request">Query example with the api_key parameter</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q={SQL statement}&api_key={Your API key}
+https://{account}.cartodb.com/api/v2/sql?q={SQL statement}&api_key={Your API key}
 ```
 
 ### OAuth
@@ -57,14 +57,14 @@ All SQL API requests to your CartoDB account should follow this general pattern:
 
 <div class="code-title code-request">SQL QUERY EXAMPLE</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q={SQL statement}
+https://{account}.cartodb.com/api/v2/sql?q={SQL statement}
 ```
 
 If you encounter errors, double-check that you are using the correct account name, and that your SQL statement is valid. A simple example of this pattern is conducting a count of all the records in your table:
 
 <div class="code-title code-request with-result">SQL QUERY COUNT EXAMPLE</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
+https://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 ```
 
 <div class="code-title">RESULT</div>
@@ -89,7 +89,7 @@ The CartoDB SQL API is setup to handle both GET and POST requests. You can test 
 
 <div class="code-title">JQUERY</div>
 ```javascript
-$.getJSON('http://'+your_account_name+'.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
+$.getJSON('https://'+your_account_name+'.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
   $.each(data.rows, function(key, val) {
     // do something!
   });
@@ -104,7 +104,7 @@ The standard response from the CartoDB SQL API is JSON. If you are building a we
 
 <div class="code-title code-request with-result">JSON</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 <div class="code-title">RESULT</div>
@@ -131,7 +131,7 @@ Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/ge
 
 <div class="code-title code-request with-result">GEOJSON</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 <div class="code-title">RESULT</div>
@@ -168,7 +168,7 @@ To customize the output filename, add the `filename` parameter to your URL:
 
 <div class="code-title code-request with-result">Customize filename</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 ### Getting table information
@@ -177,7 +177,7 @@ Currently, there is no public method to access your table schemas. The simplest 
 
 <div class="code-title code-request">COLUMNS</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 ### Response errors
@@ -201,14 +201,14 @@ Performing inserts or updates on your data is simple using your [API key](#authe
 
 <div class="code-title code-request">COLUMNS</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={Your API key}
+https://{account}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={Your API key}
 ```
 
 Updates are just as simple. Here is an example, updating a row based on the value of the cartodb_id column.
 
 <div class="code-title code-request">COLUMNS</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={Your API key}
+https://{account}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={Your API key}
 ```
 
 ## Handling geospatial data
@@ -220,7 +220,7 @@ The first, is to use the format=GeoJSON method described above. Others can be ha
 
 <div class="code-title code-request with-result">ASGEOJSON</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
 ```
 
 <div class="code-title">RESULT</div>
@@ -240,7 +240,7 @@ http://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geo
 
 <div class="code-title code-request with-result">ASTEXT</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
 ```
 
 <div class="code-title">RESULT</div>
@@ -263,7 +263,7 @@ All data returned from *the_geom* column is in WGS 84 (EPSG:4326). You can chang
 
 <div class="code-title code-request">ASTEXT</div>
 ```bash
-http://{account}.cartodb.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1
+https://{account}.cartodb.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1
 ```
 
 CartoDB also stores a second geometry column, *the_geom_webmercator*. We use this internally to build your map tiles as fast as we can. In the user-interface it is hidden, but it is visible and available for use. In this column we store a reprojected version of all your geometries using Web Mercator (EPSG:3857).
@@ -284,7 +284,7 @@ There are some tricks to consider when using the SQL API that might make your ap
 
 ## API version number
 
-All CartoDB applications use **Version 2** of our APIs. All other APIs are deprecated and will not be maintained or supported. You can check that you are using **Version 2** of our APIs by looking at your request URLS. They should all begin contain **/v2/** in the URLs as follows `http://{account}.cartodb.com/api/v2/`
+All CartoDB applications use **Version 2** of our APIs. All other APIs are deprecated and will not be maintained or supported. You can check that you are using **Version 2** of our APIs by looking at your request URLS. They should all begin contain **/v2/** in the URLs as follows `https://{account}.cartodb.com/api/v2/`
 
 ## Libraries in different languages
 
