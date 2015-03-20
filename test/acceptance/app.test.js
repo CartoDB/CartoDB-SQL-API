@@ -147,6 +147,17 @@ test('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just
     });
 });
 
+test('GET /u/vizzuality/api/v1/sql with SQL parameter on SELECT only', function(done){
+    assert.response(app, {
+        url: '/u/vizzuality/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
+        method: 'GET'
+    },{ }, function(res) {
+        assert.equal(res.statusCode, 200, res.body);
+        done();
+    });
+});
+
+
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/121
 test('SELECT from user-specific database', function(done){
     var backupDBHost = global.settings.db_host;
