@@ -19,8 +19,7 @@ HealthCheck.prototype.check = function(username, query, callback) {
 
     Step(
         function getManualDisable() {
-          disabled_file = global.settings.disabled_file;
-          fs.readFile(disabled_file, this);
+          fs.readFile(global.settings.disabled_file, this);
         },
         function handleDisabledFile(err, data) {
           var next = this;
