@@ -1,3 +1,5 @@
+require('../helper')
+
 var assert      = require('assert'),
     _           = require('underscore'),
     HealthCheck = require('../../app/monitoring/health_check');
@@ -70,6 +72,35 @@ suite('health checks', function() {
 
             done();
         });
+    });
+
+    test('error if disabled file exists', function(done) {
+      var fs = require('fs');
+
+      readFileFn = fs.readFile
+      fs.readFile = function(filename, callback) {
+        callback(null, "Maintenance");
+      }
+      healthCheck.check('fake', 'select 1', function(err, result) {
+        assert.equal(err.message, "Maintenance");
+        assert.equal(err.http_status, 503);
+        done();
+      });
+      fs.readFile = readFileFn;
+    });
+
+    test('not err if disabled file does not exists', function(done) {
+      var fs = require('fs');
+
+      readFileFn = fs.readFile
+      fs.readFile = function(filename, callback) {
+        throw "ENOENT"
+      }
+      healthCheck.check('fake', 'select 1', function(err, result) {
+        assert.equal(err, null);
+        done();
+      });
+      fs.readFile = readFileFn;
     });
 
     function mockGetAllUserDBParams(func) {

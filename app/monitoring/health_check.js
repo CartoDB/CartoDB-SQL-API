@@ -1,5 +1,6 @@
 var Step = require('step'),
-    _    = require('underscore');
+    _    = require('underscore'),
+    fs   = require('fs');
 
 function HealthCheck(metadataBackend, psqlClass) {
     this.metadataBackend = metadataBackend;
@@ -17,7 +18,25 @@ HealthCheck.prototype.check = function(username, query, callback) {
         };
 
     Step(
-        function getDBParams() {
+        function getManualDisable() {
+          disabled_file = global.settings.disabled_file;
+          fs.readFile(disabled_file, this);
+        },
+        function handleDisabledFile(err, data) {
+          var next = this;
+          if (err) {
+            return next();
+          }
+          if (!!data) {
+            err = new Error(data);
+            err.http_status = 503;
+            throw err;
+          }
+        },
+        function getDBParams(err) {
+            if (err) {
+              throw err;
+            }
             startTime = Date.now();
             self.metadataBackend.getAllUserDBParams(username, this);
         },
