@@ -70,3 +70,4 @@ module.exports.health = {
     username: 'vizzuality',
     query: 'select 1'
 };
+module.exports.disabled_file = 'pids/disabled';
