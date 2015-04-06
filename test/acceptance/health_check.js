@@ -10,9 +10,9 @@ suite('health checks', function() {
 
     beforeEach(function(done) {
         global.settings.health = {
-            enabled: true,
-            username: 'vizzuality',
-            query: 'select 1::text'
+            enabled: true
+            //username: 'vizzuality',
+            //query: 'select 1::text'
         };
         done();
     });
@@ -65,52 +65,52 @@ suite('health checks', function() {
         );
     });
 
-    test('fails for invalid user because it is not in redis', function(done) {
-        global.settings.health.username = 'invalid';
+    //test('fails for invalid user because it is not in redis', function(done) {
+    //    global.settings.health.username = 'invalid';
 
-        assert.response(app,
-            healthCheckRequest,
-            {
-                status: 503
-            },
-            function(res, err) {
-                assert.ok(!err);
+    //    assert.response(app,
+    //        healthCheckRequest,
+    //        {
+    //            status: 503
+    //        },
+    //        function(res, err) {
+    //            assert.ok(!err);
 
-                var parsed = JSON.parse(res.body);
+    //            var parsed = JSON.parse(res.body);
 
-                assert.equal(parsed.enabled, true);
-                assert.equal(parsed.ok, false);
+    //            assert.equal(parsed.enabled, true);
+    //            assert.equal(parsed.ok, false);
 
-                assert.equal(parsed.result.redis.ok, false);
+    //            assert.equal(parsed.result.redis.ok, false);
 
-                done();
-            }
-        );
-    });
+    //            done();
+    //        }
+    //    );
+    //});
 
-    test('fails for wrong query', function(done) {
-        global.settings.health.query = 'select wadus query';
+    //test('fails for wrong query', function(done) {
+    //    global.settings.health.query = 'select wadus query';
 
-        assert.response(app,
-            healthCheckRequest,
-            {
-                status: 503
-            },
-            function(res, err) {
-                assert.ok(!err);
+    //    assert.response(app,
+    //        healthCheckRequest,
+    //        {
+    //            status: 503
+    //        },
+    //        function(res, err) {
+    //            assert.ok(!err);
 
-                var parsed = JSON.parse(res.body);
+    //            var parsed = JSON.parse(res.body);
 
-                assert.equal(parsed.enabled, true);
-                assert.equal(parsed.ok, false);
+    //            assert.equal(parsed.enabled, true);
+    //            assert.equal(parsed.ok, false);
 
-                assert.ok(parsed.result.redis.ok);
+    //            assert.ok(parsed.result.redis.ok);
 
-                assert.equal(parsed.result.postgresql.ok, false);
+    //            assert.equal(parsed.result.postgresql.ok, false);
 
-                done();
-            }
-        );
-    });
+    //            done();
+    //        }
+    //    );
+    //});
 
 });
