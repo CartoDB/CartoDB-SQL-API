@@ -164,13 +164,12 @@ app.set("trust proxy", true);
 
 // basic routing
 app.options('*', function(req,res) { setCrossDomain(res); res.end(); });
-app.all(global.settings.base_url+'/sql',     function(req, res) { handleQuery(req, res) } );
-app.all(global.settings.base_url+'/sql.:f',  function(req, res) { handleQuery(req, res) } );
-app.get(global.settings.base_url+'/cachestatus',  function(req, res) { handleCacheStatus(req, res) } );
-app.get(global.settings.base_url+'/health',  function(req, res) { handleHealthCheck(req, res) } );
-app.get(global.settings.base_url+'/version', function(req, res) {
-  res.send(getVersion());
-});
+
+app.all(global.settings.base_url + '/sql',  handleQuery);
+app.all(global.settings.base_url + '/sql.:f',  handleQuery);
+app.get(global.settings.base_url + '/cachestatus', handleCacheStatus);
+app.get(global.settings.base_url + '/health',  handleHealthCheck);
+app.get(global.settings.base_url + '/version', handleVersion);
 
 var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate|refresh)\\b", "i");
 /**
@@ -192,6 +191,10 @@ function sanitize_filename(filename) {
 }
 
 // request handlers
+function handleVersion(req, res) {
+  res.send(getVersion());
+}
+
 function handleQuery(req, res) {
 
     // extract input
@@ -207,6 +210,7 @@ function handleQuery(req, res) {
     var requestedFilename = params.filename;
     var filename  = requestedFilename;
     var requestedSkipfields = params.skipfields;
+    var cdbUsername = cdbReq.userByReq(req);
     var skipfields;
     var dp        = params.dp; // decimal point digits (defaults to 6)
     var gn        = "the_geom"; // TODO: read from configuration file
@@ -280,8 +284,7 @@ function handleQuery(req, res) {
 
         var formatter;
 
-        var cdbUsername = cdbReq.userByReq(req),
-            authApi = new AuthApi(req, params),
+        var authApi = new AuthApi(req, params),
             dbParams;
 
         if ( req.profiler ) req.profiler.done('init');

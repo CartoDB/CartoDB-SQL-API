@@ -1,3 +1,12 @@
+1.22.0 - 2015-04-09
+-------------------
+
+Announcements:
+
+ * Now health check only validates against a disabling file
+ * Supports user extraction from request params via base_url config
+
+
 1.21.1 - 2015-03-02
 -------------------
 
