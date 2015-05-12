@@ -12,10 +12,8 @@ ApikeyAuth.prototype.verifyCredentials = function(options, callback) {
 };
 
 ApikeyAuth.prototype.hasCredentials = function() {
-    return !!(this.req.query.api_key
-        || this.req.query.map_key
-        || (this.req.body && this.req.body.api_key)
-        || (this.req.body && this.req.body.map_key));
+    return !!(this.req.query.api_key || this.req.query.map_key ||
+        (this.req.body && this.req.body.api_key) || (this.req.body && this.req.body.map_key));
 };
 
 /**
@@ -30,14 +28,14 @@ function verifyRequest(req, requiredApi, callback) {
     var valid = false;
 
     if ( requiredApi ) {
-        if ( requiredApi == req.query.map_key ) {
+        if ( requiredApi === req.query.map_key ) {
             valid = true;
-        } else if ( requiredApi == req.query.api_key ) {
+        } else if ( requiredApi === req.query.api_key ) {
             valid = true;
         // check also in request body
-        } else if ( req.body && req.body.map_key && requiredApi == req.body.map_key ) {
+        } else if ( req.body && req.body.map_key && requiredApi === req.body.map_key ) {
             valid = true;
-        } else if ( req.body && req.body.api_key && requiredApi == req.body.api_key ) {
+        } else if ( req.body && req.body.api_key && requiredApi === req.body.api_key ) {
             valid = true;
         }
     }
