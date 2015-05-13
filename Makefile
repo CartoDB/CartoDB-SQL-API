@@ -7,6 +7,10 @@ clean:
 check:
 	npm test
 
+jshint:
+	@echo "***jshint***"
+	@./node_modules/.bin/jshint app/ test/ app.js
+
 test:
 	test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/unit/model/*.js test/acceptance/*.js  test/acceptance/export/*.js
 
