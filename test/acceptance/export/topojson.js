@@ -1,15 +1,9 @@
 require('../../helper');
-require('../../support/assert');
 
-
-var app    = require(global.settings.app_root + '/app/controllers/app')()
-    , assert = require('assert')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , zipfile = require('zipfile')
-    , fs      = require('fs')
-    , libxmljs = require('libxmljs')
-    ;
+var app = require(global.settings.app_root + '/app/controllers/app')();
+var assert = require('../../support/assert');
+var querystring = require('querystring');
+var _ = require('underscore');
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
@@ -81,8 +75,8 @@ test('GET two polygons sharing an edge as topojson', function(done){
         assert.equal(shell[1], 1); /* non-shared arc */
         var props = obj.properties;
         assert.equal(_.keys(props).length, 2); // gid, name
-        assert.equal(props['gid'], 1);
-        assert.equal(props['name'], 'U');
+        assert.equal(props.gid, 1);
+        assert.equal(props.name, 'U');
 
         obj = topojson.objects[1]; 
         //console.dir(obj);
@@ -99,8 +93,8 @@ test('GET two polygons sharing an edge as topojson', function(done){
         assert.equal(shell[1], 2); /* non-shared arc */
         props = obj.properties;
         assert.equal(_.keys(props).length, 2); // gid, name
-        assert.equal(props['gid'], 2);
-        assert.equal(props['name'], 'D');
+        assert.equal(props.gid, 2);
+        assert.equal(props.name, 'D');
 
         // Check arcs
         assert.ok(topojson.hasOwnProperty('arcs'));
@@ -185,8 +179,8 @@ test('null geometries', function(done){
         assert.equal(shell[0], 0); /* non-shared arc */
         var props = obj.properties;
         assert.equal(_.keys(props).length, 2); // gid, name
-        assert.equal(props['gid'], 1);
-        assert.equal(props['name'], 'U');
+        assert.equal(props.gid, 1);
+        assert.equal(props.name, 'U');
 
         // Check arcs
         assert.ok(topojson.hasOwnProperty('arcs'));
@@ -233,10 +227,12 @@ test('null geometries', function(done){
             function(res) {
                 assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
                 var didRunJsonCallback = false;
+                // jshint ignore:start
                 function foo_jsonp(body) {
                     didRunJsonCallback = true;
                 }
                 eval(res.body);
+                // jshint ignore:end
                 assert.ok(didRunJsonCallback);
                 done();
             }
