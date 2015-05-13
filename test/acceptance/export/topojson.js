@@ -9,7 +9,7 @@ var _ = require('underscore');
 app.setMaxListeners(0);
 
 
-suite('export.topojson', function() {
+describe('export.topojson', function() {
 
 // TOPOJSON tests
 
@@ -28,7 +28,7 @@ suite('export.topojson', function() {
         };
     }
 
-test('GET two polygons sharing an edge as topojson', function(done){
+it('GET two polygons sharing an edge as topojson', function(done){
     assert.response(app,
         getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
@@ -134,7 +134,7 @@ test('GET two polygons sharing an edge as topojson', function(done){
     });
 });
 
-test('null geometries', function(done){
+it('null geometries', function(done){
     assert.response(app, getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
             " UNION ALL " +
@@ -192,7 +192,7 @@ test('null geometries', function(done){
     });
 });
 
-    test('skipped fields are not returned', function(done) {
+    it('skipped fields are not returned', function(done) {
         assert.response(app,
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
@@ -212,7 +212,7 @@ test('null geometries', function(done){
         );
     });
 
-    test('jsonp callback is invoked', function(done){
+    it('jsonp callback is invoked', function(done){
         assert.response(
             app,
             getRequest(
