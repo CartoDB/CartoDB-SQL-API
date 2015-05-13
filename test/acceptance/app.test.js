@@ -1458,29 +1458,6 @@ it('GET with callback must return 200 status error even if it is an error', func
             });
     });
 
-    it('stream response is closed on error and error message is part of the response', function(done){
-        assert.response(
-            app,
-            {
-                url: "/api/v1/sql?" + querystring.stringify({
-                    q: "SELECT 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4"
-                }),
-                headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
-            },
-            {
-                status: 200
-            },
-            function(res) {
-                var parsedBody = JSON.parse(res.body);
-                assert.equal(parsedBody.rows.length, 2);
-                assert.deepEqual(parsedBody.fields, {"cdb_ratio": {"type": "number"}});
-                assert.deepEqual(parsedBody.error, ["division by zero"]);
-                done();
-            }
-        );
-    });
-
     it('too large rows get into error log', function(done){
 
         var dbMaxRowSize = global.settings.db_max_row_size;

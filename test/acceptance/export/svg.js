@@ -170,6 +170,31 @@ it('SVG format with missing "the_geom" field', function(done){
     });
 });
 
+    it('should close on error and error must be the only key in the body', function(done) {
+        assert.response(
+            app,
+            {
+                url: "/api/v1/sql?" + querystring.stringify({
+                    q: "SELECT the_geom, 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4",
+                    format: 'svg'
+                }),
+                headers: {
+                    host: 'vizzuality.cartodb.com'
+                },
+                method: 'GET'
+            },
+            {
+                status: 400
+            },
+            function(res) {
+                var parsedBody = JSON.parse(res.body);
+                assert.deepEqual(Object.keys(parsedBody), ['error']);
+                assert.deepEqual(parsedBody.error, ["division by zero"]);
+                done();
+            }
+        );
+    });
+
 
 
 });
