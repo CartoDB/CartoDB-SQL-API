@@ -1,6 +1,10 @@
 1.22.1 - 2015-mm-dd
 -------------------
 
+Bug fixes:
+
+ * Close stream responses on error (#219)
+
 Enhancements:
 
  * Format files split into pg and ogr directories

@@ -1,6 +1,7 @@
 var _ = require('underscore');
 
 var pg  = require('./../pg');
+var PgErrorHandler = require('../../../postgresql/error_handler');
 
 function GeoJsonFormat() {
     this.buffer = '';
@@ -54,7 +55,7 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
 };
 
 GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
-    if (this.error) {
+    if (this.error && !this._streamingStarted) {
         this.callback(this.error);
         return;
     }
@@ -67,7 +68,15 @@ GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
         this.startStreaming();
     }
 
-    this.buffer += ']}'; // end of features
+    this.buffer += ']'; // end of features
+
+    if (this.error) {
+        var pgErrorHandler = new PgErrorHandler(this.error);
+        this.buffer += ',"error":' + JSON.stringify([pgErrorHandler.getMessage()]);
+    }
+
+    this.buffer += '}'; // end of root object
+
     if (this.opts.callback) {
         this.buffer += ')';
     }

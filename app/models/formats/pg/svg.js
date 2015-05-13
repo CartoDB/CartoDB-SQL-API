@@ -139,7 +139,7 @@ SvgFormat.prototype.handleQueryRow = function(row) {
 };
 
 SvgFormat.prototype.handleQueryEnd = function() {
-    if ( this.error ) {
+    if ( this.error && !this._streamingStarted) {
         this.callback(this.error);
         return;
     }
