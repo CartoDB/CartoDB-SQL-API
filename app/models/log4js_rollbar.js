@@ -34,7 +34,9 @@ For logger.trace('one','two','three'):
     //
     // We only log error and higher errors
     //
-    if ( loggingEvent.level.level < 40000 ) return;
+    if ( loggingEvent.level.level < 40000 ) {
+        return;
+    }
 
     rollbar.reportMessage(loggingEvent.data);
 	};

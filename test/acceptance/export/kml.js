@@ -1,22 +1,16 @@
 require('../../helper');
-require('../../support/assert');
 
-
-var app    = require(global.settings.app_root + '/app/controllers/app')()
-    , assert = require('assert')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , zipfile = require('zipfile')
-    , fs      = require('fs')
-    , libxmljs = require('libxmljs')
-    , http = require('http')
-    , server_utils = require('../../support/server_utils')
-    ;
+var app = require(global.settings.app_root + '/app/controllers/app')();
+var assert = require('../../support/assert');
+var querystring = require('querystring');
+var libxmljs = require('libxmljs');
+var http = require('http');
+var server_utils = require('../../support/server_utils');
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
 
-suite('export.kml', function() {
+describe('export.kml', function() {
 
 // Check if an attribute is in the KML output
 //
@@ -34,15 +28,21 @@ var hasAttribute = function(kml, att) {
   var xpath;
 
   xpath = "//SimpleField[@name='" + att + "']";
-  if ( doc.get(xpath) ) return true;
+  if ( doc.get(xpath) ) {
+      return true;
+  }
 
   xpath = "//Placemark/" + att;
-  if ( doc.get(xpath) ) return true;
+  if ( doc.get(xpath) ) {
+      return true;
+  }
 
   var lcatt = att.toLowerCase();
-  if ( lcatt == 'name' || lcatt == 'description' ) {
+  if ( lcatt === 'name' || lcatt === 'description' ) {
     xpath = "//Placemark/" + lcatt;
-    if ( doc.get(xpath) ) return true;
+    if ( doc.get(xpath) ) {
+        return true;
+    }
   }
 
   //if ( lowerkml.indexOf('simplefield name="'+ loweratt + '"') != -1 ) return true;
@@ -59,13 +59,19 @@ var extractCoordinates = function(kml) {
 
   var doc = libxmljs.parseXmlString(kml);
   //console.log("doc: " + doc);
-  if ( ! doc ) return;
+  if ( ! doc ) {
+      return;
+  }
   var coo = doc.get("//coordinates");
   //console.log("coo: " + coo);
-  if ( ! coo ) return;
+  if ( ! coo ) {
+      return;
+  }
   coo = coo.text();
   //console.log("coo: " + coo);
-  if ( ! coo ) return;
+  if ( ! coo ) {
+      return;
+  }
   coo = coo.split(' ');
   //console.log("coo: " + coo);
   for (var i=0; i<coo.length; ++i) {
@@ -84,19 +90,25 @@ var extractFolderName = function(kml) {
 
   var doc = libxmljs.parseXmlString(kml);
   //console.log("doc: " + doc);
-  if ( ! doc ) return;
+  if ( ! doc ) {
+      return;
+  }
   var coo = doc.get("//Document/Folder/name");
   //console.log("coo: " + coo);
-  if ( ! coo ) return;
+  if ( ! coo ) {
+      return;
+  }
   coo = coo.text();
   //console.log("coo: " + coo);
-  if ( ! coo ) return;
+  if ( ! coo ) {
+      return;
+  }
   return coo;
 };
 
 // KML tests
 
-test('KML format, unauthenticated', function(done){
+it('KML format, unauthenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -119,7 +131,7 @@ test('KML format, unauthenticated', function(done){
     });
 });
 
-test('KML format, unauthenticated, POST', function(done){
+it('KML format, unauthenticated, POST', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
@@ -134,7 +146,7 @@ test('KML format, unauthenticated, POST', function(done){
     });
 });
 
-test('KML format, bigger than 81920 bytes', function(done){
+it('KML format, bigger than 81920 bytes', function(done){
     assert.response(app, {
         url: '/api/v1/sql',
         data: querystring.stringify({
@@ -153,7 +165,7 @@ test('KML format, bigger than 81920 bytes', function(done){
     });
 });
 
-test('KML format, skipfields', function(done){
+it('KML format, skipfields', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&skipfields=address,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -176,7 +188,7 @@ test('KML format, skipfields', function(done){
     });
 });
 
-test('KML format, unauthenticated, custom filename', function(done){
+it('KML format, unauthenticated, custom filename', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&filename=kmltest',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -192,7 +204,7 @@ test('KML format, unauthenticated, custom filename', function(done){
     });
 });
 
-test('KML format, authenticated', function(done){
+it('KML format, authenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -205,15 +217,42 @@ test('KML format, authenticated', function(done){
     });
 });
 
-test('KML format, unauthenticated, concurrent requests', function(done){
+it('KML format, unauthenticated, concurrent requests', function(done){
     var query = querystring.stringify({
-        q: "SELECT 'val', x, y, st_setsrid(st_makepoint(x,y),4326) as the_geom FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
+        q: "SELECT 'val', x, y, st_setsrid(st_makepoint(x,y),4326) as the_geom " +
+            "FROM generate_series(-180, 180) as x, generate_series(-90,90) y",
         format: 'kml',
         filename: 'multi'
       });
 
     var concurrency = 4;
     var waiting = concurrency;
+
+    function onResponse(res) {
+        //console.log("Response started");
+        res.body = '';
+        //res.setEncoding('binary');
+        res.on('data', function(chunk){ res.body += chunk; });
+        res.on('end', function(){
+            //console.log("Response ended");
+            assert.equal(res.statusCode, 200, res.body);
+            assert.ok(res.body);
+            var snippet = res.body.substr(0, 5);
+            assert.equal(snippet, "<?xml");
+            var cd = res.headers['content-disposition'];
+            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            if ( ! --waiting ) {
+                app.close();
+                done();
+            }
+        });
+    }
+
+    function onError(err) {
+        console.log("Response error" + err);
+    }
+
     server_utils.startOnNextPort(app, function() { 
       var port = app.address().port;
       //console.log("Listening on port " + port);
@@ -225,34 +264,16 @@ test('KML format, unauthenticated, concurrent requests', function(done){
             path: '/api/v1/sql?' + query,
             headers: {host: 'vizzuality.cartodb.com'},
             agent: false // or should this be true ?
-        }).on('response', function(res) {
-            //console.log("Response started");
-            res.body = '';
-            //res.setEncoding('binary');
-            res.on('data', function(chunk){ res.body += chunk; });
-            res.on('end', function(){
-              //console.log("Response ended");
-              assert.equal(res.statusCode, 200, res.body);
-              assert.ok(res.body);
-              var snippet = res.body.substr(0, 5);
-              assert.equal(snippet, "<?xml");
-              var cd = res.headers['content-disposition'];
-              assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-              assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-              if ( ! --waiting ) {
-                app.close();
-                done();
-              }
-            });
-        }).on('error', function(err) {
-            console.log("Response error" + err);
-        }).end();
+        })
+            .on('response', onResponse)
+            .on('error', onError)
+            .end();
       }
     });
 });
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
-test('GET /api/v1/sql as kml with no rows', function(done){
+it('GET /api/v1/sql as kml with no rows', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -260,7 +281,10 @@ test('GET /api/v1/sql as kml with no rows', function(done){
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
-        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
+            '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+            '<Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document>' +
+            '</kml>$');
         var body = res.body.replace(/\n/g,'');
         assert.ok(body.match(pat),
           "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
@@ -269,7 +293,7 @@ test('GET /api/v1/sql as kml with no rows', function(done){
 });
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/90
-test('GET /api/v1/sql as kml with ending semicolon', function(done){
+it('GET /api/v1/sql as kml with ending semicolon', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT true WHERE false;',
@@ -280,7 +304,10 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
     },{ }, function(res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
-        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?><kml xmlns="http://www.opengis.net/kml/2.2"><Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document></kml>$');
+        var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
+            '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+            '<Document( id="root_doc")?><Folder><name>cartodb_query</name></Folder></Document>' +
+            '</kml>$');
         var body = res.body.replace(/\n/g,'');
         assert.ok(body.match(pat),
           "Response:\n" + body + '\ndoes not match pattern:\n' + pat);
@@ -289,7 +316,7 @@ test('GET /api/v1/sql as kml with ending semicolon', function(done){
 });
 
 // See https://github.com/CartoDB/cartodb/issues/276
-test('check point coordinates, unauthenticated', function(done){
+it('check point coordinates, unauthenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
@@ -307,7 +334,7 @@ test('check point coordinates, unauthenticated', function(done){
 });
 
 // See https://github.com/CartoDB/cartodb/issues/276
-test('check point coordinates, authenticated', function(done){
+it('check point coordinates, authenticated', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
@@ -325,7 +352,7 @@ test('check point coordinates, authenticated', function(done){
     });
 });
 
-    test('expects 1000 placemarks in public table', function(done){
+    it('expects 1000 placemarks in public table', function(done){
         var numberOfRowsInPublicTable = 6,
             seriesLimit = 200,
             expectedRows = numberOfRowsInPublicTable * seriesLimit;
@@ -349,7 +376,7 @@ test('check point coordinates, authenticated', function(done){
         );
     });
 
-    test('expects 1000 placemarks in private table using the API KEY', function(done){
+    it('expects 1000 placemarks in private table using the API KEY', function(done){
         var numberOfRowsInPrivateTable = 5,
             seriesLimit = 200,
             expectedRows = numberOfRowsInPrivateTable * seriesLimit;

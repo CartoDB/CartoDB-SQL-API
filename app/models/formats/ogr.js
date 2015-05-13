@@ -1,9 +1,10 @@
-var crypto      = require('crypto'),
-    Step        = require('step'),
-    fs          = require('fs'),
-    _           = require('underscore'),
-    PSQL        = require('cartodb-psql'),
-    spawn       = require('child_process').spawn;
+var crypto = require('crypto');
+var step = require('step');
+var fs = require('fs');
+var _ = require('underscore');
+var PSQL = require('cartodb-psql');
+var spawn = require('child_process').spawn;
+var assert = require('assert');
 
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
@@ -18,12 +19,12 @@ OgrFormat.prototype = {
 
   is_file: true,
 
-  getQuery: function(sql, options) {
+  getQuery: function(/*sql, options*/) {
     return null; // dont execute the query
   },
 
-  transform: function(result, options, callback) {
-    throw "should not be called for file formats"
+  transform: function(/*result, options, callback*/) {
+    throw "should not be called for file formats";
   },
 
   getContentType: function(){ return this._contentType; },
@@ -50,7 +51,7 @@ OgrFormat.prototype = {
 // Internal function usable by all OGR-driven outputs
 OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback) {
 
-  var gcol = options.gn;
+  //var gcol = options.gn;
   var sql = options.sql;
   var skipfields = options.skipfields;
   var out_layername = options.filename;
@@ -73,15 +74,16 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
   // Drop ending semicolon (ogr doens't like it)
   sql = sql.replace(/;\s*$/, ''); 
 
-  Step (
+  step (
 
     function fetchColumns() {
       var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
       pg = new PSQL(dbopts);
       pg.query(colsql, this);
     },
+    // jshint maxcomplexity:9
     function findSRS(err, result) {
-      if (err) throw err;
+      assert.ifError(err);
 
       //if ( ! result.rows.length ) throw new Error("Query returns no rows");
 
@@ -91,20 +93,29 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       for (var i=0; i<result.fields.length; ++i) {
         var field = result.fields[i];
         var k = field.name;
-        if ( skipfields.indexOf(k) != -1 ) continue;
-        if ( out_format != 'CSV' && k == "the_geom_webmercator" ) continue; // TODO: drop ?
-        if ( out_format == 'CSV' ) columns.push(pg.quoteIdentifier(k)+'::text');
-        else columns.push(pg.quoteIdentifier(k));
+        if ( skipfields.indexOf(k) !== -1 ) {
+            continue;
+        }
+        if ( out_format !== 'CSV' && k === "the_geom_webmercator" ) {
+            continue;
+        } // TODO: drop ?
+        if ( out_format === 'CSV' ) {
+            columns.push(pg.quoteIdentifier(k)+'::text');
+        } else {
+            columns.push(pg.quoteIdentifier(k));
+        }
 
         if ( needSRS ) {
-          if ( ! geocol && pg.typeName(field.dataTypeID) == 'geometry' ) {
-            geocol = k
+          if ( ! geocol && pg.typeName(field.dataTypeID) === 'geometry' ) {
+            geocol = k;
           }
         }
       }
       //console.log(columns.join(','));
 
-      if ( ! needSRS || ! geocol ) return null;
+      if ( ! needSRS || ! geocol ) {
+          return null;
+      }
 
       var next = this;
 
@@ -124,23 +135,18 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
     },
     function spawnDumper(err, srid, type) {
-      if (err) throw err;
+      assert.ifError(err);
 
       var next = this;
 
-      var ogrsql = 'SELECT ' + columns.join(',')
-          + ' FROM (' + sql + ') as _cartodbsqlapi';
+      var ogrsql = 'SELECT ' + columns.join(',') + ' FROM (' + sql + ') as _cartodbsqlapi';
 
       var ogrargs = [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
-        "PG:host=" + dbhost
-         + " port=" + dbport
-         + " user=" + dbuser
-         + " dbname=" + dbname
-         + " password=" + dbpass,
+        "PG:host=" + dbhost + " port=" + dbport + " user=" + dbuser + " dbname=" + dbname + " password=" + dbpass,
         '-sql', ogrsql
       ];
 
@@ -171,7 +177,9 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
       child.stderr.on('data', function(data) {
         data = data.toString(); // know of a faster way ?
         // Store only the first ERROR line
-        if ( ! stderr && data.match(logErrPat) ) stderr = data;
+        if ( ! stderr && data.match(logErrPat) ) {
+            stderr = data;
+        }
         console.log('ogr2ogr stderr: ' + data);
       });
 
@@ -204,7 +212,14 @@ OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
   var layername = options.filename;
 
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [ fmt, dbname, user_id, gcol, this.generateMD5(layername), this.generateMD5(sql) ].concat(skipfields).join(':');
+  var reqKey = [
+      fmt,
+      dbname,
+      user_id,
+      gcol,
+      this.generateMD5(layername),
+      this.generateMD5(sql)
+  ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
@@ -214,7 +229,7 @@ OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
 };
 
 OgrFormat.prototype.sendResponse = function(opts, callback) {
-  var next = callback;
+  //var next = callback;
   var reqKey = this.getKey(opts);
   var qElem = new ExportRequest(opts.sink, callback, opts.beforeSink);
   var baking = bakingExports[reqKey];
@@ -223,8 +238,10 @@ OgrFormat.prototype.sendResponse = function(opts, callback) {
   } else {
     baking = bakingExports[reqKey] = { req: [ qElem ] };
     this.generate(opts, function(err, dumpfile) {
-      if ( opts.profiler ) opts.profiler.done('generate');
-      Step (
+      if ( opts.profiler ) {
+          opts.profiler.done('generate');
+      }
+      step (
         function sendResults() {
           var nextPipe = function(finish) {
             var r = baking.req.shift();
@@ -234,28 +251,29 @@ OgrFormat.prototype.sendResponse = function(opts, callback) {
             });
           };
 
-          if ( ! err ) nextPipe(this);
-          else {
+          if ( ! err ) {
+              nextPipe(this);
+          } else {
             _.each(baking.req, function(r) {
               r.cb(err);
             });
             return true;
           }
         },
-        function cleanup(err) {
+        function cleanup(/*err*/) {
           delete bakingExports[reqKey];
 
           // unlink dump file (sync to avoid race condition)
           console.log("removing", dumpfile);
           try { fs.unlinkSync(dumpfile); }
           catch (e) {
-            if ( e.code != 'ENOENT' ) {
+            if ( e.code !== 'ENOENT' ) {
               console.log("Could not unlink dumpfile " + dumpfile + ": " + e);
             }
           }
         }
       );
-    })
+    });
   }
 };
 
@@ -284,8 +302,10 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
   if ( ! this.canceled ) {
     //console.log("Creating readable stream out of dumpfile");
     this.istream = fs.createReadStream(filename)
-    .on('open', function(fd) {
-      if ( that.beforeSink ) that.beforeSink();
+    .on('open', function(/*fd*/) {
+      if ( that.beforeSink ) {
+          that.beforeSink();
+      }
       that.istream.pipe(that.ostream);
       callback();
     })

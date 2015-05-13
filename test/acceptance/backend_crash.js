@@ -1,15 +1,10 @@
 require('../helper');
-require('../support/assert');
 
-var assert = require('assert')
-    , App = require(global.settings.app_root + '/app/controllers/app')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , Step = require('step')
-    , net = require('net')
-    ;
+var assert = require('../support/assert');
+var step = require('step');
+var net = require('net');
 
-var sql_server_port = 5556;
+var sql_server_port = 5540;
 var sql_server = net.createServer(function(c) {
   console.log('server connected');
   c.destroy();
@@ -19,21 +14,21 @@ var sql_server = net.createServer(function(c) {
   });
 });
 
-suite('backend crash', function() {
+describe('backend crash', function() {
 
-suiteSetup(function(done){
+before(function(done){
   sql_server.listen(sql_server_port, done);
 });
 
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/135
-test('does not hang server', function(done){
+it('does not hang server', function(done){
 //console.log("settings:"); console.dir(global.settings);
   var db_host_backup = global.settings.db_host;
   var db_port_backup = global.settings.db_port;
   global.settings.db_host = 'localhost';
   global.settings.db_port = sql_server_port;
-  var app = App();
-  Step(
+  var app = require(global.settings.app_root + '/app/controllers/app')();
+  step(
     function sendQuery() {
       var next = this;
       assert.response(app, {
@@ -45,7 +40,7 @@ test('does not hang server', function(done){
       });
     },
     function checkResponse(err, res) {
-      if ( err ) throw err;
+      assert.ifError(err);
       assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
       var parsed = JSON.parse(res.body);
       assert.ok(parsed.error);
@@ -64,7 +59,7 @@ test('does not hang server', function(done){
       });
     },
     function checkResponse(err, res) {
-      if ( err ) throw err;
+      assert.ifError(err);
       assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
       var parsed = JSON.parse(res.body);
       assert.ok(parsed.error);
@@ -80,7 +75,7 @@ test('does not hang server', function(done){
   );
 });
 
-suiteTeardown(function(done) {
+after(function(done) {
   try {
     sql_server.close(done);
   } catch (er) {

@@ -1,5 +1,6 @@
-var Step        = require('step'),
-    PSQL        = require('cartodb-psql');
+var step = require('step');
+var PSQL = require('cartodb-psql');
+var assert = require('assert');
 
 function PostgresFormat(id) {
     this.id = id;
@@ -7,7 +8,7 @@ function PostgresFormat(id) {
 
 PostgresFormat.prototype = {
 
-  getQuery: function(sql, options) {
+  getQuery: function(sql/*, options*/) {
     return sql;
   },
 
@@ -34,7 +35,9 @@ PostgresFormat.prototype.handleQueryRowWithSkipFields = function(row, result) {
 };
 
 PostgresFormat.prototype.handleNotice = function(msg, result) {
-    if ( ! result.notices ) result.notices = [];
+    if ( ! result.notices ) {
+        result.notices = [];
+    }
     for (var i=0; i<msg.length; i++) {
         result.notices.push(msg[i]);
     }
@@ -48,7 +51,9 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
     return;
   }
 
-  if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+  if ( this.opts.profiler ) {
+      this.opts.profiler.done('gotRows');
+  }
 
   this.opts.total_time = (Date.now() - this.start_time)/1000;
 
@@ -58,14 +63,16 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
     var newfields = [];
     for ( var j=0; j<result.fields.length; ++j ) {
       var f = result.fields[j];
-      if ( sf.indexOf(f.name) == -1 ) newfields.push(f);
+      if ( sf.indexOf(f.name) === -1 ) {
+          newfields.push(f);
+      }
     }
     result.fields = newfields;
   }
 
   var that = this;
 
-  Step (
+  step (
     function packageResult() {
       if ( that.opts.abortChecker ) {
         that.opts.abortChecker('packageResult');
@@ -74,11 +81,13 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
     },
     function sendResults(err, out){
 
-        if (err) throw err;
+        assert.ifError(err);
 
         // return to browser
         if ( out ) {
-          if ( that.opts.beforeSink ) that.opts.beforeSink();
+          if ( that.opts.beforeSink ) {
+              that.opts.beforeSink();
+          }
           that.opts.sink.send(out);
         } else {
           console.error("No output from transform, doing nothing ?!");
@@ -117,7 +126,9 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
         callback(err);
         return;
       }
-      if ( that.opts.profiler ) that.opts.profiler.done('eventedQuery');
+      if ( that.opts.profiler ) {
+          that.opts.profiler.done('eventedQuery');
+      }
 
       if (that.hasSkipFields) {
           query.on('row', that.handleQueryRowWithSkipFields.bind(that));

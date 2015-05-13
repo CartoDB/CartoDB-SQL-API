@@ -1,7 +1,7 @@
-var pg  = require('./pg'),
-    util = require('util'),
-    PgErrorHandler = require(global.settings.app_root + '/app/postgresql/error_handler'),
-    _ = require('underscore');
+var _ = require('underscore');
+
+var pg  = require('./pg');
+var PgErrorHandler = require('../../postgresql/error_handler');
 
 function JsonFormat() {
     this.buffer = '';
@@ -12,6 +12,7 @@ JsonFormat.prototype = new pg('json');
 
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
+// jshint maxcomplexity:9
 JsonFormat.prototype.formatResultFields = function(flds) {
   flds = flds || [];
   var nfields = {};
@@ -73,13 +74,16 @@ JsonFormat.prototype.handleQueryRow = function(row, result) {
     }
 };
 
+// jshint maxcomplexity:13
 JsonFormat.prototype.handleQueryEnd = function(result) {
     if (this.error && !this._streamingStarted) {
         this.callback(this.error);
         return;
     }
 
-    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
 
     if ( ! this._streamingStarted ) {
         this.startStreaming();
@@ -95,7 +99,9 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
         var sf = this.opts.skipfields;
         for (var i = 0; i < result.fields.length; i++) {
             var f = result.fields[i];
-            if ( sf.indexOf(f.name) == -1 ) newfields.push(f);
+            if ( sf.indexOf(f.name) === -1 ) {
+                newfields.push(f);
+            }
         }
         result.fields = newfields;
     }
@@ -124,7 +130,7 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
                 severities.push(severity);
                 notices[severity] = [];
             }
-            notices[severity].push(notice.message)
+            notices[severity].push(notice.message);
         });
         _.each(severities, function(severity) {
             out.push(',');
