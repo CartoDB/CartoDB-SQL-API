@@ -1,7 +1,7 @@
 var _ = require('underscore');
 
-var pg  = require('./pg');
-var ArrayBufferSer = require("../bin_encoder");
+var pg  = require('./../pg');
+var ArrayBufferSer = require("../../bin_encoder");
 
 function BinaryFormat() {}
 

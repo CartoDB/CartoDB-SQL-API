@@ -1,16 +1,20 @@
-//
-// load all the formats
-//
-
+var fs = require("fs");
 var formats = {};
-var path = require('path');
-var folder = __dirname + "/";
 
-require("fs").readdirSync(folder).forEach(function(file) {
-  if (path.extname(file) === '.js' && file !== 'index.js' && file !== 'ogr.js' && file !== 'pg.js' ) {
-    var format = require(folder + file);
+function formatFilesWithPath(dir) {
+    var formatDir = __dirname + '/' + dir;
+    return fs.readdirSync(formatDir).map(function(formatFile) {
+        return formatDir + '/' + formatFile;
+    });
+}
+
+var formatFilesPaths = []
+    .concat(formatFilesWithPath('ogr'))
+    .concat(formatFilesWithPath('pg'));
+
+formatFilesPaths.forEach(function(file) {
+    var format = require(file);
     formats[format.prototype.id] = format;
-  }
 });
 
 module.exports = formats;

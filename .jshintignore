@@ -1,3 +1,3 @@
 test/support/
 test/websocket_test/
-app/models/formats/topojson.js
+app/models/formats/pg/topojson.js
