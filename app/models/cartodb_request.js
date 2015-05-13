@@ -30,7 +30,9 @@ function userByHostName(host) {
     }
 
     if (mat.length !== 2) {
-        console.error("ERROR: pattern '" + re_userFromHost + "' gave unexpected matches against '" + host + "': " + mat);
+        console.error(
+            "ERROR: pattern '" + re_userFromHost + "' gave unexpected matches against '" + host + "': " + mat
+        );
         return;
     }
     return mat[1];
