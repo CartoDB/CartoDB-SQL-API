@@ -2,9 +2,9 @@
 // load all the formats
 //
 
-var formats = {},
-    path = require('path'),
-    folder = __dirname + "/";
+var formats = {};
+var path = require('path');
+var folder = __dirname + "/";
 
 require("fs").readdirSync(folder).forEach(function(file) {
   if (path.extname(file) === '.js' && file !== 'index.js' && file !== 'ogr.js' && file !== 'pg.js' ) {

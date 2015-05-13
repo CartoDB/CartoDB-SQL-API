@@ -1,5 +1,6 @@
-var _ = require('underscore'),
-    pg  = require('./pg');
+var _ = require('underscore');
+
+var pg  = require('./pg');
 
 function GeoJsonFormat() {
     this.buffer = '';
@@ -40,7 +41,7 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
         '"properties":'
     ];
     delete row[this.opts.gn];
-    delete row['the_geom_webmercator'];
+    delete row.the_geom_webmercator;
     geojson.push(JSON.stringify(row));
     geojson.push('}');
 
@@ -52,13 +53,15 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
     }
 };
 
-GeoJsonFormat.prototype.handleQueryEnd = function(result) {
+GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
     if (this.error) {
         this.callback(this.error);
         return;
     }
 
-    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
 
     if ( ! this._streamingStarted ) {
         this.startStreaming();
@@ -91,7 +94,7 @@ function _toGeoJSON(data, gn, callback){
       };
       _geojson.geometry = JSON.parse(ele[gn]);
       delete ele[gn];
-      delete ele["the_geom_webmercator"]; // TODO: use skipfields
+      delete ele.the_geom_webmercator; // TODO: use skipfields
       _geojson.properties = ele;
       out.features.push(_geojson);
     });
