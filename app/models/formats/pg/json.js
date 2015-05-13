@@ -1,7 +1,7 @@
 var _ = require('underscore');
 
-var pg  = require('./pg');
-var PgErrorHandler = require('../../postgresql/error_handler');
+var pg  = require('./../pg');
+var PgErrorHandler = require('../../../postgresql/error_handler');
 
 function JsonFormat() {
     this.buffer = '';

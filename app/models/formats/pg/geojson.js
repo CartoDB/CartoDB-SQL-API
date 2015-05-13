@@ -1,6 +1,6 @@
 var _ = require('underscore');
 
-var pg  = require('./pg');
+var pg  = require('./../pg');
 
 function GeoJsonFormat() {
     this.buffer = '';

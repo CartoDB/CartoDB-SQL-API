@@ -1,4 +1,4 @@
-var pg  = require('./pg');
+var pg  = require('./../pg');
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;

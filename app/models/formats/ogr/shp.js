@@ -3,7 +3,7 @@ var fs = require('fs');
 var spawn = require('child_process').spawn;
 var assert = require('assert');
 
-var ogr = require('./ogr');
+var ogr = require('./../ogr');
 
 function ShpFormat() {
 }

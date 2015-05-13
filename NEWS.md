@@ -1,6 +1,10 @@
 1.22.1 - 2015-mm-dd
 -------------------
 
+Enhancements:
+
+ * Format files split into pg and ogr directories
+
 
 1.22.0 - 2015-04-09
 -------------------
