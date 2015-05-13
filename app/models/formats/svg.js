@@ -1,5 +1,4 @@
-var pg  = require('./pg'),
-    _ = require('underscore');
+var pg  = require('./pg');
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;
@@ -29,26 +28,26 @@ SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
 SvgFormat.prototype.getQuery = function(sql, options) {
   var gn = options.gn;
   var dp = options.dp;
-  return  'WITH source AS ( ' + sql + '), extent AS ( '
-        + ' SELECT ST_Extent(' + gn + ') AS e FROM source '
-        + '), extent_info AS ( SELECT e, '
-        + 'st_xmin(e) as ex0, st_ymax(e) as ey0, '
-        + 'st_xmax(e)-st_xmin(e) as ew, '
-        + 'st_ymax(e)-st_ymin(e) as eh FROM extent )'
-        + ', trans AS ( SELECT CASE WHEN '
-        + 'eh = 0 THEN ' + svg_width
-        + '/ COALESCE(NULLIF(ew,0),' + svg_width +') WHEN '
-        + svg_ratio + ' <= (ew / eh) THEN ('
-        + svg_width  + '/ew ) ELSE ('
-        + svg_height + '/eh ) END as s '
-        + ', ex0 as x0, ey0 as y0 FROM extent_info ) '
-        + 'SELECT st_TransScale(e, -x0, -y0, s, s)::box2d as '
-        + gn + '_box, ST_Dimension(' + gn + ') as ' + gn
-        + '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', '
-        + '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn
-        //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY
-        + ' FROM trans, extent_info, source'
-        + ' ORDER BY the_geom_dimension ASC';
+  return  'WITH source AS ( ' + sql + '), extent AS ( ' +
+        ' SELECT ST_Extent(' + gn + ') AS e FROM source ' +
+        '), extent_info AS ( SELECT e, ' +
+        'st_xmin(e) as ex0, st_ymax(e) as ey0, ' +
+        'st_xmax(e)-st_xmin(e) as ew, ' +
+        'st_ymax(e)-st_ymin(e) as eh FROM extent )' +
+        ', trans AS ( SELECT CASE WHEN ' +
+        'eh = 0 THEN ' + svg_width +
+        '/ COALESCE(NULLIF(ew,0),' + svg_width +') WHEN ' +
+        svg_ratio + ' <= (ew / eh) THEN (' +
+        svg_width  + '/ew ) ELSE (' +
+        svg_height + '/eh ) END as s ' +
+        ', ex0 as x0, ey0 as y0 FROM extent_info ) ' +
+        'SELECT st_TransScale(e, -x0, -y0, s, s)::box2d as ' +
+        gn + '_box, ST_Dimension(' + gn + ') as ' + gn +
+        '_dimension, ST_AsSVG(ST_TransScale(' + gn + ', ' +
+        '-x0, -y0, s, s), 0, ' + dp + ') as ' + gn +
+        //+ ', ex0, ey0, ew, eh, s ' // DEBUG ONLY +
+        ' FROM trans, extent_info, source' +
+        ' ORDER BY the_geom_dimension ASC';
 };
 
 SvgFormat.prototype.startStreaming = function() {
@@ -72,14 +71,11 @@ SvgFormat.prototype.startStreaming = function() {
         this.bbox.ymax += growby;
         this.bbox.width = this.bbox.xmax - this.bbox.xmin;
         this.bbox.height = this.bbox.ymax - this.bbox.ymin;
-        rootTag += 'viewBox="' + this.bbox.xmin + ' ' + (-this.bbox.ymax) + ' '
-            + this.bbox.width + ' ' + this.bbox.height + '" ';
+        rootTag += 'viewBox="' + this.bbox.xmin + ' ' + (-this.bbox.ymax) + ' ' +
+            this.bbox.width + ' ' + this.bbox.height + '" ';
     }
-    rootTag += 'style="fill-opacity:' + fill_opacity
-        + '; stroke:' + stroke_color
-        + '; stroke-width:' + stroke_width
-        + '; fill:' + fill_color
-        + '" ';
+    rootTag += 'style="fill-opacity:' + fill_opacity + '; stroke:' + stroke_color + '; ' +
+        'stroke-width:' + stroke_width + '; fill:' + fill_color + '" ';
     rootTag += 'xmlns="http://www.w3.org/2000/svg" version="1.1">\n';
 
     header.push(rootTag);
@@ -89,6 +85,7 @@ SvgFormat.prototype.startStreaming = function() {
     this._streamingStarted = true;
 };
 
+// jshint maxcomplexity:11
 SvgFormat.prototype.handleQueryRow = function(row) {
     this.totalRows++;
 
@@ -97,8 +94,11 @@ SvgFormat.prototype.handleQueryRow = function(row) {
     }
 
     var g = row[this.opts.gn];
-    if ( ! g ) return; // null or empty
+    if ( ! g ) {
+        return;
+    } // null or empty
 
+    // jshint ignore:start
     var gdims = row[this.opts.gn + '_dimension'];
     // TODO: add an identifier, if any of "cartodb_id", "oid", "id", "gid" are found
     // TODO: add "class" attribute to help with styling ?
@@ -106,10 +106,11 @@ SvgFormat.prototype.handleQueryRow = function(row) {
         this.buffer += '<circle r="' + radius + '" ' + g + ' />\n';
     } else if ( gdims == '1' ) {
         // Avoid filling closed linestrings
-        this.buffer += '<path ' + ( fill_color != 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />\n';
+        this.buffer += '<path ' + ( fill_color !== 'none' ? 'fill="none" ' : '' ) + 'd="' + g + '" />\n';
     } else if ( gdims == '2' ) {
         this.buffer += '<path d="' + g + '" />\n';
     }
+    // jshint ignore:end
 
     if ( ! this.bbox ) {
         // Parse layer extent: "BOX(x y, X Y)"
