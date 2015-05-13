@@ -9,7 +9,7 @@ var assert = require('assert')
     , net = require('net')
     ;
 
-var sql_server_port = 5556;
+var sql_server_port = 5540;
 var sql_server = net.createServer(function(c) {
   console.log('server connected');
   c.destroy();
