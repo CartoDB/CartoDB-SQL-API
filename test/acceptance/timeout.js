@@ -13,25 +13,21 @@
  *
  */
 require('../helper');
-require('../support/assert');
 
-var assert = require('assert')
-    , App = require(global.settings.app_root + '/app/controllers/app')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , Step = require('step')
-    ;
 
-suite('timeout', function() {
+var assert = require('../support/assert');
+var step = require('step');
+
+describe('timeout', function() {
 
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/128
-test('after configured milliseconds', function(done){
+it('after configured milliseconds', function(done){
   var testTimeout = 10;
 //console.log("settings:"); console.dir(global.settings);
   var timeoutBackup = global.settings.node_socket_timeout;
   global.settings.node_socket_timeout = testTimeout;
-  var app = App();
-  Step(
+  var app = require(global.settings.app_root + '/app/controllers/app')();
+  step(
     function sendLongQuery() {
       var next = this;
       assert.response(app, {
@@ -42,7 +38,7 @@ test('after configured milliseconds', function(done){
           next(err, res);
       });
     },
-    function checkResponse(err, res) {
+    function checkResponse(err/*, res*/) {
       assert.ok(err);
       assert.ok(err.message.match(/hang up/), err);
       return null;
