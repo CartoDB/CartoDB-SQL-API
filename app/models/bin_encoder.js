@@ -1,6 +1,8 @@
 
 function ArrayBufferSer(type, data, options) {
-  if(type === undefined) throw "ArrayBufferSer should be created with a type";
+  if(type === undefined) {
+      throw "ArrayBufferSer should be created with a type";
+  }
   this.options = options || {};
   this._initFunctions();
   this.headerSize = 8;
@@ -14,13 +16,14 @@ function ArrayBufferSer(type, data, options) {
 
   var w = this.writeFn[type];
 
+  var i;
   if(!this.options.delta) {
-    for(var i = 0; i < data.length; ++i) {
+    for(i = 0; i < data.length; ++i) {
       this[w](data[i]);
     }
   } else {
     this[w](data[0]);
-    for(var i = 1; i < data.length; ++i) {
+    for(i = 1; i < data.length; ++i) {
       this[w](data[i] - data[i - 1]);
     }
   }
@@ -66,7 +69,7 @@ ArrayBufferSer.prototype = {
     var s = this.sizes[type];
     if(s) {
       var r = off % s;
-      return r == 0 ? 0 : s - r;
+      return r === 0 ? 0 : s - r;
     }
     return 0;
   },
@@ -78,7 +81,7 @@ ArrayBufferSer.prototype = {
       return s*t.length;
     }
     s = 0;
-    if(this.type == ArrayBufferSer.STRING) {
+    if(this.type === ArrayBufferSer.STRING) {
       // calculate size with padding
       t.forEach(function(arr) { 
         var pad = self._paddingFor(offset, ArrayBufferSer.MAX_PADDING);
@@ -108,16 +111,30 @@ ArrayBufferSer.prototype = {
     return this.headerSize + this._sizeFor(this.headerSize, this.data);
   },
 
-  writeFn: ['', 'writeInt8', 'writeUInt8','writeUInt8Clamp', 'writeInt16LE', 'writeUInt16LE', 'writeUInt32LE', 'writeUInt32LE', 'writeFloatLE', 'writeDoubleLE', 'writeString', 'writteBuffer'],
+  writeFn: [
+      '',
+      'writeInt8',
+      'writeUInt8',
+      'writeUInt8Clamp',
+      'writeInt16LE',
+      'writeUInt16LE',
+      'writeUInt32LE',
+      'writeUInt32LE',
+      'writeFloatLE',
+      'writeDoubleLE',
+      'writeString',
+      'writteBuffer'
+  ],
 
   _initFunctions: function() {
     var self = this;
     this.writeFn.forEach(function(fn) {
-      if(self[fn] === undefined)
+      if(self[fn] === undefined) {
         self[fn] = function(d) {
           self.buffer[fn](d, self.offset);
           self.offset += self.sizes[self.type];
-        }
+        };
+      }
     });
   },
 

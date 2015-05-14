@@ -1,23 +1,19 @@
-var Step = require('step'),
-    _    = require('underscore'),
+var step = require('step'),
     fs   = require('fs');
 
-function HealthCheck(metadataBackend, psqlClass) {
+function HealthCheck(metadataBackend) {
     this.metadataBackend = metadataBackend;
-    this.psqlClass = psqlClass;
 }
 
 module.exports = HealthCheck;
 
 HealthCheck.prototype.check = function(username, query, callback) {
-    var self = this,
-        startTime,
-        result = {
+    var result = {
             redis: {},
             postgresql: {}
         };
 
-    Step(
+    step(
         function getManualDisable() {
           fs.readFile(global.settings.disabled_file, this);
         },

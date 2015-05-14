@@ -1,22 +1,15 @@
 require('../../helper');
-require('../../support/assert');
 
-
-var app    = require(global.settings.app_root + '/app/controllers/app')()
-    , assert = require('assert')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , zipfile = require('zipfile')
-    , fs      = require('fs')
-    , libxmljs = require('libxmljs')
-    ;
+var app    = require(global.settings.app_root + '/app/controllers/app')();
+var assert = require('../../support/assert');
+var querystring = require('querystring');
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
 
-suite('export.svg', function() {
+describe('export.svg', function() {
 
-test('GET /api/v1/sql with SVG format', function(done){
+it('GET /api/v1/sql with SVG format', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
       format: "svg"
@@ -36,7 +29,7 @@ test('GET /api/v1/sql with SVG format', function(done){
     });
 });
 
-test('POST /api/v1/sql with SVG format', function(done){
+it('POST /api/v1/sql with SVG format', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
       format: "svg"
@@ -58,7 +51,7 @@ test('POST /api/v1/sql with SVG format', function(done){
     });
 });
 
-test('GET /api/v1/sql with SVG format and custom filename', function(done){
+it('GET /api/v1/sql with SVG format and custom filename', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
       format: "svg",
@@ -79,7 +72,7 @@ test('GET /api/v1/sql with SVG format and custom filename', function(done){
     });
 });
 
-test('GET /api/v1/sql with SVG format and centered point', function(done){
+it('GET /api/v1/sql with SVG format and centered point', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS the_geom ",
       format: "svg"
@@ -100,7 +93,7 @@ test('GET /api/v1/sql with SVG format and centered point', function(done){
     });
 });
 
-test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
+it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
     var queryobj = {
       q: "SELECT 1 as cartodb_id, 'LINESTRING(0 0, 1024 768, 500.123456 600.98765432)'::geometry AS the_geom ",
       format: "svg",
@@ -138,7 +131,7 @@ test('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
 
 // Test adding "the_geom" to skipfields
 // See http://github.com/Vizzuality/CartoDB-SQL-API/issues/73
-test('SVG format with "the_geom" in skipfields', function(done){
+it('SVG format with "the_geom" in skipfields', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS the_geom ",
       format: "svg",
@@ -159,7 +152,7 @@ test('SVG format with "the_geom" in skipfields', function(done){
     });
 });
 
-test('SVG format with missing "the_geom" field', function(done){
+it('SVG format with missing "the_geom" field', function(done){
     var query = querystring.stringify({
       q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS something_else ",
       format: "svg"
@@ -176,6 +169,31 @@ test('SVG format with missing "the_geom" field', function(done){
         done();
     });
 });
+
+    it('should close on error and error must be the only key in the body', function(done) {
+        assert.response(
+            app,
+            {
+                url: "/api/v1/sql?" + querystring.stringify({
+                    q: "SELECT the_geom, 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4",
+                    format: 'svg'
+                }),
+                headers: {
+                    host: 'vizzuality.cartodb.com'
+                },
+                method: 'GET'
+            },
+            {
+                status: 400
+            },
+            function(res) {
+                var parsedBody = JSON.parse(res.body);
+                assert.deepEqual(Object.keys(parsedBody), ['error']);
+                assert.deepEqual(parsedBody.error, ["division by zero"]);
+                done();
+            }
+        );
+    });
 
 
 

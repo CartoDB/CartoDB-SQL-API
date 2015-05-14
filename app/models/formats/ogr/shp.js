@@ -1,8 +1,9 @@
-var crypto      = require('crypto'),
-    Step        = require('step'),
-    fs          = require('fs'),
-    spawn       = require('child_process').spawn,
-    ogr         = require('./ogr');
+var step = require('step');
+var fs = require('fs');
+var spawn = require('child_process').spawn;
+var assert = require('assert');
+
+var ogr = require('./../ogr');
 
 function ShpFormat() {
 }
@@ -42,16 +43,17 @@ ShpFormat.prototype.toSHP = function (options, callback) {
   // TODO: following tests:
   //  - fetch query with no "the_geom" column
 
-  Step (
+  step (
     function createOutDir() {
       fs.mkdir(outdirpath, 0777, this);
     },
     function spawnDumper(err) {
-      if ( err ) throw err;
+      assert.ifError(err);
+
       fmtObj.toOGR(options, 'ESRI Shapefile', shapefile, this);
     },
     function doZip(err) {
-      if ( err ) throw err;
+      assert.ifError(err);
 
       var next = this;
 
@@ -82,21 +84,24 @@ ShpFormat.prototype.toSHP = function (options, callback) {
           if ( err ) {
             console.log("Unlinking " + fn + ": " + err);
             finish(err);
+          } else {
+              unlinkall(dir, files, finish);
           }
-          else unlinkall(dir, files, finish)
         });
       };
       fs.readdir(outdirpath, function(err, files) {
         if ( err ) {
-          if ( err.code != 'ENOENT' ) {
+          if ( err.code !== 'ENOENT' ) {
             next(new Error([topError, err].join('\n')));
           } else {
             next(topError);
           }
         } else {
-          unlinkall(outdirpath, files, function(err) {
+          unlinkall(outdirpath, files, function(/*err*/) {
             fs.rmdir(outdirpath, function(err) {
-              if ( err ) console.log("Removing dir " + path + ": " + err);
+              if ( err ) {
+                  console.log("Removing dir " + outdirpath + ": " + err);
+              }
               next(topError, zipfile);
             });
           });

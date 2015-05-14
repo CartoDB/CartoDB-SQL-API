@@ -1,24 +1,23 @@
 require('../helper');
-require('../support/assert');
 
-var app    = require(global.settings.app_root + '/app/controllers/app')()
-    , assert = require('assert')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    ;
+var app    = require(global.settings.app_root + '/app/controllers/app')();
+var assert = require('../support/assert');
+var querystring = require('querystring');
+var _ = require('underscore');
 
 // allow lots of emitters to be set to silence warning
 app.setMaxListeners(0);
 
-suite('x_cache_channel', function() {
+describe('x_cache_channel', function() {
 
 assert.contains = function(ary, elem) {
   assert.ok(_.contains(ary,elem), 'missing "' + elem +'" from x-cache-channel: '+ ary);
 };
 
-test('supports joins', function(done) {
+it('supports joins', function(done) {
     var query = querystring.stringify({
-       q: "SELECT a.name as an, b.name as bn FROM untitle_table_4 a left join private_table b ON (a.cartodb_id = b.cartodb_id)",
+       q: "SELECT a.name as an, b.name as bn FROM untitle_table_4 a " +
+           "left join private_table b ON (a.cartodb_id = b.cartodb_id)",
        api_key: 1234
     });
     assert.response(app, {
@@ -38,7 +37,7 @@ test('supports joins', function(done) {
     });
 });
 
-test('supports multistatements', function(done) {
+it('supports multistatements', function(done) {
     var query = querystring.stringify({
        q: "SELECT * FROM untitle_table_4; SELECT * FROM private_table",
        api_key: 1234
@@ -60,7 +59,7 @@ test('supports multistatements', function(done) {
     });
 });
 
-test('supports explicit transactions', function(done) {
+it('supports explicit transactions', function(done) {
     var query = querystring.stringify({
        q: "BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;",
        api_key: 1234
@@ -82,7 +81,7 @@ test('supports explicit transactions', function(done) {
     });
 });
 
-test('survives partial transactions', function(done) {
+it('survives partial transactions', function(done) {
     var query = querystring.stringify({
        q: "BEGIN; SELECT * FROM untitle_table_4",
        api_key: 1234

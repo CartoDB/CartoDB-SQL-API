@@ -9,20 +9,24 @@
 * environments: [development, test, production]
 *
 */
-var _ = require('underscore'),
-    fs = require('fs'),
-    path = require('path');
+var _ = require('underscore');
+var fs = require('fs');
+var path = require('path');
 
-if ( process.argv[2] ) ENV = process.argv[2];
-else if ( process.env['NODE_ENV'] ) ENV = process.env['NODE_ENV'];
-else ENV = 'development';
+var ENV = process.env.NODE_ENV || 'development';
 
-process.env['NODE_ENV'] = ENV;
+if (process.argv[2]) {
+    ENV = process.argv[2];
+}
+
+process.env.NODE_ENV = ENV;
+
+var availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 // sanity check arguments
-if (ENV != 'development' && ENV != 'production' && ENV != 'test' && ENV != 'staging' ) {
+if (availableEnvironments.indexOf(ENV) === -1) {
   console.error("\nnode app.js [environment]");
-  console.error("environments: development, staging, production, test");
+  console.error("environments: " + availableEnvironments.join(', '));
   process.exit(1);
 }
 
@@ -32,8 +36,8 @@ var env          = require(__dirname + '/config/environments/' + ENV);
 env.api_hostname = require('os').hostname().split('.')[0];
 _.extend(global.settings, env);
 
-global.log4js = require('log4js')
-log4js_config = {
+global.log4js = require('log4js');
+var log4js_config = {
   appenders: [],
   replaceConsole:true
 };
@@ -63,31 +67,33 @@ if ( global.settings.rollbar ) {
   });
 }
 
-log4js.configure(log4js_config, { cwd: __dirname });
-global.logger = log4js.getLogger();
+global.log4js.configure(log4js_config, { cwd: __dirname });
+global.logger = global.log4js.getLogger();
 
  
 // kick off controller
-if ( ! global.settings.base_url ) global.settings.base_url = '/api/*';
+if ( ! global.settings.base_url ) {
+    global.settings.base_url = '/api/*';
+}
 
 var version = require("./package").version;
 
 var app = require(global.settings.app_root + '/app/controllers/app')();
 app.listen(global.settings.node_port, global.settings.node_host, function() {
-  console.log("CartoDB SQL API " + version + " listening on " +
-      global.settings.node_host + ":" + global.settings.node_port +
-      " with base_url " + global.settings.base_url
-      + " (" + ENV + ")");
+  console.log(
+      "CartoDB SQL API %s listening on %s:%s with base_url %s (%s)",
+      version, global.settings.node_host, global.settings.node_port, global.settings.base_url, ENV
+  );
 });
 
 process.on('uncaughtException', function(err) {
-  logger.error('Uncaught exception: ' + err.stack);
+    global.logger.error('Uncaught exception: ' + err.stack);
 });
 
 process.on('SIGHUP', function() {
     global.log4js.clearAndShutdownAppenders(function() {
         global.log4js.configure(log4js_config);
-        global.logger = log4js.getLogger();
+        global.logger = global.log4js.getLogger();
         console.log('Log files reloaded');
     });
 });

@@ -1,10 +1,10 @@
 // too bound to the request object, but ok for now
-var _         = require('underscore')
-  , OAuthUtil = require('oauth-client')
-  , url       = require('url')
-  , Step      = require('step');
+var _ = require('underscore');
+var OAuthUtil = require('oauth-client');
+var step = require('step');
+var assert = require('assert');
 
-var oAuth = function(){
+var oAuth = (function(){
   var me = {
     oauth_database: 3,
     oauth_user_key: "rails:oauth_access_tokens:<%= oauth_access_key %>",
@@ -15,7 +15,7 @@ var oAuth = function(){
   // * in GET request
   // * in header
   me.parseTokens = function(req){
-    var query_oauth = _.clone(req.method == "POST" ? req.body: req.query);
+    var query_oauth = _.clone(req.method === "POST" ? req.body: req.query);
     var header_oauth = {};
     var oauth_variables = ['oauth_body_hash',
                            'oauth_consumer_key',
@@ -34,9 +34,10 @@ var oAuth = function(){
     var header_string = req.headers.authorization;
     if (!_.isUndefined(header_string)) {
       _.each(oauth_variables, function(oauth_key){
-        var matched_string = header_string.match(new RegExp(oauth_key + '=\"([^\"]+)\"'))
-        if (!_.isNull(matched_string))
+        var matched_string = header_string.match(new RegExp(oauth_key + '=\"([^\"]+)\"'));
+        if (!_.isNull(matched_string)) {
           header_oauth[oauth_key] = decodeURIComponent(matched_string[1]);
+        }
       });
     }
 
@@ -69,12 +70,12 @@ var oAuth = function(){
     var ohash;
     var signature;
 
-    Step(
+    step(
       function getTokensFromURL(){
         return oAuth.parseTokens(req);
       },
       function getOAuthHash(err, data){
-        if (err) throw err;
+        assert.ifError(err);
 
         // this is oauth request only if oauth headers are present
         this.is_oauth_request = !_.isEmpty(data);
@@ -87,8 +88,10 @@ var oAuth = function(){
         }
       },
       function regenerateSignature(err, data){
-        if (err) throw err;
-        if (!this.is_oauth_request) return null;
+        assert.ifError(err);
+        if (!this.is_oauth_request) {
+            return null;
+        }
 
         ohash = data;
         var consumer     = OAuthUtil.createConsumer(ohash.consumer_key, ohash.consumer_secret);
@@ -98,7 +101,7 @@ var oAuth = function(){
         var method = req.method;
         var host   = req.headers.host;
 
-        if(!httpProto || (httpProto != 'http' && httpProto != 'https')) {
+        if(!httpProto || (httpProto !== 'http' && httpProto !== 'https')) {
           var msg = "Unknown HTTP protocol " + httpProto + ".";
           err = new Error(msg);
           err.http_status = 500;
@@ -111,13 +114,13 @@ var oAuth = function(){
 
         // remove signature from passed_tokens
         signature = passed_tokens.oauth_signature;
-        delete passed_tokens['oauth_signature'];
+        delete passed_tokens.oauth_signature;
 
         var joined = {};
 
         // remove oauth_signature from body
         if(req.body) {
-            delete req.body['oauth_signature'];
+            delete req.body.oauth_signature;
         }
         _.extend(joined, req.body ? req.body : null);
         _.extend(joined, passed_tokens);
@@ -126,7 +129,7 @@ var oAuth = function(){
         return signer.sign(method, path, joined);
       },
       function checkSignature(err, data){
-        if (err) throw err;
+        assert.ifError(err);
 
         //console.log(data + " should equal the provided signature: " + signature);
         callback(err, (signature === data && !_.isUndefined(data)) ? true : null);
@@ -139,7 +142,7 @@ var oAuth = function(){
   };
 
   return me;
-}();
+})();
 
 function OAuthAuth(req) {
     this.req = req;

@@ -1,30 +1,30 @@
 require('../../helper');
 var assert = require('assert');
 
-var ArrayBufferSer = require('../../../app/models/bin_encoder')
+var ArrayBufferSer = require('../../../app/models/bin_encoder');
 
-suite('ArrayBufferSer', function() {
+describe('ArrayBufferSer', function() {
 
-  test('calculate size for basic types', function() {
-    var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4])
+  it('calculate size for basic types', function() {
+    var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4]);
     assert.equal(4*2, b.getDataSize());
 
-    b = new ArrayBufferSer(ArrayBufferSer.INT8, [1,2,3,4])
-    assert.equal(4*1, b.getDataSize());
+    b = new ArrayBufferSer(ArrayBufferSer.INT8, [1,2,3,4]);
+    assert.equal(4, b.getDataSize());
 
-    b = new ArrayBufferSer(ArrayBufferSer.INT32, [1,2,3,4])
+    b = new ArrayBufferSer(ArrayBufferSer.INT32, [1,2,3,4]);
     assert.equal(4*4, b.getDataSize());
   });
 
 
-  test('calculate size for arrays', function() {
-    var b = new ArrayBufferSer(ArrayBufferSer.STRING, ["test","kease"])
+  it('calculate size for arrays', function() {
+    var b = new ArrayBufferSer(ArrayBufferSer.STRING, ["test","kease"]);
     assert.equal((b.headerSize + 4 + 5)*2, b.getDataSize());
 
-    var ba = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4])
-    var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1,4])
+    var ba = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4]);
+    var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1,4]);
 
-    b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc])
+    b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc]);
     assert.equal((b.headerSize + 4 + 2)*2, b.getDataSize());
     assert.equal(b.type, ArrayBufferSer.BUFFER);
   });
@@ -36,28 +36,28 @@ suite('ArrayBufferSer', function() {
     }
   }
 
-  test('binary data is ok', function() {
-    var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4])
+  it('binary data is ok', function() {
+    var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2,3,4]);
     var bf = new Buffer([0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 8, 1, 0, 2, 0, 3, 0, 4, 0]);
     assert_buffer_equals(bf, b.buffer);
   });
 
-  test('binary data is ok with arrays', function() {
-    var ba = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2, 3, 4])
-    var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1,4])
+  it('binary data is ok with arrays', function() {
+    var ba = new ArrayBufferSer(ArrayBufferSer.INT16, [1,2, 3, 4]);
+    var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1,4]);
 
-    var b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc])
+    var b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc]);
     var bf = new Buffer([
       0, 0, 0, ArrayBufferSer.BUFFER, // type
       0, 0, 0, 28,
       0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 8, 1, 0, 2, 0, 3, 0, 4, 0,
-      0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 4, 1, 0, 4, 0])
+      0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 4, 1, 0, 4, 0]);
     assert_buffer_equals(bf, b.buffer);
   });
 
-  test('binary data is ok with strings', function() {
-    var s = 'test'
-    var b = new ArrayBufferSer(ArrayBufferSer.STRING, [s])
+  it('binary data is ok with strings', function() {
+    var s = 'test';
+    var b = new ArrayBufferSer(ArrayBufferSer.STRING, [s]);
     var bf = new Buffer([
       0, 0, 0, ArrayBufferSer.STRING, // type
       0, 0, 0, 16,

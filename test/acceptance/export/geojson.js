@@ -1,15 +1,8 @@
-
 require('../../helper');
-require('../../support/assert');
 
-var app    = require(global.settings.app_root + '/app/controllers/app')()
-    , assert = require('assert')
-    , querystring = require('querystring')
-    , _ = require('underscore')
-    , zipfile = require('zipfile')
-    , fs      = require('fs')
-    , libxmljs = require('libxmljs')
-    ;
+var app = require(global.settings.app_root + '/app/controllers/app')();
+var assert = require('../../support/assert');
+var querystring = require('querystring');
 
 // allow lots of emitters to be set to silence warning
 // TODO: check if still needed ...
@@ -18,17 +11,18 @@ app.setMaxListeners(0);
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
     var tmp='' + x;
-    if (tmp.indexOf(dec_sep)>-1)
-        return tmp.length-tmp.indexOf(dec_sep)-1;
-    else
+    if (tmp.indexOf(dec_sep)>-1) {
+        return tmp.length - tmp.indexOf(dec_sep) - 1;
+    } else {
         return 0;
-}
+    }
+};
 
-suite('export.geojson', function() {
+describe('export.geojson', function() {
 
 // GEOJSON tests
 
-test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-disposition set to geojson', function(done){
+it('GET /api/v1/sql with SQL parameter, ensuring content-disposition set to geojson', function(done) {
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -42,7 +36,7 @@ test('GET /api/v1/sql with SQL parameter and geojson format, ensuring content-di
     });
 });
 
-test('POST /api/v1/sql with SQL parameter and geojson format, ensuring content-disposition set to geojson', function(done){
+it('POST /api/v1/sql with SQL parameter, ensuring content-disposition set to geojson', function(done) {
     assert.response(app, {
         url: '/api/v1/sql', 
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4", format: 'geojson' }),
@@ -57,7 +51,7 @@ test('POST /api/v1/sql with SQL parameter and geojson format, ensuring content-d
     });
 });
 
-test('uses the last format parameter when multiple are used', function(done){
+it('uses the last format parameter when multiple are used', function(done){
     assert.response(app, {
         url: '/api/v1/sql?format=csv&q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -70,7 +64,7 @@ test('uses the last format parameter when multiple are used', function(done){
     });
 });
 
-test('uses custom filename', function(done){
+it('uses custom filename', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&filename=x',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -83,7 +77,7 @@ test('uses custom filename', function(done){
     });
 });
 
-test('does not include the_geom and the_geom_webmercator properties by default', function(done){
+it('does not include the_geom and the_geom_webmercator properties by default', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -104,7 +98,7 @@ test('does not include the_geom and the_geom_webmercator properties by default',
     });
 });
 
-test('skipfields controls fields included in GeoJSON output', function(done){
+it('skipfields controls fields included in GeoJSON output', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&skipfields=unexistant,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
@@ -126,7 +120,7 @@ test('skipfields controls fields included in GeoJSON output', function(done){
 });
 
 
-test('GET /api/v1/sql as geojson limiting decimal places', function(done){
+it('GET /api/v1/sql as geojson limiting decimal places', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT ST_MakePoint(0.123,2.3456) as the_geom',
@@ -142,7 +136,7 @@ test('GET /api/v1/sql as geojson limiting decimal places', function(done){
     });
 });
 
-test('GET /api/v1/sql as geojson with default dp as 6', function(done){
+it('GET /api/v1/sql as geojson with default dp as 6', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT ST_MakePoint(0.12345678,2.3456787654) as the_geom',
@@ -157,7 +151,7 @@ test('GET /api/v1/sql as geojson with default dp as 6', function(done){
     });
 });
 
-test('null geometries in geojson output', function(done){
+it('null geometries in geojson output', function(done){
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: "SELECT 1 as gid, 'U' as name, null::geometry as the_geom ",
@@ -182,7 +176,7 @@ test('null geometries in geojson output', function(done){
       });
 });
 
-test('stream response handle errors', function(done) {
+it('stream response handle errors', function(done) {
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
             q: "SELECTT 1 as gid, null::geometry as the_geom ",
@@ -191,7 +185,6 @@ test('stream response handle errors', function(done) {
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{ }, function(res){
-        console.log(res);
         assert.equal(res.statusCode, 400, res.body);
         var geoJson = JSON.parse(res.body);
         assert.ok(geoJson.error);
@@ -201,7 +194,7 @@ test('stream response handle errors', function(done) {
     });
 });
 
-test('stream response with empty result set has valid output', function(done) {
+it('stream response with empty result set has valid output', function(done) {
     assert.response(app, {
         url: '/api/v1/sql?' + querystring.stringify({
             q: "SELECT 1 as gid, null::geometry as the_geom limit 0",

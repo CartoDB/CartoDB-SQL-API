@@ -1,5 +1,7 @@
-var _ = require('underscore'),
-    pg  = require('./pg');
+var _ = require('underscore');
+
+var pg  = require('./../pg');
+var PgErrorHandler = require('../../../postgresql/error_handler');
 
 function GeoJsonFormat() {
     this.buffer = '';
@@ -40,7 +42,7 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
         '"properties":'
     ];
     delete row[this.opts.gn];
-    delete row['the_geom_webmercator'];
+    delete row.the_geom_webmercator;
     geojson.push(JSON.stringify(row));
     geojson.push('}');
 
@@ -52,19 +54,29 @@ GeoJsonFormat.prototype.handleQueryRow = function(row) {
     }
 };
 
-GeoJsonFormat.prototype.handleQueryEnd = function(result) {
-    if (this.error) {
+GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
+    if (this.error && !this._streamingStarted) {
         this.callback(this.error);
         return;
     }
 
-    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
 
     if ( ! this._streamingStarted ) {
         this.startStreaming();
     }
 
-    this.buffer += ']}'; // end of features
+    this.buffer += ']'; // end of features
+
+    if (this.error) {
+        var pgErrorHandler = new PgErrorHandler(this.error);
+        this.buffer += ',"error":' + JSON.stringify([pgErrorHandler.getMessage()]);
+    }
+
+    this.buffer += '}'; // end of root object
+
     if (this.opts.callback) {
         this.buffer += ')';
     }
@@ -91,7 +103,7 @@ function _toGeoJSON(data, gn, callback){
       };
       _geojson.geometry = JSON.parse(ele[gn]);
       delete ele[gn];
-      delete ele["the_geom_webmercator"]; // TODO: use skipfields
+      delete ele.the_geom_webmercator; // TODO: use skipfields
       _geojson.properties = ele;
       out.features.push(_geojson);
     });

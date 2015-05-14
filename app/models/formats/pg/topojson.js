@@ -1,7 +1,7 @@
-var pg  = require('./pg'),
-    _ = require('underscore'),
-    geojson = require('./geojson'),
-    TopoJSON = require('topojson');
+var pg  = require('./../pg');
+var _ = require('underscore');
+var geojson = require('./geojson');
+var TopoJSON = require('topojson');
 
 function TopoJsonFormat() {
     this.features = [];
@@ -19,7 +19,7 @@ TopoJsonFormat.prototype.handleQueryRow = function(row) {
     };
     _geojson.geometry = JSON.parse(row[this.opts.gn]);
     delete row[this.opts.gn];
-    delete row["the_geom_webmercator"];
+    delete row.the_geom_webmercator;
     _geojson.properties = row;
     this.features.push(_geojson);
 };
@@ -30,7 +30,9 @@ TopoJsonFormat.prototype.handleQueryEnd = function() {
         return;
     }
 
-    if ( this.opts.profiler ) this.opts.profiler.done('gotRows');
+    if ( this.opts.profiler ) {
+        this.opts.profiler.done('gotRows');
+    }
 
     var topology = TopoJSON.topology(this.features, {
         "quantization": 1e4,

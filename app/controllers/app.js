@@ -14,36 +14,47 @@
 // eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
 //
 //
+var express = require('express');
+var path = require('path');
+var step = require('step');
+var crypto = require('crypto');
+var os = require('os');
+var Profiler = require('step-profiler');
+var StatsD = require('node-statsd').StatsD;
+var PSQL = require('cartodb-psql');
+var _ = require('underscore');
+var LRU = require('lru-cache');
+var assert = require('assert');
 
-if ( ! process.env['PGAPPNAME'] )
-  process.env['PGAPPNAME']='cartodb_sqlapi';
+var CdbRequest = require('../models/cartodb_request');
+var AuthApi = require('../auth/auth_api');
+var formats = require('../models/formats');
+var HealthCheck = require('../monitoring/health_check');
+var PgErrorHandler = require('../postgresql/error_handler');
 
+process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
+
+// jshint ignore:start
+function pad(n) { return n < 10 ? '0' + n : n; }
+Date.prototype.toJSON = function() {
+    var s = this.getFullYear() + '-' + pad(this.getMonth() + 1) + '-' + pad(this.getDate()) + 'T' +
+        pad(this.getHours()) + ':' + pad(this.getMinutes()) + ':' + pad(this.getSeconds());
+    var offset = this.getTimezoneOffset();
+    if (offset === 0) {
+        s += 'Z';
+    } else {
+        s += ( offset < 0 ? '+' : '-' ) + pad(Math.abs(offset / 60)) + pad(Math.abs(offset % 60));
+    }
+    return s;
+};
+// jshint ignore:end
+
+// jshint maxcomplexity:21
 function App() {
 
-var path = require('path');
+var app = express.createServer();
 
-var express = require('express')
-    , app      = express.createServer()
-    , Step        = require('step')
-    , crypto      = require('crypto')
-    , fs          = require('fs')
-    , os          = require('os')
-    , zlib        = require('zlib')
-    , util        = require('util')
-    , Profiler    = require('step-profiler')
-    , StatsD      = require('node-statsd').StatsD
-    , MetadataDB  = require('cartodb-redis')
-    , PSQL        = require('cartodb-psql')
-    , CdbRequest  = require(global.settings.app_root + '/app/models/cartodb_request')
-    , AuthApi     = require(global.settings.app_root + '/app/auth/auth_api')
-    , _           = require('underscore')
-    , LRU         = require('lru-cache')
-    , formats     = require(global.settings.app_root + '/app/models/formats')
-    , HealthCheck = require(global.settings.app_root + '/app/monitoring/health_check')
-    , PgErrorHandler = require(global.settings.app_root + '/app/postgresql/error_handler')
-    ;
-
-var metadataBackend = MetadataDB({
+var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
     max: global.settings.redisPool,
@@ -63,25 +74,6 @@ var tableCache = LRU({
   maxAge: global.settings.tableCacheMaxAge || 1000*60*10
 });
 
-function pad(n) { return n < 10 ? '0' + n : n }
-Date.prototype.toJSON = function() {
-  var s = this.getFullYear() + '-'
-      + pad(this.getMonth() + 1) + '-'
-      + pad(this.getDate()) + 'T'
-      + pad(this.getHours()) + ':'
-      + pad(this.getMinutes()) + ':'
-      + pad(this.getSeconds());
-  var offset = this.getTimezoneOffset();
-  if (offset == 0) s += 'Z';
-  else {
-    s += ( offset < 0 ? '+' : '-' )
-      + pad(Math.abs(offset / 60))
-      + pad(Math.abs(offset % 60))
-
-  }
-  return s;
-};
-
 var loggerOpts = {
     buffer: true,
     format: global.settings.log_format ||
@@ -89,7 +81,7 @@ var loggerOpts = {
 };
 
 if ( global.log4js ) {
-  app.use(log4js.connectLogger(log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
+  app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
 } else {
   app.use(express.logger(loggerOpts));
 }
@@ -110,7 +102,7 @@ if ( global.settings.statsd ) {
     var last_err = statsd_client.last_error;
     var last_msg = last_err.msg;
     var this_msg = ''+err;
-    if ( this_msg != last_msg ) {
+    if ( this_msg !== last_msg ) {
       console.error("statsd client socket error: " + err);
       statsd_client.last_error.count = 1;
       statsd_client.last_error.msg = this_msg;
@@ -147,7 +139,7 @@ if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
   var timeout = parseInt(global.settings.node_socket_timeout);
   app.use(function(req, res, next) {
     req.connection.setTimeout(timeout);
-    next()
+    next();
   });
 }
 
@@ -198,25 +190,27 @@ function handleVersion(req, res) {
 function handleQuery(req, res) {
 
     // extract input
-    var body      = (req.body) ? req.body : {};
-    var params    = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var sql       = params.q;
-    var limit     = parseInt(params.rows_per_page);
-    var offset    = parseInt(params.page);
-    var orderBy   = params.order_by;
+    var body = (req.body) ? req.body : {};
+    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
+    var sql = params.q;
+    var limit = parseInt(params.rows_per_page);
+    var offset = parseInt(params.page);
+    var orderBy = params.order_by;
     var sortOrder = params.sort_order;
     var requestedFormat = params.format;
-    var format    = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
+    var format = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
-    var filename  = requestedFilename;
+    var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
     var cdbUsername = cdbReq.userByReq(req);
     var skipfields;
-    var dp        = params.dp; // decimal point digits (defaults to 6)
-    var gn        = "the_geom"; // TODO: read from configuration file
+    var dp = params.dp; // decimal point digits (defaults to 6)
+    var gn = "the_geom"; // TODO: read from configuration file
     var tableCacheItem;
 
-    if ( req.profiler ) req.profiler.start('sqlapi.query');
+    if ( req.profiler ) {
+        req.profiler.start('sqlapi.query');
+    }
 
     req.aborted = false;
     req.on("close", function() {
@@ -248,8 +242,9 @@ function handleQuery(req, res) {
 
         // Accept both comma-separated string or array of comma-separated strings
         if ( requestedSkipfields ) {
-          if ( _.isString(requestedSkipfields) ) skipfields = requestedSkipfields.split(',');
-          else if ( _.isArray(requestedSkipfields) ) {
+          if ( _.isString(requestedSkipfields) ) {
+              skipfields = requestedSkipfields.split(',');
+          } else if ( _.isArray(requestedSkipfields) ) {
             skipfields = [];
             _.each(requestedSkipfields, function(ele) {
               skipfields = skipfields.concat(ele.split(','));
@@ -287,14 +282,16 @@ function handleQuery(req, res) {
         var authApi = new AuthApi(req, params),
             dbParams;
 
-        if ( req.profiler ) req.profiler.done('init');
+        if ( req.profiler ) {
+            req.profiler.done('init');
+        }
 
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
         // 4. Setup headers
         // 5. Send formatted results back
-        Step(
+        step(
             function getDatabaseConnectionParams() {
                 checkAborted('getDatabaseConnectionParams');
                 // If the request is providing credentials it may require every DB parameters
@@ -307,12 +304,14 @@ function handleQuery(req, res) {
             function authenticate(err, userDBParams) {
                 if (err) {
                     err.http_status = 404;
-                    err.message = "Sorry, we can't find CartoDB user '" + cdbUsername
-                        + "'. Please check that you have entered the correct domain.";
+                    err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
+                        "Please check that you have entered the correct domain.";
                     throw err;
                 }
 
-                if ( req.profiler ) req.profiler.done('getDBParams');
+                if ( req.profiler ) {
+                    req.profiler.done('getDBParams');
+                }
 
                 dbParams = userDBParams;
 
@@ -330,7 +329,9 @@ function handleQuery(req, res) {
                     throw err;
                 }
 
-                if ( req.profiler ) req.profiler.done('authenticate');
+                if ( req.profiler ) {
+                    req.profiler.done('authenticate');
+                }
 
                 if (_.isBoolean(isAuthenticated) && isAuthenticated) {
                     authenticated = isAuthenticated;
@@ -349,9 +350,11 @@ function handleQuery(req, res) {
             function queryExplain(err){
                 var self = this;
 
-                if (err) throw err;
+                assert.ifError(err);
 
-                if ( req.profiler ) req.profiler.done('setDBAuth');
+                if ( req.profiler ) {
+                    req.profiler.done('setDBAuth');
+                }
 
                 checkAborted('queryExplain');
 
@@ -373,16 +376,20 @@ function handleQuery(req, res) {
                         var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
                         self(null, tables);
                       } else {
-                        console.error("Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result);
+                        console.error(
+                            "Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result
+                        );
                         self(null, []);
                       }
                    });
                 }
             },
             function setHeaders(err, tables){
-                if (err) throw err;
+                assert.ifError(err);
 
-                if ( req.profiler ) req.profiler.done('queryExplain');
+                if ( req.profiler ) {
+                    req.profiler.done('queryExplain');
+                }
 
                 checkAborted('setHeaders');
 
@@ -410,8 +417,8 @@ function handleQuery(req, res) {
                     }
                 }
 
-                var fClass = formats[format];
-                formatter = new fClass();
+                var FormatClass = formats[format];
+                formatter = new FormatClass();
                 req.formatter = formatter;
 
 
@@ -454,7 +461,7 @@ function handleQuery(req, res) {
                 return null;
             },
             function generateFormat(err){
-                if (err) throw err;
+                assert.ifError(err);
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
@@ -493,25 +500,32 @@ function handleQuery(req, res) {
             function errorHandle(err){
                 formatter = null;
 
-                if ( err ) handleException(err, res);
+                if ( err ) {
+                    handleException(err, res);
+                }
                 if ( req.profiler ) {
                   req.profiler.sendStats(); // TODO: do on nextTick ?
                 }
                 if (statsd_client) {
-                  if ( err ) statsd_client.increment('sqlapi.query.error');
-                  else statsd_client.increment('sqlapi.query.success');
+                  if ( err ) {
+                      statsd_client.increment('sqlapi.query.error');
+                  } else {
+                      statsd_client.increment('sqlapi.query.success');
+                  }
                 }
             }
         );
     } catch (err) {
         handleException(err, res);
-        if (statsd_client) statsd_client.increment('sqlapi.query.error');
+        if (statsd_client) {
+            statsd_client.increment('sqlapi.query.error');
+        }
     }
 }
 
 function handleCacheStatus(req, res){
     var tableCacheValues = tableCache.values();
-    var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits}, 0);
+    var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits; }, 0);
     var totalExplainKeys = tableCacheValues.length;
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
@@ -543,7 +557,8 @@ function handleHealthCheck(req, res) {
 function getContentDisposition(formatter, filename, inline) {
     var ext = formatter.getFileExtension();
     var time = new Date().toUTCString();
-    return ( inline ? 'inline' : 'attachment' ) +'; filename=' + filename + '.' + ext + '; modification-date="' + time + '";';
+    return ( inline ? 'inline' : 'attachment' ) + '; filename=' + filename + '.' + ext + '; ' +
+        'modification-date="' + time + '";';
 }
 
 function setCrossDomain(res){
@@ -575,13 +590,13 @@ function handleException(err, res) {
 
     _.defaults(msg, pgErrorHandler.getFields());
 
-    if (global.settings.environment == 'development') {
+    if (global.settings.environment === 'development') {
         msg.stack = err.stack;
     }
 
     if (global.settings.environment !== 'test'){
         // TODO: email this Exception report
-        console.error("EXCEPTION REPORT: " + err.stack)
+        console.error("EXCEPTION REPORT: " + err.stack);
     }
 
     // allow cross site post

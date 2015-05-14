@@ -1,11 +1,9 @@
 require('../helper');
 
-var _            = require('underscore')
-    , ApikeyAuth = require('../../app/auth/apikey')
-    , assert     = require('assert')
-    ;
+var ApikeyAuth = require('../../app/auth/apikey');
+var assert = require('assert');
 
-suite('has credentials', function() {
+describe('has credentials', function() {
 
     var noCredentialsRequests = [
         {
@@ -35,8 +33,8 @@ suite('has credentials', function() {
     ];
 
     noCredentialsRequests.forEach(function(request) {
-        test('has no credentials if ' + request.des, function() {
-            testCredentials(request.req, false)
+        it('has no credentials if ' + request.des, function() {
+            testCredentials(request.req, false);
         });
     });
 
@@ -60,8 +58,8 @@ suite('has credentials', function() {
     ];
 
     credentialsRequests.forEach(function(request) {
-        test('has credentials if ' + request.des, function() {
-            testCredentials(request.req, true)
+        it('has credentials if ' + request.des, function() {
+            testCredentials(request.req, true);
         });
     });
 
@@ -72,13 +70,13 @@ suite('has credentials', function() {
 
 });
 
-suite('verify credentials', function() {
+describe('verifyCredentials', function() {
 
-    test('verifyCredentials callbacks with true value when request api_key is the same', function(done) {
+    it('callbacks with true value when request api_key is the same', function(done) {
         testVerifyCredentials({query:{api_key: 'foo'}}, {apiKey: 'foo'}, true, done);
     });
 
-    test('verifyCredentials callbacks with true value when request api_key is different', function(done) {
+    it('callbacks with false value when request api_key is different', function(done) {
         testVerifyCredentials({query:{api_key: 'foo'}}, {apiKey: 'bar'}, false, done);
     });
 

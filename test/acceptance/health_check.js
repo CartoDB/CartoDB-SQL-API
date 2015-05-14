@@ -1,12 +1,10 @@
 require('../helper');
 require('../support/assert');
 
-var assert = require('assert'),
-    App = require(global.settings.app_root + '/app/controllers/app');
+var assert = require('assert');
+var app = require(global.settings.app_root + '/app/controllers/app')();
 
-var app = App();
-
-suite('health checks', function() {
+describe('health checks', function() {
 
     beforeEach(function(done) {
         global.settings.health = {
@@ -25,7 +23,7 @@ suite('health checks', function() {
         }
     };
 
-    test('returns 200 and ok=true with disabled configuration', function(done) {
+    it('returns 200 and ok=true with disabled configuration', function(done) {
         global.settings.health.enabled = false;
 
         assert.response(app,
@@ -46,7 +44,7 @@ suite('health checks', function() {
         );
     });
 
-    test('returns 200 and ok=true with enabled configuration', function(done) {
+    it('returns 200 and ok=true with enabled configuration', function(done) {
         assert.response(app,
             healthCheckRequest,
             {
