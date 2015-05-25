@@ -141,12 +141,18 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       var ogrsql = 'SELECT ' + columns.join(',') + ' FROM (' + sql + ') as _cartodbsqlapi';
 
+      var tables = 'fake';
+      if (options.affectedTables && options.affectedTables.length) {
+          tables = options.affectedTables.join(',');
+      }
+
       var ogrargs = [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost + " port=" + dbport + " user=" + dbuser + " dbname=" + dbname + " password=" + dbpass,
+        'tables=' + tables,
         '-sql', ogrsql
       ];
 
