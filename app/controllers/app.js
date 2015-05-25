@@ -470,7 +470,6 @@ function handleQuery(req, res) {
                 // TODO: drop this, fix UI!
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
-
                 var opts = {
                   username: cdbUsername,
                   dbopts: dbopts,
