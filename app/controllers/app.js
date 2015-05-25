@@ -31,6 +31,7 @@ var AuthApi = require('../auth/auth_api');
 var formats = require('../models/formats');
 var HealthCheck = require('../monitoring/health_check');
 var PgErrorHandler = require('../postgresql/error_handler');
+var CredentialsController = require('./credentials');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
@@ -162,6 +163,12 @@ app.all(global.settings.base_url + '/sql.:f',  handleQuery);
 app.get(global.settings.base_url + '/cachestatus', handleCacheStatus);
 app.get(global.settings.base_url + '/health',  handleHealthCheck);
 app.get(global.settings.base_url + '/version', handleVersion);
+
+// register other controllers here
+
+var credentialsController = new CredentialsController(cdbReq, metadataBackend);
+credentialsController.register(app);
+
 
 var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate|refresh)\\b", "i");
 /**
