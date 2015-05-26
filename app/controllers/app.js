@@ -286,6 +286,8 @@ function handleQuery(req, res) {
             req.profiler.done('init');
         }
 
+        var affectedTables;
+
         // 1. Get database from redis via the username stored in the host header subdomain
         // 2. Run the request through OAuth to get R/W user id if signed
         // 3. Get the list of tables affected by the query
@@ -404,6 +406,7 @@ function handleQuery(req, res) {
                     };
                     tableCache.set(sql_md5, tableCacheItem);
                 }
+                affectedTables = tables;
 
                 if ( !authenticated && tableCacheItem ) {
                     var affected_tables = tableCacheItem.affected_tables;
@@ -476,6 +479,7 @@ function handleQuery(req, res) {
                   skipfields: skipfields,
                   sql: sql,
                   filename: filename,
+                  affectedTables: affectedTables,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
                   abortChecker: checkAborted

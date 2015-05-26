@@ -1,3 +1,13 @@
+1.22.2 - 2015-05-26
+-------------------
+
+Bug fixes:
+
+ * Reintroduces tables= param in ogr2ogr exports (#204)
+   This will avoid running a heavy ogr2ogr query when the pg catalog is big
+   Ref https://github.com/CartoDB/CartoDB-SQL-API/commit/84c422c505391ef0e743aed2204214d4286d7e30
+
+
 1.22.1 - 2015-05-14
 -------------------
 
