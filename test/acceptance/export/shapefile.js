@@ -3,6 +3,7 @@ require('../../helper');
 var app = require(global.settings.app_root + '/app/controllers/app')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
+var shapefile = require('shapefile');
 var _ = require('underscore');
 var zipfile = require('zipfile');
 var fs      = require('fs');
@@ -328,5 +329,56 @@ it('point with null first', function(done){
         done();
     });
 });
+
+    var limit = 1200;
+
+    it('expects ' + limit + ' rows in public table', function(done){
+
+        var filename = 'test_1200';
+
+        assert.response(app, {
+                url: '/api/v1/sql?' + querystring.stringify({
+                    q: "SELECT * from populated_places_simple_reduced limit " + limit,
+                    format: 'shp',
+                    filename: filename
+                }),
+                headers: { host: 'vizzuality.cartodb.com' },
+                encoding: 'binary',
+                method: 'GET'
+            },
+            {
+                status: 200
+            },
+            function(res, err) {
+                if (err) {
+                    return done(err);
+                }
+
+                var tmpShpPath = '/tmp/'+filename+'.zip';
+                err = fs.writeFileSync(tmpShpPath, res.body, 'binary');
+                if (err) {
+                    return done(err);
+                }
+
+                var zf = new zipfile.ZipFile(tmpShpPath);
+                zf.names.forEach(function(name) {
+                    var buffer = zf.readFileSync(name);
+                    var tmpDbfPath = '/tmp/' + name;
+                    err = fs.writeFileSync(tmpDbfPath, buffer);
+                    if (err) {
+                        return done(err);
+                    }
+                });
+                shapefile.read('/tmp/'+filename, function(err, collection) {
+                    if (err) {
+                        return done(err);
+                    }
+                    assert.equal(collection.features.length, limit);
+                    done();
+                });
+
+            }
+        );
+    });
 
 });
