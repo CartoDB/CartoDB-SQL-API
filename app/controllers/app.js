@@ -77,7 +77,7 @@ var tableCache = LRU({
 var loggerOpts = {
     buffer: true,
     format: global.settings.log_format ||
-            ':req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
+            ':remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
 };
 
 if ( global.log4js ) {
