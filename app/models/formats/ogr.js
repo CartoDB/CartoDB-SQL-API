@@ -164,10 +164,6 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         ogrargs.push('-nlt', type);
       }
 
-      if ( out_format === 'SQLite' ) {
-        ogrargs.push('SPATIALITE=yes');
-      }
-
       ogrargs.push('-nln', out_layername);
 
       var child = spawn(ogr2ogr, ogrargs);

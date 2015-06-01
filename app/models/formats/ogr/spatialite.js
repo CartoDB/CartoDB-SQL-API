@@ -16,6 +16,7 @@ SpatiaLiteFormat.prototype._fileExtension = "sqlite";
 SpatiaLiteFormat.prototype._needSRS = true;
 
 SpatiaLiteFormat.prototype.generate = function(options, callback) {
+    var ogrFormat = 'SQLite SPATIALITE=yes';
     this.toOGR_SingleFile(options, 'SQLite', callback);
 };
 
