@@ -2,7 +2,7 @@ var app = require(global.settings.app_root + '/app/controllers/app')();
 var assert = require('../../support/assert');
 var sqlite = require('sqlite3');
 
-describe.only('spatialite query',function(){
+describe('spatialite query', function(){
 
     it('returns a valid sqlite database', function(done){
         assert.response(app, {
