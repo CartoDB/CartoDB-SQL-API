@@ -164,6 +164,10 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         ogrargs.push('-nlt', type);
       }
 
+      if (options.cmd_params){
+        ogrargs.concat(options.cmd_params);
+      }
+
       ogrargs.push('-nln', out_layername);
 
       var child = spawn(ogr2ogr, ogrargs);
