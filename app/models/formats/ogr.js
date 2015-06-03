@@ -165,9 +165,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       }
 
       if (options.cmd_params){
-        options.cmd_params.forEach(function(param){
-          ogrargs.push(param);
-        });
+        ogrargs.concat(options.cmd_params);
       }
 
       ogrargs.push('-nln', out_layername);
