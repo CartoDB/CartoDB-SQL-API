@@ -4,7 +4,7 @@
 Enhancements:
 
  * Makes ogr2ogr command configurable so it's possible to change path/bin
- * Uses :remote-addr instead of :req[X-Real-IP] (#197)
+ * Uses :remote-addr instead of :req[X-Real-IP] \(#197)
 
 New features:
 
