@@ -58,7 +58,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
   var dbopts = options.dbopts;
 
-  var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
+  var ogr2ogr = global.settings.ogr2ogrCommand || 'ogr2ogr';
   var dbhost = dbopts.host;
   var dbport = dbopts.port; 
   var dbuser = dbopts.user; 
