@@ -1,6 +1,10 @@
 1.22.3 - 2015-mm-dd
 -------------------
 
+Enhancements:
+
+ * Makes ogr2ogr command configurable so it's possible to change path/bin
+
 
 1.22.2 - 2015-05-26
 -------------------
