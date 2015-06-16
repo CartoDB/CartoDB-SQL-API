@@ -1,6 +1,11 @@
 1.22.3 - 2015-mm-dd
 -------------------
 
+Announcements:
+
+ * Reverts tables=<fake> for ogr2ogr commands
+   Ref https://github.com/CartoDB/CartoDB-SQL-API/commit/b6e53f732672369d7f9be26555ef412edc202727
+
 Enhancements:
 
  * Makes ogr2ogr command configurable so it's possible to change path/bin
