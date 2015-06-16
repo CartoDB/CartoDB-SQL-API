@@ -4,6 +4,11 @@
 Enhancements:
 
  * Makes ogr2ogr command configurable so it's possible to change path/bin
+ * Uses :remote-addr instead of :req[X-Real-IP] (#197)
+
+New features:
+
+ * Adds SpatiaLite as export format (#226)
 
 
 1.22.2 - 2015-05-26
