@@ -352,15 +352,15 @@ it('check point coordinates, authenticated', function(done){
     });
 });
 
-    it('expects 1000 placemarks in public table', function(done){
-        var numberOfRowsInPublicTable = 6,
-            seriesLimit = 200,
-            expectedRows = numberOfRowsInPublicTable * seriesLimit;
+
+    var limit = 1200;
+
+    it('expects ' + limit + ' placemarks in public table', function(done){
 
         assert.response(app, {
                 url: '/api/v1/sql',
                 data: querystring.stringify({
-                    q: "SELECT x, untitle_table_4.* FROM untitle_table_4, generate_series(1," + seriesLimit + ") x",
+                    q: "SELECT * from populated_places_simple_reduced limit " + limit,
                     format: 'kml'
                 }),
                 headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -370,32 +370,28 @@ it('check point coordinates, authenticated', function(done){
                 status: 200
             },
             function(res) {
-                assert.equal(res.body.match(/<Placemark>/g).length, expectedRows);
+                assert.equal(res.body.match(/<Placemark>/g).length, limit);
                 done();
             }
         );
     });
 
-    it('expects 1000 placemarks in private table using the API KEY', function(done){
-        var numberOfRowsInPrivateTable = 5,
-            seriesLimit = 200,
-            expectedRows = numberOfRowsInPrivateTable * seriesLimit;
+    it('expects ' + limit + ' placemarks in private table using the API KEY', function(done){
 
         assert.response(app, {
-                url: '/api/v1/sql',
-                data: querystring.stringify({
-                    q: "SELECT x, private_table.* FROM private_table, generate_series(1," + seriesLimit + ") x",
+                url: '/api/v1/sql?' + querystring.stringify({
+                    q: "SELECT * from populated_places_simple_reduced limit " + limit,
                     api_key: 1234,
                     format: 'kml'
                 }),
-                headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-                method: 'POST'
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
             },
             {
                 status: 200
             },
             function(res) {
-                assert.equal(res.body.match(/<Placemark>/g).length, expectedRows);
+                assert.equal(res.body.match(/<Placemark>/g).length, limit);
                 done();
             }
         );

@@ -57,6 +57,8 @@ module.exports.tableCacheMax = 8192;
 module.exports.tableCacheMaxAge = 1000*60*10;
 // Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
+// change ogr2ogr command or path
+module.exports.ogr2ogrCommand = 'ogr2ogr2';
 // Optional statsd support
 module.exports.statsd = {
   host: 'localhost',

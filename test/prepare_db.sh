@@ -74,6 +74,14 @@ if test x"$PREPARE_PGSQL" = xyes; then
     sed "s/:TESTPASS/${TESTPASS}/" |
     psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
 
+  echo "Populating windshaft_test database with reduced populated places data"
+  cat ./fixtures/populated_places_simple_reduced.sql |
+    sed "s/:PUBLICUSER/${PUBLICUSER}/" |
+    sed "s/:PUBLICPASS/${PUBLICPASS}/" |
+    sed "s/:TESTUSER/${TESTUSER}/" |
+    sed "s/:TESTPASS/${TESTPASS}/" |
+    psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+
   # TODO: send in a single run, togheter with test.sql
   psql -c "CREATE EXTENSION plpythonu;" ${TEST_DB}
   curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/cdb/scripts-available/CDB_QueryStatements.sql -o support/CDB_QueryStatements.sql
