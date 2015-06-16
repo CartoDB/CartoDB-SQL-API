@@ -161,7 +161,7 @@ https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_n
 }
 ```
 
-The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, and GeoJSON.
+The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
 
 ### Output filename
 To customize the output filename, add the `filename` parameter to your URL:

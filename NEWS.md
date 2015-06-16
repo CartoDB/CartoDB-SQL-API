@@ -1,3 +1,21 @@
+1.23.0 - 2015-06-16
+-------------------
+
+Announcements:
+
+ * Reverts tables=<fake> for ogr2ogr commands
+   Ref https://github.com/CartoDB/CartoDB-SQL-API/commit/b6e53f732672369d7f9be26555ef412edc202727
+
+Enhancements:
+
+ * Makes ogr2ogr command configurable so it's possible to change path/bin
+ * Uses :remote-addr instead of :req[X-Real-IP] \(#197)
+
+New features:
+
+ * Adds SpatiaLite as export format (#226)
+
+
 1.22.2 - 2015-05-26
 -------------------
 

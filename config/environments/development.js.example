@@ -5,7 +5,7 @@ module.exports.base_url     = '(?:/api/:version|/user/:user/api/:version)';
 // X-SQLAPI-Profile header containing elapsed timing for various
 // steps taken for producing the response.
 module.exports.useProfiler = true;
-module.exports.log_format   = '[:date] :req[X-Real-IP] :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler])';
+module.exports.log_format   = '[:date] :remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler])';
 // If log_filename is given logs will be written there, in append mode. Otherwise stdout is used (default).
 // Log file will be re-opened on receiving the HUP signal
 module.exports.log_filename = 'logs/cartodb-sql-api.log';
@@ -59,6 +59,8 @@ module.exports.tableCacheMax = 8192;
 module.exports.tableCacheMaxAge = 1000*60*10;
 // Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
+// change ogr2ogr command or path
+module.exports.ogr2ogrCommand = 'ogr2ogr';
 // Optional statsd support
 module.exports.statsd = {
   host: 'localhost',

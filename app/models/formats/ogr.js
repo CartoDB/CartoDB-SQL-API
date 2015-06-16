@@ -58,7 +58,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
   var dbopts = options.dbopts;
 
-  var ogr2ogr = 'ogr2ogr'; // FIXME: make configurable
+  var ogr2ogr = global.settings.ogr2ogrCommand || 'ogr2ogr';
   var dbhost = dbopts.host;
   var dbport = dbopts.port; 
   var dbuser = dbopts.user; 
@@ -141,18 +141,12 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       var ogrsql = 'SELECT ' + columns.join(',') + ' FROM (' + sql + ') as _cartodbsqlapi';
 
-      var tables = 'fake';
-      if (options.affectedTables && options.affectedTables.length) {
-          tables = options.affectedTables.join(',');
-      }
-
       var ogrargs = [
         '-f', out_format,
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
         "PG:host=" + dbhost + " port=" + dbport + " user=" + dbuser + " dbname=" + dbname + " password=" + dbpass,
-        'tables=' + tables,
         '-sql', ogrsql
       ];
 
@@ -162,6 +156,10 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       if ( type ) {
         ogrargs.push('-nlt', type);
+      }
+
+      if (options.cmd_params){
+        ogrargs.concat(options.cmd_params);
       }
 
       ogrargs.push('-nln', out_layername);

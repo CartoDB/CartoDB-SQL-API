@@ -188,4 +188,26 @@ it('GET /api/v1/sql as csv, concurrently', function(done){
     }
 });
 
+    it('expects 1200 rows in public table', function(done){
+        var limit = 1200;
+
+        assert.response(app, {
+                url: '/api/v1/sql?' + querystring.stringify({
+                    q: "SELECT * from populated_places_simple_reduced limit " + limit,
+                    format: 'csv'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            },
+            {
+                status: 200
+            },
+            function(res) {
+                var headersPlusExtraLine = 2;
+                assert.equal(res.body.split('\n').length, limit + headersPlusExtraLine);
+                done();
+            }
+        );
+    });
+
 });
