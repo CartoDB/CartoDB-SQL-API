@@ -1,3 +1,5 @@
+require('../../helper');
+
 var app = require(global.settings.app_root + '/app/controllers/app')();
 var assert = require('../../support/assert');
 var sqlite = require('sqlite3');
@@ -12,7 +14,7 @@ describe('spatialite query', function(){
         },{ }, function(res) {
             assert.equal(res.statusCode, 200, res.body);
             assert.equal(res.headers["content-type"], "application/x-sqlite3; charset=utf-8");
-            var db = new sqlite.Database(res.body);
+            var db = new sqlite.Database(':memory:', res.body);
             var qr = db.get("PRAGMA database_list", function(err){
                 assert.equal(err, null);
                 done();
@@ -40,7 +42,7 @@ describe('spatialite query', function(){
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
         },{ }, function(res) {
-            var db = new sqlite.Database(res.body);
+            var db = new sqlite.Database(':memory:', res.body);
             var schemaQuery = "SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name";
             var qr = db.get(schemaQuery, function(err){
                 assert.equal(err, null);
