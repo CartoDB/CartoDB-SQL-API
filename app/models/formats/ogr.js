@@ -72,7 +72,8 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
   var pg;
 
   // Drop ending semicolon (ogr doens't like it)
-  sql = sql.replace(/;\s*$/, ''); 
+  sql = sql.replace(/;\s*$/, '');
+  sql = checkPGReserved(sql);
 
   step (
 
@@ -203,6 +204,21 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
       callback(err, out_filename);
     }
   );
+  function checkPGReserved(sql) {
+    if (out_format === 'CSV'){
+      var pgFunctionNames = ["st_asbinary", "binarybase64", "st_asewkt", "st_asewkb", "ewkbbase64",
+        "st_astext", "asbinary", "asewkt", "asewkb", "astext"];
+      var outerFunction = sql.match(/\s.*?\(/g)[0].trim().replace("(","").toLowerCase();
+      if (pgFunctionNames.indexOf(outerFunction)) {
+        var closingParenIndex = sql.charAt(sql.lastIndexOf(")"));
+        var hasAlias = sql.charAt(closingParenIndex + 1) === " " && sql.charAt(closingParenIndex + 2) !== "";
+        if (!hasAlias) {
+          sql += " _" + outerFunction;
+        }
+      }
+    }
+    return sql;
+  }
 };
 
 OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
