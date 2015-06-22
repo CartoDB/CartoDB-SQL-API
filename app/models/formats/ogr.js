@@ -208,12 +208,15 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
     if (out_format === 'CSV'){
       var pgFunctionNames = ["st_asbinary", "binarybase64", "st_asewkt", "st_asewkb", "ewkbbase64",
         "st_astext", "asbinary", "asewkt", "asewkb", "astext"];
-      var outerFunction = sql.match(/\s.*?\(/g)[0].trim().replace("(","").toLowerCase();
-      if (pgFunctionNames.indexOf(outerFunction)) {
-        var closingParenIndex = sql.charAt(sql.lastIndexOf(")"));
-        var hasAlias = sql.charAt(closingParenIndex + 1) === " " && sql.charAt(closingParenIndex + 2) !== "";
-        if (!hasAlias) {
-          sql += " _" + outerFunction;
+      var outerFunction = sql.match(/\s.*?\(/g);
+      if(outerFunction){
+        outerFunction = outerFunction[0].trim().replace("(","").toLowerCase();
+        if (pgFunctionNames.indexOf(outerFunction) > -1) {
+          var closingParenIndex = sql.charAt(sql.lastIndexOf(")"));
+          var hasAlias = sql.charAt(closingParenIndex + 1) === " " && sql.charAt(closingParenIndex + 2) !== "";
+          if (!hasAlias) {
+            sql += " _" + outerFunction;
+          }
         }
       }
     }
