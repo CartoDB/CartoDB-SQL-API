@@ -204,6 +204,11 @@ console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).j
       callback(err, out_filename);
     }
   );
+
+   /*
+   OGR treats certain column names as a geometry column. Unless they're assigned an alias, it will return
+   an empty csv file
+   */
   function checkPGReserved(sql) {
     if (out_format === 'CSV'){
       var pgFunctionNames = ["st_asbinary", "binarybase64", "st_asewkt", "st_asewkb", "ewkbbase64",
