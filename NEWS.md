@@ -1,3 +1,15 @@
+1.24.0 - 2015-08-04
+-------------------
+
+New features:
+
+ * Client is removed from pool after error happens. This help to avoid issues with transactions (#241).
+
+Announcements:
+
+ * Upgrades cartodb-psql to [0.6.0](https://github.com/CartoDB/node-cartodb-psql/releases/tag/0.6.0)
+
+
 1.23.0 - 2015-06-16
 -------------------
 

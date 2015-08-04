@@ -358,7 +358,7 @@ function handleQuery(req, res) {
 
                 checkAborted('queryExplain');
 
-                pg = new PSQL(dbopts);
+                pg = new PSQL(dbopts, {}, { destroyOnError: true });
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
                 if (tableCacheItem) {
