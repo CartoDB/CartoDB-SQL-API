@@ -3,9 +3,8 @@
   "version": "1.23.1",
   "dependencies": {
     "cartodb-psql": {
-      "version": "0.5.1",
-      "from": "cartodb-psql@~0.5.1",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.5.1.tgz",
+      "version": "0.6.0",
+      "from": "cartodb-psql@~0.6.0",
       "dependencies": {
         "pg": {
           "version": "2.6.2-cdb3",
@@ -143,7 +142,7 @@
             },
             "inherits": {
               "version": "2.0.1",
-              "from": "inherits@2"
+              "from": "inherits@~2.0.1"
             }
           }
         },
@@ -204,9 +203,9 @@
       }
     },
     "step": {
-      "version": "0.0.5",
+      "version": "0.0.6",
       "from": "step@~0.0.5",
-      "resolved": "https://registry.npmjs.org/step/-/step-0.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/step/-/step-0.0.6.tgz"
     },
     "step-profiler": {
       "version": "0.1.0",
