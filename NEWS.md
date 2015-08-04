@@ -1,6 +1,11 @@
 1.24.0 - 2015-mm-dd
 -------------------
 
+New features:
+
+ * New configuration option `db_pool_destroy_client_on_error`: client is removed from pool after error happens
+   This help to avoid issues with transactions (#241)
+
 Announcements:
 
  * Upgrades cartodb-psql to [0.6.0](https://github.com/CartoDB/node-cartodb-psql/releases/tag/0.6.0)
