@@ -63,7 +63,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var cdbReq = new CdbRequest();
 
-// Set default configuration 
+// Set default configuration
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
 global.settings.bufferedRows = global.settings.bufferedRows || 1000;
 
@@ -200,6 +200,7 @@ function handleQuery(req, res) {
     var requestedFormat = params.format;
     var format = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
+    var queryParams = params.params;
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
     var cdbUsername = cdbReq.userByReq(req);
@@ -264,7 +265,7 @@ function handleQuery(req, res) {
         }
 
         // initialise MD5 key of sql for cache lookups
-        var sql_md5 = generateMD5(sql);
+        var sql_md5 = generateMD5(sql, queryParams);
 
         // placeholder for connection
         var pg;
@@ -478,7 +479,8 @@ function handleQuery(req, res) {
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
-                  abortChecker: checkAborted
+                  abortChecker: checkAborted,
+                  params: queryParams
                 };
 
                 if ( req.profiler ) {
@@ -574,9 +576,12 @@ function generateCacheKey(database, query_info, is_authenticated){
     }
 }
 
-function generateMD5(data){
+function generateMD5(data, params){
     var hash = crypto.createHash('md5');
     hash.update(data);
+    if (params && params.length) {
+      hash.update(JSON.stringify(params));
+    }
     return hash.digest('hex');
 }
 

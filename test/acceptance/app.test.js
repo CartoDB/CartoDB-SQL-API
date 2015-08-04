@@ -534,7 +534,22 @@ it('DELETE with RETURNING returns all results', function(done){
         done();
     });
 });
-
+it('paramaterized query', function(done){
+    assert.response(app, {
+        // view prepare_db.sh to see where to set api_key
+        url: "/api/v1/sql?api_key=1234&" + querystring.stringify({q:
+          "select * from generate_series(0, $1, $2);",
+          params: [99, 1]
+        }),
+        headers: {host: 'vizzuality.localhost.lan:8080' },
+        method: 'GET'
+    },{}, function(res) {
+        assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+        var out = JSON.parse(res.body);
+        assert.equal(out.rows.lengh, 100, 'correct number of rows');
+        done();
+    });
+});
 it('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(done){
     assert.response(app, {
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4",
