@@ -1,5 +1,9 @@
-1.23.1 - 2015-mm-dd
+1.24.0 - 2015-mm-dd
 -------------------
+
+Announcements:
+
+ * Upgrades cartodb-psql to [0.6.0](https://github.com/CartoDB/node-cartodb-psql/releases/tag/0.6.0)
 
 
 1.23.0 - 2015-06-16
