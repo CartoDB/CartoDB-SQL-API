@@ -3,8 +3,7 @@
 
 New features:
 
- * New configuration option `db_pool_destroy_client_on_error`: client is removed from pool after error happens
-   This help to avoid issues with transactions (#241)
+ * Client is removed from pool after error happens. This help to avoid issues with transactions (#241).
 
 Announcements:
 

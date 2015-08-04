@@ -66,8 +66,6 @@ var cdbReq = new CdbRequest();
 // Set default configuration 
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
 global.settings.bufferedRows = global.settings.bufferedRows || 1000;
-global.settings.db_pool_destroy_client_on_error = global.settings.hasOwnProperty('db_pool_destroy_client_on_error') ?
-    global.settings.db_pool_destroy_client_on_error : true;
 
 var tableCache = LRU({
   // store no more than these many items in the cache
@@ -360,7 +358,7 @@ function handleQuery(req, res) {
 
                 checkAborted('queryExplain');
 
-                pg = new PSQL(dbopts, {}, { destroyOnError: global.settings.db_pool_destroy_client_on_error });
+                pg = new PSQL(dbopts, {}, { destroyOnError: true });
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
                 if (tableCacheItem) {
