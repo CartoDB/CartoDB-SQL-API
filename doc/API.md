@@ -324,7 +324,7 @@ SQL injection works by tricking a database user that is only showing you certain
 
 Because CartoDB enforces roles and access at the database level, the idea of a “SQL injection attack” is not possible with CartoDB. Injection is possible, but clients will still run into our security wall at the database level. Put another way, the SQL API already lets you _attempt_ to run any query you want. The database will reject your SQL API request if it finds your user/role doesn't have the requisite permissions. In other words, you can ask any question of the database you like; the CartoDB database doesn’t guarantee it will be answered.
 
-If a user's API key found its way out into the wild, then that would be a problem, but that's not a problem we can prevent on the CartoDB side. This is why it is very important for all CartoDB users to secure their API keys.
+If a user's API key found its way out into the wild, then that would be a problem but is not something CartoDB can prevent. This is why it is very important for all CartoDB users to secure their API keys. In the event a user's API key is compromised, either the user or the CartoDB Enterprise administrator can regenerate the API key in their account settings.
 
 ### What levels of database access can roles/users have?
 
@@ -332,7 +332,7 @@ There are three levels of access with CartoDB:
 
 1. __API Key level:__ Do whatever you want in your account on the tables you own (or have been shared with you in Enterprise/multi-user accounts).
 2. __"publicuser" level:__ Do whatever has been granted to you. The publicuser level is normally read-only, but you could GRANT INSERT/UPDATE/DELETE permissions to publicuser if needed for some reason - for API key-less write operations. Use with caution.
-3. __postgres superadmin level:__ This third access level, the actual PostgreSQL system user, is only accessible from a direct database connection via the command line, which is only available currently via [CartoDB On-Premises](https://cartodb.com/on-premises/). Let us know at [sales@cartodb.com](mailto:sales@cartodb.com) if you are interested in this feature.
+3. __postgres superadmin level:__ This third access level, the actual PostgreSQL system user, is only accessible from a direct database connection via the command line, which is only available currently via [CartoDB On-Premises](https://cartodb.com/on-premises/).
 
 ### If a user has write access and makes a `DROP TABLE` query, is that data gone?
 
