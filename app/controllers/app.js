@@ -201,7 +201,6 @@ function handleQuery(req, res) {
     var format = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
     var queryParams = params.params;
-    console.log(queryParams);
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
     var cdbUsername = cdbReq.userByReq(req);
@@ -468,7 +467,6 @@ function handleQuery(req, res) {
 
                 // TODO: drop this, fix UI!
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
-
                 var opts = {
                   username: cdbUsername,
                   dbopts: dbopts,
@@ -483,7 +481,7 @@ function handleQuery(req, res) {
                   abortChecker: checkAborted,
                   params: queryParams
                 };
-
+                console.log(sql, params);
                 if ( req.profiler ) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
