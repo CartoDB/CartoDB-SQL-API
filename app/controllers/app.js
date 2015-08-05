@@ -362,27 +362,32 @@ function handleQuery(req, res) {
                 pg = new PSQL(dbopts, {}, { destroyOnError: true });
                 // get all the tables from Cache or SQL
                 tableCacheItem = tableCache.get(sql_md5);
+                function callback(err, result) {
+                   if (err) {
+                     self(err);
+                     return;
+                   }
+                   if ( result.rowCount === 1 ) {
+                     var raw_tables = result.rows[0].cdb_querytables;
+                     var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
+                     self(null, tables);
+                   } else {
+                     console.error(
+                         "Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result
+                     );
+                     self(null, []);
+                   }
+                }
                 if (tableCacheItem) {
                    tableCacheItem.hits++;
                    return false;
                 } else {
                    //TODO: sanitize cdbuser
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
-                      if (err) {
-                        self(err);
-                        return;
-                      }
-                      if ( result.rowCount === 1 ) {
-                        var raw_tables = result.rows[0].cdb_querytables;
-                        var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
-                        self(null, tables);
-                      } else {
-                        console.error(
-                            "Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result
-                        );
-                        self(null, []);
-                      }
-                   });
+                   if (queryParams && queryParams.length) {
+                     pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", queryParams, callback);
+                   } else {
+                     pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", callback);
+                  }
                 }
             },
             function setHeaders(err, tables){
@@ -481,7 +486,6 @@ function handleQuery(req, res) {
                   abortChecker: checkAborted,
                   params: queryParams
                 };
-                console.log(sql, params);
                 if ( req.profiler ) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
