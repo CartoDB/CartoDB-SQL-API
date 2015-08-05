@@ -114,13 +114,13 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
     dp: opts.dp,
     skipfields: opts.skipfields
   });
-  //var params = Array.isArray(opts.params) ? opts.params : [];
+  var params = Array.isArray(opts.params) ? opts.params : [];
   var that = this;
 
   this.start_time = Date.now();
 
   this.client = new PSQL(opts.dbopts, {}, { destroyOnError: true });
-  this.client.eventedQuery(sql, function(err, query, queryCanceller) {
+  function queryCallback(err, query, queryCanceller) {
       that.queryCanceller = queryCanceller;
       if (err) {
         callback(err);
@@ -149,7 +149,12 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
       query.on('notice', function(msg) {
           that.handleNotice(msg, query._result);
       });
-  });
+  }
+  if (params.length) {
+    this.client.eventedQuery(sql, params, queryCallback);
+  } else {
+    this.client.eventedQuery(sql, queryCallback);
+  }
 };
 
 PostgresFormat.prototype.cancel = function() {
