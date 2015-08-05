@@ -201,6 +201,7 @@ function handleQuery(req, res) {
     var format = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
     var requestedFilename = params.filename;
     var queryParams = params.params;
+    console.log(queryParams);
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
     var cdbUsername = cdbReq.userByReq(req);
