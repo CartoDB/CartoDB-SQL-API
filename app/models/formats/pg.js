@@ -151,6 +151,7 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
       });
   }
   if (params.length) {
+    console.log(sql);
     this.client.eventedQuery(sql, params, queryCallback);
   } else {
     this.client.eventedQuery(sql, queryCallback);
