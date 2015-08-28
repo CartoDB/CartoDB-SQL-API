@@ -530,18 +530,17 @@ function handleCacheStatus(req, res){
     res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
 }
 
-var healthCheck = new HealthCheck(metadataBackend, PSQL);
+var healthCheck = new HealthCheck(global.settings.disabled_file);
 function handleHealthCheck(req, res) {
     var healthConfig = global.settings.health || {};
     if (!!healthConfig.enabled) {
         var startTime = Date.now();
-        healthCheck.check(healthConfig.username, healthConfig.query, function(err, result) {
+        healthCheck.check(healthConfig.username, healthConfig.query, function(err) {
             var ok = !err;
             var response = {
                 enabled: true,
                 ok: ok,
-                elapsed: Date.now() - startTime,
-                result: result
+                elapsed: Date.now() - startTime
             };
             if (err) {
                 response.err = err.message;
