@@ -365,26 +365,39 @@ function handleQuery(req, res) {
                    tableCacheItem.hits++;
                    return false;
                 } else {
-                   //TODO: sanitize cdbuser
-                   pg.query("SELECT CDB_QueryTables($quotesql$" + sql + "$quotesql$)", function (err, result) {
-                      if (err) {
-                        self(err);
-                        return;
-                      }
-                      if ( result.rowCount === 1 ) {
-                        var raw_tables = result.rows[0].cdb_querytables;
-                        var tables = raw_tables.split(/^\{(.*)\}$/)[1].split(',');
-                        self(null, tables);
-                      } else {
-                        console.error(
-                            "Unexpected result from CDB_QueryTables($quotesql$" + sql + "$quotesql$): " + result
-                        );
-                        self(null, []);
-                      }
-                   });
+                    var affectedTablesAndLastUpdatedTimeQuery = [
+                        'WITH querytables AS (',
+                            'SELECT * FROM CDB_QueryTablesText($quotesql$' + sql + '$quotesql$) as tablenames',
+                        ')',
+                        'SELECT (SELECT tablenames FROM querytables), EXTRACT(EPOCH FROM max(updated_at)) as max',
+                        'FROM CDB_TableMetadata m',
+                        'WHERE m.tabname = any ((SELECT tablenames from querytables)::regclass[])'
+                    ].join(' ');
+
+                    pg.query(affectedTablesAndLastUpdatedTimeQuery, function (err, resultSet) {
+                        var tableNames = [];
+                        var lastUpdatedTime = Date.now();
+
+                        if (!err && resultSet.rowCount === 1) {
+                            var result = resultSet.rows[0];
+                            // This is an Array, so no need to split into parts
+                            tableNames = result.tablenames;
+                            if (Number.isFinite(result.max)) {
+                                lastUpdatedTime = result.max * 1000;
+                            }
+                        } else {
+                            var errorMessage = (err && err.message) || 'unknown error';
+                            console.error("Error on query explain '%s': %s", sql, errorMessage);
+                        }
+
+                        return self(null, {
+                            affectedTables: tableNames,
+                            lastUpdatedTime: lastUpdatedTime
+                        });
+                    });
                 }
             },
-            function setHeaders(err, tables){
+            function setHeaders(err, result) {
                 assert.ifError(err);
 
                 if ( req.profiler ) {
@@ -394,13 +407,14 @@ function handleQuery(req, res) {
                 checkAborted('setHeaders');
 
                 // store explain result in local Cache
-                if ( ! tableCacheItem && tables.length ) {
+                if ( ! tableCacheItem && result && result.affectedTables ) {
                     tableCacheItem = {
-                      affected_tables: tables,
-                      // check if query may possibly write
-                      may_write: queryMayWrite(sql),
-                      // initialise hit counter
-                      hits: 1
+                        affected_tables: result.affectedTables,
+                        last_modified: result.lastUpdatedTime,
+                        // check if query may possibly write
+                        may_write: queryMayWrite(sql),
+                        // initialise hit counter
+                        hits: 1
                     };
                     tableCache.set(sql_md5, tableCacheItem);
                 }
@@ -449,14 +463,10 @@ function handleQuery(req, res) {
                   res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, authenticated));
                 }
 
-                // Set Last-Modified header
-                //
-                // Currently sets it to NOW
-                //
-                // TODO: use a real value, querying for most recent change in
-                //       any of the source tables
-                //
-                res.header('Last-Modified', new Date().toUTCString());
+                var lastModified = (tableCacheItem && tableCacheItem.last_modified) ?
+                    tableCacheItem.last_modified :
+                    Date.now();
+                res.header('Last-Modified', new Date(lastModified).toUTCString());
 
                 return null;
             },
