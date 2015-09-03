@@ -1,5 +1,9 @@
-1.24.1 - 2015-mm-dd
+1.25.0 - 2015-mm-dd
 -------------------
+
+New features:
+
+ * Set `Last-Modified` header based on affected tables (#101)
 
 
 1.24.0 - 2015-08-04
