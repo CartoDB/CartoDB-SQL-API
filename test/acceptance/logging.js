@@ -56,6 +56,8 @@ describe('Logging SQL query on POST requests', function() {
         };
     }
 
+    var LENGHTY_SUFFIX = ' [...]';
+
     var postScenariosRequests = [
         {
             desc: 'should return json string for application/x-www-form-urlencoded',
@@ -80,6 +82,13 @@ describe('Logging SQL query on POST requests', function() {
             request: createPostRequest(
                 JSON.stringify({q: SQL_QUERY}), 'application/json', {api_key: API_KEY}
             )
+        },
+        {
+            desc: 'should return a substring when sql query is very long',
+            request: createPostRequest(
+                JSON.stringify({q: "select '" + new Array(2500).join('a') +  "'"}), 'application/json'
+            ),
+            expectedSQLQueryToLog: "select '" + (new Array(2000 + 1 - "select '".length).join('a')) + LENGHTY_SUFFIX
         }
     ];
 
@@ -92,7 +101,7 @@ describe('Logging SQL query on POST requests', function() {
             server.getSqlQueryFromRequestBody = function(req) {
                 called++;
                 var result = getSqlQueryFromRequestBodyFn(req);
-                assert.deepEqual(JSON.parse(result), {q: SQL_QUERY});
+                assert.deepEqual(JSON.parse(result), {q: scenario.expectedSQLQueryToLog || SQL_QUERY});
                 return result;
             };
 
