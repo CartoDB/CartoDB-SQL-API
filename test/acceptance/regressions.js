@@ -6,7 +6,7 @@ var qs = require('querystring');
 
 describe('regressions', function() {
 
-    it.skip('issue #224: tables with . (dot) in name works and can be queried', function(done) {
+    it('issue #224: tables with . (dot) in name works and can be queried', function(done) {
 
         function createRequest(sqlQuery) {
             return {
