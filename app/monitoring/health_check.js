@@ -7,7 +7,7 @@ function HealthCheck(disableFile) {
 
 module.exports = HealthCheck;
 
-HealthCheck.prototype.check = function(username, query, callback) {
+HealthCheck.prototype.check = function(callback) {
     var self = this;
 
     step(

@@ -574,7 +574,7 @@ function handleHealthCheck(req, res) {
     var healthConfig = global.settings.health || {};
     if (!!healthConfig.enabled) {
         var startTime = Date.now();
-        healthCheck.check(healthConfig.username, healthConfig.query, function(err) {
+        healthCheck.check(function(err) {
             var ok = !err;
             var response = {
                 enabled: true,

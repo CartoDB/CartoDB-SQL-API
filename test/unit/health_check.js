@@ -20,7 +20,7 @@ describe('health checks', function() {
       fs.readFile = function(filename, callback) {
         callback(null, "Maintenance");
       };
-      healthCheck.check('fake', 'select 1', function(err/*, result*/) {
+      healthCheck.check(function(err) {
         assert.equal(err.message, "Maintenance");
         assert.equal(err.http_status, 503);
         fs.readFile = readFileFn;
@@ -35,7 +35,7 @@ describe('health checks', function() {
       fs.readFile = function(filename, callback) {
         callback(new Error("ENOENT"), null);
       };
-      healthCheck.check('fake', 'select 1', function(err/*, result*/) {
+      healthCheck.check(function(err) {
         assert.equal(err, null);
         fs.readFile = readFileFn;
         done();
