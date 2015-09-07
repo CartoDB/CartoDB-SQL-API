@@ -84,4 +84,30 @@ describe('X-Cache-Channel header', function() {
         ], done));
     });
 
+    it('should not add header for functions', function(done) {
+        var sql = "SELECT format('%s', 'wadus')";
+        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            done();
+        });
+    });
+
+    it('should not add header for CDB_QueryTables', function(done) {
+        var sql = "SELECT CDB_QueryTablesText('select * from untitle_table_4')";
+        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            done();
+        });
+    });
+
+    it('should not add header for non table results', function(done) {
+        var sql = "SELECT 'wadus'::text";
+        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            done();
+        });
+    });
+
+
+
 });

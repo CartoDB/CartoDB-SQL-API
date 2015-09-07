@@ -488,7 +488,7 @@ function handleQuery(req, res) {
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
-                if ( tableCacheItem && ! tableCacheItem.may_write ) {
+                if ( tableCacheItem && tableCacheItem.affected_tables.length > 0 && !tableCacheItem.may_write ) {
                   res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, authenticated));
                 }
 

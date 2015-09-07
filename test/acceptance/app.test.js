@@ -1082,7 +1082,7 @@ it('numeric arrays are rendered as such', function(done){
         assert.equal(out.rows[0].x.length, 2);
         assert.equal(out.rows[0].x[0], '8.7');
         assert.equal(out.rows[0].x[1], '4.3');
-        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:'); // keep forever
+        assert.equal(res.headers.hasOwnProperty('x-cache-channel'), false);
         done();
     });
 });
