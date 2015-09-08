@@ -66,3 +66,8 @@ If any issue arise see test/README.md
 
 Note that the environment should be set to ensure the default
 PostgreSQL user is superuser (PGUSER=postgres make check).
+
+Contributing
+---
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
