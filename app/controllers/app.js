@@ -15,6 +15,7 @@
 //
 //
 var express = require('express');
+var bodyParser = require('body-parser');
 var path = require('path');
 var step = require('step');
 var crypto = require('crypto');
@@ -179,7 +180,8 @@ function getVersion() {
   return version;
 }
 
-app.use(express.bodyParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.enable('jsonp callback');
 app.set("trust proxy", true);
 
