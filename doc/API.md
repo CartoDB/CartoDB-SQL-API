@@ -143,7 +143,7 @@ https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_n
         year: "  2011",
         month: 10,
         day: "11",
-        cartodb_id: 1,
+        cartodb_id: 1
       },
       geometry: {
         type: "Point",
