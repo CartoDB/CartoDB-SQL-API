@@ -119,8 +119,6 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
       day: "11",
       the_geom: "0101000020E610...",
       cartodb_id: 1,
-      created_at: "2012-02-06T22:50:35.778Z",
-      updated_at: "2012-02-12T21:34:08.193Z",
       the_geom_webmercator: "0101000020110F000..."
     }
   ]
@@ -145,9 +143,7 @@ https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_n
         year: "  2011",
         month: 10,
         day: "11",
-        cartodb_id: 1,
-        created_at: "2012-02-06T22:50:35.778Z",
-        updated_at: "2012-02-12T21:34:08.193Z"
+        cartodb_id: 1
       },
       geometry: {
         type: "Point",
