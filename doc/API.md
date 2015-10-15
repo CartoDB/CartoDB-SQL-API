@@ -12,7 +12,7 @@ Remember that in order to access, read or modify data in private tables, you wil
 
 ## Authentication
 
-For all access to private tables and for write access to public tables, CartoDB enforces secure API access that requires you to authorize your queries. In order to authorize queries, you can use an API key or a Consumer Key and Secret from OAuth.
+For all access to private tables and for write access to public tables, CartoDB enforces secure API access that requires you to authorize your queries. In order to authorize queries, you can use an API key or a Consumer Key.
 
 ### API Key
 
@@ -30,20 +30,6 @@ To use your API key, pass it as a parameter in an URL call to the CartoDB API. F
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q={SQL statement}&api_key={Your API key}
 ```
-
-### OAuth
-
-OAuth is an authentication protocol that enables users to give permission to an application to act on their behalf without sharing their password. More information can be found at the [OAuth website](http://oauth.net/) or in the [Beginner’s Guide to OAuth](http://hueniverse.com/oauth/) from Hueniverse.
-
-For an easier route, check out the CartoDB clients [below](#libraries-in-different-languages).
-
-Getting OAuth keys - For secure access to your application you will need to generate a consumer key in your CartoDB dashboard.
-
-- Go to your dashboard.
-- Click on your username in the top right corner, and select "Your API keys."
-- Here, you can view and copy your OAuth Keys and Tokens, and you can request new OAuth Keys. Remember that requesting new OAuth Keys will affect all applications using OAuth for your CartoDB application, and that your old keys will immediately become invalid.
-
-There are many other resources to help you authenticate access via OAuth. For further reading, take a look at [this list](http://oauth.net/code/) or at the libraries available for [integrating CartoDB](#libraries-in-different-languages) with several programming languages.
 
 ## Making calls to the SQL API
 
@@ -80,7 +66,7 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 }
 ```
 
-Finally, remember that in order to use the SQL API, either your table must be public, or you must be authenticated using API Keys or OAuth, as discussed above.
+Finally, remember that in order to use the SQL API, either your table must be public, or you must be authenticated using API Keys, as discussed above.
 
 
 ### POST and GET
@@ -284,28 +270,28 @@ All CartoDB applications use **Version 2** of our APIs. All other APIs are depre
 
 ## Libraries in different languages
 
-To make things easier for developers we provide client libraries for different programming languages. These clients take care of handling OAuth to CartoDB and some of them provide some caching functionalities.
+To make things easier for developers, we provide client libraries for different programming languages and caching functionalities.
 
 - **R**  
   To help more researchers use CartoDB to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-r)
 
 - **NODE.js**  
-  This demo app authenticates with your CartoDB over OAuth/XAuth and shows how to perform read and write queries using the SQL API. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-nodejs)
+  This demo app authenticates with your CartoDB and shows how to perform read and write queries using the SQL API. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-nodejs)
 
 - **PHP**  
-  The PHP library handles basic OAuth and provides a wrapper around the SQL API to get PHP objects straight from SQL calls to CartoDB. [Fork it on GitHub!](https://github.com/Vizzuality/cartodbclient-php)
+  The PHP library provides a wrapper around the SQL API to get PHP objects straight from SQL calls to CartoDB. [Fork it on GitHub!](https://github.com/Vizzuality/cartodbclient-php)
 
 - **PYTHON**  
-  Provides API Key and xAuth access to SQL API. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
+  Provides API Key access to SQL API. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
 
 - **JAVA**  
-  Very basic example of how to access CartoDB SQL API using OAuth. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
+  Very basic example of how to access CartoDB SQL API. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
 
 - **NET**  
-  .NET library for authenticating with CartoDB using OAuth based on work started by [The Data Republic](http://www.thedatarepublic.com/). [Fork it on GitHub!](https://github.com/thedatarepublic/CartoDBClientDotNET)
+  .NET library for authenticating with CartoDB using an API key, based on work started by [The Data Republic](http://www.thedatarepublic.com/). [Fork it on GitHub!](https://github.com/thedatarepublic/CartoDBClientDotNET)
 
 - **Clojure**  
-  Clojure library for authenticating with CartoDB using OAuth, maintained by [REDD Metrics](http://www.reddmetrics.com/). [Fork it on GitHub!](https://github.com/reddmetrics/cartodb-clj)
+  Clojure library for authenticating with CartoDB, maintained by [REDD Metrics](http://www.reddmetrics.com/). [Fork it on GitHub!](https://github.com/reddmetrics/cartodb-clj)
 
 - **iOS**  
   Objective-C library for interacting with CartoDB in native iOS applications. [Fork it on GitHub!](https://github.com/jmnavarro/cartodb-objectivec-client)
