@@ -12,10 +12,10 @@ Remember that in order to access, read or modify data in private tables, you wil
 
 ## Documentation
 
-* [Authentication](/CartoDB/CartoDB-SQL-API/blob/master/doc/authentication.md)
-* [Making calls to the SQL API](/CartoDB/CartoDB-SQL-API/blob/master/doc/making_calls.md)
-* [Handling geospatial data](/CartoDB/CartoDB-SQL-API/blob/master/doc/handling_geospatial_data.md)
-* [Query optimizations](/CartoDB/CartoDB-SQL-API/blob/master/doc/query_optimizations.md)
-* [API version number](/CartoDB/CartoDB-SQL-API/blob/master/doc/version.md)
-* [Libraries in different languages](/CartoDB/CartoDB-SQL-API/blob/master/doc/libraries_support.md)
-* [Other Tips and Questions](/CartoDB/CartoDB-SQL-API/blob/master/doc/tips_and_tricks.md)
+* [Authentication](authentication.md)
+* [Making calls to the SQL API](making_calls.md)
+* [Handling geospatial data](handling_geospatial_data.md)
+* [Query optimizations](query_optimizations.md)
+* [API version number](version.md)
+* [Libraries in different languages](libraries_support.md)
+* [Other Tips and Questions](tips_and_tricks.md)
