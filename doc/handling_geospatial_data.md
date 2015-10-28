@@ -2,15 +2,18 @@
 
 Handling geospatial data through the SQL API is easy! By default, *the_geom* is returned straight from the database, in a format called Well-Known Binary. There are a handful of ways you can transform your geometries into more useful formats.
 
-
 The first, is to use the format=GeoJSON method described above. Others can be handled through your SQL statements directly. For example, enclosing your the_geom in a function called [ST_AsGeoJSON](http://www.postgis.org/documentation/manual-svn/ST_AsGeoJSON.html) will allow you to use JSON for your data but a GeoJSON string for your geometry column only. Alternatively, using a the [ST_AsText](http://www.postgis.org/documentation/manual-svn/ST_AsGeoJSON.html) function will return your geometry as Well-Known Text.
 
-<div class="code-title code-request with-result">ASGEOJSON</div>
+### ST_AsGeoJSON
+
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
 ```
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   time: 0.003,
@@ -24,13 +27,16 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_ge
 }
 ```
 
+### ST_AsText
 
-<div class="code-title code-request with-result">ASTEXT</div>
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
 ```
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   time: 0.003,
@@ -48,7 +54,8 @@ More advanced methods exist in the PostGIS library to extract meaningful data fr
 
 All data returned from *the_geom* column is in WGS 84 (EPSG:4326). You can change this quickly and easily on the fly using SQL. For example, if you desire geometries in the Hanoi 1972 (EPSG:4147) projection, you could [ST_Transform](http://www.postgis.org/docs/ST_Transform.html),
 
-<div class="code-title code-request">ASTEXT</div>
+### ST_Transform
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1
 ```
