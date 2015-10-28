@@ -4,23 +4,27 @@ CartoDB is based on the rock solid PostgreSQL database. All of your tables resid
 
 CartoDB is also based on PostGIS, so take a look at the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
 
+
 ## URL endpoints
 
 All SQL API requests to your CartoDB account should follow this general pattern:
 
-<div class="code-title code-request">SQL QUERY EXAMPLE</div>
+#### SQL query example
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q={SQL statement}
 ```
 
 If you encounter errors, double-check that you are using the correct account name, and that your SQL statement is valid. A simple example of this pattern is conducting a count of all the records in your table:
 
-<div class="code-title code-request with-result">SQL QUERY COUNT EXAMPLE</div>
+#### Count example
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 ```
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   time: 0.007,
@@ -38,9 +42,12 @@ Finally, remember that in order to use the SQL API, either your table must be pu
 
 ## POST and GET
 
-The CartoDB SQL API is setup to handle both GET and POST requests. You can test the GET method directly in your browser. Below is an example of a JQuery SQL API request to CartoDB:
+The CartoDB SQL API is setup to handle both GET and POST requests. You can test the GET method directly in your browser. Below is an example of a jQuery SQL API request to CartoDB:
 
-<div class="code-title">JQUERY</div>
+### jQuery
+
+#### Call
+
 ```javascript
 $.getJSON('https://'+your_account_name+'.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
   $.each(data.rows, function(key, val) {
@@ -51,16 +58,21 @@ $.getJSON('https://'+your_account_name+'.cartodb.com/api/v2/sql/?q='+sql_stateme
 
 By default, GET requests work from anywhere. In CartoDB, POST requests work from any website as well. We achieve this by hosting a cross-domain policy file at the root of all of our servers. This allows you the greatest level of flexibility when developing your application.
 
+
 ## Response formats
 
 The standard response from the CartoDB SQL API is JSON. If you are building a web-application, the lightweight JSON format allows you to quickly integrate data from the SQL API.
 
-<div class="code-title code-request with-result">JSON</div>
+### JSON
+
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   time: 0.006,
@@ -80,12 +92,16 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 
 Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/geojson-spec.html) to return data from the API. To do so, simply supply the `format` parameter as GeoJSON:
 
-<div class="code-title code-request with-result">GEOJSON</div>
+### GeoJSON
+
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   type: "FeatureCollection",
@@ -112,28 +128,35 @@ https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_n
 
 The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
 
+
 ## Output filename
+
 To customize the output filename, add the `filename` parameter to your URL:
 
-<div class="code-title code-request with-result">Customize filename</div>
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
 ```
+
 
 ## Getting table information
 
 Currently, there is no public method to access your table schemas. The simplest way to retrieve table structure is to access the first row of the data,
 
-<div class="code-title code-request">COLUMNS</div>
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
+
 
 ## Response errors
 
 To help you debug your SQL queries, the CartoDB SQL API returns errors as part of the JSON response. Errors come back as follows,
 
-<div class="code-title">RESULT</div>
+#### Result
+
 ```javascript
 {
   error: [
@@ -144,18 +167,25 @@ To help you debug your SQL queries, the CartoDB SQL API returns errors as part o
 
 You can use these errors to help understand your SQL. For more complete documentation see the Error Codes and Solutions section of this Users Guide.
 
+
 ## Write data to your CartoDB account
 
 Performing inserts or updates on your data is simple using your [API key](#authentication). All you need to do is supply a correct SQL [INSERT](http://www.postgresql.org/docs/9.1/static/sql-insert.html) or [UPDATE](http://www.postgresql.org/docs/9.1/static/sql-update.html) statement for your table along with the api_key parameter for your account. Be sure to keep these requests private, as anyone with your API key will be able to modify your tables. A correct SQL insert statement means that all the columns you want to insert into already exist in your table, and all the values for those columns are the right type (quoted string, unquoted string for geoms and dates, or numbers).
 
-<div class="code-title code-request">COLUMNS</div>
+### Insert
+
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={Your API key}
 ```
 
 Updates are just as simple. Here is an example, updating a row based on the value of the cartodb_id column.
 
-<div class="code-title code-request">COLUMNS</div>
+### Update
+
+#### Call
+
 ```bash
 https://{account}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={Your API key}
 ```
