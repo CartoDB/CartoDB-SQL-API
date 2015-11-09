@@ -258,7 +258,7 @@ There are some tricks to consider when using the SQL API that might make your ap
 
 * Use PostGIS functions to simplify and filter out unneeded geometries when possible. One very handy function is, [ST_Simplify](http://www.postgis.org/docs/ST_Simplify.html).
 
-* Remember to build indexes that will speed up some of your more common queries.
+* Remember to build indexes that will speed up some of your more common queries. For details, see [Creating Indexes](/cartodb-editor/managing-your-data/#creating-indexes)
 
 * Use *cartodb_id* to retrieve specific rows of your data, this is the unique key column added to every CartoDB table.
 
