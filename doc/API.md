@@ -302,7 +302,7 @@ To make things easier for developers, we provide client libraries for different 
 
 CartoDB uses the database access mechanism for security. Every writable connection is verified by an API key. If you have the correct API key, you can write-access to the database. If you do not have the correct API key, your client is "logged in" as a low privilege user, and you have read-only access to the database (if the database allows you to read).
 
-SQL injection works by tricking a database user, so that it is only showing you certain parts of the database. It tricks the database into writing to things that it shouldn't. This happens when the database connection has, perhaps, more privileges than you would freely hand out to your API users.
+SQL injection works by tricking a database user, so that running a query retrieves database wide results, even though the database is protected.
 
 Because CartoDB enforces roles and access at the database level, the idea of a “SQL injection attack” is not possible with CartoDB. Injection is possible, but clients will still run into our security wall at the database level. The SQL API already lets you _attempt_ to run any query you want. The database will reject your SQL API request if it finds your user/role does not have the requisite permissions. In other words, you can ask any question of the database you like; the CartoDB database does not guarantee it will be answered.
 
