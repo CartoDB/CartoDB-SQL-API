@@ -2,13 +2,15 @@
 
 ## What does CartoDB do to prevent SQL injection?
 
-CartoDB uses the database access mechanism itself for security. Every writable connection is verified by an API key, and if you have the correct API key, you can write to anything the database allows you to write to. If you don’t have the correct API key, your client is "logged in" as a low privilege user, and you can read anything the database allows you to read.
+CartoDB uses the database access mechanism for security. Every writable connection is verified by an API key. If you have the correct API key, you can write-access to the database. If you do not have the correct API key, your client is "logged in" as a low privilege user, and you have read-only access to the database (if the database allows you to read).
 
-SQL injection works by tricking a database user that is only showing you certain parts of the database to show all of it, or by tricking the database into writing things it shouldn't. This happens when the database connection has perhaps more privileges than you would freely hand out to your API users.
+SQL injection works by tricking a database user, so that running a query retrieves database wide results, even though the database is protected.
 
-Because CartoDB enforces roles and access at the database level, the idea of a “SQL injection attack” is not possible with CartoDB. Injection is possible, but clients will still run into our security wall at the database level. Put another way, the SQL API already lets you _attempt_ to run any query you want. The database will reject your SQL API request if it finds your user/role doesn't have the requisite permissions. In other words, you can ask any question of the database you like; the CartoDB database doesn’t guarantee it will be answered.
+Because CartoDB enforces roles and access at the database level, the idea of a "SQL injection attack" is not possible with CartoDB. Injection is possible, but clients will still run into our security wall at the database level. The SQL API already lets you _attempt_ to run any query you want. The database will reject your SQL API request if it finds your user/role does not have the requisite permissions. In other words, you can ask any question of the database you like; the CartoDB database does not guarantee it will be answered.
 
-If a user's API key found its way out into the wild, then that would be a problem but is not something CartoDB can prevent. This is why it is very important for all CartoDB users to secure their API keys. In the event a user's API key is compromised, either the user or the CartoDB Enterprise administrator can regenerate the API key in their account settings.
+If a user's API key found its way out into the wild, that could be a problem, but it is not something CartoDB can prevent. _This is why it is very important for all CartoDB users to secure their API keys_. In the event a user's API key is compromised, the user (or the CartoDB Enterprise administrator), can regenerate the API key in their account settings.
+
+**Note:** While the SQL API is SQL injection secure, if you build additional layers to allow another person to run queries (i.e., building a proxy so that others can indirectly perform authenticated queries through the SQL API), the security of those newly added layers are the responsibility of the creator.
 
 ## What levels of database access can roles/users have?
 
