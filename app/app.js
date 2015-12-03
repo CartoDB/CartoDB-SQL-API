@@ -21,6 +21,12 @@ var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
 
+var GenericController = require('./controllers/generic_controller');
+var QueryController = require('./controllers/query_controller');
+var CacheStatusController = require('./controllers/cache_status_controller');
+var HealthCheckController = require('./controllers/health_check_controller');
+var VersionController = require('./controllers/version_controller');
+
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
 // override Date.toJSON
@@ -153,23 +159,18 @@ function App() {
 
     // basic routing
 
-    var GenericController = require('./controllers/generic_controller');
     var genericController = new GenericController();
     genericController.register(app);
 
-    var QueryController = require('./controllers/query_controller');
     var queryController = new QueryController(metadataBackend, tableCache, statsd_client);
     queryController.register(app);
 
-    var CacheStatusController = require('./controllers/cache_status_controller');
     var cacheStatusController = new CacheStatusController(tableCache);
     cacheStatusController.register(app);
 
-    var HealthCheckController = require('./controllers/health_check_controller');
     var healthCheckController = new HealthCheckController();
     healthCheckController.register(app);
 
-    var VersionController = require('./controllers/version_controller');
     var versionController = new VersionController();
     versionController.register(app);
 
