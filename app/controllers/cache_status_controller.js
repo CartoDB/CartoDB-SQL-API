@@ -6,7 +6,7 @@ function CacheStatusController(tableCache) {
     this.tableCache = tableCache;
 }
 
-CacheStatusController.prototype.register = function (app) {
+CacheStatusController.prototype.route = function (app) {
     app.get(global.settings.base_url + '/cachestatus', this.handleCacheStatus.bind(this));
 };
 

@@ -160,19 +160,19 @@ function App() {
     // basic routing
 
     var genericController = new GenericController();
-    genericController.register(app);
+    genericController.route(app);
 
     var queryController = new QueryController(metadataBackend, tableCache, statsd_client);
-    queryController.register(app);
+    queryController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);
-    cacheStatusController.register(app);
+    cacheStatusController.route(app);
 
     var healthCheckController = new HealthCheckController();
-    healthCheckController.register(app);
+    healthCheckController.route(app);
 
     var versionController = new VersionController();
-    versionController.register(app);
+    versionController.route(app);
 
     return app;
 }

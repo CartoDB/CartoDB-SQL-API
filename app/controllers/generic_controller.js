@@ -5,7 +5,7 @@ var setCrossDomain = require('../utils/cross_domain');
 function GenericController() {
 }
 
-GenericController.prototype.register = function (app) {
+GenericController.prototype.route = function (app) {
     app.options('*', this.handleRequest.bind(this));
 };
 

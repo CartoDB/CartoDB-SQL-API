@@ -6,7 +6,7 @@ function HealthCheckController() {
     this.healthCheck = new HealthCheck(global.settings.disabled_file);
 }
 
-HealthCheckController.prototype.register = function (app) {
+HealthCheckController.prototype.route = function (app) {
     app.get(global.settings.base_url + '/health', this.handleHealthCheck.bind(this));
 };
 

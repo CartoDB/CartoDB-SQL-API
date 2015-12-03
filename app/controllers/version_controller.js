@@ -7,7 +7,7 @@ var version = {
 function VersionController() {
 }
 
-VersionController.prototype.register = function (app) {
+VersionController.prototype.route = function (app) {
     app.get(global.settings.base_url + '/version', this.handleVersion.bind(this));
 };
 

@@ -26,7 +26,7 @@ function QueryController(metadataBackend, tableCache, statsd_client) {
     this.statsd_client = statsd_client;
 }
 
-QueryController.prototype.register = function (app) {
+QueryController.prototype.route = function (app) {
     app.all(global.settings.base_url + '/sql',  this.handleQuery.bind(this));
     app.all(global.settings.base_url + '/sql.:f',  this.handleQuery.bind(this));
 };
