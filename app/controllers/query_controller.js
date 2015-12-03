@@ -33,7 +33,7 @@ QueryController.prototype.register = function (app) {
 
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res) {
-    var self = this;
+    var _this = this;
     // extract input
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
@@ -141,9 +141,9 @@ QueryController.prototype.handleQuery = function (req, res) {
                 checkAborted('getDatabaseConnectionParams');
                 // If the request is providing credentials it may require every DB parameters
                 if (authApi.hasCredentials()) {
-                    self.metadataBackend.getAllUserDBParams(cdbUsername, this);
+                    _this.metadataBackend.getAllUserDBParams(cdbUsername, this);
                 } else {
-                    self.metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
+                    _this.metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
                 }
             },
             function authenticate(err, userDBParams) {
@@ -165,7 +165,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                 dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
                 authApi.verifyCredentials({
-                    metadataBackend: self.metadataBackend,
+                    metadataBackend: _this.metadataBackend,
                     apiKey: dbParams.apikey
                 }, this);
             },
@@ -205,7 +205,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 pg = new PSQL(dbopts, {}, { destroyOnError: true });
                 // get all the tables from Cache or SQL
-                tableCacheItem = self.tableCache.get(sql_md5);
+                tableCacheItem = _this.tableCache.get(sql_md5);
                 if (tableCacheItem) {
                    tableCacheItem.hits++;
                    return false;
@@ -261,7 +261,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                         // initialise hit counter
                         hits: 1
                     };
-                    self.tableCache.set(sql_md5, tableCacheItem);
+                    _this.tableCache.set(sql_md5, tableCacheItem);
                 }
 
                 if ( !authenticated && tableCacheItem ) {
@@ -362,11 +362,11 @@ QueryController.prototype.handleQuery = function (req, res) {
                 if ( req.profiler ) {
                   req.profiler.sendStats(); // TODO: do on nextTick ?
                 }
-                if (self.statsd_client) {
+                if (_this.statsd_client) {
                   if ( err ) {
-                      self.statsd_client.increment('sqlapi.query.error');
+                      _this.statsd_client.increment('sqlapi.query.error');
                   } else {
-                      self.statsd_client.increment('sqlapi.query.success');
+                      _this.statsd_client.increment('sqlapi.query.success');
                   }
                 }
             }
@@ -374,8 +374,8 @@ QueryController.prototype.handleQuery = function (req, res) {
     } catch (err) {
         handleException(err, res);
 
-        if (self.statsd_client) {
-            self.statsd_client.increment('sqlapi.query.error');
+        if (_this.statsd_client) {
+            _this.statsd_client.increment('sqlapi.query.error');
         }
     }
 
