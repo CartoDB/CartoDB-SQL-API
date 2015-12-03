@@ -63,7 +63,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var cdbReq = new CdbRequest();
 
-// Set default configuration 
+// Set default configuration
 global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
 global.settings.bufferedRows = global.settings.bufferedRows || 1000;
 
@@ -154,7 +154,6 @@ if ( global.settings.statsd ) {
   });
 }
 
-
 // Use step-profiler
 if ( global.settings.useProfiler ) {
   app.use(function(req, res, next) {
@@ -173,11 +172,11 @@ if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
 }
 
 // Version extracting function
-function getVersion() {
-  var version = {};
-  version.cartodb_sql_api = require(__dirname + '/../../package.json').version;
-  return version;
-}
+// function getVersion() {
+//   var version = {};
+//   version.cartodb_sql_api = require(__dirname + '/../../package.json').version;
+//   return version;
+// }
 
 app.use(express.bodyParser());
 app.enable('jsonp callback');
@@ -188,9 +187,18 @@ app.options('*', function(req,res) { setCrossDomain(res); res.end(); });
 
 app.all(global.settings.base_url + '/sql',  handleQuery);
 app.all(global.settings.base_url + '/sql.:f',  handleQuery);
-app.get(global.settings.base_url + '/cachestatus', handleCacheStatus);
-app.get(global.settings.base_url + '/health',  handleHealthCheck);
-app.get(global.settings.base_url + '/version', handleVersion);
+
+var CacheStatusController = require('./cache_status_controller');
+var cacheStatusController = new CacheStatusController(tableCache);
+cacheStatusController.register(app);
+
+var HealthCheckController = require('./health_check_controller');
+var healthCheckController = new HealthCheckController();
+healthCheckController.register(app);
+
+var VersionController = require('./version_controller');
+var versionController = new VersionController();
+versionController.register(app);
 
 var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|drop|reindex|truncate|refresh)\\b", "i");
 /**
@@ -209,11 +217,6 @@ function sanitize_filename(filename) {
   filename = filename.replace(/[;()\[\]<>'"\s]/g, '_');
   //console.log("Sanitized: " + filename);
   return filename;
-}
-
-// request handlers
-function handleVersion(req, res) {
-  res.send(getVersion());
 }
 
 function handleQuery(req, res) {
@@ -559,36 +562,6 @@ function handleQuery(req, res) {
         if (statsd_client) {
             statsd_client.increment('sqlapi.query.error');
         }
-    }
-}
-
-function handleCacheStatus(req, res){
-    var tableCacheValues = tableCache.values();
-    var totalExplainHits = _.reduce(tableCacheValues, function(memo, res) { return memo + res.hits; }, 0);
-    var totalExplainKeys = tableCacheValues.length;
-    res.send({explain: {pid: process.pid, hits: totalExplainHits, keys : totalExplainKeys }});
-}
-
-var healthCheck = new HealthCheck(global.settings.disabled_file);
-function handleHealthCheck(req, res) {
-    var healthConfig = global.settings.health || {};
-    if (!!healthConfig.enabled) {
-        var startTime = Date.now();
-        healthCheck.check(function(err) {
-            var ok = !err;
-            var response = {
-                enabled: true,
-                ok: ok,
-                elapsed: Date.now() - startTime
-            };
-            if (err) {
-                response.err = err.message;
-            }
-            res.send(response, ok ? 200 : 503);
-
-        });
-    } else {
-        res.send({enabled: false, ok: true}, 200);
     }
 }
 
