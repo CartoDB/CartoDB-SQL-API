@@ -23,6 +23,7 @@ var LRU = require('lru-cache');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
+// override Date.toJSON
 require('../utils/date_to_json');
 
 // jshint maxcomplexity:21
