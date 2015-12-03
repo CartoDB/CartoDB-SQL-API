@@ -4,7 +4,7 @@
 * SQL API loader
 * ===============
 *
-* node app [environment] 
+* node app [environment]
 *
 * environments: [development, test, production]
 *
@@ -70,7 +70,7 @@ if ( global.settings.rollbar ) {
 global.log4js.configure(log4js_config, { cwd: __dirname });
 global.logger = global.log4js.getLogger();
 
- 
+
 // kick off controller
 if ( ! global.settings.base_url ) {
     global.settings.base_url = '/api/*';
@@ -78,7 +78,7 @@ if ( ! global.settings.base_url ) {
 
 var version = require("./package").version;
 
-var app = require(global.settings.app_root + '/app/controllers/app')();
+var app = require(global.settings.app_root + '/app/app')();
 app.listen(global.settings.node_port, global.settings.node_host, function() {
   console.log(
       "CartoDB SQL API %s listening on %s:%s with base_url %s (%s)",
