@@ -11,4 +11,4 @@ var sqlQueryMayWriteRegex = new RegExp("\\b(alter|insert|update|delete|create|dr
  */
 module.exports = function queryMayWrite(sql) {
     return sqlQueryMayWriteRegex.test(sql);
-}
+};
