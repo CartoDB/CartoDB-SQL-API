@@ -27,7 +27,7 @@ it('does not hang server', function(done){
   var db_port_backup = global.settings.db_port;
   global.settings.db_host = 'localhost';
   global.settings.db_port = sql_server_port;
-  var app = require(global.settings.app_root + '/app/controllers/app')();
+  var app = require(global.settings.app_root + '/app/app')();
   step(
     function sendQuery() {
       var next = this;

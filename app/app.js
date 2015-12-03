@@ -24,7 +24,7 @@ var LRU = require('lru-cache');
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
 // override Date.toJSON
-require('../utils/date_to_json');
+require('./utils/date_to_json');
 
 // jshint maxcomplexity:21
 function App() {
@@ -153,23 +153,23 @@ function App() {
 
     // basic routing
 
-    var GenericController = require('./generic_controller');
+    var GenericController = require('./controllers/generic_controller');
     var genericController = new GenericController();
     genericController.register(app);
 
-    var QueryController = require('./query_controller');
+    var QueryController = require('./controllers/query_controller');
     var queryController = new QueryController(metadataBackend, tableCache, statsd_client);
     queryController.register(app);
 
-    var CacheStatusController = require('./cache_status_controller');
+    var CacheStatusController = require('./controllers/cache_status_controller');
     var cacheStatusController = new CacheStatusController(tableCache);
     cacheStatusController.register(app);
 
-    var HealthCheckController = require('./health_check_controller');
+    var HealthCheckController = require('./controllers/health_check_controller');
     var healthCheckController = new HealthCheckController();
     healthCheckController.register(app);
 
-    var VersionController = require('./version_controller');
+    var VersionController = require('./controllers/version_controller');
     var versionController = new VersionController();
     versionController.register(app);
 
