@@ -93,7 +93,7 @@ JobController.prototype.handleJob = function (req, res) {
                 ') VALUES (',
                     '\'' + cdbUsername + '\', ',
                     '\'' + sql + '\' ',
-                ');'
+                ') RETURNING job_id;'
             ].join('\n');
 
             pg.query(enqueueJobQuery, function (err, result) {
@@ -124,9 +124,7 @@ JobController.prototype.handleJob = function (req, res) {
               res.header('X-Served-By-DB-Host', result.host);
             }
 
-            res.send({
-                job_id: result.job.job_id
-            });
+            res.send(result.job.rows[0]);
         }
     );
 };
