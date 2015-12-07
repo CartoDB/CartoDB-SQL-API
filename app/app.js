@@ -23,6 +23,7 @@ var LRU = require('lru-cache');
 
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
+var JobController = require('./controllers/job_controller');
 var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
@@ -164,6 +165,9 @@ function App() {
 
     var queryController = new QueryController(metadataBackend, tableCache, statsd_client);
     queryController.route(app);
+
+    var jobController = new JobController(metadataBackend, tableCache, statsd_client);
+    jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);
     cacheStatusController.route(app);

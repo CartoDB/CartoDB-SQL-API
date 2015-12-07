@@ -5,7 +5,7 @@ var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
-var AuthApi = require('../auth/auth_api');
+var UserDatabaseService = require('../services/user_database_service');
 
 var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
@@ -19,6 +19,7 @@ var generateCacheKey = require('../utils/cache_key_generator');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
+var userDatabaseService = new UserDatabaseService();
 
 function QueryController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
@@ -33,7 +34,7 @@ QueryController.prototype.route = function (app) {
 
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res) {
-    var _this = this;
+    var self = this;
     // extract input
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
@@ -115,87 +116,33 @@ QueryController.prototype.handleQuery = function (req, res) {
         var pg;
 
         // Database options
-        var dbopts = {
-          port: global.settings.db_port,
-          pass: global.settings.db_pubuser_pass
-        };
-
-        var authenticated = false;
-
+        var dbopts = {};
         var formatter;
-
-        var authApi = new AuthApi(req, params),
-            dbParams;
 
         if ( req.profiler ) {
             req.profiler.done('init');
         }
 
-        // 1. Get database from redis via the username stored in the host header subdomain
-        // 2. Run the request through OAuth to get R/W user id if signed
+        // 1. Get user database and related parameters
         // 3. Get the list of tables affected by the query
         // 4. Setup headers
         // 5. Send formatted results back
         step(
-            function getDatabaseConnectionParams() {
-                checkAborted('getDatabaseConnectionParams');
-                // If the request is providing credentials it may require every DB parameters
-                if (authApi.hasCredentials()) {
-                    _this.metadataBackend.getAllUserDBParams(cdbUsername, this);
-                } else {
-                    _this.metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
-                }
+            function getUserDBInfo() {
+                var options = {
+                    req: req,
+                    params: params,
+                    checkAborted: checkAborted,
+                    metadataBackend: self.metadataBackend,
+                    cdbUsername: cdbUsername
+                };
+                userDatabaseService.getUserDatabase(options, this);
             },
-            function authenticate(err, userDBParams) {
-                if (err) {
-                    err.http_status = 404;
-                    err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
-                        "Please check that you have entered the correct domain.";
-                    throw err;
-                }
-
-                if ( req.profiler ) {
-                    req.profiler.done('getDBParams');
-                }
-
-                dbParams = userDBParams;
-
-                dbopts.host = dbParams.dbhost;
-                dbopts.dbname = dbParams.dbname;
-                dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-                authApi.verifyCredentials({
-                    metadataBackend: _this.metadataBackend,
-                    apiKey: dbParams.apikey
-                }, this);
-            },
-            function setDBAuth(err, isAuthenticated) {
-                if (err) {
-                    throw err;
-                }
-
-                if ( req.profiler ) {
-                    req.profiler.done('authenticate');
-                }
-
-                if (_.isBoolean(isAuthenticated) && isAuthenticated) {
-                    authenticated = isAuthenticated;
-                    dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-                    if ( global.settings.hasOwnProperty('db_user_pass') ) {
-                        dbopts.pass = _.template(global.settings.db_user_pass, {
-                            user_id: dbParams.dbuser,
-                            user_password: dbParams.dbpass
-                        });
-                    } else {
-                        delete dbopts.pass;
-                    }
-                }
-                return null;
-            },
-            function queryExplain(err){
-                var self = this;
-
+            function queryExplain(err, userDatabase){
                 assert.ifError(err);
+
+                var next = this;
+                dbopts = userDatabase;
 
                 if ( req.profiler ) {
                     req.profiler.done('setDBAuth');
@@ -205,7 +152,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 pg = new PSQL(dbopts, {}, { destroyOnError: true });
                 // get all the tables from Cache or SQL
-                tableCacheItem = _this.tableCache.get(sql_md5);
+                tableCacheItem = self.tableCache.get(sql_md5);
                 if (tableCacheItem) {
                    tableCacheItem.hits++;
                    return false;
@@ -235,7 +182,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                             console.error("Error on query explain '%s': %s", sql, errorMessage);
                         }
 
-                        return self(null, {
+                        return next(null, {
                             affectedTables: tableNames,
                             lastUpdatedTime: lastUpdatedTime
                         });
@@ -261,10 +208,10 @@ QueryController.prototype.handleQuery = function (req, res) {
                         // initialise hit counter
                         hits: 1
                     };
-                    _this.tableCache.set(sql_md5, tableCacheItem);
+                    self.tableCache.set(sql_md5, tableCacheItem);
                 }
 
-                if ( !authenticated && tableCacheItem ) {
+                if ( !dbopts.authenticated && tableCacheItem ) {
                     var affected_tables = tableCacheItem.affected_tables;
                     for ( var i = 0; i < affected_tables.length; ++i ) {
                         var t = affected_tables[i];
@@ -305,7 +252,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
                 if ( tableCacheItem && tableCacheItem.affected_tables.length > 0 && !tableCacheItem.may_write ) {
-                  res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, authenticated));
+                  res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, dbopts.authenticated));
                 }
 
                 var lastModified = (tableCacheItem && tableCacheItem.last_modified) ?
@@ -362,11 +309,11 @@ QueryController.prototype.handleQuery = function (req, res) {
                 if ( req.profiler ) {
                   req.profiler.sendStats(); // TODO: do on nextTick ?
                 }
-                if (_this.statsd_client) {
+                if (self.statsd_client) {
                   if ( err ) {
-                      _this.statsd_client.increment('sqlapi.query.error');
+                      self.statsd_client.increment('sqlapi.query.error');
                   } else {
-                      _this.statsd_client.increment('sqlapi.query.success');
+                      self.statsd_client.increment('sqlapi.query.success');
                   }
                 }
             }
@@ -374,8 +321,8 @@ QueryController.prototype.handleQuery = function (req, res) {
     } catch (err) {
         handleException(err, res);
 
-        if (_this.statsd_client) {
-            _this.statsd_client.increment('sqlapi.query.error');
+        if (self.statsd_client) {
+            self.statsd_client.increment('sqlapi.query.error');
         }
     }
 

@@ -67,6 +67,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
   echo "preparing postgres..."
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
+  psql -c 'CREATE EXTENSION "uuid-ossp";' ${TEST_DB}
   cat test.sql |
     sed "s/:PUBLICUSER/${PUBLICUSER}/" |
     sed "s/:PUBLICPASS/${PUBLICPASS}/" |
@@ -108,7 +109,7 @@ HMSET rails:users:vizzuality \
  id 1 \
  database_name ${TEST_DB} \
  database_host localhost \
- map_key 1234 
+ map_key 1234
 SADD rails:users:vizzuality:map_key 1235
 EOF
 
@@ -137,5 +138,3 @@ fi
 
 
 echo "ok, you can run test now"
-
-
