@@ -4,7 +4,6 @@ var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
-var uuid = require('uuid');
 
 var UserDatabaseService = require('../services/user_database_service');
 var CdbRequest = require('../models/cartodb_request');
