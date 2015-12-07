@@ -18,7 +18,7 @@ var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 
-describe.only('job.test', function() {
+describe('job.test', function() {
 
     it('GET /api/v2/job', function (done){
         assert.response(app, {
