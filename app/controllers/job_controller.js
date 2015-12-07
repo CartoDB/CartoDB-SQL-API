@@ -123,8 +123,7 @@ JobController.prototype.handleJob = function (req, res) {
             if (result.host) {
               res.header('X-Served-By-DB-Host', result.host);
             }
-
-            res.send(result.job.rows[0]);
+            res.send(result.job);
         }
     );
 };
