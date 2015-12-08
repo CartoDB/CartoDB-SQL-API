@@ -37,7 +37,7 @@ describe('job.test', function() {
 
     it('GET /api/v2/job with SQL parameter on SELECT no database param,just id using headers', function(done){
         assert.response(app, {
-            url: '/api/v2/job?q='  + querystring.stringify({ q: "SELECT * FROM untitle_table_4" }),
+            url: '/api/v2/job?'  + querystring.stringify({ q: "SELECT * FROM untitle_table_4" }),
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {

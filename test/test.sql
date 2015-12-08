@@ -28,7 +28,8 @@ CREATE TABLE cdb_jobs (
     status character varying DEFAULT 'pending',
     query character varying,
     updated_at timestamp without time zone DEFAULT now(),
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    failed_reason character varying
 );
 
 ALTER TABLE ONLY cdb_jobs ADD CONSTRAINT cdb_jobs_pkey PRIMARY KEY (job_id);

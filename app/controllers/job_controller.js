@@ -6,11 +6,13 @@ var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
 var UserDatabaseService = require('../services/user_database_service');
+var UserDatabaseQueue = require('../../batch/user_database_queue');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
+var userDatabaseQueue = new UserDatabaseQueue();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
@@ -73,7 +75,7 @@ JobController.prototype.handleJob = function (req, res) {
             };
             userDatabaseService.getUserDatabase(options, this);
         },
-        function enqueueJob(err, userDatabase) {
+        function persistJob(err, userDatabase) {
             assert.ifError(err);
 
             var next = this;
@@ -86,7 +88,7 @@ JobController.prototype.handleJob = function (req, res) {
 
             pg = new PSQL(userDatabase, {}, { destroyOnError: true });
 
-            var enqueueJobQuery = [
+            var persistJobQuery = [
                 'INSERT INTO cdb_jobs (',
                     'user_id, query',
                 ') VALUES (',
@@ -95,13 +97,30 @@ JobController.prototype.handleJob = function (req, res) {
                 ') RETURNING job_id;'
             ].join('\n');
 
-            pg.query(enqueueJobQuery, function (err, result) {
+            pg.query(persistJobQuery, function (err, result) {
                 if (err) {
                     return next(err);
                 }
+
                 next(null, {
                     job: result,
-                    host: userDatabase.host
+                    userDatabase: userDatabase
+                });
+            });
+        },
+        function enqueueUserDatabase(err, result) {
+            assert.ifError(err);
+
+            var next = this;
+
+            userDatabaseQueue.enqueue(cdbUsername, function (err) {
+                if (err) {
+                    return next(err);
+                }
+
+                next(null, {
+                    job: result.job,
+                    host: result.userDatabase.host
                 });
             });
         },
