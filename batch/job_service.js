@@ -20,7 +20,7 @@ JobService.prototype.run = function (userDatabaseMetada, callback) {
                 return callback(err);
             }
 
-            self.runJob(pg, job.query, function (err, jobResult) {
+            self.runJob(pg, job, function (err, jobResult) {
                 if (err) {
                     self.setJobFailed(pg, job, err.message, function (err) {
                         if (err) {
@@ -42,9 +42,14 @@ JobService.prototype.run = function (userDatabaseMetada, callback) {
     });
 };
 
-JobService.prototype.runJob = function (pg, jobQuery, callback) {
-    // TODO: wrap select query with select into
-    pg.query(jobQuery, function (err, jobResult) {
+JobService.prototype.runJob = function (pg, job, callback) {
+    var query = job.query;
+
+    if (job.query.match(/SELECT\s.*FROM\s.*/i)) {
+        query = 'SELECT * INTO job_' + job.job_id.replace(/-/g, '_') + ' FROM (' + job.query + ') as q';
+    }
+
+    pg.query(query, function (err, jobResult) {
         if (err) {
             return callback(err);
         }
