@@ -12,12 +12,12 @@ var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
-var userDatabaseQueue = new UserDatabaseQueue();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
+    this.userDatabaseQueue = new UserDatabaseQueue(metadataBackend);
 }
 
 JobController.prototype.route = function (app) {
@@ -113,7 +113,7 @@ JobController.prototype.handleJob = function (req, res) {
 
             var next = this;
 
-            userDatabaseQueue.enqueue(cdbUsername, function (err) {
+            self.userDatabaseQueue.enqueue(cdbUsername, function (err) {
                 if (err) {
                     return next(err);
                 }
