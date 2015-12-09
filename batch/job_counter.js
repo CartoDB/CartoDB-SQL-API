@@ -1,6 +1,7 @@
 'use strict';
 
-function JobsCounter(maxJobsPerIntance) {
+function JobsCounter(maxJobsPerIntance, metadataBackend) {
+    this.metadataBackend = metadataBackend;
     this.maxJobsPerIntance =  maxJobsPerIntance || global.settings.max_jobs_per_instance;
     this.hosts = {};
 }

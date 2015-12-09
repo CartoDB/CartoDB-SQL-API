@@ -18,8 +18,10 @@ DatabaseDequeuer.prototype.dequeue = function (callback) {
             return callback();
         }
 
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>> 1');
+
         self.metadataBackend.getAllUserDBParams(userDatabaseName, function (err, userDatabase) {
-            console.log('>>>>', userDatabaseName, userDatabase);
+            console.log('>>>>>>>>>>>>>>>>>>>>>>>> 2');
             if (err) {
                 return callback(err);
             }

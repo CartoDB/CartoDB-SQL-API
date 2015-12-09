@@ -1,66 +1,36 @@
 'use strict';
 
-var RedisPool = require("redis-mpool");
-var _ = require('underscore');
 
-function UserDatabaseQueue(poolOptions) {
-    poolOptions = poolOptions || {};
-    var defaults = {
-        slowQueries: {
-            log: false,
-            elapsedThreshold: 25
-        }
-    };
-
-    var options = _.defaults(poolOptions, defaults);
-
-    this.redisPool = (options.pool) ?
-        poolOptions.pool :
-        new RedisPool(_.extend(poolOptions, {
-            name: 'userDatabaseQueue',
-            db: 12
-        }));
-    this.poolOptions = poolOptions;
+function UsernameBatchQueue(metadataBackend) {
+    this.metadataBackend = metadataBackend;
+    this.db = 5;
+    this.queueName = 'usernameBatchQueue';
 }
 
-UserDatabaseQueue.prototype.enqueue = function (userDatabaseName, callback) {
-    var self = this;
-    var db = this.poolOptions.db;
-    var queue = this.poolOptions.name;
+UsernameBatchQueue.prototype.enqueue = function (cdbUsername, callback) {
+    var db = this.db;
+    var queue = this.queueName;
 
-    this.redisPool.acquire(db, function (err, client) {
+    this.metadataBackend.redisCmd(db, 'LPUSH', [queue, cdbUsername], function (err, cdbUsername) {
         if (err) {
             return callback(err);
         }
 
-        client.lpush(queue, [ userDatabaseName ], function (err, userDataName) {
-            if (err) {
-                return callback(err);
-            }
-            self.redisPool.release(db, client);
-            callback(null, userDataName);
-        });
+        callback(null, cdbUsername);
     });
 };
 
-UserDatabaseQueue.prototype.dequeue = function (callback) {
-    var self = this;
-    var db = this.poolOptions.db;
-    var queue = this.poolOptions.name;
+UsernameBatchQueue.prototype.dequeue = function (callback) {
+    var db = this.db;
+    var queue = this.queueName;
 
-    this.redisPool.acquire(db, function (err, client) {
+    this.metadataBackend.redisCmd(db, 'RPOP', [queue], function (err, cdbUsername) {
         if (err) {
             return callback(err);
         }
 
-        client.rpop(queue, function (err, userDatabaseName) {
-            if (err) {
-                return callback(err);
-            }
-            self.redisPool.release(db, client);
-            callback(null, userDatabaseName);
-        });
+        callback(null, cdbUsername);
     });
 };
 
-module.exports = UserDatabaseQueue;
+module.exports = UsernameBatchQueue;

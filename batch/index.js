@@ -11,6 +11,7 @@ var JobCounter = require('./job_counter');
 
 module.exports = function (interval, maxJobsPerHost) {
     var jobCounter = new JobCounter(maxJobsPerHost);
+
     var metadataBackend = cartoDBRedis({
         host: global.settings.redis_host,
         port: global.settings.redis_port,
@@ -19,7 +20,7 @@ module.exports = function (interval, maxJobsPerHost) {
         reapIntervalMillis: global.settings.redisReapIntervalMillis
     });
 
-    var userDatabaseQueue = new UserDatabaseQueue();
+    var userDatabaseQueue = new UserDatabaseQueue(metadataBackend);
     var databaseDequeuer = new DatabaseDequeuer(userDatabaseQueue, metadataBackend, jobCounter);
     var queryRunner = new QueryRunner();
     var jobDequeuer = new JobDequeuer(databaseDequeuer);
