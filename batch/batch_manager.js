@@ -1,33 +1,52 @@
 'use strict';
 
-function BatchManager(jobDequeuer, queryRunner, jobCounter) {
-    this.jobDequeuer = jobDequeuer;
-    this.queryRunner = queryRunner;
-    this.jobCounter = jobCounter;
+function BatchManager(usernameQueue, userDatabaseMetadataService, jobService, jobCounterService) {
+    this.usernameQueue = usernameQueue;
+    this.userDatabaseMetadataService = userDatabaseMetadataService;
+    this.jobService = jobService;
+    this.jobCounterService = jobCounterService;
 }
 
-BatchManager.prototype.run = function () {
+BatchManager.prototype.run = function (callback) {
     var self = this;
 
-    this.jobDequeuer.dequeue(function (err, pg, job, host) {
+    this.usernameQueue.dequeue(function (err, username) {
         if (err) {
-            return console.error(err);
+            return callback(err);
         }
 
-        if (!pg || !job || !host) {
-            return console.info('No job launched');
+        if (!username) {
+            return callback(new Error('No jobs scheduled'));
         }
 
-        self.queryRunner.run(pg, job, host, function (err) {
+        self.userDatabaseMetadataService.getUserMetadata(username, function (err, userDatabaseMetadata) {
             if (err) {
-                return console.error(err);
+                return callback(err);
             }
 
-            if (!this.jobCounter.decrement(host)) {
-                return console.warn('Job counter for instance %s is out of range', host);
-            }
+            self.jobCounterService.increment(userDatabaseMetadata.host, function (err) {
+                if (err) {
+                    return callback(err);
+                }
 
-            console.info('Job %s done successfully', job.job_id);
+                self.jobService.run(userDatabaseMetadata, function (err) {
+                    if (err) {
+                        callback(err);
+                        self.usernameQueue.enqueue(username, function (err) {
+                            if (err) {
+                                callback(err);
+                            }
+                        });
+                    }
+
+                    self.jobCounterService.decrement(userDatabaseMetadata.host, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        callback();
+                    });
+                });
+            });
         });
     });
 };

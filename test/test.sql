@@ -35,6 +35,8 @@ CREATE TABLE cdb_jobs (
 ALTER TABLE ONLY cdb_jobs ADD CONSTRAINT cdb_jobs_pkey PRIMARY KEY (job_id);
 CREATE INDEX cdb_jobs_idx ON cdb_jobs (created_at, status);
 
+INSERT INTO cdb_jobs (user_id, query) VALUES ('vizzuality', 'select * from private_table') RETURNING job_id;
+
 -- first table
 DROP TABLE IF EXISTS untitle_table_4;
 CREATE TABLE untitle_table_4 (

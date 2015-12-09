@@ -1,8 +1,10 @@
 
-var batch = require('../../batch');
+var batchManagerFactory = require('../../batch/batch_manager_factory');
 
-describe('batch service', function() {
-    it.skip('run', function() {
-        batch(1, 1);
+describe('batch manager', function() {
+    it('run', function (done) {
+        batchManagerFactory().run(function (err) {
+            done(err);
+        });
     });
 });

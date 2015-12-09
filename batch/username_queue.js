@@ -1,13 +1,13 @@
 'use strict';
 
 
-function UsernameBatchQueue(metadataBackend) {
+function UsernameQueue(metadataBackend) {
     this.metadataBackend = metadataBackend;
     this.db = 5;
     this.queueName = 'usernameBatchQueue';
 }
 
-UsernameBatchQueue.prototype.enqueue = function (cdbUsername, callback) {
+UsernameQueue.prototype.enqueue = function (cdbUsername, callback) {
     var db = this.db;
     var queue = this.queueName;
 
@@ -20,7 +20,7 @@ UsernameBatchQueue.prototype.enqueue = function (cdbUsername, callback) {
     });
 };
 
-UsernameBatchQueue.prototype.dequeue = function (callback) {
+UsernameQueue.prototype.dequeue = function (callback) {
     var db = this.db;
     var queue = this.queueName;
 
@@ -33,4 +33,4 @@ UsernameBatchQueue.prototype.dequeue = function (callback) {
     });
 };
 
-module.exports = UsernameBatchQueue;
+module.exports = UsernameQueue;

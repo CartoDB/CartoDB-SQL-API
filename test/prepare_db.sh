@@ -133,8 +133,11 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  time sometime
 EOF
 
+# insert in username queue for testin jobs
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+LPUSH usernameBatchQueue vizzuality
+EOF
+
 fi
-
-
 
 echo "ok, you can run test now"

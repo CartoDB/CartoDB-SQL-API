@@ -6,7 +6,7 @@ var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
 var UserDatabaseService = require('../services/user_database_service');
-var UserDatabaseQueue = require('../../batch/user_database_queue');
+var UsernameQueue = require('../../batch/username_queue');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
@@ -17,7 +17,7 @@ function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
-    this.userDatabaseQueue = new UserDatabaseQueue(metadataBackend);
+    this.userDatabaseQueue = new UsernameQueue(metadataBackend);
 }
 
 JobController.prototype.route = function (app) {
