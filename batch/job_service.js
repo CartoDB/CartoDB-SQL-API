@@ -22,20 +22,23 @@ JobService.prototype.run = function (userDatabaseMetada, callback) {
 
             self.runJob(pg, job, function (err, jobResult) {
                 if (err) {
+
                     self.setJobFailed(pg, job, err.message, function (err) {
                         if (err) {
                             return callback(err);
                         }
                         callback(null, jobResult);
                     });
+
                 } else {
+
                     self.setJobDone(pg, job, function (err) {
                         if (err) {
                             return callback(err);
                         }
-                        console.info('Job %s done successfully', job.job_id);
                         callback(null, jobResult);
                     });
+
                 }
             });
         });
@@ -46,7 +49,7 @@ JobService.prototype.runJob = function (pg, job, callback) {
     var query = job.query;
 
     if (job.query.match(/SELECT\s.*FROM\s.*/i)) {
-        query = 'SELECT * INTO job_' + job.job_id.replace(/-/g, '_') + ' FROM (' + job.query + ') as q';
+        query = 'SELECT * INTO "job_' + job.job_id + '" FROM (' + job.query + ') AS j';
     }
 
     pg.query(query, function (err, jobResult) {

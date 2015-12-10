@@ -10,7 +10,11 @@ BatchLauncher.prototype.start = function (interval) {
     interval = this.batchInterval || interval || 5000;
 
     this.intervalCallback = setInterval(function () {
-        self.batchManager.run();
+        self.batchManager.run(function (err) {
+            if (err) {
+                console.log('Error in batch service: ', err);
+            }
+        });
     }, interval);
 };
 

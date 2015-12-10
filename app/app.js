@@ -28,6 +28,8 @@ var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
 
+var batchService = require('../batch');
+
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
 // override Date.toJSON
@@ -177,6 +179,8 @@ function App() {
 
     var versionController = new VersionController();
     versionController.route(app);
+
+    batchService(5000, 100);
 
     return app;
 }

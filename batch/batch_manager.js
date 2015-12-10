@@ -16,7 +16,7 @@ BatchManager.prototype.run = function (callback) {
         }
 
         if (!username) {
-            return callback(new Error('No jobs scheduled'));
+            return callback(); // no jobs scheduled
         }
 
         self.userDatabaseMetadataService.getUserMetadata(username, function (err, userDatabaseMetadata) {
@@ -31,11 +31,11 @@ BatchManager.prototype.run = function (callback) {
 
                 self.jobService.run(userDatabaseMetadata, function (err) {
                     if (err) {
-                        callback(err);
                         self.usernameQueue.enqueue(username, function (err) {
                             if (err) {
                                 callback(err);
                             }
+                            callback();
                         });
                     }
 
