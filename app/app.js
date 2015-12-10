@@ -180,7 +180,9 @@ function App() {
     var versionController = new VersionController();
     versionController.route(app);
 
-    batchService(5000, 100);
+    if (global.settings.environment !== 'test') {
+        batchService(5000, 100);
+    }
 
     return app;
 }
