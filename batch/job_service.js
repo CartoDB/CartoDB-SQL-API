@@ -45,6 +45,18 @@ JobService.prototype.run = function (userDatabaseMetada, callback) {
     });
 };
 
+JobService.prototype.getJob = function (pg, callback) {
+    var getNextJob = "SELECT * FROM cdb_jobs WHERE status='pending' ORDER BY updated_at ASC LIMIT 1";
+
+    pg.query(getNextJob, function (err, result) {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, result.rows[0]);
+    });
+};
+
 JobService.prototype.runJob = function (pg, job, callback) {
     var query = job.query;
 
@@ -114,19 +126,5 @@ JobService.prototype.setJobFailed = function (pg, job, message, callback) {
         callback(null, result);
     });
 };
-
-JobService.prototype.getJob = function (pg, callback) {
-
-    var getNextJob = "SELECT * FROM cdb_jobs WHERE status='pending' ORDER BY updated_at ASC LIMIT 1";
-
-    pg.query(getNextJob, function (err, result) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, result.rows[0]);
-    });
-};
-
 
 module.exports = JobService;
