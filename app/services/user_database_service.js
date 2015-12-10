@@ -4,10 +4,10 @@ var step = require('step');
 var _ = require('underscore');
 var AuthApi = require('../auth/auth_api');
 
-function DbService() {
+function UserDatabaseService() {
 }
 
-DbService.prototype.getUserDatabase = function (options, callback) {
+UserDatabaseService.prototype.getUserDatabase = function (options, callback) {
     var req = options.req;
     var params = options.params;
     var checkAborted = options.checkAborted;
@@ -93,4 +93,4 @@ DbService.prototype.getUserDatabase = function (options, callback) {
 
 };
 
-module.exports = DbService;
+module.exports = UserDatabaseService;
