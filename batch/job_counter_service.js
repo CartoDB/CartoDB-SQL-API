@@ -38,7 +38,7 @@ JobCounterService.prototype.decrement = function (host, callback) {
         }
 
         if (hostCounter < 0) {
-            return callback(new Error('Limit max job per host is reached'));
+            return callback(new Error('Limit max job per host is reached').name= 'JobLimitReachedError');
         }
 
         self.metadataBackend.redisCmd(db, 'DECR', [host], function (err /*, hostCounter */) {

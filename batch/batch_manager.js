@@ -25,7 +25,14 @@ BatchManager.prototype.run = function (callback) {
             }
 
             self.jobCounterService.increment(userDatabaseMetadata.host, function (err) {
-                if (err) {
+                if (err && err.name === 'JobLimitReachedError') {
+                    self.usernameQueue.enqueue(username, function (err) {
+                        if (err) {
+                            callback(err);
+                        }
+                        callback();
+                    });
+                } else if (err) {
                     return callback(err);
                 }
 
