@@ -181,7 +181,7 @@ function App() {
     versionController.route(app);
 
     if (global.settings.environment !== 'test') {
-        batchService(5000, 100);
+        batchService(metadataBackend, 5000, 100);
     }
 
     return app;
