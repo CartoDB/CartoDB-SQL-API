@@ -8,12 +8,14 @@ var PSQL = require('cartodb-psql');
 var UserDatabaseService = require('../services/user_database_service');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
+var Job = require('../../batch/job');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
 var jobPublisher = new JobPublisher();
+var job = new Job();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
@@ -90,16 +92,7 @@ JobController.prototype.handleJob = function (req, res) {
 
             pg = new PSQL(userDatabase, {}, { destroyOnError: true });
 
-            var persistJobQuery = [
-                'INSERT INTO cdb_jobs (',
-                    'user_id, query',
-                ') VALUES (',
-                    '\'' + cdbUsername + '\', ',
-                    '\'' + sql + '\' ',
-                ') RETURNING job_id;'
-            ].join('\n');
-
-            pg.query(persistJobQuery, function (err, result) {
+            job.createJob(pg, cdbUsername, sql, function (err, result) {
                 if (err) {
                     return next(err);
                 }
@@ -120,6 +113,7 @@ JobController.prototype.handleJob = function (req, res) {
                     return next(err);
                 }
 
+                // broadcast to consumers
                 jobPublisher.publish(result.userDatabase.host);
 
                 next(null, {

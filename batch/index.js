@@ -7,7 +7,7 @@ var JobSubscriber = require('./job_subscriber');
 var UserDatabaseMetadataService = require('./user_database_metadata_service');
 var JobService = require('./job_service');
 
-module.exports = function (metadataBackend) {
+module.exports = function batch(metadataBackend) {
     var jobQueuePool = new JobQueuePool();
     var jobSubscriber = new JobSubscriber();
     var job = new Job();
@@ -46,4 +46,6 @@ module.exports = function (metadataBackend) {
             });
         }
     });
+
+    return job;
 };

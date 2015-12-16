@@ -1,9 +1,13 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 
 function Job() {
+    EventEmitter.call(this);
 }
+util.inherits(Job, EventEmitter);
 
 Job.prototype.run = function (userDatabaseMetada, callback) {
     var self = this;
@@ -24,19 +28,36 @@ Job.prototype.run = function (userDatabaseMetada, callback) {
                 return callback(err);
             }
 
+            self.emit('job:running', job);
+
             self.runJob(pg, job, function (err, jobResult) {
                 if (err) {
                     return self.setJobFailed(pg, job, err.message, function () {
+                        self.emit('job:failed', { job: job.job_id, error: err });
                         callback(err);
                     });
                 }
 
                 self.setJobDone(pg, job, function () {
+                    self.emit('job:done', job);
                     callback(null, jobResult);
                 });
             });
         });
     });
+};
+
+Job.prototype.createJob = function (pg, username, sql, callback) {
+    var persistJobQuery = [
+        'INSERT INTO cdb_jobs (',
+            'user_id, query',
+        ') VALUES (',
+            '\'' + username + '\', ',
+            '\'' + sql + '\' ',
+        ') RETURNING job_id;'
+    ].join('\n');
+
+    pg.query(persistJobQuery, callback);
 };
 
 Job.prototype.getJob = function (pg, callback) {
@@ -53,10 +74,6 @@ Job.prototype.getJob = function (pg, callback) {
 
 Job.prototype.runJob = function (pg, job, callback) {
     var query = job.query;
-
-    if (job.query.match(/SELECT\s.*FROM\s.*/i)) {
-        query = 'SELECT * INTO "job_' + job.job_id + '" FROM (' + job.query + ') AS j';
-    }
 
     pg.query(query, callback);
 };
@@ -84,12 +101,7 @@ Job.prototype.setJobDone = function (pg, job, callback) {
         ' RETURNING job_id;'
     ].join('\n');
 
-    pg.query(doneJobQuery, function (err) {
-        if (err) {
-            console.error(err.stack);
-        }
-        callback();
-    });
+    pg.query(doneJobQuery, callback);
 };
 
 Job.prototype.setJobFailed = function (pg, job, message, callback) {
@@ -103,12 +115,7 @@ Job.prototype.setJobFailed = function (pg, job, message, callback) {
         ' RETURNING job_id;'
     ].join('\n');
 
-    pg.query(failedJobQuery, function (err) {
-        if (err) {
-            console.error(err.stack);
-        }
-        callback();
-    });
+    pg.query(failedJobQuery, callback);
 };
 
 module.exports = Job;
