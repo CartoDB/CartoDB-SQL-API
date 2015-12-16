@@ -6,18 +6,20 @@ var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
 var UserDatabaseService = require('../services/user_database_service');
-var UsernameQueue = require('../../batch/username_queue');
+var JobPublisher = require('../../batch/job_publisher');
+var JobQueueProducer = require('../../batch/job_queue_producer');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
+var jobPublisher = new JobPublisher();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
-    this.userDatabaseQueue = new UsernameQueue(metadataBackend);
+    this.jobQueueProducer = new JobQueueProducer(metadataBackend);
 }
 
 JobController.prototype.route = function (app) {
@@ -113,10 +115,12 @@ JobController.prototype.handleJob = function (req, res) {
 
             var next = this;
 
-            self.userDatabaseQueue.enqueue(cdbUsername, function (err) {
+            self.jobQueueProducer.enqueue(cdbUsername, result.userDatabase.host, function (err) {
                 if (err) {
                     return next(err);
                 }
+
+                jobPublisher.publish(result.userDatabase.host);
 
                 next(null, {
                     job: result.job,

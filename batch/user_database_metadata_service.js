@@ -39,7 +39,6 @@ UserDatabaseMetadataService.prototype.parseMetadaToDatabase = function (userData
     });
 
     return dbopts;
-
 };
 
 module.exports = UserDatabaseMetadataService;

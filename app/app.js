@@ -28,7 +28,7 @@ var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
 
-var batchService = require('../batch');
+var batch = require('../batch');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
@@ -181,7 +181,7 @@ function App() {
     versionController.route(app);
 
     if (global.settings.environment !== 'test') {
-        batchService(metadataBackend, 5000, 100);
+        batch(metadataBackend);
     }
 
     return app;

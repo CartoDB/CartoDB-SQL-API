@@ -1,129 +1,19 @@
 'use strict';
 
-var PSQL = require('cartodb-psql');
-
-function JobService() {
+function JobService(userDatabaseMetadataService, job) {
+    this.userDatabaseMetadataService = userDatabaseMetadataService;
+    this.job = job;
 }
 
-JobService.prototype.run = function (userDatabaseMetada, callback) {
+JobService.prototype.run = function (username, callback) {
     var self = this;
 
-    var pg = new PSQL(userDatabaseMetada, {}, { destroyOnError: true });
-
-    this.getJob(pg, function (err, job) {
+    this.userDatabaseMetadataService.getUserMetadata(username, function (err, userDatabaseMetadata) {
         if (err) {
             return callback(err);
         }
 
-        self.setJobRunning(pg, job, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            self.runJob(pg, job, function (err, jobResult) {
-                if (err) {
-
-                    self.setJobFailed(pg, job, err.message, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        callback(null, jobResult);
-                    });
-
-                } else {
-
-                    self.setJobDone(pg, job, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        callback(null, jobResult);
-                    });
-
-                }
-            });
-        });
-    });
-};
-
-JobService.prototype.getJob = function (pg, callback) {
-    var getNextJob = "SELECT * FROM cdb_jobs WHERE status='pending' ORDER BY updated_at ASC LIMIT 1";
-
-    pg.query(getNextJob, function (err, result) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, result.rows[0]);
-    });
-};
-
-JobService.prototype.runJob = function (pg, job, callback) {
-    var query = job.query;
-
-    if (job.query.match(/SELECT\s.*FROM\s.*/i)) {
-        query = 'SELECT * INTO "job_' + job.job_id + '" FROM (' + job.query + ') AS j';
-    }
-
-    pg.query(query, function (err, jobResult) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, jobResult);
-    });
-};
-
-JobService.prototype.setJobRunning = function (pg, job, callback) {
-    var runningJobQuery = [
-        'UPDATE cdb_jobs SET ',
-            'status = \'running\', ',
-            'updated_at = now() ',
-        ' WHERE ',
-            'job_id = \'' + job.job_id + '\' ',
-        ' RETURNING job_id;'
-    ].join('\n');
-
-    pg.query(runningJobQuery, function (err, result) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, result);
-    });
-};
-
-JobService.prototype.setJobDone = function (pg, job, callback) {
-    var doneJobQuery = [
-        'UPDATE cdb_jobs SET ',
-            'status = \'done\', ',
-            'updated_at = now() ',
-        ' WHERE ',
-            'job_id = \'' + job.job_id + '\' ',
-        ' RETURNING job_id;'
-    ].join('\n');
-
-    pg.query(doneJobQuery, function (err, result) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, result);
-    });
-};
-
-JobService.prototype.setJobFailed = function (pg, job, message, callback) {
-    var failedJobQuery = [
-        'UPDATE cdb_jobs SET ',
-            'status = \'failed\', ',
-            'failed_reason = \'' + message + '\', ',
-            'updated_at = now() ',
-        ' WHERE ',
-            'job_id = \'' + job.job_id + '\' ',
-        ' RETURNING job_id;'
-    ].join('\n');
-
-    pg.query(failedJobQuery, function (err, result) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, result);
+        self.job.run(userDatabaseMetadata, callback);
     });
 };
 
