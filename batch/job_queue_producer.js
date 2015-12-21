@@ -5,11 +5,11 @@ function JobQueueProducer(metadataBackend) {
     this.db = 5;
 }
 
-JobQueueProducer.prototype.enqueue = function (cdbUsername, host, callback) {
+JobQueueProducer.prototype.enqueue = function (jobId, host, callback) {
     var db = this.db;
     var queue = 'queue:' + host;
 
-    this.metadataBackend.redisCmd(db, 'LPUSH', [queue, cdbUsername], callback);
+    this.metadataBackend.redisCmd(db, 'LPUSH', [queue, jobId], callback);
 };
 
 module.exports = JobQueueProducer;

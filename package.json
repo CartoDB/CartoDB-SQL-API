@@ -22,6 +22,7 @@
     "log4js": "https://github.com/CartoDB/log4js-node/tarball/cdb",
     "lru-cache": "~2.5.0",
     "node-statsd": "~0.0.7",
+    "node-uuid": "^1.4.7",
     "oauth-client": "0.3.0",
     "redis": "^2.4.2",
     "rollbar": "~0.3.2",

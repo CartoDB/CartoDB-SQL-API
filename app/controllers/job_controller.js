@@ -3,37 +3,40 @@
 var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
-var PSQL = require('cartodb-psql');
 
 var UserDatabaseService = require('../services/user_database_service');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
-var Job = require('../../batch/job');
+var JobBackend = require('../../batch/job_backend');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
 var jobPublisher = new JobPublisher();
-var job = new Job();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
     this.jobQueueProducer = new JobQueueProducer(metadataBackend);
+    this.jobBackend = new JobBackend(metadataBackend);
 }
 
 JobController.prototype.route = function (app) {
-    app.all(global.settings.base_url + '/job',  this.handleJob.bind(this));
+    app.post(global.settings.base_url + '/job',  this.createJob.bind(this));
+    // app.get(global.settings.base_url + '/job:jobId',  this.getJob.bind(this));
 };
 
+// JobController.prototype.getJob = function (req, res) {
+//
+// };
 // jshint maxcomplexity:21
-JobController.prototype.handleJob = function (req, res) {
+JobController.prototype.createJob = function (req, res) {
     var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var sql = (params.q === "" || _.isUndefined(params.q)) ? null : params.q;
+    var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
     if (!_.isString(sql)) {
@@ -62,8 +65,6 @@ JobController.prototype.handleJob = function (req, res) {
       }
     }
 
-    var pg;
-
     if ( req.profiler ) {
         req.profiler.done('init');
     }
@@ -90,9 +91,7 @@ JobController.prototype.handleJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            pg = new PSQL(userDatabase, {}, { destroyOnError: true });
-
-            job.createJob(pg, cdbUsername, sql, function (err, result) {
+            self.jobBackend.create(cdbUsername, sql, function (err, result) {
                 if (err) {
                     return next(err);
                 }
@@ -103,12 +102,12 @@ JobController.prototype.handleJob = function (req, res) {
                 });
             });
         },
-        function enqueueUserDatabase(err, result) {
+        function enqueueJob(err, result) {
             assert.ifError(err);
 
             var next = this;
 
-            self.jobQueueProducer.enqueue(cdbUsername, result.userDatabase.host, function (err) {
+            self.jobQueueProducer.enqueue(result.job.jobId, result.userDatabase.host, function (err) {
                 if (err) {
                     return next(err);
                 }

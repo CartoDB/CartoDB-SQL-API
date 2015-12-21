@@ -20,23 +20,6 @@ SET search_path = public, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
--- jobs table
-DROP TABLE IF EXISTS cdb_jobs;
-CREATE TABLE cdb_jobs (
-    job_id uuid DEFAULT uuid_generate_v4(),
-    user_id character varying,
-    status character varying DEFAULT 'pending',
-    query character varying,
-    updated_at timestamp without time zone DEFAULT now(),
-    created_at timestamp without time zone DEFAULT now(),
-    failed_reason character varying
-);
-
-ALTER TABLE ONLY cdb_jobs ADD CONSTRAINT cdb_jobs_pkey PRIMARY KEY (job_id);
-CREATE INDEX cdb_jobs_idx ON cdb_jobs (created_at, status);
-
--- INSERT INTO cdb_jobs (user_id, query) VALUES ('vizzuality', 'select * from private_table') RETURNING job_id;
-
 -- first table
 DROP TABLE IF EXISTS untitle_table_4;
 CREATE TABLE untitle_table_4 (
@@ -136,8 +119,6 @@ ALTER ROLE :PUBLICUSER SET statement_timeout = 2000;
 DROP USER IF EXISTS :TESTUSER;
 CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
 
-GRANT ALL ON TABLE cdb_jobs TO :TESTUSER;
-GRANT ALL ON TABLE cdb_jobs TO :PUBLICUSER;
 GRANT ALL ON TABLE untitle_table_4 TO :TESTUSER;
 GRANT SELECT ON TABLE untitle_table_4 TO :PUBLICUSER;
 GRANT ALL ON TABLE private_table TO :TESTUSER;

@@ -1,10 +1,9 @@
 var assert = require('assert');
-var batchFactory = require('../../batch/');
+var batch = require('../../batch/');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
-var Job = require('../../batch/job');
+var JobBackend = require('../../batch/job_backend');
 var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
-var PSQL = require('cartodb-psql');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -18,9 +17,9 @@ describe('batch', function() {
     it('should perform one job', function (done) {
         var jobQueueProducer =  new JobQueueProducer(metadataBackend);
         var jobPublisher = new JobPublisher();
-        var job = new Job();
+        var jobBackend = new JobBackend(metadataBackend);
         var username = 'vizzuality';
-        var jobId = '';
+        var _jobId = '';
 
         var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 
@@ -29,17 +28,17 @@ describe('batch', function() {
                 return done(err);
             }
 
-            var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
             var sql = "select * from private_table limit 1";
 
-            job.createJob(pg, username, sql, function (err, result) {
+            // create job in redis
+            jobBackend.create(username, sql, function (err, job) {
                 if (err) {
                     return done(err);
                 }
 
-                jobId = result.rows[0].job_id;
+                _jobId = job.jobId;
 
-                jobQueueProducer.enqueue(username, userDatabaseMetadata.host, function (err) {
+                jobQueueProducer.enqueue(job.jobId, userDatabaseMetadata.host, function (err) {
                     if (err) {
                         return done(err);
                     }
@@ -49,11 +48,10 @@ describe('batch', function() {
             });
         });
 
-        var batch = batchFactory(metadataBackend);
-
-        batch.on('job:done', function (job) {
-            assert.equal(jobId, job.job_id);
-            done();
-        });
+        batch(metadataBackend)
+            .on('job:done', function (jobId) {
+                assert.equal(_jobId, jobId);
+                done();
+            });
     });
 });
