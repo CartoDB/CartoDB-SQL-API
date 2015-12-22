@@ -1,12 +1,12 @@
 'use strict';
 
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 var JobRunner = require('./job_runner');
 var JobQueuePool = require('./job_queue_pool');
 var JobQueueConsumer = require('./job_queue_consumer');
 var JobSubscriber = require('./job_subscriber');
 var UserDatabaseMetadataService = require('./user_database_metadata_service');
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
 
 function Batch(metadataBackend) {
     EventEmitter.call(this);
@@ -19,20 +19,22 @@ util.inherits(Batch, EventEmitter);
 
 Batch.prototype.start = function () {
     var self = this;
-    this.jobQueuePool = new JobQueuePool();
+    var jobRunner = this.jobRunner;
+    var metadataBackend = this.metadataBackend;
+    var jobQueuePool = new JobQueuePool();
 
     // subscribe to message exchange broker in order to know what queues are available
     this.jobSubscriber.subscribe(function onMessage(channel, host) {
-        var jobQueueConsumer = self.jobQueuePool.get(host);
+        var jobQueueConsumer = jobQueuePool.get(host);
 
         // if queue consumer is not registered yet
         if (!jobQueueConsumer) {
 
             // creates new one
-            jobQueueConsumer = new JobQueueConsumer(self.metadataBackend, host);
+            jobQueueConsumer = new JobQueueConsumer(metadataBackend, host);
 
             // register it in batch service
-            self.jobQueuePool.add(host, jobQueueConsumer);
+            jobQueuePool.add(host, jobQueueConsumer);
 
             // while read from queue then perform job
             jobQueueConsumer.on('data', function (jobId) {
@@ -40,7 +42,7 @@ Batch.prototype.start = function () {
                 // limit one job at the same time per queue (queue <1:1> db intance)
                 jobQueueConsumer.pause();
 
-                var job = self.jobRunner.run(jobId);
+                var job = jobRunner.run(jobId);
 
                 job.on('done', function () {
                     // next job
@@ -57,10 +59,10 @@ Batch.prototype.start = function () {
             })
             .on('error', function (err) {
                 console.error(err.stack || err);
-                self.jobQueuePool.remove(host);
+                jobQueuePool.remove(host);
             })
             .on('end', function () {
-                self.jobQueuePool.remove(host);
+                jobQueuePool.remove(host);
             });
         }
     });

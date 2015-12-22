@@ -29,7 +29,8 @@
     "step": "~0.0.5",
     "step-profiler": "~0.1.0",
     "topojson": "0.0.8",
-    "underscore": "~1.6.0"
+    "underscore": "~1.6.0",
+    "queue-async": "^1.0.7"
   },
   "devDependencies": {
     "redis": "0.7.1",

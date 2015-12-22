@@ -1,3 +1,5 @@
+var _ = require('underscore');
+var queue = require('queue-async');
 var Batch = require('../../batch/batch');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
@@ -85,4 +87,43 @@ describe('batch', function() {
         });
     });
 
+    it('should perform all job enqueued', function (done) {
+        var jobs = [
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table',
+            'select * from private_table'
+        ];
+
+        var jobsQueue = queue(jobs.length);
+
+        jobs.forEach(function(job) {
+            jobsQueue.defer(createJob, job);
+        });
+
+        jobsQueue.awaitAll(function (err, jobsCreated) {
+            if (err) {
+                return done(err);
+            }
+
+            var jobsDone = 0;
+
+            batch.on('job:done', function (jobId) {
+                _.find(jobsCreated, function(job) {
+                    if (jobId === job.jobId) {
+                        jobsDone += 1;
+                    }
+                    if (jobsDone === jobs.length) {
+                        done();
+                    }
+                });
+            });
+        });
+    });
 });
