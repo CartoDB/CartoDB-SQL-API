@@ -13,7 +13,7 @@ util.inherits(JobBackend, EventEmitter);
 
 JobBackend.prototype.create = function (username, sql, callback) {
     var self = this;
-    var jobId = uuid.v4();
+    var jobId = 'job:' + uuid.v4();
     var redisParams = [
         jobId,
         'user', username,

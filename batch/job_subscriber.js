@@ -12,4 +12,8 @@ JobSubscriber.prototype.subscribe = function (onMessage) {
     this.client.on('message', onMessage);
 };
 
+JobSubscriber.prototype.unsubscribe = function () {
+    this.client.unsubscribe(this.channel);
+};
+
 module.exports = JobSubscriber;

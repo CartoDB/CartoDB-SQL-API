@@ -133,9 +133,10 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  time sometime
 EOF
 
-# insert in username queue for testin jobs
+# delete previous jobs
 cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
-LPUSH usernameBatchQueue vizzuality
+EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 job:*
+DEL queue:localhost
 EOF
 
 fi

@@ -1,8 +1,7 @@
-var batch = require('../../batch/');
+var Batch = require('../../batch/batch');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
 var JobBackend = require('../../batch/job_backend');
-var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -12,47 +11,78 @@ var metadataBackend = require('cartodb-redis')({
 });
 
 describe('batch', function() {
+    var dbInstance = 'localhost';
+    var username = 'vizzuality';
+    var jobQueueProducer =  new JobQueueProducer(metadataBackend);
+    var jobPublisher = new JobPublisher();
+    var jobBackend = new JobBackend(metadataBackend);
+    var batch = new Batch(metadataBackend);
 
-    it('should perform one job', function (done) {
-        var jobQueueProducer =  new JobQueueProducer(metadataBackend);
-        var jobPublisher = new JobPublisher();
-        var jobBackend = new JobBackend(metadataBackend);
-        var username = 'vizzuality';
-        var sql = "select * into batch_table from (select * from private_table limit 1) as job";
-        var _jobId = '';
+    before(function () {
+        batch.start();
+    });
 
-        var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+    after(function () {
+        batch.stop();
+    });
 
-        userDatabaseMetadataService.getUserMetadata(username, function (err, userDatabaseMetadata) {
+    function createJob(sql, done) {
+        jobBackend.create(username, sql, function (err, job) {
             if (err) {
                 return done(err);
             }
 
-            // create job in redis
-            jobBackend.create(username, sql, function (err, job) {
+            jobQueueProducer.enqueue(job.jobId, dbInstance, function (err) {
                 if (err) {
                     return done(err);
                 }
 
-                _jobId = job.jobId;
-
-                jobQueueProducer.enqueue(job.jobId, userDatabaseMetadata.host, function (err) {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    jobPublisher.publish(userDatabaseMetadata.host);
-                });
+                jobPublisher.publish(dbInstance);
+                done(null, job);
             });
         });
+    }
 
-        batch(metadataBackend)
-            .on('job:done', function (jobId) {
-                // It might another test add jobs to the queue, this test waits for resolution
-                // of previous inserted job
-                if (_jobId === jobId) {
+    it('should perform job with select', function (done) {
+        createJob('select * from private_table', function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:done', function (jobId) {
+                if (jobId === job.jobId) {
                     done();
                 }
             });
+        });
     });
+
+    it('should perform job with select into', function (done) {
+        createJob('select * into batch_test_table from (select * from private_table) as job', function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:done', function (jobId) {
+                if (jobId === job.jobId) {
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should perform job swith select from result table', function (done) {
+        createJob('select * from batch_test_table', function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:done', function (jobId) {
+                if (jobId === job.jobId) {
+                    done();
+                }
+            });
+        });
+    });
+
 });
