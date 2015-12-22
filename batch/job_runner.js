@@ -26,13 +26,19 @@ JobRunner.prototype.run = function (jobId) {
 
             jobBackend.setRunning(job);
 
-            pg.eventedQuery(job.query, function (err, query) {
-                query.on('error', function (err) {
-                    jobBackend.setFailed(job, err);
-                });
+            pg.query('SET statement_timeout=0', function(err) {
+                if(err) {
+                    return jobBackend.setFailed(job, err);
+                }
 
-                query.on('end', function () {
-                    jobBackend.setDone(job);
+                pg.eventedQuery(job.query, function (err, query /* , queryCanceller */) {
+                    query.on('error', function (err) {
+                        jobBackend.setFailed(job, err);
+                    });
+
+                    query.on('end', function () {
+                        jobBackend.setDone(job);
+                    });
                 });
             });
         });

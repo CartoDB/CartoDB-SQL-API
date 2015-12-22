@@ -18,9 +18,8 @@ describe('batch', function() {
         var jobPublisher = new JobPublisher();
         var jobBackend = new JobBackend(metadataBackend);
         var username = 'vizzuality';
-        var sql = "select * from private_table limit 1";
+        var sql = "select * into batch_table from (select * from private_table limit 1) as job";
         var _jobId = '';
-
 
         var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 
