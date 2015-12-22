@@ -1,4 +1,3 @@
-var assert = require('assert');
 var batch = require('../../batch/');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');

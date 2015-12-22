@@ -25,12 +25,17 @@ function JobController(metadataBackend, tableCache, statsd_client) {
 
 JobController.prototype.route = function (app) {
     app.post(global.settings.base_url + '/job',  this.createJob.bind(this));
-    // app.get(global.settings.base_url + '/job:jobId',  this.getJob.bind(this));
+    app.get(global.settings.base_url + '/job:jobId',  this.getJob.bind(this));
 };
 
-// JobController.prototype.getJob = function (req, res) {
-//
-// };
+JobController.prototype.getJob = function (req, res) {
+    var self = this;
+    var body = (req.body) ? req.body : {};
+    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
+    var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
+    var cdbUsername = cdbReq.userByReq(req);
+
+};
 
 // jshint maxcomplexity:21
 JobController.prototype.createJob = function (req, res) {
@@ -86,7 +91,7 @@ JobController.prototype.createJob = function (req, res) {
 
             var next = this;
 
-            checkAborted('enqueueJob');
+            checkAborted('persistJob');
 
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');
@@ -105,6 +110,8 @@ JobController.prototype.createJob = function (req, res) {
         },
         function enqueueJob(err, result) {
             assert.ifError(err);
+
+            checkAborted('enqueueJob');
 
             var next = this;
 
