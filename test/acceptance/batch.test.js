@@ -19,7 +19,9 @@ describe('batch', function() {
         var jobPublisher = new JobPublisher();
         var jobBackend = new JobBackend(metadataBackend);
         var username = 'vizzuality';
+        var sql = "select * from private_table limit 1";
         var _jobId = '';
+
 
         var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 
@@ -27,8 +29,6 @@ describe('batch', function() {
             if (err) {
                 return done(err);
             }
-
-            var sql = "select * from private_table limit 1";
 
             // create job in redis
             jobBackend.create(username, sql, function (err, job) {
@@ -50,8 +50,11 @@ describe('batch', function() {
 
         batch(metadataBackend)
             .on('job:done', function (jobId) {
-                assert.equal(_jobId, jobId);
-                done();
+                // It might another test add jobs to the queue, this test waits for resolution
+                // of previous inserted job
+                if (_jobId === jobId) {
+                    done();
+                }
             });
     });
 });

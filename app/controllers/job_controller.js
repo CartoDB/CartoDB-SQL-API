@@ -31,6 +31,7 @@ JobController.prototype.route = function (app) {
 // JobController.prototype.getJob = function (req, res) {
 //
 // };
+
 // jshint maxcomplexity:21
 JobController.prototype.createJob = function (req, res) {
     var self = this;
