@@ -19,6 +19,7 @@ var assert = require('../support/assert');
 var querystring = require('querystring');
 
 describe('job', function() {
+    var job = {};
 
     it('POST /api/v2/job', function (done){
         assert.response(app, {
@@ -31,11 +32,28 @@ describe('job', function() {
         }, {
             status: 200
         }, function(res) {
-            var job = JSON.parse(res.body);
+            job = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.equal(job.query, "SELECT * FROM untitle_table_4");
             assert.equal(job.status, "pending");
             assert.equal(job.user, "vizzuality");
+            done();
+        });
+    });
+
+    it('GET /api/v2/job/:jobId', function (done){
+        assert.response(app, {
+            url: '/api/v2/job/' + job.jobId,
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'GET'
+        }, {
+            status: 200
+        }, function(res) {
+            var jobGot = JSON.parse(res.body);
+            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.equal(jobGot.query, "SELECT * FROM untitle_table_4");
+            assert.equal(jobGot.status, "pending");
+            assert.equal(jobGot.user, "vizzuality");
             done();
         });
     });
