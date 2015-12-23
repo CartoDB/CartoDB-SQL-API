@@ -22,7 +22,7 @@ UserDatabaseMetadataService.prototype.parseMetadaToDatabase = function (userData
     var dbParams = userDatabaseMetadata;
 
     var dbopts = {
-        port: global.settings.db_batch_port,
+        port: global.settings.db_batch_port || 6432,
         pass: global.settings.db_pubuser_pass
     };
 
