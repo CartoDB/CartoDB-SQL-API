@@ -16,12 +16,12 @@ util.inherits(JobQueueConsumer, Readable);
 
 JobQueueConsumer.prototype._read = function () {
     var self = this;
-    this.metadataBackend.redisCmd(this.db, 'RPOP', [ this.queueName ], function (err, jobId) {
+    this.metadataBackend.redisCmd(this.db, 'RPOP', [ this.queueName ], function (err, job_id) {
         if (err) {
             return self.emit('error', err);
         }
 
-        self.push(jobId);
+        self.push(job_id);
     });
 };
 

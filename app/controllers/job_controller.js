@@ -25,17 +25,17 @@ function JobController(metadataBackend, tableCache, statsd_client) {
 
 JobController.prototype.route = function (app) {
     app.post(global.settings.base_url + '/job',  this.createJob.bind(this));
-    app.get(global.settings.base_url + '/job/:jobId',  this.getJob.bind(this));
+    app.get(global.settings.base_url + '/job/:job_id',  this.getJob.bind(this));
 };
 
 JobController.prototype.getJob = function (req, res) {
     var self = this;
-    var jobId = req.params.jobId;
+    var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(jobId)) {
+    if (!_.isString(job_id)) {
         return handleException(new Error("You must indicate a job id"), res);
     }
 
@@ -91,7 +91,7 @@ JobController.prototype.getJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.get(jobId, function (err, job) {
+            self.jobBackend.get(job_id, function (err, job) {
                 if (err) {
                     return next(err);
                 }
@@ -211,7 +211,7 @@ JobController.prototype.createJob = function (req, res) {
 
             var next = this;
 
-            self.jobQueueProducer.enqueue(result.job.jobId, result.userDatabase.host, function (err) {
+            self.jobQueueProducer.enqueue(result.job.job_id, result.userDatabase.host, function (err) {
                 if (err) {
                     return next(err);
                 }

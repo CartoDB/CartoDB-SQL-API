@@ -34,7 +34,7 @@ describe('batch', function() {
                 return done(err);
             }
 
-            jobQueueProducer.enqueue(job.jobId, dbInstance, function (err) {
+            jobQueueProducer.enqueue(job.job_id, dbInstance, function (err) {
                 if (err) {
                     return done(err);
                 }
@@ -51,8 +51,8 @@ describe('batch', function() {
                 return done(err);
             }
 
-            batch.on('job:done', function (jobId) {
-                if (jobId === job.jobId) {
+            batch.on('job:done', function (job_id) {
+                if (job_id === job.job_id) {
                     done();
                 }
             });
@@ -65,8 +65,8 @@ describe('batch', function() {
                 return done(err);
             }
 
-            batch.on('job:done', function (jobId) {
-                if (jobId === job.jobId) {
+            batch.on('job:done', function (job_id) {
+                if (job_id === job.job_id) {
                     done();
                 }
             });
@@ -79,8 +79,8 @@ describe('batch', function() {
                 return done(err);
             }
 
-            batch.on('job:done', function (jobId) {
-                if (jobId === job.jobId) {
+            batch.on('job:done', function (job_id) {
+                if (job_id === job.job_id) {
                     done();
                 }
             });
@@ -114,9 +114,9 @@ describe('batch', function() {
 
             var jobsDone = 0;
 
-            batch.on('job:done', function (jobId) {
+            batch.on('job:done', function (job_id) {
                 _.find(jobsCreated, function(job) {
-                    if (jobId === job.jobId) {
+                    if (job_id === job.job_id) {
                         jobsDone += 1;
                         if (jobsDone === jobs.length) {
                             done();

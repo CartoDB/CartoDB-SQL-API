@@ -13,14 +13,15 @@ util.inherits(JobBackend, EventEmitter);
 
 JobBackend.prototype.create = function (username, sql, callback) {
     var self = this;
-    var jobId = 'job:' + uuid.v4();
+    var job_id = uuid.v4();
+    var now = new Date().toISOString();
     var redisParams = [
-        jobId,
+        'job:' + job_id,
         'user', username,
         'status', 'pending',
         'query', sql,
-        'created_at', Date.now(),
-        'updated_at', Date.now()
+        'created_at', now,
+        'updated_at', now
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams , function (err) {
@@ -28,18 +29,19 @@ JobBackend.prototype.create = function (username, sql, callback) {
             return callback(err);
         }
 
-        self.get(jobId, callback);
+        self.get(job_id, callback);
     });
 };
 
-JobBackend.prototype.get = function (jobId, callback) {
+JobBackend.prototype.get = function (job_id, callback) {
     var redisParams = [
-        jobId,
+        'job:' + job_id,
         'user',
         'status',
         'query',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'failed_reason'
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, jobValues) {
@@ -47,17 +49,22 @@ JobBackend.prototype.get = function (jobId, callback) {
             return callback(err);
         }
 
-        if (!jobValues) {
-            return callback(new Error('Job not found'));
+        function isJobFound(jobValues) {
+            return jobValues[0] && jobValues[1] && jobValues[2] && jobValues[3] && jobValues[4];
+        }
+
+        if (!isJobFound(jobValues)) {
+            return callback(new Error('Job with id ' + job_id + ' not found'));
         }
 
         callback(null, {
-            jobId: jobId,
+            job_id: job_id,
             user: jobValues[0],
             status: jobValues[1],
             query: jobValues[2],
             created_at: jobValues[3],
-            updated_at: jobValues[4]
+            updated_at: jobValues[4],
+            failed_reason: jobValues[5] ? jobValues[5] : undefined
         });
     });
 };
@@ -65,9 +72,9 @@ JobBackend.prototype.get = function (jobId, callback) {
 JobBackend.prototype.setRunning = function (job) {
     var self = this;
     var redisParams = [
-        job.jobId,
+        'job:' + job.job_id,
         'status', 'running',
-        'updated_at', Date.now()
+        'updated_at', new Date().toISOString()
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams, function (err) {
@@ -82,9 +89,9 @@ JobBackend.prototype.setRunning = function (job) {
 JobBackend.prototype.setDone = function (job) {
     var self = this;
     var redisParams = [
-        job.jobId,
+        'job:' + job.job_id,
         'status', 'done',
-        'updated_at', Date.now()
+        'updated_at', new Date().toISOString()
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
@@ -99,10 +106,10 @@ JobBackend.prototype.setDone = function (job) {
 JobBackend.prototype.setFailed = function (job, err) {
     var self = this;
     var redisParams = [
-        job.jobId,
+        'job:' + job.job_id,
         'status', 'failed',
         'failed_reason', err.message,
-        'updated_at', Date.now()
+        'updated_at', new Date().toISOString()
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams , function (err) {

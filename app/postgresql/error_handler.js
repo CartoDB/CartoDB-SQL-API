@@ -38,6 +38,8 @@ ErrorHandler.prototype.getStatus = function() {
 
     if (message && message.match(/permission denied/)) {
         statusError = 401;
+    } else if (message && message.match(/not found/)) {
+        statusError = 404;
     }
 
     return statusError;

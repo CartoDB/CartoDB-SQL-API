@@ -23,7 +23,7 @@ describe('job', function() {
 
     it('POST /api/v2/job', function (done){
         assert.response(app, {
-            url: '/api/v2/job',
+            url: '/api/v2/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
@@ -41,9 +41,9 @@ describe('job', function() {
         });
     });
 
-    it('GET /api/v2/job/:jobId', function (done){
+    it('GET /api/v2/job/:job_id', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + job.jobId,
+            url: '/api/v2/job/' + job.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
         }, {

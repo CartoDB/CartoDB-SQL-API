@@ -37,22 +37,22 @@ Batch.prototype.start = function () {
             jobQueuePool.add(host, jobQueueConsumer);
 
             // while read from queue then perform job
-            jobQueueConsumer.on('data', function (jobId) {
+            jobQueueConsumer.on('data', function (job_id) {
 
                 // limit one job at the same time per queue (queue <1:1> db intance)
                 jobQueueConsumer.pause();
 
-                var job = jobRunner.run(jobId);
+                var job = jobRunner.run(job_id);
 
                 job.on('done', function () {
                     // next job
-                    self.emit('job:done', jobId);
+                    self.emit('job:done', job_id);
                     jobQueueConsumer.resume();
                 });
 
                 job.on('error', function (err) {
                     console.error(err.stack || err);
-                    self.emit('job:failed', jobId);
+                    self.emit('job:failed', job_id);
                     jobQueueConsumer.resume();
                 });
 
