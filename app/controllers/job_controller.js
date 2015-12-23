@@ -79,6 +79,10 @@ JobController.prototype.getJob = function (req, res) {
         function getJob(err, userDatabase) {
             assert.ifError(err);
 
+            if (!userDatabase.authenticated) {
+                throw new Error('permission denied');
+            }
+
             var next = this;
 
             checkAborted('persistJob');
@@ -100,7 +104,7 @@ JobController.prototype.getJob = function (req, res) {
         },
         function handleResponse(err, result) {
             if ( err ) {
-                handleException(err, res);
+                return handleException(err, res);
             }
 
             if ( req.profiler ) {
@@ -173,6 +177,10 @@ JobController.prototype.createJob = function (req, res) {
         function persistJob(err, userDatabase) {
             assert.ifError(err);
 
+            if (!userDatabase.authenticated) {
+                throw new Error('permission denied');
+            }
+
             var next = this;
 
             checkAborted('persistJob');
@@ -195,6 +203,10 @@ JobController.prototype.createJob = function (req, res) {
         function enqueueJob(err, result) {
             assert.ifError(err);
 
+            if ( req.profiler ) {
+                req.profiler.done('persistJob');
+            }
+
             checkAborted('enqueueJob');
 
             var next = this;
@@ -215,7 +227,7 @@ JobController.prototype.createJob = function (req, res) {
         },
         function handleResponse(err, result) {
             if ( err ) {
-                handleException(err, res);
+                return handleException(err, res);
             }
 
             if ( req.profiler ) {
@@ -230,7 +242,6 @@ JobController.prototype.createJob = function (req, res) {
             if (result.host) {
               res.header('X-Served-By-DB-Host', result.host);
             }
-
             res.send(result.job);
         }
     );
