@@ -118,9 +118,9 @@ describe('batch', function() {
                 _.find(jobsCreated, function(job) {
                     if (jobId === job.jobId) {
                         jobsDone += 1;
-                    }
-                    if (jobsDone === jobs.length) {
-                        done();
+                        if (jobsDone === jobs.length) {
+                            done();
+                        }
                     }
                 });
             });
