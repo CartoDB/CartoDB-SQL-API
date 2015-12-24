@@ -3,15 +3,19 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var uuid = require('node-uuid');
+var queue = require('queue-async');
 
-function JobBackend(metadataBackend) {
+function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     EventEmitter.call(this);
     this.metadataBackend = metadataBackend;
+    this.jobQueueProducer = jobQueueProducer;
+    this.jobPublisher = jobPublisher;
+    this.userIndexer = userIndexer;
     this.db = 5;
 }
 util.inherits(JobBackend, EventEmitter);
 
-JobBackend.prototype.create = function (username, sql, callback) {
+JobBackend.prototype.create = function (username, sql, host, callback) {
     var self = this;
     var job_id = uuid.v4();
     var now = new Date().toISOString();
@@ -29,7 +33,44 @@ JobBackend.prototype.create = function (username, sql, callback) {
             return callback(err);
         }
 
-        self.get(job_id, callback);
+        self.jobQueueProducer.enqueue(job_id, host, function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            // broadcast to consumers
+            self.jobPublisher.publish(host);
+
+            self.userIndexer.add(username, job_id, function (err) {
+              if (err) {
+                  return callback(err);
+              }
+
+              self.get(job_id, callback);
+            });
+        });
+    });
+};
+
+JobBackend.prototype.list = function (username, callback) {
+    var self = this;
+    this.userIndexer.list(username, function (err, job_ids) {
+        if (err) {
+            return callback(err);
+        }
+
+        var jobsQueue = queue(job_ids.length);
+
+        job_ids.forEach(function(job_id) {
+            jobsQueue.defer(self.get.bind(self), job_id);
+        });
+
+        jobsQueue.awaitAll(function (err, jobs) {
+            if (err) {
+                return callback(err);
+            }
+            callback(null, jobs);
+        });
     });
 };
 

@@ -3,6 +3,7 @@ var queue = require('queue-async');
 var Batch = require('../../batch/batch');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueueProducer = require('../../batch/job_queue_producer');
+var UserIndexer = require('../../batch/user_indexer');
 var JobBackend = require('../../batch/job_backend');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
@@ -17,7 +18,8 @@ describe('batch', function() {
     var username = 'vizzuality';
     var jobQueueProducer =  new JobQueueProducer(metadataBackend);
     var jobPublisher = new JobPublisher();
-    var jobBackend = new JobBackend(metadataBackend);
+    var userIndexer = new UserIndexer(metadataBackend);
+    var jobBackend = new JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer);
     var batch = new Batch(metadataBackend);
 
     before(function () {
@@ -29,19 +31,12 @@ describe('batch', function() {
     });
 
     function createJob(sql, done) {
-        jobBackend.create(username, sql, function (err, job) {
+        jobBackend.create(username, sql, dbInstance, function (err, job) {
             if (err) {
                 return done(err);
             }
 
-            jobQueueProducer.enqueue(job.job_id, dbInstance, function (err) {
-                if (err) {
-                    return done(err);
-                }
-
-                jobPublisher.publish(dbInstance);
-                done(null, job);
-            });
+            done(null, job);
         });
     }
 
