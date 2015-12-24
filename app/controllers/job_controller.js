@@ -75,7 +75,7 @@ JobController.prototype.listJob = function (req, res) {
             };
             userDatabaseService.getUserDatabase(options, this);
         },
-        function getJob(err, userDatabase) {
+        function listJob(err, userDatabase) {
             assert.ifError(err);
 
             if (!userDatabase.authenticated) {
@@ -90,13 +90,13 @@ JobController.prototype.listJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.get(job_id, function (err, job) {
+            self.jobBackend.list(cdbUsername, function (err, jobs) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    job: job,
+                    jobs: jobs,
                     userDatabase: userDatabase
                 });
             });
@@ -119,7 +119,7 @@ JobController.prototype.listJob = function (req, res) {
               res.header('X-Served-By-DB-Host', result.host);
             }
 
-            res.send(result.job);
+            res.send(result.jobs);
         }
     );
 };
