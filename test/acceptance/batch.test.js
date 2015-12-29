@@ -2,7 +2,7 @@ var _ = require('underscore');
 var queue = require('queue-async');
 var Batch = require('../../batch/batch');
 var JobPublisher = require('../../batch/job_publisher');
-var JobQueueProducer = require('../../batch/job_queue_producer');
+var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');
 var JobBackend = require('../../batch/job_backend');
 var metadataBackend = require('cartodb-redis')({
@@ -16,18 +16,14 @@ var metadataBackend = require('cartodb-redis')({
 describe('batch', function() {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
-    var jobQueueProducer =  new JobQueueProducer(metadataBackend);
+    var jobQueue =  new JobQueue(metadataBackend);
     var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
     var batch = new Batch(metadataBackend);
 
     before(function () {
         batch.start();
-    });
-
-    after(function () {
-        batch.stop();
     });
 
     function createJob(sql, done) {

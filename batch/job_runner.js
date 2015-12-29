@@ -3,7 +3,7 @@
 var JobBackend = require('./job_backend');
 var PSQL = require('cartodb-psql');
 var JobPublisher = require('./job_publisher');
-var JobQueueProducer = require('./job_queue_producer');
+var JobQueue = require('./job_queue');
 var UserIndexer = require('./user_indexer');
 
 function JobRunner(metadataBackend, userDatabaseMetadataService) {
@@ -13,15 +13,16 @@ function JobRunner(metadataBackend, userDatabaseMetadataService) {
 
 JobRunner.prototype.run = function (job_id) {
     var self = this;
-    var jobQueueProducer =  new JobQueueProducer(this.metadataBackend);
+    var jobQueue =  new JobQueue(this.metadataBackend);
     var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(this.metadataBackend);
-    var jobBackend = new JobBackend(this.metadataBackend, jobQueueProducer, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(this.metadataBackend, jobQueue, jobPublisher, userIndexer);
 
     jobBackend.get(job_id, function (err, job) {
         if (err) {
             return jobBackend.emit('error', err);
         }
+
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
             if (err) {
                 return jobBackend.emit('error', err);

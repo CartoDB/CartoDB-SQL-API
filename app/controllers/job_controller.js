@@ -6,7 +6,7 @@ var assert = require('assert');
 
 var UserDatabaseService = require('../services/user_database_service');
 var JobPublisher = require('../../batch/job_publisher');
-var JobQueueProducer = require('../../batch/job_queue_producer');
+var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');
 var JobBackend = require('../../batch/job_backend');
 var CdbRequest = require('../models/cartodb_request');
@@ -16,14 +16,14 @@ var cdbReq = new CdbRequest();
 var userDatabaseService = new UserDatabaseService();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
-    var jobQueueProducer = new JobQueueProducer(metadataBackend);
+    var jobQueue = new JobQueue(metadataBackend);
     var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(metadataBackend);
 
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
-    this.jobBackend = new JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer);
+    this.jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
 }
 
 JobController.prototype.route = function (app) {

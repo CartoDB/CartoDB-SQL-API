@@ -35,7 +35,6 @@ describe('job', function() {
             job = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.equal(job.query, "SELECT * FROM untitle_table_4");
-            assert.equal(job.status, "pending");
             assert.equal(job.user, "vizzuality");
             done();
         });
@@ -52,7 +51,6 @@ describe('job', function() {
             var jobGot = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.equal(jobGot.query, "SELECT * FROM untitle_table_4");
-            assert.equal(jobGot.status, "pending");
             assert.equal(jobGot.user, "vizzuality");
             done();
         });
