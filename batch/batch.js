@@ -23,10 +23,10 @@ Batch.prototype.start = function () {
 
         if (!queue) {
             queue = self.jobQueuePool.add(host);
-            run(queue);
+            consume(queue);
         }
 
-        function run(queue) {
+        function consume(queue) {
             queue.dequeue(host, function (err, job_id) {
                 if (err) {
                     self.jobQueuePool.remove(host);
@@ -42,12 +42,12 @@ Batch.prototype.start = function () {
                     .on('done', function (job) {
                         console.log('Job %s done in %s', job_id, host);
                         self.emit('job:done', job_id);
-                        run(queue);
+                        consume(queue); // recursive call
                     })
                     .on('failed', function (job) {
                         console.log('Job %s done in %s', job_id, host);
                         self.emit('job:failed', job_id);
-                        run(queue);
+                        consume(queue); // recursive call
                     })
                     .on('error', function (err) {
                         self.emit('job:failed', job_id);

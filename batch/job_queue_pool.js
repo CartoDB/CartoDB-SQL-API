@@ -11,9 +11,6 @@ JobQueuePool.prototype.get = function (host) {
     return this.queues[host];
 };
 
-JobQueuePool.prototype.tap = function (host) {
-};
-
 JobQueuePool.prototype.list = function () {
     return Object.keys(this.queues);
 };

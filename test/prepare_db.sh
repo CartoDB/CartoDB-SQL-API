@@ -135,8 +135,17 @@ EOF
 
 # delete previous jobs
 cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
-EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 job:*
-DEL queue:localhost
+EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 batch:jobs:*
+EOF
+
+# delete job queue
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+DEL batch:queues:localhost
+EOF
+
+# delete user index
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+DEL batch:users:vizzuality
 EOF
 
 fi

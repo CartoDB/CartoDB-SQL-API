@@ -13,7 +13,7 @@ var metadataBackend = require('cartodb-redis')({
     reapIntervalMillis: global.settings.redisReapIntervalMillis
 });
 
-describe('batch', function() {
+describe('batch module', function() {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
     var jobQueue =  new JobQueue(metadataBackend);

@@ -12,6 +12,7 @@ function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer
     this.jobPublisher = jobPublisher;
     this.userIndexer = userIndexer;
     this.db = 5;
+    this.redisPrefix = 'batch:jobs:';
 }
 util.inherits(JobBackend, EventEmitter);
 
@@ -20,7 +21,7 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
     var job_id = uuid.v4();
     var now = new Date().toISOString();
     var redisParams = [
-        'job:' + job_id,
+        this.redisPrefix + job_id,
         'user', username,
         'status', 'pending',
         'query', sql,
@@ -76,7 +77,7 @@ JobBackend.prototype.list = function (username, callback) {
 
 JobBackend.prototype.get = function (job_id, callback) {
     var redisParams = [
-        'job:' + job_id,
+        this.redisPrefix + job_id,
         'user',
         'status',
         'query',
@@ -113,7 +114,7 @@ JobBackend.prototype.get = function (job_id, callback) {
 JobBackend.prototype.setRunning = function (job) {
     var self = this;
     var redisParams = [
-        'job:' + job.job_id,
+        this.redisPrefix + job.job_id,
         'status', 'running',
         'updated_at', new Date().toISOString()
     ];
@@ -130,7 +131,7 @@ JobBackend.prototype.setRunning = function (job) {
 JobBackend.prototype.setDone = function (job) {
     var self = this;
     var redisParams = [
-        'job:' + job.job_id,
+        this.redisPrefix + job.job_id,
         'status', 'done',
         'updated_at', new Date().toISOString()
     ];
@@ -147,7 +148,7 @@ JobBackend.prototype.setDone = function (job) {
 JobBackend.prototype.setFailed = function (job, err) {
     var self = this;
     var redisParams = [
-        'job:' + job.job_id,
+        this.redisPrefix + job.job_id,
         'status', 'failed',
         'failed_reason', err.message,
         'updated_at', new Date().toISOString()
