@@ -14,11 +14,11 @@ UserDatabaseMetadataService.prototype.getUserMetadata = function (username, call
             return callback(err);
         }
 
-        callback(null, self.parseMetadaToDatabase(userDatabaseMetadata));
+        callback(null, self.parseMetadataToDatabase(userDatabaseMetadata));
     });
 };
 
-UserDatabaseMetadataService.prototype.parseMetadaToDatabase = function (userDatabaseMetadata) {
+UserDatabaseMetadataService.prototype.parseMetadataToDatabase = function (userDatabaseMetadata) {
     var dbParams = userDatabaseMetadata;
 
     var dbopts = {
