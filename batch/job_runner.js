@@ -23,6 +23,11 @@ JobRunner.prototype.run = function (job_id) {
             return jobBackend.emit('error', err);
         }
 
+        if (job.status !== 'pending') {
+            return jobBackend.emit('error',
+                new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status));
+        }
+
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
             if (err) {
                 return jobBackend.emit('error', err);
@@ -37,7 +42,10 @@ JobRunner.prototype.run = function (job_id) {
                     return jobBackend.setFailed(job, err);
                 }
 
-                pg.eventedQuery(job.query, function (err, query /* , queryCanceller */) {
+                // mark query to allow to users cancel their queries whether users request for that
+                var sql = job.query + ' /* ' + job.job_id + ' */';
+
+                pg.eventedQuery(sql, function (err, query /* , queryCanceller */) {
                     if (err) {
                         return jobBackend.setFailed(job, err);
                     }

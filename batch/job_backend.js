@@ -163,4 +163,22 @@ JobBackend.prototype.setFailed = function (job, err) {
     });
 };
 
+JobBackend.prototype.setCancelled = function (job) {
+    var self = this;
+    var redisParams = [
+        this.redisPrefix + job.job_id,
+        'status', 'cancelled',
+        'updated_at', new Date().toISOString()
+    ];
+
+    this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
+        if (err) {
+            return self.emit('error', err);
+        }
+
+        self.emit('cancelled', job);
+    });
+};
+
+
 module.exports = JobBackend;

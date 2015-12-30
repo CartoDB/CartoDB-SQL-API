@@ -41,15 +41,16 @@ Batch.prototype.start = function () {
                 self.jobRunner.run(job_id)
                     .on('done', function (job) {
                         console.log('Job %s done in %s', job_id, host);
-                        self.emit('job:done', job_id);
+                        self.emit('job:done', job.job_id);
                         consume(queue); // recursive call
                     })
                     .on('failed', function (job) {
                         console.log('Job %s done in %s', job_id, host);
-                        self.emit('job:failed', job_id);
+                        self.emit('job:failed', job.job_id);
                         consume(queue); // recursive call
                     })
                     .on('error', function (err) {
+                        console.error('Error in job ', err.message || err);
                         self.emit('job:failed', job_id);
                         self.jobQueuePool.remove(host);
                     });
