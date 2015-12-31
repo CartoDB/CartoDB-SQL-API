@@ -53,6 +53,36 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
     });
 };
 
+JobBackend.prototype.update = function (job_id, sql, callback) {
+    var self = this;
+
+    this.get(job_id, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (job.status !== 'pending') {
+            return callback(new Error('Job is not pending, it couldn\'t be updated'));
+        }
+
+        var now = new Date().toISOString();
+        var redisParams = [
+            self.redisPrefix + job_id,
+            'query', sql,
+            'updated_at', now
+        ];
+
+        self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams , function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self.get(job_id, callback);
+        });
+
+    });
+};
+
 JobBackend.prototype.list = function (username, callback) {
     var self = this;
     this.userIndexer.list(username, function (err, job_ids) {

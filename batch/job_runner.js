@@ -5,6 +5,7 @@ var PSQL = require('cartodb-psql');
 var JobPublisher = require('./job_publisher');
 var JobQueue = require('./job_queue');
 var UserIndexer = require('./user_indexer');
+var QUERY_CANCELED = 57014;
 
 function JobRunner(metadataBackend, userDatabaseMetadataService) {
     this.metadataBackend = metadataBackend;
@@ -51,6 +52,10 @@ JobRunner.prototype.run = function (job_id) {
                     }
 
                     query.on('error', function (err) {
+                        if (err.code === QUERY_CANCELED) {
+                            return jobBackend.setCancelled(job);
+                        }
+
                         jobBackend.setFailed(job, err);
                     });
 
