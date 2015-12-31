@@ -28,7 +28,7 @@ JobCanceller.prototype.cancel = function (job_id) {
         }
 
         if (job.status !== 'running') {
-            return jobBackend.emit('error', new Error('Job has been dispatched previously, nothing to do'));
+            return jobBackend.emit('error', new Error('Job is ' + job.status + ' nothing to do'));
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
@@ -47,12 +47,11 @@ JobCanceller.prototype.cancel = function (job_id) {
                     return jobBackend.emit('error', err);
                 }
 
-                var pid = result.rows[0].pid;
-
-                if (!pid) {
+                if (!result.rows[0] || result.rows[0].pid) {
                     return jobBackend.emit('error', new Error('Query not running currently'));
                 }
 
+                var pid = result.rows[0].pid;
                 var cancelQuery = 'SELECT pg_cancel_backend(' + pid +')';
 
                 pg.query(cancelQuery, function (err, result) {

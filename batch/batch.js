@@ -70,9 +70,9 @@ Batch.prototype._consume = function consume(host, queue, callback) {
                 callback();
             })
             .on('error', function (err) {
-                console.error('Error in job %s due to', job_id, err.message || err);
+                console.error('Error in job %s due to:', job_id, err.message || err);
                 self.emit('job:failed', job_id);
-                callback(err);
+                callback();
             });
     });
 };
