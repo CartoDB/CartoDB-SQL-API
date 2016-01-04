@@ -65,7 +65,7 @@ JobCanceller.prototype.cancel = function (job_id) {
                         return jobBackend.emit('error', new Error('Query has not been cancelled'));
                     }
 
-                    jobBackend.emit('cancelled');
+                    jobBackend.emit('cancelled', job);
                 });
             });
         });

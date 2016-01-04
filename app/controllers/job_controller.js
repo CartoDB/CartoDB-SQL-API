@@ -36,6 +36,7 @@ JobController.prototype.route = function (app) {
     app.get(global.settings.base_url + '/job/:job_id',  this.getJob.bind(this));
     app.delete(global.settings.base_url + '/job/:job_id',  this.cancelJob.bind(this));
     app.put(global.settings.base_url + '/job/:job_id',  this.updateJob.bind(this));
+    app.patch(global.settings.base_url + '/job/:job_id',  this.updateJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {
@@ -104,9 +105,12 @@ JobController.prototype.cancelJob = function (req, res) {
             var jobCanceller = new JobCanceller(self.metadataBackend, self.userDatabaseMetadataService);
 
             jobCanceller.cancel(job_id)
-                .on('cancelled', function () {
+                .on('cancelled', function (job) {
+                    // job is cancelled but surelly jobRunner has not deal whith it yet and it's not saved
+                    job.status = 'cancelled';
+
                     next(null, {
-                        cancelled: true,
+                        job: job,
                         host: userDatabase.host
                     });
                 })
@@ -133,7 +137,7 @@ JobController.prototype.cancelJob = function (req, res) {
             }
 
             res.send({
-                cancelled: result.cancelled
+                cancelled: result.job
             });
         }
     );

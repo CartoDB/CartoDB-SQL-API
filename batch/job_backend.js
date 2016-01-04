@@ -94,15 +94,40 @@ JobBackend.prototype.list = function (username, callback) {
         var jobsQueue = queue(job_ids.length);
 
         job_ids.forEach(function(job_id) {
-            jobsQueue.defer(self.get.bind(self), job_id);
+            jobsQueue.defer(self._getForList.bind(self), job_id, username);
         });
 
         jobsQueue.awaitAll(function (err, jobs) {
             if (err) {
                 return callback(err);
             }
-            callback(null, jobs);
+
+            callback(null, jobs.filter(function (job) {
+                return job ? true : false;
+            }));
         });
+    });
+};
+
+JobBackend.prototype._getForList = function (job_id, username, callback) {
+    var self = this;
+
+    this.get(job_id, function (err, job) {
+
+        if (err && err.name === 'NotFoundError') {
+            return self.userIndexer.remove(username, job_id, function (err) {
+                if (err) {
+                    console.error('Error removing key %s in user set', job_id, err);
+                }
+                callback();
+            });
+        }
+
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, job);
     });
 };
 
@@ -127,7 +152,9 @@ JobBackend.prototype.get = function (job_id, callback) {
         }
 
         if (!isJobFound(jobValues)) {
-            return callback(new Error('Job with id ' + job_id + ' not found'));
+            var notFoundError = new Error('Job with id ' + job_id + ' not found');
+            notFoundError.name = 'NotFoundError';
+            return callback(notFoundError);
         }
 
         callback(null, {
@@ -198,7 +225,7 @@ JobBackend.prototype.setFailed = function (job, err) {
             return self.emit('error', err);
         }
 
-        self.metadataBackend.redisCmd(this.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
+        self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
             if (err) {
                 return self.emit('error', err);
             }
@@ -222,7 +249,7 @@ JobBackend.prototype.setCancelled = function (job) {
             return self.emit('error', err);
         }
 
-        self.metadataBackend.redisCmd(this.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
+        self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
             if (err) {
                 return self.emit('error', err);
             }
