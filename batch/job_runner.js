@@ -43,7 +43,7 @@ JobRunner.prototype.run = function (job_id) {
                     return jobBackend.setFailed(job, err);
                 }
 
-                // mark query to allow to users cancel their queries whether users request for that
+                // mark query to allow to users cancel their queries whether users request for it
                 var sql = job.query + ' /* ' + job.job_id + ' */';
 
                 pg.eventedQuery(sql, function (err, query /* , queryCanceller */) {

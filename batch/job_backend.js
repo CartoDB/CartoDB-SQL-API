@@ -4,6 +4,7 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var uuid = require('node-uuid');
 var queue = require('queue-async');
+var JOBS_TTL_AFTER_RESOLUTION = 48 * 3600;
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     EventEmitter.call(this);
@@ -160,8 +161,9 @@ JobBackend.prototype.setRunning = function (job) {
 
 JobBackend.prototype.setDone = function (job) {
     var self = this;
+    var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
-        this.redisPrefix + job.job_id,
+        redisKey,
         'status', 'done',
         'updated_at', new Date().toISOString()
     ];
@@ -171,14 +173,21 @@ JobBackend.prototype.setDone = function (job) {
             return self.emit('error', err);
         }
 
-        self.emit('done', job);
+        self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
+            if (err) {
+                return self.emit('error', err);
+            }
+
+            self.emit('done', job);
+        });
     });
 };
 
 JobBackend.prototype.setFailed = function (job, err) {
     var self = this;
+    var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
-        this.redisPrefix + job.job_id,
+        redisKey,
         'status', 'failed',
         'failed_reason', err.message,
         'updated_at', new Date().toISOString()
@@ -189,14 +198,21 @@ JobBackend.prototype.setFailed = function (job, err) {
             return self.emit('error', err);
         }
 
-        self.emit('failed', job);
+        self.metadataBackend.redisCmd(this.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
+            if (err) {
+                return self.emit('error', err);
+            }
+
+            self.emit('failed', job);
+        });
     });
 };
 
 JobBackend.prototype.setCancelled = function (job) {
     var self = this;
+    var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
-        this.redisPrefix + job.job_id,
+        redisKey,
         'status', 'cancelled',
         'updated_at', new Date().toISOString()
     ];
@@ -206,7 +222,14 @@ JobBackend.prototype.setCancelled = function (job) {
             return self.emit('error', err);
         }
 
-        self.emit('cancelled', job);
+        self.metadataBackend.redisCmd(this.db, 'EXPIRE', [ redisKey, JOBS_TTL_AFTER_RESOLUTION ], function (err) {
+            if (err) {
+                return self.emit('error', err);
+            }
+
+            self.emit('cancelled', job);
+        });
+
     });
 };
 

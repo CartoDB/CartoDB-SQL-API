@@ -47,7 +47,7 @@ JobCanceller.prototype.cancel = function (job_id) {
                     return jobBackend.emit('error', err);
                 }
 
-                if (!result.rows[0] || result.rows[0].pid) {
+                if (!result.rows[0] || !result.rows[0].pid) {
                     return jobBackend.emit('error', new Error('Query not running currently'));
                 }
 
