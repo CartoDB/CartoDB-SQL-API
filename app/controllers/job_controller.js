@@ -482,6 +482,10 @@ JobController.prototype.updateJob = function (req, res) {
         function updateJob(err, userDatabase) {
             assert.ifError(err);
 
+            if (!userDatabase.authenticated) {
+                throw new Error('permission denied');
+            }
+
             var next = this;
 
             checkAborted('updateJob');
