@@ -44,6 +44,10 @@ Batch.prototype.start = function () {
     });
 };
 
+Batch.prototype.stop = function () {
+    this.jobSubscriber.unsubscribe();
+};
+
 Batch.prototype._consume = function consume(host, queue, callback) {
     var self = this;
 

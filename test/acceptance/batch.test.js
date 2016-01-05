@@ -26,6 +26,10 @@ describe('batch module', function() {
         batch.start();
     });
 
+    after(function () {
+        batch.stop();
+    });
+
     function createJob(sql, done) {
         jobBackend.create(username, sql, dbInstance, function (err, job) {
             if (err) {
