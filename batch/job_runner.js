@@ -11,14 +11,13 @@ function JobRunner(metadataBackend, userDatabaseMetadataService) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
     this.jobPublisher = new JobPublisher();
-
+    this.jobQueue =  new JobQueue(this.metadataBackend);
+    this.userIndexer = new UserIndexer(this.metadataBackend);
 }
 
 JobRunner.prototype.run = function (job_id) {
     var self = this;
-    var jobQueue =  new JobQueue(this.metadataBackend);
-    var userIndexer = new UserIndexer(this.metadataBackend);
-    var jobBackend = new JobBackend(this.metadataBackend, jobQueue, this.jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(this.metadataBackend, this.jobQueue, this.jobPublisher, this.userIndexer);
 
     jobBackend.get(job_id, function (err, job) {
         if (err) {
