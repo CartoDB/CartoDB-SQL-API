@@ -86,30 +86,49 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
 
 JobBackend.prototype.list = function (username, callback) {
     var self = this;
+
     this.userIndexer.list(username, function (err, job_ids) {
         if (err) {
             return callback(err);
         }
 
-        var jobsQueue = queue(job_ids.length);
+        var initialLength = job_ids.length;
 
-        job_ids.forEach(function(job_id) {
-            jobsQueue.defer(self._getForList.bind(self), job_id, username);
-        });
-
-        jobsQueue.awaitAll(function (err, jobs) {
+        self._getCleanedList(username, job_ids, function (err, jobs) {
             if (err) {
                 return callback(err);
             }
 
-            callback(null, jobs.filter(function (job) {
-                return job ? true : false;
-            }));
+            if (jobs.length < initialLength) {
+                return self.list(username, callback);
+            }
+
+            callback(null, jobs);
         });
     });
 };
 
-JobBackend.prototype._getForList = function (job_id, username, callback) {
+JobBackend.prototype._getCleanedList = function (username, job_ids, callback) {
+    var self = this;
+
+    var jobsQueue = queue(job_ids.length);
+
+    job_ids.forEach(function(job_id) {
+        jobsQueue.defer(self._getIndexedJob.bind(self), job_id, username);
+    });
+
+    jobsQueue.awaitAll(function (err, jobs) {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, jobs.filter(function (job) {
+            return job ? true : false;
+        }));
+    });
+};
+
+JobBackend.prototype._getIndexedJob = function (job_id, username, callback) {
     var self = this;
 
     this.get(job_id, function (err, job) {

@@ -30,7 +30,7 @@ describe('job module', function() {
                 query: "SELECT * FROM untitle_table_4"
             })
         }, {
-            status: 200
+            status: 201
         }, function(res) {
             job = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');

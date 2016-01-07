@@ -424,7 +424,8 @@ JobController.prototype.createJob = function (req, res) {
             if (result.host) {
               res.header('X-Served-By-DB-Host', result.host);
             }
-            res.send(result.job);
+
+            res.status(201).send(result.job);
         }
     );
 };
