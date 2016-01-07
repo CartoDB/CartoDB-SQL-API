@@ -10,14 +10,15 @@ var QUERY_CANCELED = '57014';
 function JobRunner(metadataBackend, userDatabaseMetadataService) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
+    this.jobPublisher = new JobPublisher();
+
 }
 
 JobRunner.prototype.run = function (job_id) {
     var self = this;
     var jobQueue =  new JobQueue(this.metadataBackend);
-    var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(this.metadataBackend);
-    var jobBackend = new JobBackend(this.metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(this.metadataBackend, jobQueue, this.jobPublisher, userIndexer);
 
     jobBackend.get(job_id, function (err, job) {
         if (err) {
