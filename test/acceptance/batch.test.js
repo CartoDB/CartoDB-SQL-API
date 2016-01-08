@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var queue = require('queue-async');
-var Batch = require('../../batch/batch');
+var Batch = require('../../batch');
+// var Batch = require('../../batch/batch');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');

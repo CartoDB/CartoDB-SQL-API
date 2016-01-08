@@ -2,21 +2,19 @@
 
 var JobBackend = require('./job_backend');
 var PSQL = require('cartodb-psql');
-var JobPublisher = require('./job_publisher');
-var JobQueue = require('./job_queue');
-var UserIndexer = require('./user_indexer');
 var QUERY_CANCELED = '57014';
 
-function JobRunner(metadataBackend, userDatabaseMetadataService) {
+function JobRunner(metadataBackend, userDatabaseMetadataService, jobPublisher, jobQueue, userIndexer) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
-    this.jobPublisher = new JobPublisher();
-    this.jobQueue =  new JobQueue(this.metadataBackend);
-    this.userIndexer = new UserIndexer(this.metadataBackend);
+    this.jobPublisher = jobPublisher;
+    this.jobQueue =  jobQueue;
+    this.userIndexer = userIndexer;
 }
 
 JobRunner.prototype.run = function (job_id) {
     var self = this;
+
     var jobBackend = new JobBackend(this.metadataBackend, this.jobQueue, this.jobPublisher, this.userIndexer);
 
     jobBackend.get(job_id, function (err, job) {

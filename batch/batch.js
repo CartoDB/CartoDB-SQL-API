@@ -2,17 +2,13 @@
 
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-var JobRunner = require('./job_runner');
-var JobQueuePool = require('./job_queue_pool');
-var JobSubscriber = require('./job_subscriber');
-var UserDatabaseMetadataService = require('./user_database_metadata_service');
 var forever = require('./forever');
 
-function Batch(metadataBackend) {
+function Batch(jobSubscriber, jobQueuePool, jobRunner) {
     EventEmitter.call(this);
-    this.jobSubscriber = new JobSubscriber();
-    this.jobQueuePool = new JobQueuePool(metadataBackend);
-    this.jobRunner = new JobRunner(metadataBackend, new UserDatabaseMetadataService(metadataBackend));
+    this.jobSubscriber = jobSubscriber;
+    this.jobQueuePool = jobQueuePool;
+    this.jobRunner = jobRunner;
 }
 util.inherits(Batch, EventEmitter);
 
