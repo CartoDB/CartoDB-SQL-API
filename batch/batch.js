@@ -25,7 +25,7 @@ Batch.prototype.start = function () {
 
         queue = self.jobQueuePool.add(host);
 
-        // do forever, it does not cause a stack overflow
+        // do forever, it does not throw a stack overflow
         forever(function (next) {
             self._consumeJobs(host, queue, next);
         }, function (err) {
@@ -63,7 +63,12 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
                 return callback(err);
             }
 
-            console.log('Job %s %s in %s', job_id, job.status, host);
+            if (job.status === 'failed') {
+                console.log('Job %s %s in %s due to: %s', job_id, job.status, host, job.failed_reason);
+            } else {
+                console.log('Job %s %s in %s', job_id, job.status, host);
+            }
+
             self.emit('job:' + job.status, job_id);
 
             callback();

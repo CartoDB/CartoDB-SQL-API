@@ -21,7 +21,7 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
         }
 
         if (job.status !== 'running') {
-            return callback(new Error('Job is ' + job.status + ' nothing to do'));
+            return callback(new Error('Job is ' + job.status + ', cancel is not allowed'));
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
@@ -62,7 +62,7 @@ JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
                 return callback(new Error('Query has not been cancelled'));
             }
 
-            // JobRunner handles job status through the PG's client error handler (see JobRunner.run:48)
+            // JobRunner handles job status through the PG's client error handler (see JobRunner.run, on error callback)
             // Due to user needs feedback, this modifies to the current status and updated dat
             job.updated_at = new Date().toISOString();
             job.status = 'cancelled';

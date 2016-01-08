@@ -232,14 +232,14 @@ JobBackend.prototype.setDone = function (job, callback) {
     });
 };
 
-JobBackend.prototype.setFailed = function (job, err, callback) {
+JobBackend.prototype.setFailed = function (job, error, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
         redisKey,
         'status', 'failed',
-        'failed_reason', err.message,
+        'failed_reason', error.message,
         'updated_at', now
     ];
 
@@ -255,6 +255,7 @@ JobBackend.prototype.setFailed = function (job, err, callback) {
 
             job.status = 'failed';
             job.updated_at = now;
+            job.failed_reason = error.message;
 
             callback(null, job);
         });
