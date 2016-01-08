@@ -27,7 +27,7 @@ Batch.prototype.start = function () {
 
         // do forever, it does not cause a stack overflow
         forever(function (next) {
-            self._consume(host, queue, next);
+            self._consumeJobs(host, queue, next);
         }, function (err) {
             self.jobQueuePool.remove(host);
 
@@ -44,7 +44,7 @@ Batch.prototype.stop = function () {
     this.jobSubscriber.unsubscribe();
 };
 
-Batch.prototype._consume = function consume(host, queue, callback) {
+Batch.prototype._consumeJobs = function (host, queue, callback) {
     var self = this;
 
     queue.dequeue(host, function (err, job_id) {
@@ -58,22 +58,16 @@ Batch.prototype._consume = function consume(host, queue, callback) {
             return callback(emptyQueueError);
         }
 
-        self.jobRunner.run(job_id)
-            .on('done', function (job) {
-                console.log('Job %s done in %s', job_id, host);
-                self.emit('job:done', job.job_id);
-                callback();
-            })
-            .on('failed', function (job) {
-                console.log('Job %s failed in %s', job_id, host);
-                self.emit('job:failed', job.job_id);
-                callback();
-            })
-            .on('error', function (err) {
-                console.error('Error in job %s due to:', job_id, err.message || err);
-                self.emit('job:failed', job_id);
-                callback();
-            });
+        self.jobRunner.run(job_id, function (err, job) {
+            if (err) {
+                return callback(err);
+            }
+
+            console.log('Job %s %s in %s', job_id, job.status, host);
+            self.emit('job:' + job.status, job_id);
+
+            callback();
+        });
     });
 };
 

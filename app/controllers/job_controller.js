@@ -28,6 +28,7 @@ function JobController(metadataBackend, tableCache, statsd_client) {
     this.statsd_client = statsd_client;
     this.jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
     this.userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+    this.jobCanceller = new JobCanceller(this.metadataBackend, this.userDatabaseMetadataService, this.jobBackend);
 }
 
 JobController.prototype.route = function (app) {
@@ -102,21 +103,17 @@ JobController.prototype.cancelJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            var jobCanceller = new JobCanceller(self.metadataBackend, self.userDatabaseMetadataService);
 
-            jobCanceller.cancel(job_id)
-                .on('cancelled', function (job) {
-                    // job is cancelled but surelly jobRunner has not deal whith it yet and it's not saved
-                    job.status = 'cancelled';
+            self.jobCanceller.cancel(job_id, function (err, job) {
+                if (err) {
+                    return next(err);
+                }
 
-                    next(null, {
-                        job: job,
-                        host: userDatabase.host
-                    });
-                })
-                .on('error', function (err) {
-                    next(err);
+                next(null, {
+                    job: job,
+                    host: userDatabase.host
                 });
+            });
         },
         function handleResponse(err, result) {
             if ( err ) {

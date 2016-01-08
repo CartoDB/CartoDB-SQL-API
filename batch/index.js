@@ -7,25 +7,19 @@ var UserDatabaseMetadataService = require('./user_database_metadata_service');
 var JobPublisher = require('./job_publisher');
 var JobQueue = require('./job_queue');
 var UserIndexer = require('./user_indexer');
+var JobBackend = require('./job_backend');
 
 var Batch = require('./batch');
 
 module.exports = function batchFactory (metadataBackend) {
     var jobSubscriber = new JobSubscriber();
     var jobQueuePool = new JobQueuePool(metadataBackend);
-
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobPublisher = new JobPublisher();
     var jobQueue =  new JobQueue(metadataBackend);
     var userIndexer = new UserIndexer(metadataBackend);
-
-    var jobRunner = new JobRunner(
-        metadataBackend,
-        userDatabaseMetadataService,
-        jobPublisher,
-        jobQueue,
-        userIndexer
-    );
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+    var jobRunner = new JobRunner(jobBackend, userDatabaseMetadataService);
 
     return new Batch(jobSubscriber, jobQueuePool, jobRunner);
 };

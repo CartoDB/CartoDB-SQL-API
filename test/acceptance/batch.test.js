@@ -21,6 +21,7 @@ describe('batch module', function() {
     var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+
     var batch = new Batch(metadataBackend);
 
     before(function () {

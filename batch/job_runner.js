@@ -1,74 +1,74 @@
 'use strict';
 
-var JobBackend = require('./job_backend');
 var PSQL = require('cartodb-psql');
 var QUERY_CANCELED = '57014';
 
-function JobRunner(metadataBackend, userDatabaseMetadataService, jobPublisher, jobQueue, userIndexer) {
-    this.metadataBackend = metadataBackend;
+function JobRunner(jobBackend, userDatabaseMetadataService) {
+    this.jobBackend = jobBackend;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
-    this.jobPublisher = jobPublisher;
-    this.jobQueue =  jobQueue;
-    this.userIndexer = userIndexer;
 }
 
-JobRunner.prototype.run = function (job_id) {
+JobRunner.prototype.run = function (job_id, callback) {
     var self = this;
 
-    var jobBackend = new JobBackend(this.metadataBackend, this.jobQueue, this.jobPublisher, this.userIndexer);
-
-    jobBackend.get(job_id, function (err, job) {
+    self.jobBackend.get(job_id, function (err, job) {
         if (err) {
-            return jobBackend.emit('error', err);
+            return callback(err);
         }
 
         if (job.status !== 'pending') {
-            return jobBackend.emit('error',
-                new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status));
+            return callback(new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status));
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
             if (err) {
-                return jobBackend.emit('error', err);
+                return callback(err);
             }
 
-            var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-
-            jobBackend.setRunning(job);
-
-            pg.query('SET statement_timeout=0', function(err) {
-                if(err) {
-                    return jobBackend.setFailed(job, err);
+            self.jobBackend.setRunning(job, function (err, job) {
+                if (err) {
+                    return callback(err);
                 }
 
-                // mark query to allow to users cancel their queries whether users request for it
-                var sql = job.query + ' /* ' + job.job_id + ' */';
-
-                pg.eventedQuery(sql, function (err, query /* , queryCanceller */) {
-                    if (err) {
-                        return jobBackend.setFailed(job, err);
-                    }
-
-                    query.on('error', function (err) {
-                        if (err.code === QUERY_CANCELED) {
-                            return jobBackend.setCancelled(job);
-                        }
-
-                        jobBackend.setFailed(job, err);
-                    });
-
-                    query.on('end', function (result) {
-                        if (result) {
-                            jobBackend.setDone(job);
-                        }
-                    });
-                });
+                self._query(job, userDatabaseMetadata, callback);
             });
         });
     });
-
-    return jobBackend;
 };
 
+JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
+    var self = this;
+
+    var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
+
+    pg.query('SET statement_timeout=0', function (err) {
+        if(err) {
+            return self.jobBackend.setFailed(job, err, callback);
+        }
+
+        // mark query to allow to users cancel their queries whether users request for it
+        var sql = job.query + ' /* ' + job.job_id + ' */';
+
+        pg.eventedQuery(sql, function (err, query) {
+            if (err) {
+                return self.jobBackend.setFailed(job, err, callback);
+            }
+
+            query.on('error', function (err) {
+                if (err.code === QUERY_CANCELED) {
+                    return self.jobBackend.setCancelled(job, callback);
+                }
+
+                self.jobBackend.setFailed(job, err, callback);
+            });
+
+            query.on('end', function (result) {
+                if (result) {
+                    self.jobBackend.setDone(job, callback);
+                }
+            });
+        });
+    });
+};
 
 module.exports = JobRunner;
