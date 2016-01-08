@@ -1,7 +1,6 @@
 var _ = require('underscore');
 var queue = require('queue-async');
-var Batch = require('../../batch');
-// var Batch = require('../../batch/batch');
+var batchFactory = require('../../batch');
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');
@@ -22,7 +21,7 @@ describe('batch module', function() {
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
 
-    var batch = new Batch(metadataBackend);
+    var batch = batchFactory(metadataBackend);
 
     before(function () {
         batch.start();
