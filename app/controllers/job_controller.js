@@ -133,9 +133,7 @@ JobController.prototype.cancelJob = function (req, res) {
               res.header('X-Served-By-DB-Host', result.host);
             }
 
-            res.send({
-                cancelled: result.job
-            });
+            res.send(result.job);
         }
     );
 };
