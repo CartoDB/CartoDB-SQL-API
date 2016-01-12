@@ -29,6 +29,8 @@ describe('job module', function() {
     var job = {};
 
     after(function (done) {
+        // batch services is not activate, so we need empty the queue to avoid unexpected
+        // behaviour fot further test
         metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
     });
 
