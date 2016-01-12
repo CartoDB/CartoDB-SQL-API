@@ -38,10 +38,10 @@ describe('job and batch together', function() {
         batch.stop();
     });
 
-    describe('Use case 1: cancel a done job', function () {
+    describe('Use case 1: cancel and modify a done job', function () {
         var doneJob = {};
 
-        it('Step 1, should create job', function (done) {
+        it('Step 1, should create a job', function (done) {
             assert.response(app, {
                 url: '/api/v2/job?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -66,16 +66,16 @@ describe('job and batch together', function() {
                 }, {
                     status: 200
                 }, function(res) {
-                    var jobGot = JSON.parse(res.body);
+                    var jobDone = JSON.parse(res.body);
                     assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-                    assert.equal(jobGot.status, "done");
+                    assert.equal(jobDone.status, "done");
                     done();
                 });
 
-            }, 300);
+            }, 200);
         });
 
-        it('Step 3, cancel job should give an error', function (done){
+        it('Step 3, cancel a done job should give an error', function (done){
             assert.response(app, {
                 url: '/api/v2/job/' + doneJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },

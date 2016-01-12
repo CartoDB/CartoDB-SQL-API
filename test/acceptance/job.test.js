@@ -17,9 +17,20 @@ require('../helper');
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
+var metadataBackend = require('cartodb-redis')({
+    host: global.settings.redis_host,
+    port: global.settings.redis_port,
+    max: global.settings.redisPool,
+    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
+    reapIntervalMillis: global.settings.redisReapIntervalMillis
+});
 
 describe('job module', function() {
     var job = {};
+
+    after(function (done) {
+        metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+    });
 
     it('POST /api/v2/job should respond with 200 and the created job', function (done){
         assert.response(app, {
@@ -399,7 +410,7 @@ describe('job module', function() {
         });
     });
 
-    it.skip('DELETE /api/v2/job/:job_id should respond with 200 and the requested job', function (done){
+    it('DELETE /api/v2/job/:job_id should respond with 200 and the requested job', function (done){
         assert.response(app, {
             url: '/api/v2/job/' + job.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -409,6 +420,7 @@ describe('job module', function() {
         }, function(res) {
             var jobCancelled = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.equal(jobCancelled.job_id, job.job_id);
             assert.equal(jobCancelled.query, "SELECT * FROM untitle_table_4");
             assert.equal(jobCancelled.user, "vizzuality");
             assert.equal(jobCancelled.status, "cancelled");
