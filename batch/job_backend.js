@@ -204,6 +204,27 @@ JobBackend.prototype.setRunning = function (job, callback) {
     });
 };
 
+JobBackend.prototype.setPending = function (job, callback) {
+    var now = new Date().toISOString();
+    var redisKey = this.redisPrefix + job.job_id;
+    var redisParams = [
+        redisKey,
+        'status', 'pending',
+        'updated_at', now
+    ];
+
+    this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        job.status = 'pending';
+        job.updated_at = now;
+
+        callback(null, job);
+    });
+};
+
 JobBackend.prototype.setDone = function (job, callback) {
     var self = this;
     var now = new Date().toISOString();
@@ -277,7 +298,7 @@ JobBackend.prototype.setCancelled = function (job, callback) {
             return callback(err);
         }
 
-        self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], function (err) {
+        self.metadataBackend.redisCmd(self.db, 'PERSIST', [ redisKey ], function (err) {
             if (err) {
                 return callback(err);
             }

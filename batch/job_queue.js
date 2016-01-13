@@ -14,4 +14,8 @@ JobQueue.prototype.dequeue = function (host, callback) {
     this.metadataBackend.redisCmd(this.db, 'RPOP', [ this.redisPrefix + host ], callback);
 };
 
+JobQueue.prototype.enqueueFirst = function (job_id, host, callback) {
+    this.metadataBackend.redisCmd(this.db, 'RPUSH', [ this.redisPrefix + host, job_id ], callback);
+};
+
 module.exports = JobQueue;

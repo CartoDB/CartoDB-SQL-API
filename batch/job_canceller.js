@@ -29,9 +29,28 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
                 return callback(err);
             }
 
-            self._query(job, userDatabaseMetadata, callback);
+            self._query(job, userDatabaseMetadata, function (err, job) {
+                if (err) {
+                    return callback(err);
+                }
+
+                self.jobBackend.setCancelled(job, callback);
+            });
         });
     });
+};
+
+JobCanceller.prototype.drain = function (job_id, callback) {
+    var self = this;
+
+    this.cancel(job_id, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+
+        self.jobBackend.setPending(job, callback);
+    });
+
 };
 
 JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
@@ -49,7 +68,7 @@ JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
         }
 
         var pid = result.rows[0].pid;
-        var cancelQuery = 'SELECT pg_cancel_backend(' + pid +')';
+        var cancelQuery = 'SELECT pg_cancel_backend(' + pid + ')';
 
         pg.query(cancelQuery, function (err, result) {
             if (err) {
@@ -61,11 +80,6 @@ JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
             if (!isCancelled) {
                 return callback(new Error('Query has not been cancelled'));
             }
-
-            // JobRunner handles job status through the PG's client error handler (see JobRunner.run, on error callback)
-            // Due to user needs feedback, this modifies to the current status and updated dat
-            job.updated_at = new Date().toISOString();
-            job.status = 'cancelled';
 
             callback(null, job);
         });

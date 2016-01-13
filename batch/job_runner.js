@@ -17,7 +17,9 @@ JobRunner.prototype.run = function (job_id, callback) {
         }
 
         if (job.status !== 'pending') {
-            return callback(new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status));
+            var error = new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status);
+            error.name = 'InvalidJobStatus';
+            return callback(error);
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
@@ -55,11 +57,9 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
             }
 
             query.on('error', function (err) {
-                if (err.code === QUERY_CANCELED) {
-                    return self.jobBackend.setCancelled(job, callback);
+                if (err.code !== QUERY_CANCELED) {
+                    self.jobBackend.setFailed(job, err, callback);
                 }
-
-                self.jobBackend.setFailed(job, err, callback);
             });
 
             query.on('end', function (result) {

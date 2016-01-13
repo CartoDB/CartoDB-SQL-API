@@ -27,8 +27,8 @@ describe('batch module', function() {
         batch.start();
     });
 
-    after(function () {
-        batch.stop();
+    after(function (done) {
+        batch.stop(done);
     });
 
     function createJob(sql, done) {
