@@ -30,9 +30,8 @@ describe('Use case 1: cancel and modify a done job', function () {
 
     var batch = batchFactory(metadataBackend);
 
-    before(function (done) {
+    before(function () {
         batch.start();
-        done();
     });
 
     after(function (done) {

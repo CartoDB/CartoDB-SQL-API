@@ -30,9 +30,8 @@ describe('Use case 4: modify a pending job', function() {
 
     var batch = batchFactory(metadataBackend);
 
-    before(function (done) {
+    before(function () {
         batch.start();
-        done();
     });
 
     after(function (done) {

@@ -30,9 +30,8 @@ describe('Use case 2: cancel a running job', function() {
 
     var batch = batchFactory(metadataBackend);
 
-    before(function (done) {
+    before(function () {
         batch.start();
-        done();
     });
 
     after(function (done) {

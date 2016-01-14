@@ -30,9 +30,8 @@ describe('Use case 5: modify a running job', function() {
 
     var batch = batchFactory(metadataBackend);
 
-    before(function (done) {
+    before(function () {
         batch.start();
-        done();
     });
 
     after(function (done) {
