@@ -57,14 +57,19 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
             }
 
             query.on('error', function (err) {
-                if (err.code !== QUERY_CANCELED) {
-                    self.jobBackend.setFailed(job, err, callback);
+                // if query has been cancelled then it's going to get the current job status saved by query_canceller
+                if (err.code === QUERY_CANCELED) {
+                    return self.jobBackend.get(job.job_id, callback);
                 }
+
+                self.jobBackend.setFailed(job, err, callback);
             });
 
             query.on('end', function (result) {
+                // only if result is present then query is done sucessfully otherwise an error has happened
+                // and it was handled by error listener
                 if (result) {
-                    self.jobBackend.setDone(job, callback);
+                    return self.jobBackend.setDone(job, callback);
                 }
             });
         });
