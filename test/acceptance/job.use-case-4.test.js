@@ -43,7 +43,7 @@ describe('Use case 4: modify a pending job', function() {
 
     it('Step 1, should create a job', function (done) {
         assert.response(app, {
-            url: '/api/v2/job?api_key=1234',
+            url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
@@ -59,7 +59,7 @@ describe('Use case 4: modify a pending job', function() {
 
     it('Step 2, should create another job', function (done) {
         assert.response(app, {
-            url: '/api/v2/job?api_key=1234',
+            url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
@@ -76,7 +76,7 @@ describe('Use case 4: modify a pending job', function() {
     it('Step 3, job should be pending', function (done){
         var interval = setInterval(function () {
             assert.response(app, {
-                url: '/api/v2/job/' + pendingJob.job_id + '?api_key=1234',
+                url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
@@ -93,7 +93,7 @@ describe('Use case 4: modify a pending job', function() {
 
     it('Step 4, job should be modified', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + pendingJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
@@ -111,7 +111,7 @@ describe('Use case 4: modify a pending job', function() {
 
     it('Step 5, running job should be cancelled', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + runningJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {

@@ -32,12 +32,12 @@ function JobController(metadataBackend, tableCache, statsd_client) {
 }
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/job',  this.createJob.bind(this));
-    app.get(global.settings.base_url + '/job',  this.listJob.bind(this));
-    app.get(global.settings.base_url + '/job/:job_id',  this.getJob.bind(this));
-    app.delete(global.settings.base_url + '/job/:job_id',  this.cancelJob.bind(this));
-    app.put(global.settings.base_url + '/job/:job_id',  this.updateJob.bind(this));
-    app.patch(global.settings.base_url + '/job/:job_id',  this.updateJob.bind(this));
+    app.post(global.settings.base_url + '/sql/job',  this.createJob.bind(this));
+    app.get(global.settings.base_url + '/sql/job',  this.listJob.bind(this));
+    app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
+    app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
+    app.put(global.settings.base_url + '/sql/job/:job_id',  this.updateJob.bind(this));
+    app.patch(global.settings.base_url + '/sql/job/:job_id',  this.updateJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {

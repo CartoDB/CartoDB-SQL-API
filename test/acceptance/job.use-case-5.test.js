@@ -42,7 +42,7 @@ describe('Use case 5: modify a running job', function() {
 
     it('Step 1, should create job', function (done) {
         assert.response(app, {
-            url: '/api/v2/job?api_key=1234',
+            url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
@@ -59,7 +59,7 @@ describe('Use case 5: modify a running job', function() {
     it('Step 2, job should be running', function (done){
         var interval = setInterval(function () {
             assert.response(app, {
-                url: '/api/v2/job/' + runningJob.job_id + '?api_key=1234',
+                url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
@@ -76,7 +76,7 @@ describe('Use case 5: modify a running job', function() {
 
     it('Step 3, modify a running job should give an error', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + runningJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
@@ -93,7 +93,7 @@ describe('Use case 5: modify a running job', function() {
 
     it('Step 4, running job should be cancelled', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + runningJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {
@@ -107,7 +107,7 @@ describe('Use case 5: modify a running job', function() {
 
     it('Step 5, modify again a cancelled job should give an error', function (done){
         assert.response(app, {
-            url: '/api/v2/job/' + runningJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
