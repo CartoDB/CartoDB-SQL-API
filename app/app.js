@@ -150,9 +150,7 @@ function App() {
       });
     }
 
-    //
     app.use(cors());
-
 
     // Use step-profiler
     if ( global.settings.useProfiler ) {
