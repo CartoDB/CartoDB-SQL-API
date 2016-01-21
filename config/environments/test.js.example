@@ -27,6 +27,7 @@ module.exports.db_pubuser_pass   = 'public';
 module.exports.db_host      = 'localhost';
 module.exports.db_port      = '5432';
 module.exports.db_batch_port      = '5432';
+module.exports.jobs_ttl_in_seconds = 48 * 3600; // 48 hours
 // Max database connections in the pool
 // Subsequent connections will wait for a free slot.
 // NOTE: not used by OGR-mediated accesses

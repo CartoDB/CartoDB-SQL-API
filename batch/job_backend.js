@@ -2,7 +2,7 @@
 
 var uuid = require('node-uuid');
 var queue = require('queue-async');
-var JOBS_TTL_IN_SECONDS = 48 * 3600;
+var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     this.db = 5;
