@@ -53,40 +53,13 @@ JobController.prototype.cancelJob = function (req, res) {
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
-    }
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
-
-    if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
-            var options = {
-                req: req,
-                params: params,
-                checkAborted: checkAborted,
-                metadataBackend: self.metadataBackend,
-                cdbUsername: cdbUsername
-            };
-            userDatabaseService.getUserDatabase(options, this);
+            var next = this;
+            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
         },
         function cancelJob(err, userDatabase) {
             assert.ifError(err);
@@ -97,12 +70,9 @@ JobController.prototype.cancelJob = function (req, res) {
 
             var next = this;
 
-            checkAborted('cancelJob');
-
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');
             }
-
 
             self.jobCanceller.cancel(job_id, function (err, job) {
                 if (err) {
@@ -148,38 +118,14 @@ JobController.prototype.listJob = function (req, res) {
         req.profiler.start('sqlapi.job');
     }
 
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
-
     if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
-            var options = {
-                req: req,
-                params: params,
-                checkAborted: checkAborted,
-                metadataBackend: self.metadataBackend,
-                cdbUsername: cdbUsername
-            };
-            userDatabaseService.getUserDatabase(options, this);
+            var next = this;
+            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
         },
         function listJob(err, userDatabase) {
             assert.ifError(err);
@@ -189,8 +135,6 @@ JobController.prototype.listJob = function (req, res) {
             }
 
             var next = this;
-
-            checkAborted('listJob');
 
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');
@@ -243,40 +187,13 @@ JobController.prototype.getJob = function (req, res) {
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
-    }
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
-
-    if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
-            var options = {
-                req: req,
-                params: params,
-                checkAborted: checkAborted,
-                metadataBackend: self.metadataBackend,
-                cdbUsername: cdbUsername
-            };
-            userDatabaseService.getUserDatabase(options, this);
+            var next = this;
+            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
         },
         function getJob(err, userDatabase) {
             assert.ifError(err);
@@ -286,8 +203,6 @@ JobController.prototype.getJob = function (req, res) {
             }
 
             var next = this;
-
-            checkAborted('getJob');
 
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');
@@ -327,7 +242,6 @@ JobController.prototype.getJob = function (req, res) {
     );
 };
 
-// jshint maxcomplexity:21
 JobController.prototype.createJob = function (req, res) {
     var self = this;
     var body = (req.body) ? req.body : {};
@@ -341,40 +255,13 @@ JobController.prototype.createJob = function (req, res) {
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
-    }
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
-
-    if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
-            var options = {
-                req: req,
-                params: params,
-                checkAborted: checkAborted,
-                metadataBackend: self.metadataBackend,
-                cdbUsername: cdbUsername
-            };
-            userDatabaseService.getUserDatabase(options, this);
+            var next = this;
+            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
         },
         function persistJob(err, userDatabase) {
             assert.ifError(err);
@@ -384,8 +271,6 @@ JobController.prototype.createJob = function (req, res) {
             }
 
             var next = this;
-
-            checkAborted('persistJob');
 
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');
@@ -413,11 +298,11 @@ JobController.prototype.createJob = function (req, res) {
             }
 
             if (global.settings.api_hostname) {
-              res.header('X-Served-By-Host', global.settings.api_hostname);
+                res.header('X-Served-By-Host', global.settings.api_hostname);
             }
 
             if (result.host) {
-              res.header('X-Served-By-DB-Host', result.host);
+                res.header('X-Served-By-DB-Host', result.host);
             }
 
             res.status(201).send(result.job);
@@ -440,40 +325,13 @@ JobController.prototype.updateJob = function (req, res) {
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
-    }
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
-
-    if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
-            var options = {
-                req: req,
-                params: params,
-                checkAborted: checkAborted,
-                metadataBackend: self.metadataBackend,
-                cdbUsername: cdbUsername
-            };
-            userDatabaseService.getUserDatabase(options, this);
+            var next = this;
+            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
         },
         function updateJob(err, userDatabase) {
             assert.ifError(err);
@@ -483,8 +341,6 @@ JobController.prototype.updateJob = function (req, res) {
             }
 
             var next = this;
-
-            checkAborted('updateJob');
 
             if ( req.profiler ) {
                 req.profiler.done('setDBAuth');

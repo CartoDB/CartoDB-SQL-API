@@ -7,13 +7,8 @@ var AuthApi = require('../auth/auth_api');
 function UserDatabaseService() {
 }
 
-UserDatabaseService.prototype.getUserDatabase = function (options, callback) {
-    var req = options.req;
-    var params = options.params;
-    var checkAborted = options.checkAborted;
-    var metadataBackend = options.metadataBackend;
-    var cdbUsername = options.cdbUsername;
-
+UserDatabaseService.prototype.getUserDatabase =
+function (req, params, checkAborted, metadataBackend, cdbUsername, callback) {
     var authApi = new AuthApi(req, params);
 
     var dbParams;
@@ -27,7 +22,9 @@ UserDatabaseService.prototype.getUserDatabase = function (options, callback) {
     // 3. Set to user authorization params
     step(
         function getDatabaseConnectionParams() {
-            checkAborted('getDatabaseConnectionParams');
+            if (checkAborted) {
+                checkAborted('getDatabaseConnectionParams');
+            }
             // If the request is providing credentials it may require every DB parameters
             if (authApi.hasCredentials()) {
                 metadataBackend.getAllUserDBParams(cdbUsername, this);

@@ -129,14 +129,8 @@ QueryController.prototype.handleQuery = function (req, res) {
         // 5. Send formatted results back
         step(
             function getUserDBInfo() {
-                var options = {
-                    req: req,
-                    params: params,
-                    checkAborted: checkAborted,
-                    metadataBackend: self.metadataBackend,
-                    cdbUsername: cdbUsername
-                };
-                userDatabaseService.getUserDatabase(options, this);
+                var next = this;
+                userDatabaseService.getUserDatabase(req, params, checkAborted, self.metadataBackend, cdbUsername, next);
             },
             function queryExplain(err, userDatabase){
                 assert.ifError(err);
