@@ -35,7 +35,7 @@ process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 // override Date.toJSON
 require('./utils/date_to_json');
 
-// jshint maxcomplexity:21
+// jshint maxcomplexity:12
 function App() {
 
     var app = express.createServer();
