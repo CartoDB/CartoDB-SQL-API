@@ -5,6 +5,8 @@ var step = require('step');
 var assert = require('assert');
 
 var UserDatabaseService = require('../services/user_database_service');
+var AuthApi = require('../auth/auth_api');
+
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');
@@ -16,13 +18,13 @@ var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
-var userDatabaseService = new UserDatabaseService();
 
 function JobController(metadataBackend, tableCache, statsd_client) {
     var jobQueue = new JobQueue(metadataBackend);
     var jobPublisher = new JobPublisher();
     var userIndexer = new UserIndexer(metadataBackend);
 
+    this.userDatabaseService = new UserDatabaseService(metadataBackend);
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
@@ -59,7 +61,9 @@ JobController.prototype.cancelJob = function (req, res) {
     step(
         function getUserDBInfo() {
             var next = this;
-            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
+            var authApi = new AuthApi(req, params);
+
+            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
         },
         function cancelJob(err, userDatabase) {
             assert.ifError(err);
@@ -116,16 +120,15 @@ JobController.prototype.listJob = function (req, res) {
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
-    }
-
-    if ( req.profiler ) {
         req.profiler.done('init');
     }
 
     step(
         function getUserDBInfo() {
             var next = this;
-            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
+            var authApi = new AuthApi(req, params);
+
+            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
         },
         function listJob(err, userDatabase) {
             assert.ifError(err);
@@ -193,7 +196,9 @@ JobController.prototype.getJob = function (req, res) {
     step(
         function getUserDBInfo() {
             var next = this;
-            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
+            var authApi = new AuthApi(req, params);
+
+            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
         },
         function getJob(err, userDatabase) {
             assert.ifError(err);
@@ -261,7 +266,9 @@ JobController.prototype.createJob = function (req, res) {
     step(
         function getUserDBInfo() {
             var next = this;
-            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
+            var authApi = new AuthApi(req, params);
+
+            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
         },
         function persistJob(err, userDatabase) {
             assert.ifError(err);
@@ -331,7 +338,9 @@ JobController.prototype.updateJob = function (req, res) {
     step(
         function getUserDBInfo() {
             var next = this;
-            userDatabaseService.getUserDatabase(req, params, null, self.metadataBackend, cdbUsername, next);
+            var authApi = new AuthApi(req, params);
+
+            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
         },
         function updateJob(err, userDatabase) {
             assert.ifError(err);

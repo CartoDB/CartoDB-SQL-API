@@ -2,14 +2,14 @@
 
 var step = require('step');
 var _ = require('underscore');
-var AuthApi = require('../auth/auth_api');
 
-function UserDatabaseService() {
+function UserDatabaseService(metadataBackend) {
+    this.metadataBackend = metadataBackend;
 }
 
 UserDatabaseService.prototype.getUserDatabase =
-function (req, params, checkAborted, metadataBackend, cdbUsername, callback) {
-    var authApi = new AuthApi(req, params);
+function (authApi, cdbUsername, callback) {
+    var self = this;
 
     var dbParams;
     var dbopts = {
@@ -22,26 +22,23 @@ function (req, params, checkAborted, metadataBackend, cdbUsername, callback) {
     // 3. Set to user authorization params
     step(
         function getDatabaseConnectionParams() {
-            if (checkAborted) {
-                checkAborted('getDatabaseConnectionParams');
-            }
+            var next = this;
+
             // If the request is providing credentials it may require every DB parameters
             if (authApi.hasCredentials()) {
-                metadataBackend.getAllUserDBParams(cdbUsername, this);
+                self.metadataBackend.getAllUserDBParams(cdbUsername, next);
             } else {
-                metadataBackend.getUserDBPublicConnectionParams(cdbUsername, this);
+                self.metadataBackend.getUserDBPublicConnectionParams(cdbUsername, next);
             }
         },
         function authenticate(err, userDBParams) {
+            var next = this;
+
             if (err) {
                 err.http_status = 404;
                 err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
                     "Please check that you have entered the correct domain.";
                 return callback(err);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('getDBParams');
             }
 
             dbParams = userDBParams;
@@ -51,17 +48,13 @@ function (req, params, checkAborted, metadataBackend, cdbUsername, callback) {
             dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
             authApi.verifyCredentials({
-                metadataBackend: metadataBackend,
+                metadataBackend: self.metadataBackend,
                 apiKey: dbParams.apikey
-            }, this);
+            }, next);
         },
         function setDBAuth(err, isAuthenticated) {
             if (err) {
                 throw err;
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('authenticate');
             }
 
             if (_.isBoolean(isAuthenticated) && isAuthenticated) {

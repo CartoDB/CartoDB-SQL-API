@@ -6,6 +6,7 @@ var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
 var UserDatabaseService = require('../services/user_database_service');
+var AuthApi = require('../auth/auth_api');
 
 var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
@@ -19,12 +20,12 @@ var generateCacheKey = require('../utils/cache_key_generator');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
-var userDatabaseService = new UserDatabaseService();
 
 function QueryController(metadataBackend, tableCache, statsd_client) {
     this.metadataBackend = metadataBackend;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
+    this.userDatabaseService = new UserDatabaseService(metadataBackend);
 }
 
 QueryController.prototype.route = function (app) {
@@ -130,7 +131,9 @@ QueryController.prototype.handleQuery = function (req, res) {
         step(
             function getUserDBInfo() {
                 var next = this;
-                userDatabaseService.getUserDatabase(req, params, checkAborted, self.metadataBackend, cdbUsername, next);
+                var authApi = new AuthApi(req, params);
+
+                self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
             },
             function queryExplain(err, userDatabase){
                 assert.ifError(err);
