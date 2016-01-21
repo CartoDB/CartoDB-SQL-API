@@ -5,7 +5,6 @@ var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
 
-var UserDatabaseService = require('../services/user_database_service');
 var AuthApi = require('../auth/auth_api');
 
 var CdbRequest = require('../models/cartodb_request');
@@ -15,17 +14,15 @@ var sanitize_filename = require('../utils/filename_sanitizer');
 var generateMD5 = require('../utils/md5');
 var queryMayWrite = require('../utils/query_may_write');
 var getContentDisposition = require('../utils/content_disposition');
-var setCrossDomain = require('../utils/cross_domain');
 var generateCacheKey = require('../utils/cache_key_generator');
 var handleException = require('../utils/error_handler');
 
 var cdbReq = new CdbRequest();
 
-function QueryController(metadataBackend, tableCache, statsd_client) {
-    this.metadataBackend = metadataBackend;
+function QueryController(userDatabaseService, tableCache, statsd_client) {
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
-    this.userDatabaseService = new UserDatabaseService(metadataBackend);
+    this.userDatabaseService = userDatabaseService;
 }
 
 QueryController.prototype.route = function (app) {
@@ -229,9 +226,6 @@ QueryController.prototype.handleQuery = function (req, res) {
                 var use_inline = !requestedFormat && !requestedFilename;
                 res.header("Content-Disposition", getContentDisposition(formatter, filename, use_inline));
                 res.header("Content-Type", formatter.getContentType());
-
-                // allow cross site post
-                setCrossDomain(res);
 
                 // set cache headers
                 var ttl = 31536000; // 1 year time to live by default

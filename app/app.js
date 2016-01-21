@@ -21,6 +21,16 @@ var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
 
+var UserDatabaseService = require('./services/user_database_service');
+var JobPublisher = require('../batch/job_publisher');
+var JobQueue = require('../batch/job_queue');
+var UserIndexer = require('../batch/user_indexer');
+var JobBackend = require('../batch/job_backend');
+var JobCanceller = require('../batch/job_canceller');
+var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
+
+var cors = require('./middlewares/cors');
+
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
 var JobController = require('./controllers/job_controller');
@@ -47,6 +57,7 @@ function App() {
         idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
         reapIntervalMillis: global.settings.redisReapIntervalMillis
     });
+
 
     // Set default configuration
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -139,6 +150,10 @@ function App() {
       });
     }
 
+    //
+    app.use(cors());
+
+
     // Use step-profiler
     if ( global.settings.useProfiler ) {
       app.use(function(req, res, next) {
@@ -162,13 +177,22 @@ function App() {
 
     // basic routing
 
+    var userDatabaseService = new UserDatabaseService(metadataBackend);
+
+    var jobQueue = new JobQueue(metadataBackend);
+    var jobPublisher = new JobPublisher();
+    var userIndexer = new UserIndexer(metadataBackend);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+    var jobCanceller = new JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend);
+
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(metadataBackend, tableCache, statsd_client);
+    var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
-    var jobController = new JobController(metadataBackend, tableCache, statsd_client);
+    var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller, tableCache, statsd_client);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);

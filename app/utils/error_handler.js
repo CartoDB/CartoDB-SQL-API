@@ -2,7 +2,6 @@
 
 var _ = require('underscore');
 var PgErrorHandler = require('../postgresql/error_handler');
-var setCrossDomain = require('../utils/cross_domain');
 
 // jshint unused: false
 module.exports = function handleException(err, res) {
@@ -22,9 +21,6 @@ module.exports = function handleException(err, res) {
         // TODO: email this Exception report
         console.error("EXCEPTION REPORT: " + err.stack);
     }
-
-    // allow cross site post
-    setCrossDomain(res);
 
     // Force inline content disposition
     res.header("Content-Disposition", 'inline');

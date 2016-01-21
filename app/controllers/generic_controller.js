@@ -1,7 +1,5 @@
 'use strict';
 
-var setCrossDomain = require('../utils/cross_domain');
-
 function GenericController() {
 }
 
@@ -10,7 +8,6 @@ GenericController.prototype.route = function (app) {
 };
 
 GenericController.prototype.handleRequest = function(req, res) {
-    setCrossDomain(res);
     res.end();
 };
 

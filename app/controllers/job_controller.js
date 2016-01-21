@@ -4,33 +4,17 @@ var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
 
-var UserDatabaseService = require('../services/user_database_service');
 var AuthApi = require('../auth/auth_api');
-
-var JobPublisher = require('../../batch/job_publisher');
-var JobQueue = require('../../batch/job_queue');
-var UserIndexer = require('../../batch/user_indexer');
-var JobBackend = require('../../batch/job_backend');
-var JobCanceller = require('../../batch/job_canceller');
-var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
-
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
-
 var cdbReq = new CdbRequest();
 
-function JobController(metadataBackend, tableCache, statsd_client) {
-    var jobQueue = new JobQueue(metadataBackend);
-    var jobPublisher = new JobPublisher();
-    var userIndexer = new UserIndexer(metadataBackend);
-
-    this.userDatabaseService = new UserDatabaseService(metadataBackend);
-    this.metadataBackend = metadataBackend;
+function JobController(userDatabaseService, jobBackend, jobCanceller, tableCache, statsd_client) {
+    this.userDatabaseService = userDatabaseService;
+    this.jobBackend = jobBackend;
+    this.jobCanceller = jobCanceller;
     this.tableCache = tableCache;
     this.statsd_client = statsd_client;
-    this.jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
-    this.userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    this.jobCanceller = new JobCanceller(this.metadataBackend, this.userDatabaseMetadataService, this.jobBackend);
 }
 
 JobController.prototype.route = function (app) {
