@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 all:
 	npm install
 
@@ -17,15 +19,15 @@ TEST_SUITE_ACCEPTANCE := $(shell find test/acceptance -name "*.js")
 
 test:
 	@echo "***tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE)
+	@$(SHELL) test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE)
 
 test-unit:
 	@echo "***unit tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_UNIT)
+	@$(SHELL) test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_UNIT)
 
 test-acceptance:
 	@echo "***acceptance tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_ACCEPTANCE)
+	@$(SHELL) test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_ACCEPTANCE)
 
 test-all: jshint test
 
