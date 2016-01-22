@@ -55,11 +55,11 @@ JobCanceller.prototype.drain = function (job_id, callback) {
 
 JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
     var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-    var getPIDQuery = 'SELECT pid FROM pg_stat_activity WHERE query = \'' + job.query +
-        ' /* ' + job.job_id + ' */\'';
+    var escapedJobQuery = pg.escapeLiteral(job.query + ' /* ' + job.job_id + ' */');
+    var getPIDQuery = 'SELECT pid FROM pg_stat_activity WHERE query = ' + escapedJobQuery;
 
     pg.query(getPIDQuery, function(err, result) {
-        if(err) {
+        if (err) {
             return callback(err);
         }
 

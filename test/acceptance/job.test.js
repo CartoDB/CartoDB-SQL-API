@@ -175,6 +175,23 @@ describe('job module', function() {
         });
     });
 
+    it('GET /api/v2/sql/job/:jobId with wrong jobId header respond with 400 and an error', function (done){
+        assert.response(app, {
+            url: '/api/v2/sql/job/irrelevantJob?api_key=1234',
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'GET'
+        }, {
+            status: 400
+        }, function(res) {
+            var error = JSON.parse(res.body);
+            console.log(error);
+            assert.deepEqual(error , {
+                error: ['Job with id irrelevantJob not found']
+            });
+            done();
+        });
+    });
+
     it('PUT /api/v2/sql/job/:job_id should respond 200 and the updated job', function (done) {
         var query ="SELECT cartodb_id FROM untitle_table_4";
         assert.response(app, {
