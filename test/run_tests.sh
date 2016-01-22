@@ -16,6 +16,7 @@ OPT_CREATE_PGSQL=yes # create/prepare the postgresql test database
 OPT_CREATE_REDIS=yes # create/prepare the redis test databases
 OPT_DROP_PGSQL=yes   # drop the postgreql test environment
 OPT_DROP_REDIS=yes   # drop the redis test environment
+OPT_COVERAGE=no      # run tests with coverage
 
 cd $(dirname $0)
 BASEDIR=$(pwd)
@@ -80,6 +81,10 @@ while [ -n "$1" ]; do
                 OPT_CREATE_REDIS=no
                 shift
                 continue
+        elif test "$1" = "--with-coverage"; then
+                OPT_COVERAGE=yes
+                shift
+                continue
         else
                 break
         fi
@@ -94,6 +99,7 @@ if [ -z "$1" ]; then
         echo " --nodrop           do not drop the test environment on exit" >&2
         echo " --nodrop-pg        do not drop the pgsql test environment" >&2
         echo " --nodrop-redis     do not drop the redis test environment" >&2
+        echo " --with-coverage    use istanbul to determine code coverage" >&2
         exit 1
 fi
 
@@ -127,8 +133,13 @@ echo
 echo "  ogr2ogr version: "`ogr2ogr --version`
 echo
 
-echo "Running tests"
-mocha -t 5000 -u tdd ${TESTS}
+if test x"$OPT_COVERAGE" = xyes; then
+  echo "Running tests with coverage"
+  ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u tdd -t 5000 ${TESTS}
+else
+  echo "Running tests"
+  mocha -u tdd -t 5000 ${TESTS}
+fi
 ret=$?
 
 cleanup || exit 1
