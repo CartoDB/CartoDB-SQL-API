@@ -146,7 +146,12 @@ JobBackend.prototype._getIndexedJob = function (job_id, username, callback) {
     });
 };
 
+JobBackend.prototype._isJobFound = function (jobValues) {
+    return jobValues[0] && jobValues[1] && jobValues[2] && jobValues[3] && jobValues[4];
+};
+
 JobBackend.prototype.get = function (job_id, callback) {
+    var self = this;
     var redisParams = [
         this.redisPrefix + job_id,
         'user',
@@ -162,11 +167,7 @@ JobBackend.prototype.get = function (job_id, callback) {
             return callback(err);
         }
 
-        function isJobFound(jobValues) {
-            return jobValues[0] && jobValues[1] && jobValues[2] && jobValues[3] && jobValues[4];
-        }
-
-        if (!isJobFound(jobValues)) {
+        if (!self._isJobFound(jobValues)) {
             var notFoundError = new Error('Job with id ' + job_id + ' not found');
             notFoundError.name = 'NotFoundError';
             return callback(notFoundError);

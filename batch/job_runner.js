@@ -1,7 +1,9 @@
 'use strict';
 
+var errorCodes = require('../app/postgresql/error_codes');
 var PSQL = require('cartodb-psql');
 var QUERY_CANCELED = '57014';
+
 
 function JobRunner(jobBackend, userDatabaseMetadataService) {
     this.jobBackend = jobBackend;
@@ -58,7 +60,7 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
 
             query.on('error', function (err) {
                 // if query has been cancelled then it's going to get the current job status saved by query_canceller
-                if (err.code === QUERY_CANCELED) {
+                if (errorCodes[err.code] === 'query_canceled') {
                     return self.jobBackend.get(job.job_id, callback);
                 }
 
