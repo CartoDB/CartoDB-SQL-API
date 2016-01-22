@@ -11,17 +11,21 @@ jshint:
 	@echo "***jshint***"
 	@./node_modules/.bin/jshint app/ test/ app.js
 
+TEST_SUITE := $(shell find test/{acceptance,unit} -name "*.js")
+TEST_SUITE_UNIT := $(shell find test/unit -name "*.js")
+TEST_SUITE_ACCEPTANCE := $(shell find test/acceptance -name "*.js")
+
 test:
 	@echo "***tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/unit/model/*.js test/acceptance/*.js  test/acceptance/export/*.js
+	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE)
 
 test-unit:
 	@echo "***unit tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} test/unit/*.js test/unit/model/*.js
+	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_UNIT)
 
 test-acceptance:
 	@echo "***acceptance tests***"
-	test/run_tests.sh ${RUNTESTFLAGS} test/acceptance/*.js  test/acceptance/export/*.js
+	test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_ACCEPTANCE)
 
 test-all: jshint test
 
