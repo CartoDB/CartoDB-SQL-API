@@ -9,7 +9,7 @@ check:
 
 jshint:
 	@echo "***jshint***"
-	@./node_modules/.bin/jshint app/ test/ app.js
+	@./node_modules/.bin/jshint app/ batch/ test/ app.js
 
 TEST_SUITE := $(shell find test/{acceptance,unit} -name "*.js")
 TEST_SUITE_UNIT := $(shell find test/unit -name "*.js")
