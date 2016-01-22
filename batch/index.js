@@ -1,5 +1,6 @@
 'use strict';
 
+var redis = require('redis');
 var JobRunner = require('./job_runner');
 var JobCanceller = require('./job_canceller');
 var JobQueuePool = require('./job_queue_pool');
@@ -12,9 +13,9 @@ var JobBackend = require('./job_backend');
 var Batch = require('./batch');
 
 module.exports = function batchFactory (metadataBackend) {
-    var jobSubscriber = new JobSubscriber();
+    var jobSubscriber = new JobSubscriber(redis);
     var jobQueuePool = new JobQueuePool(metadataBackend);
-    var jobPublisher = new JobPublisher();
+    var jobPublisher = new JobPublisher(redis);
     var jobQueue =  new JobQueue(metadataBackend);
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);

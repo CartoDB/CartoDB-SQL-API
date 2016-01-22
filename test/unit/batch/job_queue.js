@@ -14,7 +14,7 @@ describe('batch API job queue', function () {
         this.jobQueue = new JobQueue(this.metadataBackend);
     });
 
-    it('.enqueue(username) should enqueue the provided job', function (done) {
+    it('.enqueue() should enqueue the provided job', function (done) {
         this.jobQueue.enqueue('irrelevantJob', 'irrelevantHost', function (err, username) {
             assert.ok(!err);
             assert.equal(username, 'irrelevantJob');
@@ -22,8 +22,16 @@ describe('batch API job queue', function () {
         });
     });
 
-    it('.dequeue(username) should dequeue the next job', function (done) {
+    it('.dequeue() should dequeue the next job', function (done) {
         this.jobQueue.dequeue('irrelevantHost', function (err, username) {
+            assert.ok(!err);
+            assert.equal(username, 'irrelevantJob');
+            done();
+        });
+    });
+
+    it('.enqueueFirst() should dequeue the next job', function (done) {
+        this.jobQueue.enqueueFirst('irrelevantJob', 'irrelevantHost', function (err, username) {
             assert.ok(!err);
             assert.equal(username, 'irrelevantJob');
             done();

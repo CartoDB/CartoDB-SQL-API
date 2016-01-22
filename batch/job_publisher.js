@@ -1,8 +1,6 @@
 'use strict';
 
-var redis = require('redis');
-
-function JobPublisher() {
+function JobPublisher(redis) {
     this.channel = 'batch:hosts';
     this.client = redis.createClient(global.settings.redis_port, global.settings.redis_host);
 }

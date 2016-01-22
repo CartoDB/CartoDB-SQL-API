@@ -21,6 +21,7 @@ var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
 
+var redis = require('redis');
 var UserDatabaseService = require('./services/user_database_service');
 var JobPublisher = require('../batch/job_publisher');
 var JobQueue = require('../batch/job_queue');
@@ -178,7 +179,7 @@ function App() {
     var userDatabaseService = new UserDatabaseService(metadataBackend);
 
     var jobQueue = new JobQueue(metadataBackend);
-    var jobPublisher = new JobPublisher();
+    var jobPublisher = new JobPublisher(redis);
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);

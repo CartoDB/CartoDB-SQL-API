@@ -1,4 +1,6 @@
 var _ = require('underscore');
+
+var redis = require('redis');
 var queue = require('queue-async');
 var batchFactory = require('../../batch');
 var JobPublisher = require('../../batch/job_publisher');
@@ -17,7 +19,7 @@ describe('batch module', function() {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
     var jobQueue =  new JobQueue(metadataBackend);
-    var jobPublisher = new JobPublisher();
+    var jobPublisher = new JobPublisher(redis);
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
 
