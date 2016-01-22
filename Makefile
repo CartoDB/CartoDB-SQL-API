@@ -29,4 +29,7 @@ test-acceptance:
 
 test-all: jshint test
 
-.PHONY: test
+coverage:
+	@RUNTESTFLAGS=--with-coverage make test
+
+.PHONY: test coverage
