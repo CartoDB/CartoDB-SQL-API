@@ -64,8 +64,9 @@ var metadataBackend = require('cartodb-redis')({
 var cdbReq = new CdbRequest();
 
 // Set default configuration 
-global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
+global.settings.db_pubuser   = global.settings.db_pubuser || "publicuser";
 global.settings.bufferedRows = global.settings.bufferedRows || 1000;
+global.settings.maxQueryRows = global.settings.maxQueryRows || null;
 
 var tableCache = LRU({
   // store no more than these many items in the cache
@@ -266,7 +267,7 @@ function handleQuery(req, res) {
         format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
         filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
         sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
-        limit     = (!_.isNaN(limit))  ? limit : null;
+        limit     = (!_.isNaN(limit))  ? limit : global.settings.maxQueryRows;
         offset    = (!_.isNaN(offset)) ? offset * limit : null;
 
         // Accept both comma-separated string or array of comma-separated strings
