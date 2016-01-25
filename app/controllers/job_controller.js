@@ -33,10 +33,6 @@ JobController.prototype.cancelJob = function (req, res) {
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(job_id)) {
-        return handleException(new Error("You must indicate a job id"), res);
-    }
-
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
         req.profiler.done('init');
@@ -167,10 +163,6 @@ JobController.prototype.getJob = function (req, res) {
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var cdbUsername = cdbReq.userByReq(req);
-
-    if (!_.isString(job_id)) {
-        return handleException(new Error("You must indicate a job id"), res);
-    }
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
