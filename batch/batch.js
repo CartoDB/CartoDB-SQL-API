@@ -15,21 +15,7 @@ function Batch(jobSubscriber, jobQueuePool, jobRunner, jobCanceller) {
 util.inherits(Batch, EventEmitter);
 
 Batch.prototype.start = function () {
-    var self = this;
     this._subscribe();
-
-    process.on('SIGTERM', function () {
-        self.stop();
-        self.drain(function (err) {
-            if (err) {
-                console.log('Exit with error');
-                return process.exit(1);
-            }
-
-            console.log('Exit gracefully');
-            process.exit(0);
-        });
-    });
 };
 
 Batch.prototype._subscribe = function () {

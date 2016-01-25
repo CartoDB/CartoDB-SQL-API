@@ -97,3 +97,16 @@ process.on('SIGHUP', function() {
         console.log('Log files reloaded');
     });
 });
+
+process.on('SIGTERM', function () {
+    app.batch.stop();
+    app.batch.drain(function (err) {
+        if (err) {
+            console.log('Exit with error');
+            return process.exit(1);
+        }
+
+        console.log('Exit gracefully');
+        process.exit(0);
+    });
+});
