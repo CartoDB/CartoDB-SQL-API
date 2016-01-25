@@ -34,8 +34,9 @@ describe('Use case 1: cancel and modify a done job', function () {
         batch.start();
     });
 
-    after(function () {
+    after(function (done) {
         batch.stop();
+        batch.drain(done);
     });
 
     var doneJob = {};

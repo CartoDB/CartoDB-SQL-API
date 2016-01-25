@@ -34,8 +34,9 @@ describe('Use case 3: cancel a pending job', function() {
         batch.start();
     });
 
-    after(function () {
+    after(function (done) {
         batch.stop();
+        batch.drain(done);
     });
 
     var runningJob = {};

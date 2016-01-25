@@ -34,8 +34,9 @@ describe('Use case 7: cancel a job with quotes', function() {
         batch.start();
     });
 
-    after(function () {
+    after(function (done) {
         batch.stop();
+        batch.drain(done);
     });
 
     var runningJob = {};
