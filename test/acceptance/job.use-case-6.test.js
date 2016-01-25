@@ -34,8 +34,8 @@ describe('Use case 6: modify a done job', function() {
         batch.start();
     });
 
-    after(function (done) {
-        batch.stop(done);
+    after(function () {
+        batch.stop();
     });
 
     var doneJob = {};

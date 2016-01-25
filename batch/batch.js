@@ -47,7 +47,7 @@ Batch.prototype._subscribe = function () {
         forever(function (next) {
             self._consumeJobs(host, queue, next);
         }, function (err) {
-            self.jobQueuePool.remove(host);
+            self.jobQueuePool.removeQueue(host);
 
             if (err.name === 'EmptyQueue') {
                 return console.log(err.message);
@@ -82,28 +82,27 @@ Batch.prototype.drain = function (callback) {
 
 Batch.prototype._drainJob = function (host, callback) {
     var self = this;
-    var job_id = self.jobQueuePool.get(host).currentJobId;
+    var job_id = self.jobQueuePool.getCurrentJobId(host);
+
+    if (!job_id) {
+        return process.nextTick(function () {
+            return callback();
+        });
+    }
+
+    var queue = self.jobQueuePool.getQueue(host);
 
     this.jobCanceller.drain(job_id, function (err) {
         if (err) {
             return callback(err);
         }
 
-        var queue = self.jobQueuePool.get(host).queue;
-
         queue.enqueueFirst(job_id, host, callback);
     });
 };
 
-Batch.prototype.stop = function (callback) {
+Batch.prototype.stop = function () {
     this.jobSubscriber.unsubscribe();
-    this.drain(function (err) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback();
-    });
 };
 
 Batch.prototype._consumeJobs = function (host, queue, callback) {
@@ -137,6 +136,8 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
             } else {
                 console.log('Job %s %s in %s', job_id, job.status, host);
             }
+
+            self.jobQueuePool.removeCurrentJobId(host);
 
             self.emit('job:' + job.status, job_id);
 

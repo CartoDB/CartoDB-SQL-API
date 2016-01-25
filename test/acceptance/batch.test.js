@@ -1,5 +1,5 @@
+var assert = require('../support/assert');
 var _ = require('underscore');
-
 var redis = require('redis');
 var queue = require('queue-async');
 var batchFactory = require('../../batch');
@@ -29,8 +29,8 @@ describe('batch module', function() {
         batch.start();
     });
 
-    after(function (done) {
-        batch.stop(done);
+    after(function () {
+        batch.stop();
     });
 
     function createJob(sql, done) {
@@ -124,4 +124,72 @@ describe('batch module', function() {
             });
         });
     });
+
+    it('should set all job as failed', function (done) {
+        var jobs = [
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table',
+            'select * from unexistent_table'
+        ];
+
+        var jobsQueue = queue(jobs.length);
+
+        jobs.forEach(function(job) {
+            jobsQueue.defer(createJob, job);
+        });
+
+        jobsQueue.awaitAll(function (err, jobsCreated) {
+            if (err) {
+                return done(err);
+            }
+
+            var jobsFailed = 0;
+
+            batch.on('job:failed', function (job_id) {
+                _.find(jobsCreated, function(job) {
+                    if (job_id === job.job_id) {
+                        jobsFailed += 1;
+                        if (jobsFailed === jobs.length) {
+                            done();
+                        }
+                    }
+                });
+            });
+        });
+    });
+
+    it('should drain the current job', function (done) {
+        createJob('select pg_sleep(30)', function (err, job) {
+            if (err) {
+                return done(err);
+            }
+            setTimeout(function () {
+                jobBackend.get(job.job_id, function (err, job) {
+                    if (err) {
+                        done(err);
+                    }
+
+                    assert.equal(job.status, 'running');
+
+                    batch.drain(function () {
+                        jobBackend.get(job.job_id, function (err, job) {
+                            if (err) {
+                                done(err);
+                            }
+                            assert.equal(job.status, 'pending');
+                            done();
+                        });
+                    });
+                });
+            }, 50);
+        });
+    });
+
 });
