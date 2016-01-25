@@ -80,6 +80,10 @@ Batch.prototype._drainJob = function (host, callback) {
     var queue = self.jobQueuePool.getQueue(host);
 
     this.jobCanceller.drain(job_id, function (err) {
+        if (err && err.name === 'CancelNotAllowedError') {
+            return callback();
+        }
+
         if (err) {
             return callback(err);
         }
@@ -109,6 +113,8 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
         self.jobQueuePool.setCurrentJobId(host, job_id);
 
         self.jobRunner.run(job_id, function (err, job) {
+            self.jobQueuePool.removeCurrentJobId(host);
+
             if (err && err.name === 'InvalidJobStatus') {
                 console.log(err.message);
                 return callback();
@@ -123,8 +129,6 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
             } else {
                 console.log('Job %s %s in %s', job_id, job.status, host);
             }
-
-            self.jobQueuePool.removeCurrentJobId(host);
 
             self.emit('job:' + job.status, job_id);
 

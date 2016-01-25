@@ -313,5 +313,40 @@ JobBackend.prototype.setCancelled = function (job, callback) {
     });
 };
 
+JobBackend.prototype.setUnknown = function (job_id, callback) {
+    var self = this;
+
+    this.get(job_id, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+
+        var now = new Date().toISOString();
+        var redisKey = self.redisPrefix + job.job_id;
+        var redisParams = [
+            redisKey,
+            'status', 'unknown',
+            'updated_at', now
+        ];
+
+        self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams ,  function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], function (err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                job.status = 'unknown';
+                job.updated_at = now;
+
+                callback(null, job);
+            });
+        });
+    });
+};
+
 
 module.exports = JobBackend;

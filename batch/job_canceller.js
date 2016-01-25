@@ -21,7 +21,9 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
         }
 
         if (job.status !== 'running') {
-            return callback(new Error('Job is ' + job.status + ', cancel is not allowed'));
+            var cancelNotAllowedError = new Error('Job is ' + job.status + ', cancel is not allowed');
+            cancelNotAllowedError.name  = 'CancelNotAllowedError';
+            return callback(cancelNotAllowedError);
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
@@ -44,8 +46,13 @@ JobCanceller.prototype.drain = function (job_id, callback) {
     var self = this;
 
     this.cancel(job_id, function (err, job) {
-        if (err) {
+        if (err && err.name === 'CancelNotAllowedError') {
             return callback(err);
+        }
+
+        if (err) {
+            console.error('There was an error while draining job %s, %s ',  job_id, err);
+            return self.jobBackend.setUnknown(job_id, callback);
         }
 
         self.jobBackend.setPending(job, callback);
