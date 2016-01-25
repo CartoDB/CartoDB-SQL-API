@@ -86,6 +86,9 @@ describe('Use case 3: cancel a pending job', function() {
                 if (job.status === "pending") {
                     clearInterval(interval);
                     done();
+                } else {
+                    clearInterval(interval);
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
                 }
             });
         }, 50);

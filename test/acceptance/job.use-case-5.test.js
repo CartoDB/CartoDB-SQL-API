@@ -69,6 +69,9 @@ describe('Use case 5: modify a running job', function() {
                 if (job.status === "running") {
                     clearInterval(interval);
                     done();
+                } else if (job.status === "done" || job.status === "failed" || job.status === "cancelled") {
+                    clearInterval(interval);
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
                 }
             });
         }, 50);

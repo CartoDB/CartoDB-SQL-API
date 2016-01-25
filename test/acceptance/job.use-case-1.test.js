@@ -69,9 +69,11 @@ describe('Use case 1: cancel and modify a done job', function () {
                 if (job.status === "done") {
                     clearInterval(interval);
                     done();
+                } else if (job.status === "failed" || job.status === "cancelled") {
+                    clearInterval(interval);
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                 }
             });
-
         }, 50);
     });
 
