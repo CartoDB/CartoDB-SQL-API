@@ -19,6 +19,7 @@ Batch.prototype.start = function () {
     this._subscribe();
 
     process.on('SIGTERM', function () {
+        self.stop();
         self.drain(function (err) {
             if (err) {
                 console.log('Exit with error');
