@@ -36,7 +36,9 @@ describe('Use case 4: modify a pending job', function() {
 
     after(function (done) {
         batch.stop();
-        batch.drain(done);
+        batch.drain(function () {
+            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        });
     });
 
     var runningJob = {};
