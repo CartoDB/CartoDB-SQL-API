@@ -26,7 +26,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var batchFactory = require('../../batch');
 
-describe.skip('Use case 1: cancel and modify a done job', function () {
+describe('Use case 1: cancel and modify a done job', function () {
 
     var batch = batchFactory(metadataBackend);
 
@@ -73,6 +73,8 @@ describe.skip('Use case 1: cancel and modify a done job', function () {
                 } else if (job.status === "failed" || job.status === "cancelled") {
                     clearInterval(interval);
                     done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                } else {
+                    console.log('Job ' + job.job_id + ' is ' + job.status + ', expecting to be done');
                 }
             });
         }, 50);
