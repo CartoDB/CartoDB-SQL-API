@@ -167,7 +167,7 @@ describe('batch module', function() {
     });
 
     it('should drain the current job', function (done) {
-        createJob('select pg_sleep(30)', function (err, job) {
+        createJob('select pg_sleep(3)', function (err, job) {
             if (err) {
                 return done(err);
             }

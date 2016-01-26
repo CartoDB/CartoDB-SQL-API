@@ -47,7 +47,7 @@ describe('Use case 5: modify a running job', function() {
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
-                query: "SELECT * FROM untitle_table_4; select pg_sleep(5)"
+                query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
             })
         }, {
             status: 201
