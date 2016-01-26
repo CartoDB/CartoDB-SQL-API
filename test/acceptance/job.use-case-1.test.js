@@ -58,24 +58,11 @@ describe('Use case 1: cancel and modify a done job', function () {
     });
 
     it('Step 2, job should be done', function (done) {
-        var interval = setInterval(function () {
-            assert.response(app, {
-                url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
-                headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-                method: 'GET'
-            }, {
-                status: 200
-            }, function (res) {
-                var job = JSON.parse(res.body);
-                if (job.status === "done") {
-                    clearInterval(interval);
-                    done();
-                } else if (job.status === "failed" || job.status === "cancelled") {
-                    clearInterval(interval);
-                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                }
-            });
-        }, 50);
+        batch.on('job:done', function (job_id) {
+            if (job_id === doneJob.job_id) {
+                done();
+            }
+        });
     });
 
     it('Step 3, cancel a done job should give an error', function (done){
