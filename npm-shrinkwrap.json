@@ -3,7 +3,7 @@
   "version": "1.25.0",
   "dependencies": {
     "cartodb-psql": {
-      "version": "0.6.0",
+      "version": "0.6.1",
       "from": "cartodb-psql@~0.6.0",
       "dependencies": {
         "pg": {
@@ -20,6 +20,18 @@
               "version": "1.0.0",
               "from": "buffer-writer@1.0.0",
               "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-1.0.0.tgz"
+            }
+          }
+        },
+        "debug": {
+          "version": "2.2.0",
+          "from": "debug@~2.2.0",
+          "resolved": "https://registry.npmjs.org/debug/-/debug-2.2.0.tgz",
+          "dependencies": {
+            "ms": {
+              "version": "0.7.1",
+              "from": "ms@0.7.1",
+              "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.1.tgz"
             }
           }
         }
@@ -126,9 +138,9 @@
           "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.33.tgz",
           "dependencies": {
             "core-util-is": {
-              "version": "1.0.1",
+              "version": "1.0.2",
               "from": "core-util-is@~1.0.0",
-              "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.1.tgz"
+              "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz"
             },
             "isarray": {
               "version": "0.0.1",
@@ -142,7 +154,7 @@
             },
             "inherits": {
               "version": "2.0.1",
-              "from": "inherits@2",
+              "from": "inherits@~2.0.1",
               "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
             }
           }
@@ -169,6 +181,11 @@
       "from": "node-statsd@~0.0.7",
       "resolved": "https://registry.npmjs.org/node-statsd/-/node-statsd-0.0.7.tgz"
     },
+    "node-uuid": {
+      "version": "1.4.7",
+      "from": "node-uuid@^1.4.7",
+      "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.7.tgz"
+    },
     "oauth-client": {
       "version": "0.3.0",
       "from": "oauth-client@0.3.0",
@@ -181,16 +198,33 @@
         }
       }
     },
+    "queue-async": {
+      "version": "1.0.7",
+      "from": "queue-async@^1.0.7",
+      "resolved": "https://registry.npmjs.org/queue-async/-/queue-async-1.0.7.tgz"
+    },
+    "redis": {
+      "version": "2.4.2",
+      "from": "redis@^2.4.2",
+      "resolved": "https://registry.npmjs.org/redis/-/redis-2.4.2.tgz",
+      "dependencies": {
+        "double-ended-queue": {
+          "version": "2.1.0-0",
+          "from": "double-ended-queue@^2.1.0-0",
+          "resolved": "https://registry.npmjs.org/double-ended-queue/-/double-ended-queue-2.1.0-0.tgz"
+        },
+        "redis-commands": {
+          "version": "1.0.2",
+          "from": "redis-commands@^1.0.1",
+          "resolved": "https://registry.npmjs.org/redis-commands/-/redis-commands-1.0.2.tgz"
+        }
+      }
+    },
     "rollbar": {
       "version": "0.3.13",
       "from": "rollbar@~0.3.2",
       "resolved": "https://registry.npmjs.org/rollbar/-/rollbar-0.3.13.tgz",
       "dependencies": {
-        "node-uuid": {
-          "version": "1.4.3",
-          "from": "node-uuid@1.4.x",
-          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.3.tgz"
-        },
         "lru-cache": {
           "version": "2.2.4",
           "from": "lru-cache@~2.2.1",

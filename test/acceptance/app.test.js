@@ -14,7 +14,7 @@
  */
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/controllers/app')();
+var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');

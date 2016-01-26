@@ -1,8 +1,8 @@
 --
 -- sql-api test database
--- 
+--
 -- To use:
--- 
+--
 -- > dropdb -Upostgres -hlocalhost  cartodb_test_user_1_db
 -- > createdb -Upostgres -hlocalhost -Ttemplate_postgis -Opostgres -EUTF8 cartodb_test_user_1_db
 -- > psql -Upostgres -hlocalhost cartodb_test_user_1_db < test.sql

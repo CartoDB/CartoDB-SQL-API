@@ -26,7 +26,7 @@ it('after configured milliseconds', function(done){
 //console.log("settings:"); console.dir(global.settings);
   var timeoutBackup = global.settings.node_socket_timeout;
   global.settings.node_socket_timeout = testTimeout;
-  var app = require(global.settings.app_root + '/app/controllers/app')();
+  var app = require(global.settings.app_root + '/app/app')();
   step(
     function sendLongQuery() {
       var next = this;
