@@ -5,12 +5,17 @@
 1.25.0 - 2016-01-26
 -------------------
 
+Bug fixes:
+
+ * Stop adding X-Cache-Channel header when no tables involved #250
+
 New features:
 
  * Set `Last-Modified` header based on affected tables (#101)
  * Batch API (#261):
    - New endpoint to create, read, update and delete long-running queries (jobs).
    - Batch service to process jobs.
+ * Set Last-Modified header based on affected tables #247
 
 Announcements:
 
