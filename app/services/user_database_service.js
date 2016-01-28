@@ -76,7 +76,7 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 return callback(err);
             }
 
-            callback(null, dbopts);
+            callback(null, dbopts, dbopts);
         }
     );
 

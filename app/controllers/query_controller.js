@@ -122,7 +122,7 @@ QueryController.prototype.handleQuery = function (req, res) {
             function getUserDBInfo() {
                 self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
             },
-            function queryExplain(err, dbParams) {
+            function queryExplain(err, dbParams, authDbParams) {
                 assert.ifError(err);
 
                 dbopts = dbParams;
@@ -133,7 +133,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(dbParams, sql, this);
+                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(authDbParams, sql, this);
             },
             function setHeaders(err, queryExplainResult) {
                 assert.ifError(err);
