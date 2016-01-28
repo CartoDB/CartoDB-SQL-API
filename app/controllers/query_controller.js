@@ -180,7 +180,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                             affectedTables: tableNames,
                             lastUpdatedTime: lastUpdatedTime
                         });
-                    });
+                    }, true);
                 }
             },
             function setHeaders(err, result) {
