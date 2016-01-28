@@ -7,6 +7,16 @@ function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
 }
 
+/**
+ * Callback is invoked with `dbParams` and `authDbParams`.
+ * `dbParams` depends on AuthApi verification so it might return a public user with just SELECT permission, where
+ * `authDbParams` will always return connection params as AuthApi had authorized the connection.
+ * That might be useful when you have to run a query with and without permissions.
+ *
+ * @param {AuthApi} authApi
+ * @param {String} cdbUsername
+ * @param {Function} callback (err, dbParams, authDbParams)
+ */
 UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
     var self = this;
 
