@@ -37,10 +37,7 @@ QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connect
         resultSet = resultSet || {};
         var rows = resultSet.rows || [];
 
-        if (err || rows.length !== 1) {
-            var errorMessage = (err && err.message) || 'unknown error';
-            console.error("Error on query explain '%s': %s", sql, errorMessage);
-        }
+        logIfError(err, sql, rows);
 
         var result = rows[0] || {};
 
@@ -60,3 +57,10 @@ QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connect
         return callback(null, queryExplainResult);
     }, true);
 };
+
+function logIfError(err, sql, rows) {
+    if (err || rows.length !== 1) {
+        var errorMessage = (err && err.message) || 'unknown error';
+        console.error("Error on query explain '%s': %s", sql, errorMessage);
+    }
+}
