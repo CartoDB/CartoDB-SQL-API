@@ -12,9 +12,8 @@ module.exports = QueryTablesApi;
 QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connectionParams, sql, callback) {
     var self = this;
 
-    var sqlCacheKey = generateMD5(sql);
-
-    var queryExplainResult = this.tableCache.get(sqlCacheKey);
+    var cacheKey = sqlCacheKey(connectionParams.user, sql);
+    var queryExplainResult = this.tableCache.get(cacheKey);
 
     if (queryExplainResult) {
         queryExplainResult.hits++;
@@ -52,7 +51,7 @@ QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connect
             hits: 1
         };
 
-        self.tableCache.set(sqlCacheKey, queryExplainResult);
+        self.tableCache.set(cacheKey, queryExplainResult);
 
         return callback(null, queryExplainResult);
     }, true);
@@ -63,4 +62,8 @@ function logIfError(err, sql, rows) {
         var errorMessage = (err && err.message) || 'unknown error';
         console.error("Error on query explain '%s': %s", sql, errorMessage);
     }
+}
+
+function sqlCacheKey(user, sql) {
+    return user + ':' + generateMD5(sql);
 }
