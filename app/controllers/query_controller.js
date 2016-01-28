@@ -177,8 +177,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
                 if (queryExplainResult.affectedTables.length > 0 && !queryExplainResult.mayWrite) {
-                  res.header('X-Cache-Channel', generateCacheKey(
-                      dbopts.dbname, queryExplainResult, dbopts.authenticated));
+                    res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, queryExplainResult.affectedTables));
                 }
 
                 res.header('Last-Modified', new Date(queryExplainResult.lastModified).toUTCString());
