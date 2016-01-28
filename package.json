@@ -30,7 +30,7 @@
         "step-profiler": "~0.1.0",
         "topojson": "0.0.8",
         "underscore": "~1.6.0",
-        "queue-async": "^1.0.7"
+        "queue-async": "~1.0.7"
     },
     "devDependencies": {
         "istanbul": "~0.4.2",
