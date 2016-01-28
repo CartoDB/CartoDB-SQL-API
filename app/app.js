@@ -191,7 +191,7 @@ function App() {
     var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
-    var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller, tableCache, statsd_client);
+    var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);

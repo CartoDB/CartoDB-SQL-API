@@ -9,12 +9,10 @@ var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
 
-function JobController(userDatabaseService, jobBackend, jobCanceller, tableCache, statsd_client) {
+function JobController(userDatabaseService, jobBackend, jobCanceller) {
     this.userDatabaseService = userDatabaseService;
     this.jobBackend = jobBackend;
     this.jobCanceller = jobCanceller;
-    this.tableCache = tableCache;
-    this.statsd_client = statsd_client;
 }
 
 JobController.prototype.route = function (app) {
