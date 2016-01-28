@@ -41,7 +41,7 @@ JobController.prototype.cancelJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
         },
         function cancelJob(err, userDatabase) {
             assert.ifError(err);
@@ -106,7 +106,7 @@ JobController.prototype.listJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
         },
         function listJob(err, userDatabase) {
             assert.ifError(err);
@@ -172,7 +172,7 @@ JobController.prototype.getJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
         },
         function getJob(err, userDatabase) {
             assert.ifError(err);
@@ -242,7 +242,7 @@ JobController.prototype.createJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
         },
         function persistJob(err, userDatabase) {
             assert.ifError(err);
@@ -314,7 +314,7 @@ JobController.prototype.updateJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
         },
         function updateJob(err, userDatabase) {
             assert.ifError(err);

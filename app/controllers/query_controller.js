@@ -120,16 +120,12 @@ QueryController.prototype.handleQuery = function (req, res) {
         // 5. Send formatted results back
         step(
             function getUserDBInfo() {
-                var next = this;
-                var authApi = new AuthApi(req, params);
-
-                self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+                self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
             },
-            function queryExplain(err, userDatabase){
+            function queryExplain(err, dbParams) {
                 assert.ifError(err);
 
-                var next = this;
-                dbopts = userDatabase;
+                dbopts = dbParams;
 
                 if ( req.profiler ) {
                     req.profiler.done('setDBAuth');
@@ -137,7 +133,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(userDatabase, sql, this);
+                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(dbParams, sql, this);
             },
             function setHeaders(err, queryExplainResult) {
                 assert.ifError(err);

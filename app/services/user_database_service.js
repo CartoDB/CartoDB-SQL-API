@@ -7,7 +7,7 @@ function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
 }
 
-UserDatabaseService.prototype.getUserDatabase = function (authApi, cdbUsername, callback) {
+UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
     var self = this;
 
     var dbParams;
