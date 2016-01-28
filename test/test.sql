@@ -148,5 +148,4 @@ CREATE TABLE IF NOT EXISTS
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('untitle_table_4'::regclass, '2014-01-01T23:31:30.123Z');
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('private_table'::regclass, '2015-01-01T23:31:30.123Z');
 
--- GRANT SELECT ON CDB_TableMetadata TO :PUBLICUSER;
 GRANT SELECT ON CDB_TableMetadata TO :TESTUSER;
