@@ -11,16 +11,16 @@ var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
-var generateMD5 = require('../utils/md5');
-var queryMayWrite = require('../utils/query_may_write');
 var getContentDisposition = require('../utils/content_disposition');
 var generateCacheKey = require('../utils/cache_key_generator');
 var handleException = require('../utils/error_handler');
 
+var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
+
 var cdbReq = new CdbRequest();
 
-function QueryController(userDatabaseService, tableCache, statsd_client) {
-    this.tableCache = tableCache;
+function QueryController(userDatabaseService, queryTablesApi, statsd_client) {
+    this.queryTablesApi = queryTablesApi;
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
 }
@@ -50,7 +50,6 @@ QueryController.prototype.handleQuery = function (req, res) {
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration file
-    var tableCacheItem;
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.query');
@@ -107,12 +106,6 @@ QueryController.prototype.handleQuery = function (req, res) {
             throw new Error("You must indicate a sql query");
         }
 
-        // initialise MD5 key of sql for cache lookups
-        var sql_md5 = generateMD5(sql);
-
-        // placeholder for connection
-        var pg;
-
         // Database options
         var dbopts = {};
         var formatter;
@@ -127,16 +120,12 @@ QueryController.prototype.handleQuery = function (req, res) {
         // 5. Send formatted results back
         step(
             function getUserDBInfo() {
-                var next = this;
-                var authApi = new AuthApi(req, params);
-
-                self.userDatabaseService.getUserDatabase(authApi, cdbUsername, next);
+                self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
             },
-            function queryExplain(err, userDatabase){
+            function queryExplain(err, dbParams, authDbParams) {
                 assert.ifError(err);
 
-                var next = this;
-                dbopts = userDatabase;
+                dbopts = dbParams;
 
                 if ( req.profiler ) {
                     req.profiler.done('setDBAuth');
@@ -144,46 +133,9 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                pg = new PSQL(dbopts, {}, { destroyOnError: true });
-                // get all the tables from Cache or SQL
-                tableCacheItem = self.tableCache.get(sql_md5);
-                if (tableCacheItem) {
-                   tableCacheItem.hits++;
-                   return false;
-                } else {
-                    var affectedTablesAndLastUpdatedTimeQuery = [
-                        'WITH querytables AS (',
-                            'SELECT * FROM CDB_QueryTablesText($quotesql$' + sql + '$quotesql$) as tablenames',
-                        ')',
-                        'SELECT (SELECT tablenames FROM querytables), EXTRACT(EPOCH FROM max(updated_at)) as max',
-                        'FROM CDB_TableMetadata m',
-                        'WHERE m.tabname = any ((SELECT tablenames from querytables)::regclass[])'
-                    ].join(' ');
-
-                    pg.query(affectedTablesAndLastUpdatedTimeQuery, function (err, resultSet) {
-                        var tableNames = [];
-                        var lastUpdatedTime = Date.now();
-
-                        if (!err && resultSet.rowCount === 1) {
-                            var result = resultSet.rows[0];
-                            // This is an Array, so no need to split into parts
-                            tableNames = result.tablenames;
-                            if (Number.isFinite(result.max)) {
-                                lastUpdatedTime = result.max * 1000;
-                            }
-                        } else {
-                            var errorMessage = (err && err.message) || 'unknown error';
-                            console.error("Error on query explain '%s': %s", sql, errorMessage);
-                        }
-
-                        return next(null, {
-                            affectedTables: tableNames,
-                            lastUpdatedTime: lastUpdatedTime
-                        });
-                    });
-                }
+                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(authDbParams, sql, this);
             },
-            function setHeaders(err, result) {
+            function setHeaders(err, queryExplainResult) {
                 assert.ifError(err);
 
                 if ( req.profiler ) {
@@ -192,21 +144,8 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('setHeaders');
 
-                // store explain result in local Cache
-                if ( ! tableCacheItem && result && result.affectedTables ) {
-                    tableCacheItem = {
-                        affected_tables: result.affectedTables,
-                        last_modified: result.lastUpdatedTime,
-                        // check if query may possibly write
-                        may_write: queryMayWrite(sql),
-                        // initialise hit counter
-                        hits: 1
-                    };
-                    self.tableCache.set(sql_md5, tableCacheItem);
-                }
-
-                if ( !dbopts.authenticated && tableCacheItem ) {
-                    var affected_tables = tableCacheItem.affected_tables;
+                if (!dbopts.authenticated) {
+                    var affected_tables = queryExplainResult.affectedTables;
                     for ( var i = 0; i < affected_tables.length; ++i ) {
                         var t = affected_tables[i];
                         if ( t.match(/\bpg_/) ) {
@@ -228,28 +167,20 @@ QueryController.prototype.handleQuery = function (req, res) {
                 res.header("Content-Type", formatter.getContentType());
 
                 // set cache headers
-                var ttl = 31536000; // 1 year time to live by default
-                var cache_policy = req.query.cache_policy;
-                if ( cache_policy === 'persist' ) {
-                  res.header('Cache-Control', 'public,max-age=' + ttl);
+                var cachePolicy = req.query.cache_policy;
+                if (cachePolicy === 'persist') {
+                    res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
-                  if ( ! tableCacheItem || tableCacheItem.may_write ) {
-                    // Tell clients this response is already expired
-                    // TODO: prevent cache_policy from overriding this ?
-                    ttl = 0;
-                  }
-                  res.header('Cache-Control', 'no-cache,max-age='+ttl+',must-revalidate,public');
+                    var maxAge = (queryExplainResult.mayWrite) ? 0 : ONE_YEAR_IN_SECONDS;
+                    res.header('Cache-Control', 'no-cache,max-age='+maxAge+',must-revalidate,public');
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
-                if ( tableCacheItem && tableCacheItem.affected_tables.length > 0 && !tableCacheItem.may_write ) {
-                  res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, tableCacheItem, dbopts.authenticated));
+                if (queryExplainResult.affectedTables.length > 0 && !queryExplainResult.mayWrite) {
+                    res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, queryExplainResult.affectedTables));
                 }
 
-                var lastModified = (tableCacheItem && tableCacheItem.last_modified) ?
-                    tableCacheItem.last_modified :
-                    Date.now();
-                res.header('Last-Modified', new Date(lastModified).toUTCString());
+                res.header('Last-Modified', new Date(queryExplainResult.lastModified).toUTCString());
 
                 return null;
             },

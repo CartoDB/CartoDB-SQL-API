@@ -1,6 +1,10 @@
 1.25.1 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+
+ * Fix X-Cache-Channel generation when request are not authenticated #266
+
 
 1.25.0 - 2016-01-26
 -------------------

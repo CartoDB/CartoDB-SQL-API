@@ -7,7 +7,17 @@ function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
 }
 
-UserDatabaseService.prototype.getUserDatabase = function (authApi, cdbUsername, callback) {
+/**
+ * Callback is invoked with `dbParams` and `authDbParams`.
+ * `dbParams` depends on AuthApi verification so it might return a public user with just SELECT permission, where
+ * `authDbParams` will always return connection params as AuthApi had authorized the connection.
+ * That might be useful when you have to run a query with and without permissions.
+ *
+ * @param {AuthApi} authApi
+ * @param {String} cdbUsername
+ * @param {Function} callback (err, dbParams, authDbParams)
+ */
+UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
     var self = this;
 
     var dbParams;
@@ -21,14 +31,7 @@ UserDatabaseService.prototype.getUserDatabase = function (authApi, cdbUsername, 
     // 3. Set to user authorization params
     step(
         function getDatabaseConnectionParams() {
-            var next = this;
-
-            // If the request is providing credentials it may require every DB parameters
-            if (authApi.hasCredentials()) {
-                self.metadataBackend.getAllUserDBParams(cdbUsername, next);
-            } else {
-                self.metadataBackend.getUserDBPublicConnectionParams(cdbUsername, next);
-            }
+            self.metadataBackend.getAllUserDBParams(cdbUsername, this);
         },
         function authenticate(err, userDBParams) {
             var next = this;
@@ -56,27 +59,31 @@ UserDatabaseService.prototype.getUserDatabase = function (authApi, cdbUsername, 
                 throw err;
             }
 
-            if (_.isBoolean(isAuthenticated) && isAuthenticated) {
-                dbopts.authenticated = isAuthenticated;
-                dbopts.user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-                if ( global.settings.hasOwnProperty('db_user_pass') ) {
-                    dbopts.pass = _.template(global.settings.db_user_pass, {
-                        user_id: dbParams.dbuser,
-                        user_password: dbParams.dbpass
-                    });
-                } else {
-                    delete dbopts.pass;
-                }
+            var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
+            var pass = null;
+            if (global.settings.hasOwnProperty('db_user_pass')) {
+                pass = _.template(global.settings.db_user_pass, {
+                    user_id: dbParams.dbuser,
+                    user_password: dbParams.dbpass
+                });
             }
 
-            return dbopts;
+            if (_.isBoolean(isAuthenticated) && isAuthenticated) {
+                dbopts.authenticated = isAuthenticated;
+                dbopts.user = user;
+                dbopts.pass = pass;
+            }
+
+            var authDbOpts = _.defaults({user: user, pass: pass}, dbopts);
+
+            return this(null, dbopts, authDbOpts);
         },
-        function errorHandle(err, dbopts) {
+        function errorHandle(err, dbopts, authDbOpts) {
             if (err) {
                 return callback(err);
             }
 
-            callback(null, dbopts);
+            callback(null, dbopts, authDbOpts);
         }
     );
 
