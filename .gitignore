@@ -9,3 +9,5 @@ tools/munin/cdbsqlapi.conf
 test/redis.pid
 test/test.log
 test/acceptance/oauth/venv/*
+coverage/
+npm-debug.log

@@ -1,21 +1,18 @@
 var step = require('step'),
     fs   = require('fs');
 
-function HealthCheck(metadataBackend) {
-    this.metadataBackend = metadataBackend;
+function HealthCheck(disableFile) {
+    this.disableFile = disableFile;
 }
 
 module.exports = HealthCheck;
 
-HealthCheck.prototype.check = function(username, query, callback) {
-    var result = {
-            redis: {},
-            postgresql: {}
-        };
+HealthCheck.prototype.check = function(callback) {
+    var self = this;
 
     step(
         function getManualDisable() {
-          fs.readFile(global.settings.disabled_file, this);
+          fs.readFile(self.disableFile, this);
         },
         function handleDisabledFile(err, data) {
           var next = this;
@@ -29,7 +26,7 @@ HealthCheck.prototype.check = function(username, query, callback) {
           }
         },
         function handleResult(err) {
-          callback(err, result);
+          callback(err);
         }
     );
 };

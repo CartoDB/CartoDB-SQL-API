@@ -67,6 +67,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
   echo "preparing postgres..."
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
+  psql -c 'CREATE EXTENSION "uuid-ossp";' ${TEST_DB}
   cat test.sql |
     sed "s/:PUBLICUSER/${PUBLICUSER}/" |
     sed "s/:PUBLICPASS/${PUBLICPASS}/" |
@@ -108,7 +109,7 @@ HMSET rails:users:vizzuality \
  id 1 \
  database_name ${TEST_DB} \
  database_host localhost \
- map_key 1234 
+ map_key 1234
 SADD rails:users:vizzuality:map_key 1235
 EOF
 
@@ -132,10 +133,21 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  time sometime
 EOF
 
+# delete previous jobs
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 batch:jobs:*
+EOF
+
+# delete job queue
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+DEL batch:queues:localhost
+EOF
+
+# delete user index
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+DEL batch:users:vizzuality
+EOF
+
 fi
 
-
-
 echo "ok, you can run test now"
-
-

@@ -1,3 +1,18 @@
+1.25.0 - 2016-01-26
+-------------------
+
+New features:
+
+ * Set `Last-Modified` header based on affected tables (#101)
+ * Batch API (#261):
+   - New endpoint to create, read, update and delete long-running queries (jobs).
+   - Batch service to process jobs.
+
+Announcements:
+
+ * Upgrades cartodb-psql to [0.6.1](https://github.com/CartoDB/node-cartodb-psql/releases/tag/0.6.1)
+
+
 1.24.0 - 2015-08-04
 -------------------
 
@@ -383,7 +398,7 @@ Other changes:
 -----
 * Set Last-Modified header with cache_policy=persist
 * Raise max-age to one year for all cacheable queries
-* Set max-age to 0 for uncacheable (mutating) queries 
+* Set max-age to 0 for uncacheable (mutating) queries
 * Add REINDEX to the list of uncacheable queries
 * Support all parameters with POST as well as GET
 * Ensure testsuite passes with both GDAL-0.9 and GDAL-0.10
@@ -422,7 +437,7 @@ Other changes:
 ------
 * Fixed problem identifying OAuth request protocol
 * Make base url configurable
-* Update underscore dependency 
+* Update underscore dependency
 * Add munin plugin
 * Make PostgreSQL client pooling settings configurable (#47)
 * Do not execute queries on OPTIONS (#94)
