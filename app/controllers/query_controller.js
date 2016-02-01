@@ -133,7 +133,9 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(authDbParams, sql, this);
+                var skipCache = !!dbopts.authenticated;
+
+                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(authDbParams, sql, skipCache, this);
             },
             function setHeaders(err, queryExplainResult) {
                 assert.ifError(err);
