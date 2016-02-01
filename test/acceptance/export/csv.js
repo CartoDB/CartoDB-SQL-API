@@ -97,6 +97,29 @@ it('CSV format, custom filename', function(done){
     });
 });
 
+it('CSV format, custom filename', function(done){
+    assert.response(app, {
+        url: '/api/v1/sql?q=select%20st_astext(st_makepoint(0,0))&format=csv',
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    },{ }, function(res){
+        assert.equal(res.statusCode, 200, res.body);
+        var ct = res.header('Content-Type');
+        assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+        var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
+        var checkFields = { _st_astext: true };
+        Object.keys(checkFields).forEach(function(f) {
+            var idx = row0.indexOf(f);
+            if ( checkFields[f] ) {
+                assert.ok(idx !== -1, "result does not include '" + f + "'");
+            } else {
+                assert.ok(idx === -1, "result includes '" + f + "' ("+idx+")");
+            }
+        });
+        done();
+    });
+});
+
 it('skipfields controls fields included in CSV output', function(done){
     assert.response(app, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv' +
