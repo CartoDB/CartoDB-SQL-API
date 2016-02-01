@@ -25,12 +25,12 @@ describe('query-tables-api', function() {
         var desc = 'authenticated=' + JSON.stringify(!!scenario.apiKey) + ' requests' +
             ' ' + shouldOrShouldNot + ' skip internal query-tables-api cache';
         it(desc, function(done) {
-            var getAffectedTablesAndLastUpdatedTimeCalled = false;
+            var getAffectedTablesCalled = false;
             var skippedCache = null;
-            var getAffectedTablesAndLastUpdatedTimeFn = QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime;
+            var getAffectedTablesFn = QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime;
             QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime =
                 function(connectionParams, sql, skipCache, callback) {
-                    getAffectedTablesAndLastUpdatedTimeCalled = true;
+                    getAffectedTablesCalled = true;
                     skippedCache = skipCache;
                     return callback(null, {
                         affectedTables: [],
@@ -55,13 +55,13 @@ describe('query-tables-api', function() {
                     // status: 200 // not using this as we cannot restore getAffectedTablesAndLastUpdatedTime
                 },
                 function(res, err) {
-                    QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = getAffectedTablesAndLastUpdatedTimeFn;
+                    QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = getAffectedTablesFn;
 
                     assert.ok(!err, err);
                     assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
 
                     assert.equal(skippedCache, scenario.shouldSkipCache, 'skip cache expected as true');
-                    assert.ok(getAffectedTablesAndLastUpdatedTimeCalled, 'getAffectedTablesAndLastUpdatedTime NOT called');
+                    assert.ok(getAffectedTablesCalled, 'getAffectedTablesAndLastUpdatedTime NOT called');
 
                     done();
                 }
