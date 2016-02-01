@@ -1,6 +1,10 @@
 1.25.2 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+
+ * Skip query-tables-api for authenticated requests
+
 
 1.25.1 - 2016-01-28
 -------------------
