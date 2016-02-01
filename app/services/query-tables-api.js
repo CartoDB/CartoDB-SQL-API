@@ -9,11 +9,15 @@ function QueryTablesApi(tableCache) {
 
 module.exports = QueryTablesApi;
 
-QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connectionParams, sql, callback) {
+QueryTablesApi.prototype.getAffectedTablesAndLastUpdatedTime = function (connectionParams, sql, skipCache, callback) {
     var self = this;
 
     var cacheKey = sqlCacheKey(connectionParams.user, sql);
-    var queryExplainResult = this.tableCache.get(cacheKey);
+    var queryExplainResult;
+
+    if (!skipCache) {
+        queryExplainResult = this.tableCache.get(cacheKey);
+    }
 
     if (queryExplainResult) {
         queryExplainResult.hits++;
