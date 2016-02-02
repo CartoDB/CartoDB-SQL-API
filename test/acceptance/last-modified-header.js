@@ -31,6 +31,11 @@ describe('last modified header', function() {
 
     scenarios.forEach(function(scenario) {
         it(scenario.desc, function(done) {
+            var fixedDateNow = Date.now();
+            var dateNowFn = Date.now;
+            Date.now = function() {
+                return fixedDateNow;
+            };
             var query = qs.stringify({
                 q: scenario.tables.map(function(table) {
                     return 'select cartodb_id from ' + table;
@@ -49,7 +54,8 @@ describe('last modified header', function() {
                     statusCode: 200
                 },
                 function(res) {
-                    assert.equal(res.headers['last-modified'], scenario.expectedLastModified);
+                    Date.now = dateNowFn;
+                    assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                     done();
                 }
             );

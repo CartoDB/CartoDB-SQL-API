@@ -182,7 +182,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                     res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, queryExplainResult.affectedTables));
                 }
 
-                res.header('Last-Modified', new Date(queryExplainResult.lastModified).toUTCString());
+                res.header('Last-Modified', new Date().toUTCString());
 
                 return null;
             },
