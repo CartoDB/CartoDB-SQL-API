@@ -1,6 +1,10 @@
 1.25.3 - 2016-mm-dd
 -------------------
 
+Enhancements:
+
+ * QueryTablesApi caches affected tables and retrieves last modification #269
+
 
 1.25.2 - 2016-02-01
 -------------------
