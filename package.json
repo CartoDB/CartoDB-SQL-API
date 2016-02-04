@@ -10,6 +10,7 @@
         "type": "git",
         "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
     },
+    "license": "BSD-3-Clause",
     "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
     "contributors": [
         "Simon Tokumine <simon@vizzuality.com>",
