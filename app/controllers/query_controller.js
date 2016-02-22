@@ -185,7 +185,10 @@ QueryController.prototype.handleQuery = function (req, res) {
                     res.header('Surrogate-Key', affectedTables.key());
                 }
 
-                res.header('Last-Modified', new Date(affectedTables.getLastUpdatedAt()).toUTCString());
+                if(!!affectedTables) {
+                    res.header('Last-Modified',
+                               new Date(affectedTables.getLastUpdatedAt(Number(new Date()))).toUTCString());
+                }
 
                 return null;
             },
