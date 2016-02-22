@@ -136,7 +136,12 @@ QueryController.prototype.handleQuery = function (req, res) {
                 QueryTables.getAffectedTablesFromQuery(pg, sql, this);
             },
             function setHeaders(err, affectedTables) {
-                assert.ifError(err);
+
+                if (err) {
+                    var errorMessage = (err && err.message) || 'unknown error';
+                    console.error("Error on query explain '%s': %s", sql, errorMessage);
+                }
+
 
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
@@ -144,7 +149,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                 }
 
                 checkAborted('setHeaders');
-                if (!dbopts.authenticated) {
+                if (!dbopts.authenticated && !!affectedTables) {
                     for ( var i = 0; i < affectedTables.tables.length; ++i ) {
                         var t = affectedTables.tables[i];
                         if ( t.table_name.match(/\bpg_/) ) {
@@ -175,7 +180,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
-                if (affectedTables.tables.length > 0 && !mayWrite) {
+                if (!!affectedTables && affectedTables.tables.length > 0 && !mayWrite) {
                     res.header('X-Cache-Channel', affectedTables.getCacheChannel());
                     res.header('Surrogate-Key', affectedTables.key());
                 }
