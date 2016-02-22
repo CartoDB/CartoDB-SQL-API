@@ -177,7 +177,7 @@
       "from": "https://registry.npmjs.org/lru-cache/-/lru-cache-2.5.2.tgz",
       "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-2.5.2.tgz"
     },
-    "node-cartodb-query-tables": {
+    "cartodb-query-tables": {
       "version": "0.1.0",
       "from": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master",
       "resolved": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master"
