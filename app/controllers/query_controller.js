@@ -4,7 +4,7 @@ var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
-var QueryTables = require('node-cartodb-query-tables');
+var QueryTables = require('cartodb-query-tables');
 var AuthApi = require('../auth/auth_api');
 var queryMayWrite = require('../utils/query_may_write');
 
