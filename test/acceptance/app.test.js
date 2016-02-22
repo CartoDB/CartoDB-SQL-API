@@ -789,7 +789,7 @@ it('DROP TABLE with GET and auth', function(done){
     });
 });
 
-test('CREATE FUNCTION with GET and auth', function(done){
+it('CREATE FUNCTION with GET and auth', function(done){
     assert.response(app, {
         url: "/api/v1/sql?" + querystring.stringify({
           q: 'CREATE FUNCTION create_func_test(a int) RETURNS INT AS \'SELECT 1\' LANGUAGE \'sql\'',
