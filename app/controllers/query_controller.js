@@ -182,7 +182,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
                 if (!!affectedTables && affectedTables.tables.length > 0 && !mayWrite) {
                     res.header('X-Cache-Channel', affectedTables.getCacheChannel());
-                    res.header('Surrogate-Key', affectedTables.key());
+                    res.header('Surrogate-Key', affectedTables.key().join(' '));
                 }
 
                 if(!!affectedTables) {
