@@ -1,6 +1,6 @@
 # SQL Batch API
 
-The SQL Batch API supports a REST endpoint for long-running queries. This is useful for evaluating any timeouts due to endpoint fails. You can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-a-job), [update](#update-a-job) and [delete](#delete-a-job). Job instances are stored on a [Redis server and contain a TTL key](http://redis.io/commands/ttl), which CartoDB has defined to timeout at 48 hours after a job resolution. You can then use the list results for job scheduling, which implements First-In First-Out (FIFO) queue rules.
+The SQL Batch API supports a REST endpoint for long-running queries. This is useful for evaluating any timeouts due to endpoint fails. You can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [delete](#delete-a-job). Job instances are stored on a [Redis server and contain a TTL key](http://redis.io/commands/ttl), which CartoDB has defined to timeout at 48 hours after a job resolution. You can then use the list results for job scheduling, which implements First-In First-Out (FIFO) queue rules.
 
 
 ## SQL Batch API Job Schema
