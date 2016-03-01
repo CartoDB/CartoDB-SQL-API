@@ -21,7 +21,7 @@ Name | Description
 &#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job. For example, if draining before exit has failed.
 `query` | the SQL statement to be executed in a database. You can modify the select SQL statement to be used in the job schema.<br/><br/>**Tip:** You can retrieve a query with outputs (SELECT) or inputs (INSERT, UPDATE and DELETE). In some scenarios, you may need to retrieve the query results from a finished job. If that is the case, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:<br/><br/>1. A job query, `SELECT * FROM user_dataset;`<br/><br/>2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`<br/><br/>3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
 `created_at` | the date and time when the job schema was created.
-`updated_at` | the date and time of when the job schema was updated, or modified.
+`updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
 
 **Note:** Only the `query` element can be modified by the user. All other elements of the job schema are not editable.
@@ -154,9 +154,8 @@ BODY: {
 
 ```bash
 errors: [
-  “Job is not pending, it couldn't be updated”
-  ]
-}
+	“Job is not pending, it couldn't be updated”
+]
 ```
 
 If this is the case, make a PATCH request with the following parameters.
