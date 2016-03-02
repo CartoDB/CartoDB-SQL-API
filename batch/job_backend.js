@@ -59,7 +59,7 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
         }
 
         if (job.status !== 'pending') {
-            return callback(new Error('Job is not pending, it couldn\'t be updated'));
+            return callback(new Error('Job is not pending, it cannot be updated'));
         }
 
         var now = new Date().toISOString();
