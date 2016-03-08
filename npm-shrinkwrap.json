@@ -1,10 +1,10 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.25.4",
+  "version": "1.26.0",
   "dependencies": {
     "cartodb-psql": {
       "version": "0.6.1",
-      "from": "cartodb-psql@0.6.1",
+      "from": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.6.1.tgz",
       "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.6.1.tgz",
       "dependencies": {
         "pg": {
@@ -37,6 +37,11 @@
           }
         }
       }
+    },
+    "cartodb-query-tables": {
+      "version": "0.1.0",
+      "from": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master",
+      "resolved": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master"
     },
     "cartodb-redis": {
       "version": "0.11.0",
@@ -176,11 +181,6 @@
       "version": "2.5.2",
       "from": "https://registry.npmjs.org/lru-cache/-/lru-cache-2.5.2.tgz",
       "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-2.5.2.tgz"
-    },
-    "cartodb-query-tables": {
-      "version": "0.1.0",
-      "from": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master",
-      "resolved": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master"
     },
     "node-statsd": {
       "version": "0.0.7",
