@@ -25,7 +25,7 @@ CachedQueryTables.prototype.getAffectedTablesFromQuery = function(pg, sql, callb
 
             self.tableCache.set(cacheKey, {
                 result: result,
-                hits: 1
+                hits: 0
             });
 
             return callback(null, result);
