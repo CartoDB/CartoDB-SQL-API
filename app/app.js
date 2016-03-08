@@ -188,7 +188,7 @@ function App() {
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(userDatabaseService, statsd_client);
+    var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
     var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller);

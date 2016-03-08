@@ -4,7 +4,7 @@ var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
-var QueryTables = require('cartodb-query-tables');
+var CachedQueryTables = require('../services/cached-query-tables');
 var AuthApi = require('../auth/auth_api');
 var queryMayWrite = require('../utils/query_may_write');
 
@@ -19,9 +19,10 @@ var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
 var cdbReq = new CdbRequest();
 
-function QueryController(userDatabaseService, statsd_client) {
+function QueryController(userDatabaseService, tableCache, statsd_client) {
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
+    this.queryTables = new CachedQueryTables(tableCache);
 }
 
 QueryController.prototype.route = function (app) {
@@ -136,7 +137,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 var pg = new PSQL(authDbParams, {}, { destroyOnError: true });
 
-                QueryTables.getAffectedTablesFromQuery(pg, sql, function(err, result) {
+                self.queryTables.getAffectedTablesFromQuery(pg, sql, function(err, result) {
                     if (err) {
                         var errorMessage = (err && err.message) || 'unknown error';
                         console.error("Error on query explain '%s': %s", sql, errorMessage);
