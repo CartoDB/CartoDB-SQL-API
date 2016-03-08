@@ -5,7 +5,7 @@
     "keywords": [
         "cartodb"
     ],
-    "version": "1.25.4",
+    "version": "1.26.0",
     "repository": {
         "type": "git",
         "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
@@ -32,7 +32,7 @@
         "topojson": "0.0.8",
         "underscore": "~1.6.0",
         "queue-async": "~1.0.7",
-        "cartodb-query-tables": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master"
+        "cartodb-query-tables": "0.1.0"
     },
     "devDependencies": {
         "istanbul": "~0.4.2",

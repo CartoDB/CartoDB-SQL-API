@@ -1,7 +1,14 @@
-1.25.4 - 2016-mm-dd
+1.26.0 - 2016-03-08
 -------------------
 
+New features:
 
+ * Add [Surrogate-Key](https://github.com/CartoDB/cartodb/wiki/CartoDB-Surrogate-Keys) headers to responses
+
+Enhancements:
+ 
+ * Use new `node-cartodb-query-tables` library to obtain affected tables in queries
+ 
 1.25.3 - 2016-02-02
 -------------------
 
