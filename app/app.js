@@ -29,7 +29,6 @@ var UserIndexer = require('../batch/user_indexer');
 var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
 var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
-var QueryTablesApi = require('./services/query-tables-api');
 
 var cors = require('./middlewares/cors');
 
@@ -71,7 +70,6 @@ function App() {
       // consider entries expired after these many milliseconds (10 minutes by default)
       maxAge: global.settings.tableCacheMaxAge || 1000*60*10
     });
-    var queryTablesApi = new QueryTablesApi(tableCache);
 
     // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
     var SQL_QUERY_BODY_LOG_MAX_LENGTH = 2000;
@@ -190,7 +188,7 @@ function App() {
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(userDatabaseService, queryTablesApi, statsd_client);
+    var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
     var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller);

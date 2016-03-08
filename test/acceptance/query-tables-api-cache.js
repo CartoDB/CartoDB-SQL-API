@@ -44,7 +44,7 @@ describe('query-tables-api', function() {
             getCacheStatus(function(err, cacheStatus) {
                 assert.ok(!err, err);
                 assert.equal(cacheStatus.explain.keys, 1);
-                assert.equal(cacheStatus.explain.hits, 1);
+                assert.equal(cacheStatus.explain.hits, 0);
 
                 done();
             });
@@ -58,7 +58,7 @@ describe('query-tables-api', function() {
             getCacheStatus(function(err, cacheStatus) {
                 assert.ok(!err, err);
                 assert.equal(cacheStatus.explain.keys, 1);
-                assert.equal(cacheStatus.explain.hits, 2);
+                assert.equal(cacheStatus.explain.hits, 1);
 
                 done();
             });

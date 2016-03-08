@@ -31,7 +31,8 @@
         "step-profiler": "~0.1.0",
         "topojson": "0.0.8",
         "underscore": "~1.6.0",
-        "queue-async": "~1.0.7"
+        "queue-async": "~1.0.7",
+        "cartodb-query-tables": "https://github.com/CartoDB/node-cartodb-query-tables/tarball/master"
     },
     "devDependencies": {
         "istanbul": "~0.4.2",
