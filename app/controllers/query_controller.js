@@ -124,6 +124,8 @@ QueryController.prototype.handleQuery = function (req, res) {
             function queryExplain(err, dbParams, authDbParams) {
                 assert.ifError(err);
 
+                var next = this;
+
                 dbopts = dbParams;
 
                 if ( req.profiler ) {
@@ -133,15 +135,17 @@ QueryController.prototype.handleQuery = function (req, res) {
                 checkAborted('queryExplain');
 
                 var pg = new PSQL(authDbParams, {}, { destroyOnError: true });
-                QueryTables.getAffectedTablesFromQuery(pg, sql, this);
+
+                QueryTables.getAffectedTablesFromQuery(pg, sql, function(err, result) {
+                    if (err) {
+                        var errorMessage = (err && err.message) || 'unknown error';
+                        console.error("Error on query explain '%s': %s", sql, errorMessage);
+                    }
+                    return next(null, result);
+                });
             },
             function setHeaders(err, affectedTables) {
-
-                if (err) {
-                    var errorMessage = (err && err.message) || 'unknown error';
-                    console.error("Error on query explain '%s': %s", sql, errorMessage);
-                }
-
+                assert.ifError(err);
 
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
