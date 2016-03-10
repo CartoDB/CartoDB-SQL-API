@@ -8,11 +8,15 @@ function CachedQueryTables(tableCache) {
 
 module.exports = CachedQueryTables;
 
-CachedQueryTables.prototype.getAffectedTablesFromQuery = function(pg, sql, callback) {
+CachedQueryTables.prototype.getAffectedTablesFromQuery = function(pg, sql, skipCache, callback) {
     var self = this;
 
     var cacheKey = sqlCacheKey(pg.username(), sql);
-    var cachedResult = this.tableCache.get(cacheKey);
+
+    var cachedResult;
+    if (!skipCache) {
+        cachedResult = this.tableCache.get(cacheKey);
+    }
 
     if (cachedResult) {
         cachedResult.hits++;

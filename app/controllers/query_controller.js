@@ -136,8 +136,9 @@ QueryController.prototype.handleQuery = function (req, res) {
                 checkAborted('queryExplain');
 
                 var pg = new PSQL(authDbParams, {}, { destroyOnError: true });
+                var skipCache = !!dbopts.authenticated;
 
-                self.queryTables.getAffectedTablesFromQuery(pg, sql, function(err, result) {
+                self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
                     if (err) {
                         var errorMessage = (err && err.message) || 'unknown error';
                         console.error("Error on query explain '%s': %s", sql, errorMessage);
