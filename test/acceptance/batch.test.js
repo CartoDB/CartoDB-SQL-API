@@ -88,7 +88,7 @@ describe('batch module', function() {
         });
     });
 
-    it('should perform all job enqueued', function (done) {
+    it('should perform all enqueued jobs', function (done) {
         var jobs = [
             'select * from private_table',
             'select * from private_table',
@@ -195,26 +195,51 @@ describe('batch module', function() {
         });
     });
 
-    it.skip('should perform job with array of select', function (done) {
-        var jobs = ['select * from private_table', 'select * from private_table'];
-        var queriesDone = 0
+    it('should perform job with array of select', function (done) {
+        var queries = ['select * from private_table', 'select * from private_table'];
 
-        createJob(jobs, function (err, job) {
+        createJob(queries, function (err, job) {
             if (err) {
                 return done(err);
             }
 
             batch.on('job:done', function (job_id) {
                 if (job_id === job.job_id) {
-                    queriesDone++;
-
-                    if (queriesDone === jobs.length) {
-                        done();
-                    }
+                    done();
                 }
             });
+        });
+    });
 
+    it('should set job as failed if last query fails', function (done) {
+        var queries = ['select * from private_table', 'select * from undefined_table'];
 
+        createJob(queries, function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:failed', function (job_id) {
+                if (job_id === job.job_id) {
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should set job as failed if first query fails', function (done) {
+        var queries = ['select * from undefined_table', 'select * from private_table'];
+
+        createJob(queries, function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:failed', function (job_id) {
+                if (job_id === job.job_id) {
+                    done();
+                }
+            });
         });
     });
 
