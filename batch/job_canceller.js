@@ -62,8 +62,7 @@ JobCanceller.prototype.drain = function (job_id, callback) {
 
 JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
     var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-    var escapedJobQuery = pg.escapeLiteral(job.query + ' /* ' + job.job_id + ' */');
-    var getPIDQuery = 'SELECT pid FROM pg_stat_activity WHERE query = ' + escapedJobQuery;
+    var getPIDQuery = "SELECT pid FROM pg_stat_activity WHERE query LIKE '/* " + job.job_id + " */%'";
 
     pg.query(getPIDQuery, function(err, result) {
         if (err) {
@@ -71,7 +70,7 @@ JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
         }
 
         if (!result.rows[0] || !result.rows[0].pid) {
-            return callback(new Error('Query not running currently'));
+            return callback(new Error('Query is not running currently'));
         }
 
         var pid = result.rows[0].pid;

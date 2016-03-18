@@ -41,6 +41,7 @@ JobRunner.prototype.run = function (job_id, callback) {
 };
 
 JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
+    var self = this;
     var jobQueue = queue(1); // performs in series
 
     if (!Array.isArray(job.query)) {
@@ -53,15 +54,15 @@ JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
 
     jobQueue.await(function (err, result) {
         if (err) {
-            return callback(err);
+            // if query has been cancelled then it's going to get the current job status saved by query_canceller
+            if (errorCodes[err.code.toString()] === 'query_canceled') {
+                return self.jobBackend.get(job.job_id, callback);
+            }
+
+            return self.jobBackend.setFailed(job, err, callback);
         }
 
-        // last result is the good one
-        if (Array.isArray(result)) {
-            return callback(null, result[result.length - 1]);
-        }
-
-        callback(null, result);
+        self.jobBackend.setDone(job, callback);
     })
 };
 
@@ -76,27 +77,20 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callbac
         }
 
         // mark query to allow to users cancel their queries whether users request for it
-        var sql = job.query[index] + ' /* ' + job.job_id + ' */';
+        var sql = '/* ' + job.job_id + ' */ ' + job.query[index];
 
         pg.eventedQuery(sql, function (err, query) {
             if (err) {
                 return self.jobBackend.setFailed(job, err, callback);
             }
 
-            query.on('error', function (err) {
-                // if query has been cancelled then it's going to get the current job status saved by query_canceller
-                if (errorCodes[err.code.toString()] === 'query_canceled') {
-                    return self.jobBackend.get(job.job_id, callback);
-                }
-
-                self.jobBackend.setFailed(job, err, callback);
-            });
+            query.on('error', callback);
 
             query.on('end', function (result) {
                 // only if result is present then query is done sucessfully otherwise an error has happened
                 // and it was handled by error listener
                 if (result) {
-                    return self.jobBackend.setDone(job, callback);
+                    callback(null, result);
                 }
             });
         });
