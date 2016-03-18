@@ -52,7 +52,7 @@ JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
         jobQueue.defer(this._query.bind(this), job, userDatabaseMetadata, i);
     }
 
-    jobQueue.await(function (err, result) {
+    jobQueue.await(function (err) {
         if (err) {
             // if query has been cancelled then it's going to get the current job status saved by query_canceller
             if (errorCodes[err.code.toString()] === 'query_canceled') {
@@ -63,7 +63,7 @@ JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
         }
 
         self.jobBackend.setDone(job, callback);
-    })
+    });
 };
 
 JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callback) {
