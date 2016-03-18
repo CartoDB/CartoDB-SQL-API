@@ -84,7 +84,10 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callbac
                 return self.jobBackend.setFailed(job, err, callback);
             }
 
-            query.on('error', callback);
+            query.on('error', function (err) {
+                err.message = 'Error on query[' + index +']: ' + err.message;
+                callback(err);
+            });
 
             query.on('end', function (result) {
                 // only if result is present then query is done sucessfully otherwise an error has happened
