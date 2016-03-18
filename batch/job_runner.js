@@ -2,6 +2,7 @@
 
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
 var PSQL = require('cartodb-psql');
+var queue = require('queue-async');
 
 
 function JobRunner(jobBackend, userDatabaseMetadataService) {
@@ -33,13 +34,38 @@ JobRunner.prototype.run = function (job_id, callback) {
                     return callback(err);
                 }
 
-                self._query(job, userDatabaseMetadata, callback);
+                self._series(job, userDatabaseMetadata, callback);
             });
         });
     });
 };
 
-JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
+JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
+    var jobQueue = queue(1); // performs in series
+
+    if (!Array.isArray(job.query)) {
+        job.query = [ job.query ];
+    }
+
+    for (var i = 0; i < job.query.length; i++) {
+        jobQueue.defer(this._query.bind(this), job, userDatabaseMetadata, i);
+    }
+
+    jobQueue.await(function (err, result) {
+        if (err) {
+            return callback(err);
+        }
+
+        // last result is the good one
+        if (Array.isArray(result)) {
+            return callback(null, result[result.length - 1]);
+        }
+
+        callback(null, result);
+    })
+};
+
+JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callback) {
     var self = this;
 
     var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
@@ -50,7 +76,7 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
         }
 
         // mark query to allow to users cancel their queries whether users request for it
-        var sql = job.query + ' /* ' + job.job_id + ' */';
+        var sql = job.query[index] + ' /* ' + job.job_id + ' */';
 
         pg.eventedQuery(sql, function (err, query) {
             if (err) {

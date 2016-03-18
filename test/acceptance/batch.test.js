@@ -195,4 +195,27 @@ describe('batch module', function() {
         });
     });
 
+    it.skip('should perform job with array of select', function (done) {
+        var jobs = ['select * from private_table', 'select * from private_table'];
+        var queriesDone = 0
+
+        createJob(jobs, function (err, job) {
+            if (err) {
+                return done(err);
+            }
+
+            batch.on('job:done', function (job_id) {
+                if (job_id === job.job_id) {
+                    queriesDone++;
+
+                    if (queriesDone === jobs.length) {
+                        done();
+                    }
+                }
+            });
+
+
+        });
+    });
+
 });

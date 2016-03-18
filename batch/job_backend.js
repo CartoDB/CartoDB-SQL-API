@@ -21,7 +21,7 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
         this.redisPrefix + job_id,
         'user', username,
         'status', 'pending',
-        'query', sql,
+        'query', JSON.stringify(sql),
         'created_at', now,
         'updated_at', now
     ];
@@ -99,6 +99,8 @@ JobBackend.prototype.list = function (username, callback) {
                 return self.list(username, callback);
             }
 
+
+
             callback(null, jobs);
         });
     });
@@ -173,11 +175,19 @@ JobBackend.prototype.get = function (job_id, callback) {
             return callback(notFoundError);
         }
 
+        var query;
+
+        try {
+            query = JSON.parse(jobValues[2]);
+        } catch (err) {
+            query = jobValues[2];
+        }
+
         callback(null, {
             job_id: job_id,
             user: jobValues[0],
             status: jobValues[1],
-            query: jobValues[2],
+            query: query,
             created_at: jobValues[3],
             updated_at: jobValues[4],
             failed_reason: jobValues[5] ? jobValues[5] : undefined
