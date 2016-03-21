@@ -71,7 +71,7 @@ JobRunner.prototype._runInSeries = function(job, userDatabaseMetadata, callback)
 JobRunner.prototype._run = function (job, userDatabaseMetadata, index, isMultiQuery, callback) {
     this._query(job, userDatabaseMetadata, index, function (err, result) {
         if (err && isMultiQuery) {
-            err.message = 'Error on query[' + index +']: ' + err.message;
+            err.message = 'Error on query ' + (index + 1) +': ' + err.message;
             return callback(err);
         }
 
