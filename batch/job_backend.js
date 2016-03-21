@@ -99,8 +99,6 @@ JobBackend.prototype.list = function (username, callback) {
                 return self.list(username, callback);
             }
 
-
-
             callback(null, jobs);
         });
     });
