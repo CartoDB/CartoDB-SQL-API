@@ -65,7 +65,7 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
         var now = new Date().toISOString();
         var redisParams = [
             self.redisPrefix + job_id,
-            'query', sql,
+            'query', JSON.stringify(sql),
             'updated_at', now
         ];
 
