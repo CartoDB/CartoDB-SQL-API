@@ -34,22 +34,24 @@ JobRunner.prototype.run = function (job_id, callback) {
                     return callback(err);
                 }
 
-                self._series(job, userDatabaseMetadata, callback);
+                self._runInSeries(job, userDatabaseMetadata, callback);
             });
         });
     });
 };
 
-JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
+JobRunner.prototype._runInSeries = function(job, userDatabaseMetadata, callback) {
     var self = this;
     var jobQueue = queue(1); // performs in series
+    var isMultiQuery = true;
 
     if (!Array.isArray(job.query)) {
+        isMultiQuery = false;
         job.query = [ job.query ];
     }
 
     for (var i = 0; i < job.query.length; i++) {
-        jobQueue.defer(this._query.bind(this), job, userDatabaseMetadata, i);
+        jobQueue.defer(this._run.bind(this), job, userDatabaseMetadata, i, isMultiQuery);
     }
 
     jobQueue.await(function (err) {
@@ -66,6 +68,21 @@ JobRunner.prototype._series = function(job, userDatabaseMetadata, callback) {
     });
 };
 
+JobRunner.prototype._run = function (job, userDatabaseMetadata, index, isMultiQuery, callback) {
+    this._query(job, userDatabaseMetadata, index, function (err, result) {
+        if (err && isMultiQuery) {
+            err.message = 'Error on query[' + index +']: ' + err.message;
+            return callback(err);
+        }
+
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, result);
+    });
+};
+
 JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callback) {
     var self = this;
 
@@ -76,7 +93,7 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callbac
             return self.jobBackend.setFailed(job, err, callback);
         }
 
-        // mark query to allow to users cancel their queries whether users request for it
+        // mark query to allow to users cancel their queries
         var sql = '/* ' + job.job_id + ' */ ' + job.query[index];
 
         pg.eventedQuery(sql, function (err, query) {
@@ -84,10 +101,7 @@ JobRunner.prototype._query = function (job, userDatabaseMetadata, index, callbac
                 return self.jobBackend.setFailed(job, err, callback);
             }
 
-            query.on('error', function (err) {
-                err.message = 'Error on query[' + index +']: ' + err.message;
-                callback(err);
-            });
+            query.on('error', callback);
 
             query.on('end', function (result) {
                 // only if result is present then query is done sucessfully otherwise an error has happened
