@@ -2,7 +2,15 @@
 
 var uuid = require('node-uuid');
 var queue = require('queue-async');
+var moment = require('moment');
+require("moment-duration-format");
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
+
+function getDuration(start, end) {
+    var startDate = moment(start);
+    var endDate = moment(end);
+    return moment.duration(endDate.diff(startDate, 'seconds', true), 'seconds').format('d[d] h[h]:mm[m]:ss[s]');
+}
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     this.db = 5;
@@ -150,6 +158,7 @@ JobBackend.prototype._isJobFound = function (jobValues) {
     return jobValues[0] && jobValues[1] && jobValues[2] && jobValues[3] && jobValues[4];
 };
 
+// jshint maxcomplexity: 7
 JobBackend.prototype.get = function (job_id, callback) {
     var self = this;
     var redisParams = [
@@ -159,7 +168,10 @@ JobBackend.prototype.get = function (job_id, callback) {
         'query',
         'created_at',
         'updated_at',
-        'failed_reason'
+        'failed_reason',
+        'waiting_elapsed_time',
+        'running_elapsed_time',
+        'total_elapsed_time'
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, jobValues) {
@@ -180,17 +192,22 @@ JobBackend.prototype.get = function (job_id, callback) {
             query: jobValues[2],
             created_at: jobValues[3],
             updated_at: jobValues[4],
-            failed_reason: jobValues[5] ? jobValues[5] : undefined
+            failed_reason: jobValues[5] ? jobValues[5] : undefined,
+            waiting_elapsed_time: jobValues[6] ? jobValues[6] : undefined,
+            running_elapsed_time: jobValues[7] ? jobValues[7] : undefined,
+            total_elapsed_time: jobValues[8] ? jobValues[8] : undefined
         });
     });
 };
 
 JobBackend.prototype.setRunning = function (job, callback) {
+    var self = this;
     var now = new Date().toISOString();
     var redisParams = [
         this.redisPrefix + job.job_id,
         'status', 'running',
-        'updated_at', now
+        'updated_at', now,
+        'waiting_elapsed_time', getDuration(job.created_at, now)
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams, function (err) {
@@ -198,14 +215,12 @@ JobBackend.prototype.setRunning = function (job, callback) {
             return callback(err);
         }
 
-        job.status = 'running';
-        job.updated_at = now;
-
-        callback(null, job);
+        self.get(job.job_id, callback);
     });
 };
 
 JobBackend.prototype.setPending = function (job, callback) {
+    var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
@@ -219,10 +234,7 @@ JobBackend.prototype.setPending = function (job, callback) {
             return callback(err);
         }
 
-        job.status = 'pending';
-        job.updated_at = now;
-
-        callback(null, job);
+        self.get(job.job_id, callback);
     });
 };
 
@@ -233,7 +245,9 @@ JobBackend.prototype.setDone = function (job, callback) {
     var redisParams = [
         redisKey,
         'status', 'done',
-        'updated_at', now
+        'updated_at', now,
+        'running_elapsed_time', getDuration(job.updated_at, now),
+        'total_elapsed_time', getDuration(job.created_at, now)
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
@@ -246,10 +260,7 @@ JobBackend.prototype.setDone = function (job, callback) {
                 return callback(err);
             }
 
-            job.status = 'done';
-            job.updated_at = now;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
     });
 };
@@ -262,7 +273,9 @@ JobBackend.prototype.setFailed = function (job, error, callback) {
         redisKey,
         'status', 'failed',
         'failed_reason', error.message,
-        'updated_at', now
+        'updated_at', now,
+        'running_elapsed_time', getDuration(job.updated_at, now),
+        'total_elapsed_time', getDuration(job.created_at, now)
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams , function (err) {
@@ -275,11 +288,7 @@ JobBackend.prototype.setFailed = function (job, error, callback) {
                 return callback(err);
             }
 
-            job.status = 'failed';
-            job.updated_at = now;
-            job.failed_reason = error.message;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
     });
 };
@@ -288,10 +297,14 @@ JobBackend.prototype.setCancelled = function (job, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
+    var durationKey = job.status === 'pending' ? 'waiting_elapsed_time' : 'running_elapsed_time';
+    var durationValue = job.status === 'pending' ? getDuration(job.created_at, now) : getDuration(job.updated_at, now);
     var redisParams = [
         redisKey,
         'status', 'cancelled',
-        'updated_at', now
+        'updated_at', now,
+        durationKey, durationValue,
+        'total_elapsed_time', getDuration(job.created_at, now)
     ];
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
@@ -304,10 +317,7 @@ JobBackend.prototype.setCancelled = function (job, callback) {
                 return callback(err);
             }
 
-            job.status = 'cancelled';
-            job.updated_at = now;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
 
     });
@@ -326,7 +336,9 @@ JobBackend.prototype.setUnknown = function (job_id, callback) {
         var redisParams = [
             redisKey,
             'status', 'unknown',
-            'updated_at', now
+            'updated_at', now,
+            'running_elapsed_time', getDuration(job.updated_at, now),
+            'total_elapsed_time', getDuration(job.created_at, now)
         ];
 
         self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams ,  function (err) {
@@ -339,10 +351,7 @@ JobBackend.prototype.setUnknown = function (job_id, callback) {
                     return callback(err);
                 }
 
-                job.status = 'unknown';
-                job.updated_at = now;
-
-                callback(null, job);
+                self.get(job.job_id, callback);
             });
         });
     });
