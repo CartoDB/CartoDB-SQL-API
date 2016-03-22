@@ -60,7 +60,7 @@ describe('job elapsed times', function() {
                     method: 'GET'
                 }, {},
                 function(res, err) {
-                    next(err, res)
+                    next(err, res);
                 });
             },
             function (err, res) {
