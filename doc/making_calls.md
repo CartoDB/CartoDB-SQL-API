@@ -153,7 +153,7 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 
 ## Response errors
 
-To help you debug your SQL queries, the CartoDB SQL API returns errors as part of the JSON response. Errors come back as follows,
+To help you debug your SQL queries, the CartoDB SQL API returns the full error provided by PostgreSQL, as part of the JSON response. Error responses appear in the following format,
 
 #### Result
 
@@ -165,7 +165,7 @@ To help you debug your SQL queries, the CartoDB SQL API returns errors as part o
 }
 ```
 
-You can use these errors to help understand your SQL. For more complete documentation see the Error Codes and Solutions section of this Users Guide.
+You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through the CartoDB Editor, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
 
 
 ## Write data to your CartoDB account
