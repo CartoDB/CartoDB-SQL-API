@@ -194,6 +194,7 @@ JobBackend.prototype.get = function (job_id, callback) {
 };
 
 JobBackend.prototype.setRunning = function (job, callback) {
+    var self = this;
     var now = new Date().toISOString();
     var redisParams = [
         this.redisPrefix + job.job_id,
@@ -206,14 +207,12 @@ JobBackend.prototype.setRunning = function (job, callback) {
             return callback(err);
         }
 
-        job.status = 'running';
-        job.updated_at = now;
-
-        callback(null, job);
+        self.get(job.job_id, callback);
     });
 };
 
 JobBackend.prototype.setPending = function (job, callback) {
+    var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
@@ -227,10 +226,7 @@ JobBackend.prototype.setPending = function (job, callback) {
             return callback(err);
         }
 
-        job.status = 'pending';
-        job.updated_at = now;
-
-        callback(null, job);
+        self.get(job.job_id, callback);
     });
 };
 
@@ -254,10 +250,7 @@ JobBackend.prototype.setDone = function (job, callback) {
                 return callback(err);
             }
 
-            job.status = 'done';
-            job.updated_at = now;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
     });
 };
@@ -283,11 +276,7 @@ JobBackend.prototype.setFailed = function (job, error, callback) {
                 return callback(err);
             }
 
-            job.status = 'failed';
-            job.updated_at = now;
-            job.failed_reason = error.message;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
     });
 };
@@ -312,10 +301,7 @@ JobBackend.prototype.setCancelled = function (job, callback) {
                 return callback(err);
             }
 
-            job.status = 'cancelled';
-            job.updated_at = now;
-
-            callback(null, job);
+            self.get(job.job_id, callback);
         });
 
     });
@@ -347,10 +333,7 @@ JobBackend.prototype.setUnknown = function (job_id, callback) {
                     return callback(err);
                 }
 
-                job.status = 'unknown';
-                job.updated_at = now;
-
-                callback(null, job);
+                self.get(job.job_id, callback);
             });
         });
     });
