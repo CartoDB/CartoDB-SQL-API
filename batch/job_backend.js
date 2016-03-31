@@ -214,7 +214,7 @@ JobBackend.prototype.setRunning = function (job, index, callback) {
 
     if (!callback) {
         callback = index;
-    } else if (index || index === 0) {
+    } else if (index >= 0 && index < job.query.length) {
         job.query[index].status = 'running';
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
@@ -240,7 +240,7 @@ JobBackend.prototype.setPending = function (job, index, callback) {
 
     if (!callback) {
         callback = index;
-    } else if (index || index === 0) {
+    } else if (index >= 0 && index < job.query.length) {
         job.query[index].status = 'pending';
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
@@ -266,7 +266,7 @@ JobBackend.prototype.setDone = function (job, index, callback) {
 
     if (!callback) {
         callback = index;
-    } else if (index || index === 0) {
+    } else if (index >= 0 && index < job.query.length) {
         job.query[index].status = 'done';
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
@@ -322,7 +322,7 @@ JobBackend.prototype.setFailed = function (job, error, index, callback) {
 
     if (!callback) {
         callback = index;
-    } else if (index || index === 0) {
+    } else if (index >= 0 && index < job.query.length) {
         job.query[index].status = 'failed';
         job.query[index].failed_reason = error.message;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
@@ -355,7 +355,7 @@ JobBackend.prototype.setCancelled = function (job, index, callback) {
 
     if (!callback) {
         callback = index;
-    } else if (index || index === 0) {
+    } else if (index >= 0 && index < job.query.length) {
         job.query[index].status = 'cancelled';
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
