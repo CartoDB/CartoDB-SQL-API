@@ -324,6 +324,7 @@ JobBackend.prototype.setFailed = function (job, error, index, callback) {
         callback = index;
     } else if (index || index === 0) {
         job.query[index].status = 'failed';
+        job.query[index].failed_reason = error.message;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
 
