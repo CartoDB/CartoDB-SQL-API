@@ -51,8 +51,8 @@ describe('Use case 9: modify a pending multiquery job', function() {
             method: 'POST',
             data: querystring.stringify({
                 query: [
-                    "SELECT * FROM untitle_table_4",
-                    "select pg_sleep(3)"
+                    "select pg_sleep(3)",
+                    "SELECT * FROM untitle_table_4"
                 ]
             })
         }, {

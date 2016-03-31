@@ -198,16 +198,25 @@ describe('batch module', function() {
     it('should perform job with array of select', function (done) {
         var queries = ['select * from private_table', 'select * from private_table'];
 
+
         createJob(queries, function (err, job) {
             if (err) {
                 return done(err);
             }
 
-            batch.on('job:done', function (job_id) {
+            var queriesDone = 0;
+
+            var checkJobDone = function (job_id) {
                 if (job_id === job.job_id) {
-                    done();
+                    queriesDone += 1;
+                    if (queriesDone === queries.length) {
+                        done();
+                    }
                 }
-            });
+            };
+
+            batch.on('job:done', checkJobDone);
+            batch.on('job:pending', checkJobDone);
         });
     });
 

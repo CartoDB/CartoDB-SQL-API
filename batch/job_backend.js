@@ -17,6 +17,16 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
     var self = this;
     var job_id = uuid.v4();
     var now = new Date().toISOString();
+
+    if (Array.isArray(sql)) {
+        for (var i = 0; i < sql.length; i++) {
+            sql[i] = {
+                query: sql[i],
+                status: 'pending'
+            };
+        }
+    }
+
     var redisParams = [
         this.redisPrefix + job_id,
         'user', username,
@@ -193,14 +203,21 @@ JobBackend.prototype.get = function (job_id, callback) {
     });
 };
 
-JobBackend.prototype.setRunning = function (job, callback) {
+JobBackend.prototype.setRunning = function (job, index, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisParams = [
         this.redisPrefix + job.job_id,
         'status', 'running',
-        'updated_at', now
+        'updated_at', now,
     ];
+
+    if (!callback) {
+        callback = index;
+    } else if (index || index === 0) {
+        job.query[index].status = 'running';
+        redisParams = redisParams.concat('query', JSON.stringify(job.query));
+    }
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams, function (err) {
         if (err) {
@@ -211,7 +228,7 @@ JobBackend.prototype.setRunning = function (job, callback) {
     });
 };
 
-JobBackend.prototype.setPending = function (job, callback) {
+JobBackend.prototype.setPending = function (job, index, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
@@ -220,6 +237,13 @@ JobBackend.prototype.setPending = function (job, callback) {
         'status', 'pending',
         'updated_at', now
     ];
+
+    if (!callback) {
+        callback = index;
+    } else if (index || index === 0) {
+        job.query[index].status = 'pending';
+        redisParams = redisParams.concat('query', JSON.stringify(job.query));
+    }
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
         if (err) {
@@ -230,7 +254,7 @@ JobBackend.prototype.setPending = function (job, callback) {
     });
 };
 
-JobBackend.prototype.setDone = function (job, callback) {
+JobBackend.prototype.setDone = function (job, index, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
@@ -239,6 +263,13 @@ JobBackend.prototype.setDone = function (job, callback) {
         'status', 'done',
         'updated_at', now
     ];
+
+    if (!callback) {
+        callback = index;
+    } else if (index || index === 0) {
+        job.query[index].status = 'done';
+        redisParams = redisParams.concat('query', JSON.stringify(job.query));
+    }
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
         if (err) {
@@ -255,7 +286,30 @@ JobBackend.prototype.setDone = function (job, callback) {
     });
 };
 
-JobBackend.prototype.setFailed = function (job, error, callback) {
+JobBackend.prototype.setJobPendingAndQueryDone = function (job, index, callback) {
+    var self = this;
+    var now = new Date().toISOString();
+    var redisKey = this.redisPrefix + job.job_id;
+
+    job.query[index].status = 'done';
+
+    var redisParams = [
+        redisKey,
+        'status', 'pending',
+        'updated_at', now,
+        'query', JSON.stringify(job.query)
+    ];
+
+    this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        self.get(job.job_id, callback);
+    });
+};
+
+JobBackend.prototype.setFailed = function (job, error, index, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
@@ -265,6 +319,13 @@ JobBackend.prototype.setFailed = function (job, error, callback) {
         'failed_reason', error.message,
         'updated_at', now
     ];
+
+    if (!callback) {
+        callback = index;
+    } else if (index || index === 0) {
+        job.query[index].status = 'failed';
+        redisParams = redisParams.concat('query', JSON.stringify(job.query));
+    }
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams , function (err) {
         if (err) {
@@ -281,7 +342,7 @@ JobBackend.prototype.setFailed = function (job, error, callback) {
     });
 };
 
-JobBackend.prototype.setCancelled = function (job, callback) {
+JobBackend.prototype.setCancelled = function (job, index, callback) {
     var self = this;
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
@@ -290,6 +351,13 @@ JobBackend.prototype.setCancelled = function (job, callback) {
         'status', 'cancelled',
         'updated_at', now
     ];
+
+    if (!callback) {
+        callback = index;
+    } else if (index || index === 0) {
+        job.query[index].status = 'cancelled';
+        redisParams = redisParams.concat('query', JSON.stringify(job.query));
+    }
 
     this.metadataBackend.redisCmd(this.db, 'HMSET', redisParams ,  function (err) {
         if (err) {

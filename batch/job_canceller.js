@@ -8,6 +8,16 @@ function JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend) 
     this.jobBackend = jobBackend;
 }
 
+function getIndexOfRunningQuery(job) {
+    if (Array.isArray(job.query)) {
+        for (var i = 0; i < job.query.length; i++) {
+            if (job.query[i].status === 'running') {
+                return i;
+            }
+        }
+    }
+}
+
 JobCanceller.prototype.cancel = function (job_id, callback) {
     var self = this;
 
@@ -36,7 +46,9 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
                     return callback(err);
                 }
 
-                self.jobBackend.setCancelled(job, callback);
+                var queryIndex = getIndexOfRunningQuery(job);
+
+                self.jobBackend.setCancelled(job, queryIndex, callback);
             });
         });
     });
