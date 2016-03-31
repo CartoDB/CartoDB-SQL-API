@@ -94,7 +94,7 @@ JobRunner.prototype._run = function (job, query, callback) {
                     return self.jobBackend.get(job.job_id, callback);
                 }
 
-                return self.jobBackend.setFailed(job, err, callback);
+                return self.jobBackend.setFailed(job, err, query.index, callback);
             }
 
             if (isLastQuery(job, query.index)) {
