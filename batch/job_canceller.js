@@ -48,7 +48,13 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
 
                 var queryIndex = getIndexOfRunningQuery(job);
 
-                self.jobBackend.setCancelled(job, queryIndex, callback);
+                self.jobBackend.setCancelled(job, queryIndex, function (err, job) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, job, queryIndex);
+                });
             });
         });
     });
@@ -57,7 +63,7 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
 JobCanceller.prototype.drain = function (job_id, callback) {
     var self = this;
 
-    this.cancel(job_id, function (err, job) {
+    this.cancel(job_id, function (err, job, queryIndex) {
         if (err && err.name === 'CancelNotAllowedError') {
             return callback(err);
         }
@@ -67,7 +73,7 @@ JobCanceller.prototype.drain = function (job_id, callback) {
             return self.jobBackend.setUnknown(job_id, callback);
         }
 
-        self.jobBackend.setPending(job, callback);
+        self.jobBackend.setPending(job, queryIndex, callback);
     });
 
 };

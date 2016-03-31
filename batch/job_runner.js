@@ -102,7 +102,6 @@ JobRunner.prototype._run = function (job, query, callback) {
                 return self.jobBackend.setDone(job, query.index, callback);
             }
 
-
             self.jobBackend.setJobPendingAndQueryDone(job, query.index, function (err, job) {
                 if (err) {
                     return callback(err);
