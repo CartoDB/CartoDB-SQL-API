@@ -1,13 +1,32 @@
 'use strict';
 
-function JobSubscriber(redis) {
+function JobSubscriber(redis, metadataBackend) {
     this.channel = 'batch:hosts';
     this.client = redis.createClient(global.settings.redis_port, global.settings.redis_host);
+    this.metadataBackend = metadataBackend;
+    this.db = 5;
+    this.redisPrefix = 'batch:queues:';
 }
 
 JobSubscriber.prototype.subscribe = function (onMessage) {
-    this.client.subscribe(this.channel);
-    this.client.on('message', onMessage);
+    var self = this;
+    var redisParams = [ this.redisPrefix + '*' ];
+
+    self.metadataBackend.redisCmd(self.db, 'KEYS', redisParams , function (err, queues) {
+        if (err) {
+            console.error(err);
+        }
+
+        if (queues) {
+            queues.forEach(function (queue) {
+                var host = queue.substr(queue.lastIndexOf(':') + 1);
+                onMessage(self.channel, host);
+            });
+        }
+
+        self.client.subscribe(self.channel);
+        self.client.on('message', onMessage);
+    });
 };
 
 JobSubscriber.prototype.unsubscribe = function () {

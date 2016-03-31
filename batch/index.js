@@ -13,7 +13,7 @@ var JobBackend = require('./job_backend');
 var Batch = require('./batch');
 
 module.exports = function batchFactory (metadataBackend) {
-    var jobSubscriber = new JobSubscriber(redis);
+    var jobSubscriber = new JobSubscriber(redis, metadataBackend);
     var jobQueuePool = new JobQueuePool(metadataBackend);
     var jobPublisher = new JobPublisher(redis);
     var jobQueue =  new JobQueue(metadataBackend);

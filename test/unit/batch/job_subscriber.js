@@ -23,8 +23,15 @@ describe('batch API job subscriber', function () {
                 self.redis.unsubscribeIsCalledWithValidArgs = isValidFirstArg;
             }
         };
+        this.metadataBackend = {
+            redisCmd: function () {
+                var callback = arguments[3];
 
-        this.jobSubscriber = new JobSubscriber(this.redis);
+                callback(null, []);
+            }
+        };
+
+        this.jobSubscriber = new JobSubscriber(this.redis, this.metadataBackend);
     });
 
     it('.subscribe() should listen for incoming messages', function () {
