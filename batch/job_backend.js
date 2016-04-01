@@ -4,6 +4,19 @@ var uuid = require('node-uuid');
 var queue = require('queue-async');
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
 
+function setPendingIfMutiqueryJob(sql) {
+    if (Array.isArray(sql)) {
+        for (var j = 0; j < sql.length; j++) {
+            sql[j] = {
+                query: sql[j],
+                status: 'pending'
+            };
+        }
+    }
+
+    return sql;
+}
+
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     this.db = 5;
     this.redisPrefix = 'batch:jobs:';
@@ -18,14 +31,7 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
     var job_id = uuid.v4();
     var now = new Date().toISOString();
 
-    if (Array.isArray(sql)) {
-        for (var i = 0; i < sql.length; i++) {
-            sql[i] = {
-                query: sql[i],
-                status: 'pending'
-            };
-        }
-    }
+    sql = setPendingIfMutiqueryJob(sql);
 
     var redisParams = [
         this.redisPrefix + job_id,
@@ -71,6 +77,16 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
         if (job.status !== 'pending') {
             return callback(new Error('Job is not pending, it cannot be updated'));
         }
+
+        if (Array.isArray(job.query)) {
+            for (var i = 0; i < job.query.length; i++) {
+                if (job.query[i].status !== 'pending') {
+                    return callback(new Error('Job is not pending, it cannot be updated'));
+                }
+            }
+        }
+
+        sql = setPendingIfMutiqueryJob(sql);
 
         var now = new Date().toISOString();
         var redisParams = [
