@@ -82,21 +82,21 @@ describe('Use case 1: cancel and modify a done job', function () {
         }, 50);
     });
 
-    it('Step 3, cancel a done job should give an error', function (done){
+    it('Step 3, delete a done job should remove the job', function (done){
         assert.response(app, {
             url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {
-            status: 400
+            status: 200
         }, function(res) {
-            var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is done, cancel is not allowed");
+            var job = JSON.parse(res.body);
+            assert.equal(job.job_id, doneJob.job_id);
             done();
         });
     });
 
-    it('Step 4, modify a done job should give an error', function (done){
+    it('Step 4, modify a removed job should give an error', function (done){
         assert.response(app, {
             url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -108,7 +108,7 @@ describe('Use case 1: cancel and modify a done job', function () {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is not pending, it cannot be updated");
+            assert.equal(errors.error[0], "Job with id " + doneJob.job_id + " not found");
             done();
         });
     });

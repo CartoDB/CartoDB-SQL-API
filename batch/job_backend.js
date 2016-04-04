@@ -76,7 +76,40 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
 
             self.get(job_id, callback);
         });
+    });
+};
 
+JobBackend.prototype.delete = function (job_id, callback) {
+    var self = this;
+    var redisParams = [
+        this.redisPrefix + job_id,
+        'user',
+        'status',
+        'query',
+        'created_at',
+        'updated_at',
+        'failed_reason'
+    ];
+
+    this.get(job_id, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+
+        var username = job.user;
+
+        self.metadataBackend.redisCmd(self.db, 'HDEL', redisParams , function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self.userIndexer.remove(username, job_id, function (err) {
+              if (err) {
+                  return callback(err);
+              }
+              callback(null, job);
+            });
+        });
     });
 };
 

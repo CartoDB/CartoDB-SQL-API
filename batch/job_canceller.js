@@ -21,9 +21,7 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
         }
 
         if (job.status !== 'running') {
-            var cancelNotAllowedError = new Error('Job is ' + job.status + ', cancel is not allowed');
-            cancelNotAllowedError.name  = 'CancelNotAllowedError';
-            return callback(cancelNotAllowedError);
+            return self.jobBackend.delete(job.job_id, callback);
         }
 
         self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
