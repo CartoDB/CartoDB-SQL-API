@@ -2,6 +2,7 @@
 
 var redis = require('redis');
 var JobRunner = require('./job_runner');
+var QueryRunner = require('./query_runner');
 var JobCanceller = require('./job_canceller');
 var JobQueuePool = require('./job_queue_pool');
 var JobSubscriber = require('./job_subscriber');
@@ -20,7 +21,8 @@ module.exports = function batchFactory (metadataBackend) {
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobRunner = new JobRunner(jobBackend, userDatabaseMetadataService);
+    var queryRunner = new QueryRunner();
+    var jobRunner = new JobRunner(jobBackend, jobQueue, queryRunner, userDatabaseMetadataService);
     var jobCanceller = new JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend);
 
     return new Batch(jobSubscriber, jobQueuePool, jobRunner, jobCanceller);

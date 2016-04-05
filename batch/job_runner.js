@@ -1,11 +1,40 @@
 'use strict';
 
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
-var PSQL = require('cartodb-psql');
 
+function getNextQuery(job) {
+    if (!Array.isArray(job.query)) {
+        return {
+            query: job.query
+        };
+    }
 
-function JobRunner(jobBackend, userDatabaseMetadataService) {
+    for (var i = 0; i < job.query.length; i++) {
+        if (job.query[i].status === 'pending') {
+            return {
+                index: i,
+                query: job.query[i].query
+            };
+        }
+    }
+}
+
+function isLastQuery(job, index) {
+    if (!Array.isArray(job.query)) {
+        return true;
+    }
+
+    if (index >= (job.query.length -1)) {
+        return true;
+    }
+
+    return false;
+}
+
+function JobRunner(jobBackend, jobQueue, queryRunner,userDatabaseMetadataService) {
     this.jobBackend = jobBackend;
+    this.jobQueue = jobQueue;
+    this.queryRunner = queryRunner;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
 }
 
@@ -18,60 +47,73 @@ JobRunner.prototype.run = function (job_id, callback) {
         }
 
         if (job.status !== 'pending') {
-            var error = new Error('Cannot run job ' + job.job_id + ' due to its status is ' + job.status);
-            error.name = 'InvalidJobStatus';
-            return callback(error);
+            var invalidJobStatusError = new Error([
+                'Cannot run job',
+                job.job_id,
+                'due to its status is',
+                job.status
+            ].join(' '));
+            invalidJobStatusError.name = 'InvalidJobStatus';
+            return callback(invalidJobStatusError);
         }
 
-        self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
+        var query = getNextQuery(job);
+
+        if (!query) {
+            var queryNotFoundError = new Error([
+                'Cannot run job',
+                job.job_id,
+                ', there is no query to run'
+            ].join(' '));
+            queryNotFoundError.name = 'QueryNotFound';
+            return callback(queryNotFoundError);
+        }
+
+        self.jobBackend.setRunning(job, query.index, function (err, job) {
             if (err) {
                 return callback(err);
             }
 
-            self.jobBackend.setRunning(job, function (err, job) {
-                if (err) {
-                    return callback(err);
-                }
-
-                self._query(job, userDatabaseMetadata, callback);
-            });
+            self._run(job, query, callback);
         });
     });
 };
 
-JobRunner.prototype._query = function (job, userDatabaseMetadata, callback) {
+JobRunner.prototype._run = function (job, query, callback) {
     var self = this;
-
-    var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-
-    pg.query('SET statement_timeout=0', function (err) {
-        if(err) {
-            return self.jobBackend.setFailed(job, err, callback);
+    self.userDatabaseMetadataService.getUserMetadata(job.user, function (err, userDatabaseMetadata) {
+        if (err) {
+            return callback(err);
         }
 
-        // mark query to allow to users cancel their queries whether users request for it
-        var sql = job.query + ' /* ' + job.job_id + ' */';
-
-        pg.eventedQuery(sql, function (err, query) {
+        self.queryRunner.run(job.job_id, query.query, userDatabaseMetadata, function (err /*, result */) {
             if (err) {
-                return self.jobBackend.setFailed(job, err, callback);
-            }
-
-            query.on('error', function (err) {
-                // if query has been cancelled then it's going to get the current job status saved by query_canceller
+                // if query has been cancelled then it's going to get the current
+                // job status saved by query_canceller
                 if (errorCodes[err.code.toString()] === 'query_canceled') {
                     return self.jobBackend.get(job.job_id, callback);
                 }
 
-                self.jobBackend.setFailed(job, err, callback);
-            });
+                return self.jobBackend.setFailed(job, err, query.index, callback);
+            }
 
-            query.on('end', function (result) {
-                // only if result is present then query is done sucessfully otherwise an error has happened
-                // and it was handled by error listener
-                if (result) {
-                    return self.jobBackend.setDone(job, callback);
+            if (isLastQuery(job, query.index)) {
+                console.log('set done', query.index);
+                return self.jobBackend.setDone(job, query.index, callback);
+            }
+
+            self.jobBackend.setJobPendingAndQueryDone(job, query.index, function (err, job) {
+                if (err) {
+                    return callback(err);
                 }
+
+                self.jobQueue.enqueue(job.job_id, userDatabaseMetadata.host, function (err){
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, job);
+                });
             });
         });
     });
