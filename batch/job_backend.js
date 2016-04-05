@@ -3,13 +3,14 @@
 var uuid = require('node-uuid');
 var queue = require('queue-async');
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
+var jobStatus = require('./job_status');
 
 function setPendingIfMutiqueryJob(sql) {
     if (Array.isArray(sql)) {
         for (var j = 0; j < sql.length; j++) {
             sql[j] = {
                 query: sql[j],
-                status: 'pending'
+                status: jobStatus.PENDING
             };
         }
     }
@@ -36,7 +37,7 @@ JobBackend.prototype.create = function (username, sql, host, callback) {
     var redisParams = [
         this.redisPrefix + job_id,
         'user', username,
-        'status', 'pending',
+        'status', jobStatus.PENDING,
         'query', JSON.stringify(sql),
         'created_at', now,
         'updated_at', now
@@ -74,13 +75,13 @@ JobBackend.prototype.update = function (job_id, sql, callback) {
             return callback(err);
         }
 
-        if (job.status !== 'pending') {
+        if (job.status !== jobStatus.PENDING) {
             return callback(new Error('Job is not pending, it cannot be updated'));
         }
 
         if (Array.isArray(job.query)) {
             for (var i = 0; i < job.query.length; i++) {
-                if (job.query[i].status !== 'pending') {
+                if (job.query[i].status !== jobStatus.PENDING) {
                     return callback(new Error('Job is not pending, it cannot be updated'));
                 }
             }
@@ -224,14 +225,14 @@ JobBackend.prototype.setRunning = function (job, index, callback) {
     var now = new Date().toISOString();
     var redisParams = [
         this.redisPrefix + job.job_id,
-        'status', 'running',
+        'status', jobStatus.RUNNING,
         'updated_at', now,
     ];
 
     if (!callback) {
         callback = index;
     } else if (index >= 0 && index < job.query.length) {
-        job.query[index].status = 'running';
+        job.query[index].status = jobStatus.RUNNING;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
 
@@ -250,14 +251,14 @@ JobBackend.prototype.setPending = function (job, index, callback) {
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
         redisKey,
-        'status', 'pending',
+        'status', jobStatus.PENDING,
         'updated_at', now
     ];
 
     if (!callback) {
         callback = index;
     } else if (index >= 0 && index < job.query.length) {
-        job.query[index].status = 'pending';
+        job.query[index].status = jobStatus.PENDING;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
 
@@ -276,14 +277,14 @@ JobBackend.prototype.setDone = function (job, index, callback) {
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
         redisKey,
-        'status', 'done',
+        'status', jobStatus.DONE,
         'updated_at', now
     ];
 
     if (!callback) {
         callback = index;
     } else if (index >= 0 && index < job.query.length) {
-        job.query[index].status = 'done';
+        job.query[index].status = jobStatus.DONE;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
 
@@ -307,11 +308,11 @@ JobBackend.prototype.setJobPendingAndQueryDone = function (job, index, callback)
     var now = new Date().toISOString();
     var redisKey = this.redisPrefix + job.job_id;
 
-    job.query[index].status = 'done';
+    job.query[index].status = jobStatus.DONE;
 
     var redisParams = [
         redisKey,
-        'status', 'pending',
+        'status', jobStatus.PENDING,
         'updated_at', now,
         'query', JSON.stringify(job.query)
     ];
@@ -331,7 +332,7 @@ JobBackend.prototype.setFailed = function (job, error, index, callback) {
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
         redisKey,
-        'status', 'failed',
+        'status', jobStatus.FAILED,
         'failed_reason', error.message,
         'updated_at', now
     ];
@@ -339,7 +340,7 @@ JobBackend.prototype.setFailed = function (job, error, index, callback) {
     if (!callback) {
         callback = index;
     } else if (index >= 0 && index < job.query.length) {
-        job.query[index].status = 'failed';
+        job.query[index].status = jobStatus.FAILED;
         job.query[index].failed_reason = error.message;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
@@ -365,14 +366,14 @@ JobBackend.prototype.setCancelled = function (job, index, callback) {
     var redisKey = this.redisPrefix + job.job_id;
     var redisParams = [
         redisKey,
-        'status', 'cancelled',
+        'status', jobStatus.CANCELLED,
         'updated_at', now
     ];
 
     if (!callback) {
         callback = index;
     } else if (index >= 0 && index < job.query.length) {
-        job.query[index].status = 'cancelled';
+        job.query[index].status = jobStatus.CANCELLED;
         redisParams = redisParams.concat('query', JSON.stringify(job.query));
     }
 
@@ -404,7 +405,7 @@ JobBackend.prototype.setUnknown = function (job_id, callback) {
         var redisKey = self.redisPrefix + job.job_id;
         var redisParams = [
             redisKey,
-            'status', 'unknown',
+            'status', jobStatus.UNKNOWN,
             'updated_at', now
         ];
 

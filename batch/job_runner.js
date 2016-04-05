@@ -1,6 +1,7 @@
 'use strict';
 
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
+var jobStatus = require('./job_status');
 
 function getNextQuery(job) {
     if (!Array.isArray(job.query)) {
@@ -10,7 +11,7 @@ function getNextQuery(job) {
     }
 
     for (var i = 0; i < job.query.length; i++) {
-        if (job.query[i].status === 'pending') {
+        if (job.query[i].status === jobStatus.PENDING) {
             return {
                 index: i,
                 query: job.query[i].query
@@ -46,7 +47,7 @@ JobRunner.prototype.run = function (job_id, callback) {
             return callback(err);
         }
 
-        if (job.status !== 'pending') {
+        if (job.status !== jobStatus.PENDING) {
             var invalidJobStatusError = new Error([
                 'Cannot run job',
                 job.job_id,
@@ -98,7 +99,6 @@ JobRunner.prototype._run = function (job, query, callback) {
             }
 
             if (isLastQuery(job, query.index)) {
-                console.log('set done', query.index);
                 return self.jobBackend.setDone(job, query.index, callback);
             }
 
