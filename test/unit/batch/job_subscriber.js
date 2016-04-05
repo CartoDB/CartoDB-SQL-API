@@ -21,10 +21,20 @@ describe('batch API job subscriber', function () {
             unsubscribe: function () {
                 var isValidFirstArg = arguments[0] === 'batch:hosts';
                 self.redis.unsubscribeIsCalledWithValidArgs = isValidFirstArg;
+            },
+            removeAllListeners: function () {
+                return this;
+            }
+        };
+        this.queueSeeker = {
+            seek: function () {
+                var callback = arguments[1];
+
+                callback(null, []);
             }
         };
 
-        this.jobSubscriber = new JobSubscriber(this.redis);
+        this.jobSubscriber = new JobSubscriber(this.redis, this.queueSeeker);
     });
 
     it('.subscribe() should listen for incoming messages', function () {

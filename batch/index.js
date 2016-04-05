@@ -6,6 +6,7 @@ var QueryRunner = require('./query_runner');
 var JobCanceller = require('./job_canceller');
 var JobQueuePool = require('./job_queue_pool');
 var JobSubscriber = require('./job_subscriber');
+var QueueSeeker = require('./queue_seeker');
 var UserDatabaseMetadataService = require('./user_database_metadata_service');
 var JobPublisher = require('./job_publisher');
 var JobQueue = require('./job_queue');
@@ -14,7 +15,8 @@ var JobBackend = require('./job_backend');
 var Batch = require('./batch');
 
 module.exports = function batchFactory (metadataBackend) {
-    var jobSubscriber = new JobSubscriber(redis);
+    var queueSeeker = new QueueSeeker(metadataBackend);
+    var jobSubscriber = new JobSubscriber(redis, queueSeeker);
     var jobQueuePool = new JobQueuePool(metadataBackend);
     var jobPublisher = new JobPublisher(redis);
     var jobQueue =  new JobQueue(metadataBackend);
