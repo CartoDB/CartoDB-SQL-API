@@ -4,25 +4,25 @@ var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
-
+var CachedQueryTables = require('../services/cached-query-tables');
 var AuthApi = require('../auth/auth_api');
+var queryMayWrite = require('../utils/query_may_write');
 
 var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-var generateCacheKey = require('../utils/cache_key_generator');
 var handleException = require('../utils/error_handler');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
 var cdbReq = new CdbRequest();
 
-function QueryController(userDatabaseService, queryTablesApi, statsd_client) {
-    this.queryTablesApi = queryTablesApi;
+function QueryController(userDatabaseService, tableCache, statsd_client) {
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
+    this.queryTables = new CachedQueryTables(tableCache);
 }
 
 QueryController.prototype.route = function (app) {
@@ -125,6 +125,8 @@ QueryController.prototype.handleQuery = function (req, res) {
             function queryExplain(err, dbParams, authDbParams) {
                 assert.ifError(err);
 
+                var next = this;
+
                 dbopts = dbParams;
 
                 if ( req.profiler ) {
@@ -133,22 +135,30 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                self.queryTablesApi.getAffectedTablesAndLastUpdatedTime(authDbParams, sql, this);
+                var pg = new PSQL(authDbParams, {}, { destroyOnError: true });
+                var skipCache = !!dbopts.authenticated;
+
+                self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
+                    if (err) {
+                        var errorMessage = (err && err.message) || 'unknown error';
+                        console.error("Error on query explain '%s': %s", sql, errorMessage);
+                    }
+                    return next(null, result);
+                });
             },
-            function setHeaders(err, queryExplainResult) {
+            function setHeaders(err, affectedTables) {
                 assert.ifError(err);
 
+                var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
                     req.profiler.done('queryExplain');
                 }
 
                 checkAborted('setHeaders');
-
-                if (!dbopts.authenticated) {
-                    var affected_tables = queryExplainResult.affectedTables;
-                    for ( var i = 0; i < affected_tables.length; ++i ) {
-                        var t = affected_tables[i];
-                        if ( t.match(/\bpg_/) ) {
+                if (!dbopts.authenticated && !!affectedTables) {
+                    for ( var i = 0; i < affectedTables.tables.length; ++i ) {
+                        var t = affectedTables.tables[i];
+                        if ( t.table_name.match(/\bpg_/) ) {
                             var e = new SyntaxError("system tables are forbidden");
                             e.http_status = 403;
                             throw(e);
@@ -171,16 +181,20 @@ QueryController.prototype.handleQuery = function (req, res) {
                 if (cachePolicy === 'persist') {
                     res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
-                    var maxAge = (queryExplainResult.mayWrite) ? 0 : ONE_YEAR_IN_SECONDS;
+                    var maxAge = (mayWrite) ? 0 : ONE_YEAR_IN_SECONDS;
                     res.header('Cache-Control', 'no-cache,max-age='+maxAge+',must-revalidate,public');
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
-                if (queryExplainResult.affectedTables.length > 0 && !queryExplainResult.mayWrite) {
-                    res.header('X-Cache-Channel', generateCacheKey(dbopts.dbname, queryExplainResult.affectedTables));
+                if (!!affectedTables && affectedTables.tables.length > 0 && !mayWrite) {
+                    res.header('X-Cache-Channel', affectedTables.getCacheChannel());
+                    res.header('Surrogate-Key', affectedTables.key().join(' '));
                 }
 
-                res.header('Last-Modified', new Date(queryExplainResult.lastModified).toUTCString());
+                if(!!affectedTables) {
+                    res.header('Last-Modified',
+                               new Date(affectedTables.getLastUpdatedAt(Number(new Date()))).toUTCString());
+                }
 
                 return null;
             },

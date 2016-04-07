@@ -1,5 +1,30 @@
-1.25.4 - 2016-mm-dd
+1.27.1 - 2016-mm-dd
 -------------------
+
+
+1.27.0 - 2016-04-05
+-------------------
+
+New features:
+
+ * Add support for multiquery-jobs in Batch API #280
+ * Add queue discovering for Batch processing at service startup #282
+
+Bug fixes:
+
+ * Fix issue in Batch API when after a period of inactivity it does not process jobs
+
+
+1.26.0 - 2016-03-08
+-------------------
+
+New features:
+
+ * Add [Surrogate-Key](https://github.com/CartoDB/cartodb/wiki/CartoDB-Surrogate-Keys) headers to responses
+
+Enhancements:
+
+ * Use new `node-cartodb-query-tables` library to obtain affected tables in queries
 
 
 1.25.3 - 2016-02-02

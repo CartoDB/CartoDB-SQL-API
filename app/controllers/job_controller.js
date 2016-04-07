@@ -221,6 +221,23 @@ JobController.prototype.getJob = function (req, res) {
     );
 };
 
+function isValidJob(sql) {
+    if (_.isArray(sql)) {
+        for (var i = 0; i < sql.length; i++) {
+            if (!_.isString(sql[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    if (!_.isString(sql)) {
+        return false;
+    }
+
+    return true;
+}
+
 JobController.prototype.createJob = function (req, res) {
     var self = this;
     var body = (req.body) ? req.body : {};
@@ -228,8 +245,8 @@ JobController.prototype.createJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(sql)) {
-        return handleException(new Error("You must indicate a sql query"), res);
+    if (!isValidJob(sql)) {
+        return handleException(new Error("You must indicate a valid SQL query"), res);
     }
 
     if ( req.profiler ) {
@@ -300,7 +317,7 @@ JobController.prototype.updateJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(sql)) {
+    if (!isValidJob(sql)) {
         return handleException(new Error("You must indicate a sql query"), res);
     }
 

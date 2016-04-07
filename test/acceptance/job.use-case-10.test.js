@@ -26,7 +26,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var batchFactory = require('../../batch');
 
-describe('Use case 2: cancel a running job', function() {
+describe('Use case 1: cancel and modify a done multiquery job', function () {
 
     var batch = batchFactory(metadataBackend);
 
@@ -41,94 +41,68 @@ describe('Use case 2: cancel a running job', function() {
         });
     });
 
-    var runningJob = {};
-    var cancelledJob = {};
+    var doneJob = {};
 
-    it('Step 1, should create a new job', function (done){
+    it('Step 1, should create a multiquery job', function (done) {
         assert.response(app, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
-                query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
+                query: [
+                    "SELECT * FROM untitle_table_4",
+                    "SELECT * FROM untitle_table_4",
+                    "SELECT * FROM untitle_table_4"
+                ]
             })
         }, {
             status: 201
-        }, function(res) {
-            runningJob = JSON.parse(res.body);
+        }, function (res) {
+            doneJob = JSON.parse(res.body);
             done();
         });
     });
 
-    it('Step 2, job should be running', function (done){
+    it('Step 2, multiquery job should be done', function (done) {
         var interval = setInterval(function () {
             assert.response(app, {
-                url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
+                url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function (res) {
                 var job = JSON.parse(res.body);
-                if (job.status === "running") {
+                if (job.status === "done") {
                     clearInterval(interval);
                     done();
-                } else if (job.status === "done" || job.status === "failed" || job.status === "cancelled") {
+                } else if (job.status === "failed" || job.status === "cancelled") {
                     clearInterval(interval);
-                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                } else {
+                    console.log('Job ' + job.job_id + ' is ' + job.status + ', expecting to be done');
                 }
             });
         }, 50);
     });
 
-    it('Step 3, cancel a job', function (done){
+    it('Step 3, cancel a done multiquery job should give an error', function (done){
         assert.response(app, {
-            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'DELETE'
-        }, {
-            status: 200
-        }, function(res) {
-            cancelledJob = JSON.parse(res.body);
-            assert.equal(cancelledJob.status, "cancelled");
-            done();
-        });
-    });
-
-    it('Step 4, job should be cancelled', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 200
-        }, function(res) {
-            var job = JSON.parse(res.body);
-            if (job.status === "cancelled") {
-                done();
-            } else {
-                done(new Error('Job status is not cancelled, ' + job.status));
-            }
-        });
-    });
-
-    it('Step 5, cancel a cancelled should give an error', function (done) {
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is cancelled, cancel is not allowed");
+            assert.equal(errors.error[0], "Job is done, cancel is not allowed");
             done();
         });
     });
 
-    it('Step 5, modify a cancelled job should give an error', function (done){
+    it('Step 4, modify a done multiquery job should give an error', function (done){
         assert.response(app, {
-            url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({

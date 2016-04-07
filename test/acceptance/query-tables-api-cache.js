@@ -44,7 +44,7 @@ describe('query-tables-api', function() {
             getCacheStatus(function(err, cacheStatus) {
                 assert.ok(!err, err);
                 assert.equal(cacheStatus.explain.keys, 1);
-                assert.equal(cacheStatus.explain.hits, 1);
+                assert.equal(cacheStatus.explain.hits, 0);
 
                 done();
             });
@@ -58,7 +58,31 @@ describe('query-tables-api', function() {
             getCacheStatus(function(err, cacheStatus) {
                 assert.ok(!err, err);
                 assert.equal(cacheStatus.explain.keys, 1);
-                assert.equal(cacheStatus.explain.hits, 2);
+                assert.equal(cacheStatus.explain.hits, 1);
+
+                done();
+            });
+        });
+    });
+
+    it('should skip cache to retrieve affected tables', function(done) {
+        var authenticatedRequest = {
+            url: '/api/v1/sql?' + qs.stringify({
+                q: 'SELECT * FROM untitle_table_4',
+                api_key: '1234'
+            }),
+            headers: {
+                host: 'vizzuality.cartodb.com'
+            },
+            method: 'GET'
+        };
+        assert.response(app, authenticatedRequest, RESPONSE_OK, function(res, err) {
+            assert.ok(!err, err);
+
+            getCacheStatus(function(err, cacheStatus) {
+                assert.ok(!err, err);
+                assert.equal(cacheStatus.explain.keys, 1);
+                assert.equal(cacheStatus.explain.hits, 0);
 
                 done();
             });

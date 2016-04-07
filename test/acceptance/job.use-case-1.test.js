@@ -108,7 +108,7 @@ describe('Use case 1: cancel and modify a done job', function () {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is not pending, it couldn't be updated");
+            assert.equal(errors.error[0], "Job is not pending, it cannot be updated");
             done();
         });
     });

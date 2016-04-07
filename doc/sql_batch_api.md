@@ -1,6 +1,6 @@
 # SQL Batch API
 
-The SQL Batch API supports a REST endpoint for long-running queries. This is useful for evaluating any timeouts due to endpoint fails. You can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [delete](#delete-a-job). Job instances are stored on a [Redis server and contain a TTL key](http://redis.io/commands/ttl), which CartoDB has defined to timeout at 48 hours after a job resolution. You can then use the list results for job scheduling, which implements First-In First-Out (FIFO) queue rules.
+The SQL Batch API supports a REST endpoint for long-running queries. This is useful for evaluating any timeouts due to endpoint fails. You can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [delete](#delete-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one statement. CartoDB has defined job instances to timeout at 48 hours after a job resolution. You can then use the list results for job scheduling, which implements First-In First-Out (FIFO) queue rules.
 
 
 ## SQL Batch API Job Schema
@@ -31,12 +31,12 @@ Name | Description
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT * FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-15T07:36:25Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT * FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -49,7 +49,7 @@ Creates an SQL Batch API job request.
 ```bash
 HEADERS: POST /api/v2/sql/job 
 BODY: {
-  query: ‘SELECT * FROM user_dataset’
+  	  query: ‘SELECT * FROM user_dataset’
 }
 ```
 
@@ -58,12 +58,12 @@ BODY: {
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT * FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-15T07:36:25Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT * FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -81,12 +81,12 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT * FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-15T07:36:25Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT * FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -104,19 +104,19 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: [{
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT * FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-15T07:36:25Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT * FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-15T07:36:25Z”
 }, {
-“job_id”: “ba25ed54-75b4-431b-af27-eb6b9e5428ff”,
-“user”: “cartofante” 
-“query”: “DELETE FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:43:12Z”,
-“updated_at”: “2015-12-15T07:43:12Z”
+	 “job_id”: “ba25ed54-75b4-431b-af27-eb6b9e5428ff”,
+	 “user”: “cartofante” 
+	 “query”: “DELETE FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:43:12Z”,
+	 “updated_at”: “2015-12-15T07:43:12Z”
 }]
 ```
 
@@ -127,12 +127,12 @@ To update an SQL Batch API job, make a PUT request with the following parameters
 ```bash
 HEADERS: PUT /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT cartodb_id FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-15T07:36:25Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT cartodb_id FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -141,12 +141,12 @@ BODY: {
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT cartodb_id FROM user_dataset”,
-“status”: “pending”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-17T15:45:56Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT cartodb_id FROM user_dataset”,
+	 “status”: “pending”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-17T15:45:56Z”
 }
 ```
 
@@ -154,7 +154,7 @@ BODY: {
 
 ```bash
 errors: [
-	“Job is not pending, it couldn't be updated”
+	 “The job status is not pending, it cannot be updated”
 ]
 ```
 
@@ -163,7 +163,7 @@ If this is the case, make a PATCH request with the following parameters.
 ```bash
 HEADERS: PATCH /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {
-“query”: “SELECT cartodb_id FROM user_dataset”,
+	 “query”: “SELECT cartodb_id FROM user_dataset”,
 }
 ```
 
@@ -186,11 +186,57 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-“job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-“user”: “cartofante” 
-“query”: “SELECT * FROM user_dataset”,
-“status”: “cancelled”,
-“created_at”: “2015-12-15T07:36:25Z”,
-“updated_at”: “2015-12-17T06:22:42Z”
+	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	 “user”: “cartofante” 
+	 “query”: “SELECT * FROM user_dataset”,
+	 “status”: “cancelled”,
+	 “created_at”: “2015-12-15T07:36:25Z”,
+	 “updated_at”: “2015-12-17T06:22:42Z”
 }
 ```
+
+## Multi Query Batch Jobs
+
+In some cases, you may need to run multiple SQL queries in one statement. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed.
+
+```bash
+HEADERS: POST /api/v2/sql/job 
+BODY: {
+	 query: [
+		   ‘SELECT * FROM user_dataset_0’,
+		   ‘SELECT * FROM user_dataset_1’,
+		   ‘SELECT * FROM user_dataset_2’
+	  ]
+}
+```
+
+#### Response
+
+```bash
+HEADERS: 201 CREATED; application/json
+BODY: {
+	   “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+	   “user”: “cartofante” 
+	   “query”:  [{
+			“query”: “SELECT * FROM user_dataset_0”,
+			“status”: “pending”
+	   }, {
+		    “query”: “SELECT * FROM user_dataset_1”,
+		    “status”: “pending”
+	   }, {
+		    “query”: “SELECT * FROM user_dataset_2”,
+			“status”: “pending”
+}],
+	    “status”: “pending”,
+		“created_at”: “2015-12-15T07:36:25Z”,
+		“updated_at”: “2015-12-15T07:36:25Z”
+}
+```
+
+**Note:** The SQL Batch API returns a job status for both the parent Multi Query request, and for each child query within the request. The order in which each query is executed is guaranteed. Here are the possible status results for Multi Query batch jobs: 
+
+- If one query within the Multi Query batch fails, the `"status": "failed"` is returned for both the job and the query, and any "pending" queries will not be processed
+
+- Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
+
+- If you delete the Multi Query batch job between queries, the job status changes to `"status": "cancelled"` for the Multi Query batch job, but each of the child queries are changed to `"status": "pending"` at the point after it was cancelled. This ensure that no query was cancelled, but the batch array was cancelled
