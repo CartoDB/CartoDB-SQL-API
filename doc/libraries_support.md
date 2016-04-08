@@ -1,4 +1,4 @@
-# Libraries in different languages
+# Libraries in Different Languages
 
 To make things easier for developers, we provide client libraries for different programming languages and caching functionalities.
 
@@ -18,7 +18,7 @@ To make things easier for developers, we provide client libraries for different 
   Very basic example of how to access CartoDB SQL API. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
 
 - **NET**  
-  .NET library for authenticating with CartoDB using an API key, based on work started by [The Data Republic](http://www.thedatarepublic.com/). [Fork it on GitHub!](https://github.com/thedatarepublic/CartoDBClientDotNET)
+  .NET library for authenticating with CartoDB using an API Key, based on work started by [The Data Republic](http://www.thedatarepublic.com/). [Fork it on GitHub!](https://github.com/thedatarepublic/CartoDBClientDotNET)
 
 - **Clojure**  
   Clojure library for authenticating with CartoDB, maintained by [REDD Metrics](http://www.reddmetrics.com/). [Fork it on GitHub!](https://github.com/reddmetrics/cartodb-clj)
