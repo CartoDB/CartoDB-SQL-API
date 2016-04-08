@@ -126,12 +126,7 @@ To update an SQL Batch API job, make a PUT request with the following parameters
 ```bash
 HEADERS: PUT /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “SELECT cartodb_id FROM user_dataset”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-15T07:36:25Z”
+	"query": “SELECT cartodb_id FROM user_dataset”
 }
 ```
 
@@ -183,6 +178,14 @@ BODY: {
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-17T06:22:42Z”
 }
+```
+
+**Note:** Jobs can only be cancelled while the `status: "running"` or `status: "pending"`, otherwise the SQL Batch API Cancel operation is not allowed. You will receive an error if the job status is anything but "running" or "pending".
+
+```bash
+errors: [
+	 “The job status is done, cancel is not allowed”
+]
 ```
 
 ## Multi Query Batch Jobs
