@@ -196,7 +196,7 @@ BODY: {
 
 ## Multi Query Batch Jobs
 
-In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed.
+In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed. You can use any of the operations (create, read, list, update, cancel) for the queries in a Multi Query batch job. 
 
 ```bash
 HEADERS: POST /api/v2/sql/job 
