@@ -157,15 +157,6 @@ errors: [
 ]
 ```
 
-If this is the case, make a PATCH request with the following parameters.
-
-```bash
-HEADERS: PATCH /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
-BODY: {
-	 “query”: “SELECT cartodb_id FROM user_dataset”,
-}
-```
-
 ## Cancel a Job
 
 To cancel an SQL Batch API job, make a DELETE request with the following parameters.
@@ -236,6 +227,6 @@ BODY: {
 
 - If one query within the Multi Query batch fails, the `"status": "failed"` is returned for both the job and the query, and any "pending" queries will not be processed
 
-- Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
+- If you cancel the Multi Query batch job, the job status changes to `"status": "cancelled"`. Any running queries within the job will be stopped and changed to `"status": "pending"`, and will not be processed
 
-- If you cancel the Multi Query batch job between queries, the job status changes to `"status": "cancelled"` for the Multi Query batch job, but each of the child queries are changed to `"status": "pending"` at the point after it was cancelled. This ensure that no query was cancelled, but the batch array was cancelled
+- Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
