@@ -1,30 +1,29 @@
 # SQL Batch API
 
-The SQL Batch API supports a REST endpoint for long-running queries. This is useful for evaluating any timeouts due to endpoint fails. You can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [delete](#delete-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one statement. CartoDB has defined job instances to timeout at 48 hours after a job resolution. You can then use the list results for job scheduling, which implements First-In First-Out (FIFO) queue rules.
+The SQL Batch API enables you to request queries with long-running processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys.
 
 ## SQL Batch API Job Schema
 
-The SQL Batch API request to your CartoDB account should include the following elements, that represent the job schema for long-running queries:
+The SQL Batch API request to your CartoDB account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the SQL Batch API and are read-only.
 
 Name | Description
 --- | ---
 `job_id` | a universally unique identifier (uuid).
-`user_id` | user identifier, as displayed by the username.
+`user` | user identifier, as displayed by the username.
 `status` | displays the result of the long-running query. The possible status results are:
 --- | ---
-&#124;_ `pending` | job waiting to be executed (daily, weekly jobs).
+&#124;_ `pending` | job waiting to be executed.
 &#124;_ `running` | indicates that the job is currently running.
 &#124;_ `done` | job executed successfully.
 &#124;_ `failed` | job executed but failed, with errors.
 &#124;_ `canceled` | job canceled by user request.
-&#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job. For example, if draining before exit has failed.
-`query` | the SQL statement to be executed in a database. You can modify the select SQL statement to be used in the job schema.<br/><br/>**Tip:** You can retrieve a query with outputs (SELECT) or inputs (INSERT, UPDATE and DELETE). In some scenarios, you may need to retrieve the query results from a finished job. If that is the case, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:<br/><br/>1. A job query, `SELECT * FROM user_dataset;`<br/><br/>2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`<br/><br/>3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+&#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job.
+`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. If that is the case, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:<br/><br/>1. A job query, `SELECT * FROM user_dataset;`<br/><br/>2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`<br/><br/>3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
 `created_at` | the date and time when the job schema was created.
 `updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
-
-**Note:** Only the `query` element can be modified by the user. All other elements of the job schema are not editable.
 
 #### Example
 
@@ -167,16 +166,16 @@ BODY: {
 }
 ```
 
-## Delete a Job
+## Cancel a Job
 
-To delete and cancel an SQL Batch API job, make a DELETE request with the following parameters.
+To cancel an SQL Batch API job, make a DELETE request with the following parameters.
 
 ```bash
 HEADERS: DELETE /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {}
 ```
 
-**Note:** Be mindful when deleting a job when the status: `pending` or `running`.
+**Note:** Be mindful when cancelling a job when the status: `pending` or `running`.
 
 - If the job is `pending`, the job will never be executed
 - If the job is `running`, the job will be terminated immediately
@@ -197,7 +196,7 @@ BODY: {
 
 ## Multi Query Batch Jobs
 
-In some cases, you may need to run multiple SQL queries in one statement. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed.
+In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed.
 
 ```bash
 HEADERS: POST /api/v2/sql/job 
@@ -239,4 +238,4 @@ BODY: {
 
 - Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
 
-- If you delete the Multi Query batch job between queries, the job status changes to `"status": "cancelled"` for the Multi Query batch job, but each of the child queries are changed to `"status": "pending"` at the point after it was cancelled. This ensure that no query was cancelled, but the batch array was cancelled
+- If you cancel the Multi Query batch job between queries, the job status changes to `"status": "cancelled"` for the Multi Query batch job, but each of the child queries are changed to `"status": "pending"` at the point after it was cancelled. This ensure that no query was cancelled, but the batch array was cancelled
