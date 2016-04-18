@@ -265,11 +265,11 @@ JobController.prototype.createJob = function (req, res) {
 
 
     if (!isValidJob(sql)) {
-        return handleException(new Error("You must indicate a valid SQL"), res);
+        return handleException(new Error('You must indicate a valid SQL'), res);
     }
 
     if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error("Query is too long"), res);
+        return handleException(new Error('Query is too long'), res);
     }
 
     if ( req.profiler ) {
@@ -342,11 +342,11 @@ JobController.prototype.updateJob = function (req, res) {
     var cdbUsername = cdbReq.userByReq(req);
 
     if (!isValidJob(sql)) {
-        return handleException(new Error("You must indicate a sql query"), res);
+        return handleException(new Error('You must indicate a valid SQL'), res);
     }
 
     if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error("Query is too long"), res);
+        return handleException(new Error('Query is too long'), res);
     }
 
     if ( req.profiler ) {
