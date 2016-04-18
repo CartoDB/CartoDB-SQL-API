@@ -9,6 +9,23 @@ var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
 
+var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4096; // 4kb
+
+function reachMaxQuerySizeLimit(query) {
+    var sql;
+    var queryLengthInBytes;
+
+    try {
+        sql = (typeof query === 'string') ? query : JSON.stringify(query);
+    } catch (e) {
+        return false;
+    }
+
+    queryLengthInBytes = Buffer.byteLength(sql, 'utf-8');
+
+    return queryLengthInBytes > MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+}
+
 function JobController(userDatabaseService, jobBackend, jobCanceller) {
     this.userDatabaseService = userDatabaseService;
     this.jobBackend = jobBackend;
@@ -239,14 +256,20 @@ function isValidJob(sql) {
 }
 
 JobController.prototype.createJob = function (req, res) {
+    // jshint maxcomplexity: 7
     var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
+
     if (!isValidJob(sql)) {
-        return handleException(new Error("You must indicate a valid SQL query"), res);
+        return handleException(new Error("You must indicate a valid SQL"), res);
+    }
+
+    if (reachMaxQuerySizeLimit(sql)) {
+        return handleException(new Error("Query is too long"), res);
     }
 
     if ( req.profiler ) {
@@ -310,6 +333,7 @@ JobController.prototype.createJob = function (req, res) {
 
 
 JobController.prototype.updateJob = function (req, res) {
+    // jshint maxcomplexity: 7
     var self = this;
     var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
@@ -319,6 +343,10 @@ JobController.prototype.updateJob = function (req, res) {
 
     if (!isValidJob(sql)) {
         return handleException(new Error("You must indicate a sql query"), res);
+    }
+
+    if (reachMaxQuerySizeLimit(sql)) {
+        return handleException(new Error("Query is too long"), res);
     }
 
     if ( req.profiler ) {

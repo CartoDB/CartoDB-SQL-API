@@ -65,7 +65,7 @@ describe('job module', function() {
             status: 400
         }, function(res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'You must indicate a valid SQL query' ] });
+            assert.deepEqual(error, { error: [ 'You must indicate a valid SQL' ] });
             done();
         });
     });
@@ -82,7 +82,7 @@ describe('job module', function() {
             status: 400
         }, function(res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'You must indicate a valid SQL query' ] });
+            assert.deepEqual(error, { error: [ 'You must indicate a valid SQL' ] });
             done();
         });
     });
