@@ -3,27 +3,35 @@
 var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
+var util = require('util');
 
 var AuthApi = require('../auth/auth_api');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
 
-var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4096; // 4kb
+var ONE_KILOBYTE_IN_BYTES = 1024;
+var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4 * ONE_KILOBYTE_IN_BYTES; // 4kb
 
 function reachMaxQuerySizeLimit(query) {
-    var sql;
-    var queryLengthInBytes;
+    var querySize;
 
     try {
-        sql = (typeof query === 'string') ? query : JSON.stringify(query);
+        querySize = (typeof query === 'string') ? query.length : JSON.stringify(query).length;
     } catch (e) {
         return false;
     }
 
-    queryLengthInBytes = Buffer.byteLength(sql, 'utf-8');
+    return querySize > MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+}
 
-    return queryLengthInBytes > MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+function getMaxSizeErrorMessage(sql) {
+    return util.format(
+        'Query is too long (%s). Max size allowed is %s (%skb)',
+        sql.length,
+        MAX_LIMIT_QUERY_SIZE_IN_BYTES,
+        Math.round(MAX_LIMIT_QUERY_SIZE_IN_BYTES / ONE_KILOBYTE_IN_BYTES)
+    );
 }
 
 function JobController(userDatabaseService, jobBackend, jobCanceller) {
@@ -269,7 +277,7 @@ JobController.prototype.createJob = function (req, res) {
     }
 
     if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error('Query is too long'), res);
+        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
 
     if ( req.profiler ) {
@@ -346,7 +354,7 @@ JobController.prototype.updateJob = function (req, res) {
     }
 
     if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error('Query is too long'), res);
+        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
 
     if ( req.profiler ) {

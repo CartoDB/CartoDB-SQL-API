@@ -49,7 +49,7 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'Query is too long' ] });
+            assert.deepEqual(error, { error: [ 'Query is too long (4097). Max size allowed is 4096 (4kb)' ] });
             done();
         });
     });
@@ -67,7 +67,7 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'Query is too long' ] });
+            assert.deepEqual(error, { error: [ 'Query is too long (4097). Max size allowed is 4096 (4kb)' ] });
             done();
         });
     });
