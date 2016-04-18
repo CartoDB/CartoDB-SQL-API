@@ -1,5 +1,9 @@
-1.27.1 - 2016-mm-dd
+1.27.1 - 2016-04-18
 -------------------
+
+Bug fixes:
+
+  * Size of queries in Batch API is limited to 4kb per job
 
 
 1.27.0 - 2016-04-05
