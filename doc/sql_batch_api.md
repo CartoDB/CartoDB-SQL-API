@@ -1,8 +1,8 @@
 # SQL Batch API
 
-The SQL Batch API enables you to request queries with long-running processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
+The SQL Batch API enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys.
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. Additionally, if you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage.
 
 ## SQL Batch API Job Schema
 
@@ -233,3 +233,7 @@ BODY: {
 - If you cancel the Multi Query batch job, the job status changes to `"status": "cancelled"`. Any running queries within the job will be stopped and changed to `"status": "pending"`, and will not be processed
 
 - Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
+
+## cURL and Node.js Examples
+
+For complete code examples of using the Batch API operations for POST and GET requests, see the developer [GIST examples here](https://gist.github.com/dgaubert/26eb015cee03f0a9b3ad84bd7fe79c5d).
