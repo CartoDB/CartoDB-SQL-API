@@ -1,8 +1,8 @@
 # SQL Batch API
 
-The SQL Batch API enables you to request queries with long-running processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
+The SQL Batch API enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys.
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. Additionally, if you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage.
 
 ## SQL Batch API Job Schema
 
@@ -66,6 +66,38 @@ BODY: {
 }
 ```
 
+##### POST Examples
+
+If you are using the Batch API create operation for cURL POST request, use the following code:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+    "query": "select * from my_public_dataset"
+}' "http://{username}.cartodb.com/api/v2/sql/job"
+```
+
+If you are using the Batch API create operation for a Node.js client POST request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'POST',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job',
+  headers: { 'content-type': 'application/json' },
+  body: {
+    query: 'select * from my_public_dataset'
+  },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+```
+
 ## Read a Job
 
 To read an SQL Batch API job, make a GET request with the following parameters.
@@ -87,6 +119,31 @@ BODY: {
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-15T07:36:25Z”
 }
+```
+
+##### GET Examples
+
+If you are using the Batch API read operation for cURL GET request, use the following code:
+
+```bash
+curl -X GET "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+```
+
+If you are using the Batch API read operation for a Node.js client GET request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'GET',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
 ```
 
 ## List Jobs
@@ -117,6 +174,32 @@ BODY: [{
 	 “created_at”: “2015-12-15T07:43:12Z”,
 	 “updated_at”: “2015-12-15T07:43:12Z”
 }]
+```
+
+##### GET Examples
+
+If you are using the Batch API list operation for cURL GET request, use the following code:
+
+```bash
+curl -X GET "http://{username}.cartodb.com/api/v2/sql/job"
+```
+
+If you are using the Batch API list operation for a Node.js client GET request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'GET',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job',
+  headers:
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
 ```
 
 ## Update a Job
@@ -150,6 +233,38 @@ BODY: {
 errors: [
 	 “The job status is not pending, it cannot be updated”
 ]
+```
+
+##### PUT Examples
+
+If you are using the Batch API update operation for cURL PUT request, use the following code:
+
+```bash
+curl -X PUT -H "Content-Type: application/json" -d '{
+    "query": "select the_geom from my_public_dataset"
+}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+```
+
+If you are using the Batch API update operation for a Node.js client PUT request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'PUT',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+  headers: {
+    'content-type': 'application/json'
+  },
+  body: { query: 'select the_geom from my_public_dataset' },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
 ```
 
 ## Cancel a Job
@@ -186,6 +301,31 @@ BODY: {
 errors: [
 	 “The job status is done, cancel is not allowed”
 ]
+```
+
+##### DELETE Examples
+
+If you are using the Batch API cancel operation for cURL DELETE request, use the following code:
+
+```bash
+curl -X DELETE  "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+```
+
+If you are using the Batch API cancel operation for a Node.js client DELETE request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'DELETE',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
 ```
 
 ## Multi Query Batch Jobs
@@ -233,3 +373,85 @@ BODY: {
 - If you cancel the Multi Query batch job, the job status changes to `"status": "cancelled"`. Any running queries within the job will be stopped and changed to `"status": "pending"`, and will not be processed
 
 - Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Multi Query batch job
+
+##### POST Examples
+
+If you are using the Batch API Multi Query operation for cURL POST request, use the following code:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+    "query": [
+        "select * from my_public_dataset_01",
+        "select * from my_public_dataset_02",
+        "select * from my_public_dataset_03"
+    ]
+}' "http://{username}.cartodb.com/api/v2/sql/job"
+```
+
+If you are using the Batch API Multi Query operation for a Node.js client POST request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'POST',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job',
+  headers: { 'content-type': 'application/json' },
+  body: {
+    "query": [
+      "select * from my_public_dataset_01",
+      "select * from my_public_dataset_02",
+      "select * from my_public_dataset_03"
+    ]  
+  },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+```
+
+##### PUT Examples
+
+If you are using the Batch API Multi Query operation for cURL PUT request, use the following code:
+
+```bash
+curl -X PUT -H "Content-Type: application/json" -d '{
+    "query": [
+        "select * from my_public_dataset_01",
+        "select * from my_public_dataset_02",
+        "select * from my_public_dataset_03",
+        "select * from my_public_dataset_04"
+    ]
+}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+```
+
+If you are using the Batch API Multi Query operation for a Node.js client PUT request, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'PUT',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+  headers: { 'content-type': 'application/json' },
+  body: {
+    query: [
+      'select * from my_public_dataset_01',
+      'select * from my_public_dataset_02',
+      'select * from my_public_dataset_03',
+      'select * from my_public_dataset_04'
+    ]
+  },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+```
