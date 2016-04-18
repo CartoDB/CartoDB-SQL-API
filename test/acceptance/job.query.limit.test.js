@@ -24,9 +24,9 @@ var metadataBackend = require('cartodb-redis')({
     idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
     reapIntervalMillis: global.settings.redisReapIntervalMillis
 });
-var fs = require('fs');
-var queryTooLong = fs.readFileSync('./test/fixtures/queryTooLong.sql','utf-8');
-var queryMaxSize = queryTooLong.slice(1);
+
+var queryMaxSize = new Array(4097).join('a');
+var queryTooLong = queryMaxSize.concat('a');
 
 describe('job query limit', function() {
 
