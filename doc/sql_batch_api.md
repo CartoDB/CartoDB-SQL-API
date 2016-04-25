@@ -4,7 +4,7 @@ The SQL Batch API enables you to request queries with long-running CPU processin
 
 _The Batch API is not intended to be used for large inserts. If you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage._
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. See the [Usage Notes](#usage-notes) section for best practices about using the SQL Batch API.
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. **Review the [Usage Notes](#usage-notes) for best practices about using the SQL Batch API.**
 
 ## SQL Batch API Job Schema
 
@@ -74,7 +74,7 @@ If you are using the Batch API create operation for cURL POST request, use the f
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-    "query": "select * from my_public_dataset"
+    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
 }' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
@@ -88,7 +88,7 @@ var options = {
   url: 'http://{username}.cartodb.com/api/v2/sql/job',
   headers: { 'content-type': 'application/json' },
   body: {
-    query: 'select * from my_public_dataset'
+    query: 'CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)'
   },
   json: true
 };
@@ -138,7 +138,7 @@ var request = require("request");
 
 var options = {
   method: 'GET',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}'
 };
 
 request(options, function (error, response, body) {
@@ -193,8 +193,7 @@ var request = require("request");
 
 var options = {
   method: 'GET',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job',
-  headers:
+  url: 'http://{username}.cartodb.com/api/v2/sql/job'
 };
 
 request(options, function (error, response, body) {
@@ -243,7 +242,7 @@ If you are using the Batch API update operation for cURL PUT request, use the fo
 
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
-    "query": "select the_geom from my_public_dataset"
+    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
 }' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
@@ -383,9 +382,9 @@ If you are using the Batch API Multi Query operation for cURL POST request, use 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
     "query": [
-        "select * from my_public_dataset_01",
-        "select * from my_public_dataset_02",
-        "select * from my_public_dataset_03"
+        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+        "DROP TABLE airports",
+        "ALTER TABLE world_airports RENAME TO airport;"
     ]
 }' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
@@ -401,9 +400,9 @@ var options = {
   headers: { 'content-type': 'application/json' },
   body: {
     "query": [
-      "select * from my_public_dataset_01",
-      "select * from my_public_dataset_02",
-      "select * from my_public_dataset_03"
+        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+        "DROP TABLE airports",
+        "ALTER TABLE world_airports RENAME TO airport;"
     ]  
   },
   json: true
@@ -423,10 +422,10 @@ If you are using the Batch API Multi Query operation for cURL PUT request, use t
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
     "query": [
-        "select * from my_public_dataset_01",
-        "select * from my_public_dataset_02",
-        "select * from my_public_dataset_03",
-        "select * from my_public_dataset_04"
+        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+        "DROP TABLE airports",
+        "ALTER TABLE world_airports RENAME TO airport;",
+        "UPDATE airports SET airport = upper(airport)"
     ]
 }' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
@@ -442,10 +441,10 @@ var options = {
   headers: { 'content-type': 'application/json' },
   body: {
     query: [
-      'select * from my_public_dataset_01',
-      'select * from my_public_dataset_02',
-      'select * from my_public_dataset_03',
-      'select * from my_public_dataset_04'
+        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+        "DROP TABLE airports",
+        "ALTER TABLE world_airports RENAME TO airport;",
+        "UPDATE airports SET airport = upper(airport)"    
     ]
   },
   json: true
@@ -462,7 +461,7 @@ request(options, function (error, response, body) {
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
 
-- The Batch API is not designed for INSERT jobs, use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
+- The Batch API is not intended for INSERT jobs, use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
 
@@ -474,17 +473,43 @@ For best practices, ensure that you are following these recommended usage notes 
 
 - There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
 
-`error code`
+`Your payload is too large (4097). Max size allowed is 4096 (4kb). Are you trying to import data? Please use the Import API, http://docs.cartodb.com/cartodb-platform/import-api/`
 
 - Your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. The following error message appears if you are using private tables, or are not authenticated:
 
 `{"error":["permission denied"]}`
 
-Enter your `api_key` as part of your POST request, as shown in the following example:
+For all access to private tables, and for write access to public tables, CartoDB enforces secure API access that requires you to authorize your queries. In order to authorize queries, you can use an API Key or a Consumer Key, as shown in the following example.
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-   "query": "select max(tpep_dropoff_datetime), min(tpep_dropoff_datetime) from jferzoco.taxi_aug_dec_2015", 
-   "api_key": "[api_key}"
-}' "http://{username}.cartodb.com/api/v2/sql/job"
+    "query": "{your-expensive-query}"
+}' "http://{username}.cartodb.com/api/v2/sql/job?api_key={api_key}"
+```
+
+If you are using the Batch API create operation for a Node.js client POST request with private tables, use the following code:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: 'POST',
+  url: 'http://{username}.cartodb.com/api/v2/sql/job',
+  qs: {
+    'api_key': '{api_key}'
+  },   
+  headers: { 
+    'content-type': 'application/json'
+  },
+  body: {
+    query: '{your-expensive-query}'
+  },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
 ```
