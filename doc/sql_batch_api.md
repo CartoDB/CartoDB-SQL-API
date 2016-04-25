@@ -34,7 +34,7 @@ HEADERS: 201 CREATED; application/json
 BODY: {
 	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	 “user”: “cartofante” 
-	 “query”: “SELECT * FROM user_dataset”,
+	 “query”: UPDATE airports SET type = 'international'”,
 	 “status”: “pending”,
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-15T07:36:25Z”
@@ -50,7 +50,7 @@ Creates an SQL Batch API job request.
 ```bash
 HEADERS: POST /api/v2/sql/job 
 BODY: {
-  	  query: ‘SELECT * FROM user_dataset’
+  	  query: ‘UPDATE airports SET type = 'international'’
 }
 ```
 
@@ -61,7 +61,7 @@ HEADERS: 201 CREATED; application/json
 BODY: {
 	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	 “user”: “cartofante” 
-	 “query”: “SELECT * FROM user_dataset”,
+	 “query”: “UPDATE airports SET type = 'international'”,
 	 “status”: “pending”,
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-15T07:36:25Z”
@@ -116,7 +116,7 @@ HEADERS: 200 OK; application/json
 BODY: {
 	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	 “user”: “cartofante” 
-	 “query”: “SELECT * FROM user_dataset”,
+	 “query”: “UPDATE airports SET type = 'international'”,
 	 “status”: “pending”,
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-15T07:36:25Z”
@@ -164,7 +164,7 @@ HEADERS: 200 OK; application/json
 BODY: [{
 	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	 “user”: “cartofante” 
-	 “query”: “SELECT * FROM user_dataset”,
+	 “query”: “UPDATE airports SET type = 'international'”,
 	 “status”: “pending”,
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-15T07:36:25Z”
@@ -289,7 +289,7 @@ HEADERS: 200 OK; application/json
 BODY: {
 	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	 “user”: “cartofante” 
-	 “query”: “SELECT * FROM user_dataset”,
+	 “query”: “UPDATE airports SET type = 'international'”,
 	 “status”: “cancelled”,
 	 “created_at”: “2015-12-15T07:36:25Z”,
 	 “updated_at”: “2015-12-17T06:22:42Z”
@@ -337,7 +337,7 @@ In some cases, you may need to run multiple SQL queries in one job. The Multi Qu
 HEADERS: POST /api/v2/sql/job 
 BODY: {
 	 query: [
-		   ‘SELECT * FROM user_dataset_0’,
+		   ‘UPDATE airports SET type = 'international'_0’,
 		   ‘SELECT * FROM user_dataset_1’,
 		   ‘SELECT * FROM user_dataset_2’
 	  ]
@@ -352,7 +352,7 @@ BODY: {
 	   “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
 	   “user”: “cartofante” 
 	   “query”:  [{
-			“query”: “SELECT * FROM user_dataset_0”,
+			“query”: “UPDATE airports SET type = 'international'_0”,
 			“status”: “pending”
 	   }, {
 		    “query”: “SELECT * FROM user_dataset_1”,
@@ -467,6 +467,8 @@ In some scenarios, you may need to collect the job results. If that is the case,
 
 3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
 
+Alternatively, use `UPDATE` as there is no need to wrap the query. For example, `UPDATE airports SET type = 'international'`.
+
 ## Usage Notes
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
@@ -475,7 +477,7 @@ For best practices, ensure that you are following these recommended usage notes 
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
 
-- If you are not creating a new table from a query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB
+- If you are creating a new table from a query without wrapping the query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB. Ensure you wrap the query correctly, or use UPDATE instead
 
 - There is a limit of 4kb per job, or 4096 characters per query. The following limit error message appears if your job exceeds this size:
 
