@@ -2,7 +2,9 @@
 
 The SQL Batch API enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. Additionally, if you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage.
+_The Batch API is not intended to be used for large inserts. If you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage._
+
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. See the [Usage Notes](#usage-notes) section for best practices about using the SQL Batch API.
 
 ## SQL Batch API Job Schema
 
@@ -454,4 +456,35 @@ request(options, function (error, response, body) {
 
   console.log(body);
 });
+```
+
+## Usage Notes
+
+For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
+
+- The Batch API is not designed for INSERT jobs, use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
+
+- Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
+
+- The SQL `INTO` operation is a way to create a new table from a query. If you are retrieving query results from a finished job, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:
+
+1. A job query, `SELECT * FROM user_dataset;`
+2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`
+3 Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+
+- There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
+
+`error code`
+
+- Your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. The following error message appears if you are using private tables, or are not authenticated:
+
+`{"error":["permission denied"]}`
+
+Enter your `api_key` as part of your POST request, as shown in the following example:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+   "query": "select max(tpep_dropoff_datetime), min(tpep_dropoff_datetime) from jferzoco.taxi_aug_dec_2015", 
+   "api_key": "[api_key}"
+}' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
