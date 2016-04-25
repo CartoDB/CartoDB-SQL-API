@@ -468,7 +468,9 @@ For best practices, ensure that you are following these recommended usage notes 
 - The SQL `INTO` operation is a way to create a new table from a query. If you are retrieving query results from a finished job, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:
 
 1. A job query, `SELECT * FROM user_dataset;`
+
 2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`
+
 3 Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
 
 - There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
