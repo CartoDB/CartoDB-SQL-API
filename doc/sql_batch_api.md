@@ -2,7 +2,7 @@
 
 The SQL Batch API enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
-_The Batch API is not intended to be used for large inserts. If you are using SQL operations, such as "insert" or "update", for managing large datasets in your account, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/), or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), for this type of data management. The Batch API is specific to queries and CPU usage._
+_The Batch API is not intended to be used for large query payloads than contain over 4096 characters. If you are inserting a large number of rows (over 4kb) into your table, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
 
 **Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. **Review the [Usage Notes](#usage-notes) for best practices about using the SQL Batch API.**
 
@@ -22,7 +22,7 @@ Name | Description
 &#124;_ `failed` | job executed but failed, with errors.
 &#124;_ `canceled` | job canceled by user request.
 &#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job.
-`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. See [#retrieving-job-results](## Retrieving Job Results) for details.
+`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. See [Retrieving Job Results](#retrieving-job-results) for details.
 `created_at` | the date and time when the job schema was created.
 `updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
@@ -477,7 +477,7 @@ For best practices, ensure that you are following these recommended usage notes 
 
 - If you are not creating a new table from a query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB
 
-- There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
+- There is a limit of 4kb per job, or 4096 characters per query. The following limit error message appears if your job exceeds this size;
 
 `Your payload is too large (4097). Max size allowed is 4096 (4kb)`
 
