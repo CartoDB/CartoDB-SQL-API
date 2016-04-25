@@ -471,13 +471,13 @@ In some scenarios, you may need to collect the job results. If that is the case,
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
 
-- The Batch API is not intended for INSERT jobs, use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
+- The Batch API is not intended for large INSERT jobs, use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
 
 - If you are not creating a new table from a query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB
 
-- There is a limit of 4kb per job, or 4096 characters per query. The following limit error message appears if your job exceeds this size;
+- There is a limit of 4kb per job, or 4096 characters per query. The following limit error message appears if your job exceeds this size:
 
 `Your payload is too large (4097). Max size allowed is 4096 (4kb)`
 
