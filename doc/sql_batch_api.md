@@ -471,7 +471,9 @@ For best practices, ensure that you are following these recommended usage notes 
 
 2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`
 
-3 Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+
+- If you are not creating a new table from a query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB
 
 - There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
 
