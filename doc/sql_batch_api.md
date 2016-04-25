@@ -22,7 +22,7 @@ Name | Description
 &#124;_ `failed` | job executed but failed, with errors.
 &#124;_ `canceled` | job canceled by user request.
 &#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job.
-`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. If that is the case, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:<br/><br/>1. A job query, `SELECT * FROM user_dataset;`<br/><br/>2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`<br/><br/>3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. See [#retrieving-job-results](## Retrieving Job Results) for details.
 `created_at` | the date and time when the job schema was created.
 `updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
@@ -457,6 +457,16 @@ request(options, function (error, response, body) {
 });
 ```
 
+## Retrieving Job Results
+
+In some scenarios, you may need to collect the job results. If that is the case, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results are stored in a new table in your database. For example:
+
+1. A job query, `SELECT * FROM user_dataset;`
+
+2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`
+
+3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
+
 ## Usage Notes
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
@@ -465,19 +475,11 @@ For best practices, ensure that you are following these recommended usage notes 
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
 
-- The SQL `INTO` operation is a way to create a new table from a query. If you are retrieving query results from a finished job, wrap the query with SELECT * INTO, or CREATE TABLE AS. The results will be stored in a new table in your user database. For example:
-
-1. A job query, `SELECT * FROM user_dataset;`
-
-2. Wrap the query, `SELECT * INTO job_result FROM (SELECT * FROM user_dataset) AS job;`
-
-3. Once the table is created, retrieve the results through the CartoDB SQL API, `SELECT * FROM  job_result;`
-
 - If you are not creating a new table from a query (via INTO or CREATE TABLE AS), the result will create ghost tables that are not configured for CartoDB
 
 - There is a limit of 4kb per job. The following limit error message appears if your job exceeds this size;
 
-`Your payload is too large (4097). Max size allowed is 4096 (4kb). Are you trying to import data? Please use the Import API, http://docs.cartodb.com/cartodb-platform/import-api/`
+`Your payload is too large (4097). Max size allowed is 4096 (4kb)`
 
 - Your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. The following error message appears if you are using private tables, or are not authenticated:
 
