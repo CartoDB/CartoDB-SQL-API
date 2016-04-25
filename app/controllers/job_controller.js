@@ -26,8 +26,11 @@ function reachMaxQuerySizeLimit(query) {
 }
 
 function getMaxSizeErrorMessage(sql) {
-    return util.format(
-        'Query is too long (%s). Max size allowed is %s (%skb)',
+    return util.format([
+            'Your payload is too large (%s). Max size allowed is %s (%skb).',
+            'Are you trying to import data?.',
+            'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
+        ].join(' '),
         sql.length,
         MAX_LIMIT_QUERY_SIZE_IN_BYTES,
         Math.round(MAX_LIMIT_QUERY_SIZE_IN_BYTES / ONE_KILOBYTE_IN_BYTES)

@@ -49,7 +49,13 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'Query is too long (4097). Max size allowed is 4096 (4kb)' ] });
+            assert.deepEqual(error, { error: [
+                [
+                    'Your payload is too large (4097). Max size allowed is 4096 (4kb).',
+                    'Are you trying to import data?.',
+                    'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
+                ].join(' ')
+            ]});
             done();
         });
     });
@@ -67,7 +73,13 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'Query is too long (4097). Max size allowed is 4096 (4kb)' ] });
+            assert.deepEqual(error, { error: [
+                [
+                    'Your payload is too large (4097). Max size allowed is 4096 (4kb).',
+                    'Are you trying to import data?.',
+                    'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
+                ].join(' ')
+            ]});
             done();
         });
     });
