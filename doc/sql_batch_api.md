@@ -4,7 +4,7 @@ The SQL Batch API enables you to request queries with long-running CPU processin
 
 _The Batch API is not intended to be used for large query payloads than contain over 4096 characters (4kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. **Review [Private Datasets](#private-datasets) for manipulate private datasets with SQL Batch API.**
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. For details about how to manipulate private datasets with SQL Batch API, see [Private Datasets](#private-datasets).**
 
 ## SQL Batch API Job Schema
 
@@ -22,7 +22,7 @@ Name | Description
 &#124;_ `failed` | job executed but failed, with errors.
 &#124;_ `canceled` | job canceled by user request.
 &#124;_ `unknown` | appears when it is not possible to determine what exactly happened with the job.
-`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. See [Retrieving Job Results](#retrieving-job-results) for details.
+`query` | the SQL statement to be executed in a database. _You can modify the select SQL statement to be used in the job schema._<br/><br/>**Tip:** In some scenarios, you may need to retrieve the query results from a finished job. See [Fetching Job Results](#fetching-job-results) for details.
 `created_at` | the date and time when the job schema was created.
 `updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
@@ -459,21 +459,19 @@ request(options, function (error, response, body) {
 
 ## Fetching Job Results
 
-In some scenarios, you may need to fetch the output of a job. If that is the case, wrap the query with `SELECT * INTO`, or `CREATE TABLE AS`. The output is stored in a new table in your database. Given the query `SELECT * FROM airports`:
+In some scenarios, you may need to fetch the output of a job. If that is the case, wrap the query with `SELECT * INTO`, or `CREATE TABLE AS`. The output is stored in a new table in your database. For example, if using the query `SELECT * FROM airports`:
 
 1. Wrap the query `SELECT * INTO job_result FROM (SELECT * FROM airports) AS job`
 
-2. [Create a job](#create-a-job) as described previously.
+2. [Create a job](#create-a-job), as described previously
 
 3. Once the job is done, fetch the results through the [CartoDB SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), `SELECT * FROM job_result`
 
-**Note**: if you need to create a map or analysis with the new table you should use [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
-
+**Note:**: If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
 
 ## Private Datasets
 
-
-For all access to private tables, and for write access to public tables, Batch API requires API Key to [authorize your queries](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication). The following error message appears if you are using private tables and are not authenticated:
+For access to all private tables, and for write access to public tables, an API Key is required to [authenticate]((http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
 
 ```bash
 { 
@@ -520,9 +518,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-
 ## Best Practices
-
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
 
