@@ -32,12 +32,12 @@ Name | Description
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: UPDATE airports SET type = 'international'”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-15T07:36:25Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante",
+  "query": "UPDATE airports SET type = 'international'",
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-15T07:36:25Z"
 }
 ```
 
@@ -50,7 +50,7 @@ Creates an SQL Batch API job request.
 ```bash
 HEADERS: POST /api/v2/sql/job
 BODY: {
-  query: ‘UPDATE airports SET type = 'international'’
+  "query": "UPDATE airports SET type = 'international'"
 }
 ```
 
@@ -59,12 +59,12 @@ BODY: {
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: “UPDATE airports SET type = 'international'”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-15T07:36:25Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query": "UPDATE airports SET type = 'international'",
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-15T07:36:25Z"
 }
 ```
 
@@ -84,11 +84,11 @@ If you are using the Batch API create operation for a Node.js client POST reques
 var request = require("request");
 
 var options = {
-  method: 'POST',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job',
-  headers: { 'content-type': 'application/json' },
+  method: "POST",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
+  headers: { "content-type": "application/json" },
   body: {
-    query: 'CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)'
+    query: "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
   },
   json: true
 };
@@ -114,12 +114,12 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: “UPDATE airports SET type = 'international'”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-15T07:36:25Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query": "UPDATE airports SET type = 'international'",
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-15T07:36:25Z"
 }
 ```
 
@@ -137,8 +137,8 @@ If you are using the Batch API read operation for a Node.js client GET request, 
 var request = require("request");
 
 var options = {
-  method: 'GET',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}'
+  method: "GET",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 };
 
 request(options, function (error, response, body) {
@@ -162,19 +162,19 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: [{
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: “UPDATE airports SET type = 'international'”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-15T07:36:25Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query": "UPDATE airports SET type = 'international'",
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-15T07:36:25Z"
 }, {
-  “job_id”: “ba25ed54-75b4-431b-af27-eb6b9e5428ff”,
-  “user”: “cartofante”
-  “query”: “DELETE FROM user_dataset”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:43:12Z”,
-  “updated_at”: “2015-12-15T07:43:12Z”
+  "job_id": "ba25ed54-75b4-431b-af27-eb6b9e5428ff",
+  "user": "cartofante"
+  "query": "DELETE FROM user_dataset",
+  "status": "pending",
+  "created_at": "2015-12-15T07:43:12Z",
+  "updated_at": "2015-12-15T07:43:12Z"
 }]
 ```
 
@@ -192,8 +192,8 @@ If you are using the Batch API list operation for a Node.js client GET request, 
 var request = require("request");
 
 var options = {
-  method: 'GET',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job'
+  method: "GET",
+  url: "http://{username}.cartodb.com/api/v2/sql/job"
 };
 
 request(options, function (error, response, body) {
@@ -210,7 +210,7 @@ To update an SQL Batch API job, make a PUT request with the following parameters
 ```bash
 HEADERS: PUT /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {
-  "query": “SELECT cartodb_id FROM user_dataset”
+  "query": "SELECT cartodb_id FROM user_dataset"
 }
 ```
 
@@ -219,12 +219,12 @@ BODY: {
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: “SELECT cartodb_id FROM user_dataset”,
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-17T15:45:56Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query": "SELECT cartodb_id FROM user_dataset",
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-17T15:45:56Z"
 }
 ```
 
@@ -232,7 +232,7 @@ BODY: {
 
 ```bash
 errors: [
-  “The job status is not pending, it cannot be updated”
+  "The job status is not pending, it cannot be updated"
 ]
 ```
 
@@ -252,12 +252,12 @@ If you are using the Batch API update operation for a Node.js client PUT request
 var request = require("request");
 
 var options = {
-  method: 'PUT',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+  method: "PUT",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
   headers: {
-    'content-type': 'application/json'
+    "content-type": "application/json"
   },
-  body: { query: 'select the_geom from my_public_dataset' },
+  body: { query: "select the_geom from my_public_dataset" },
   json: true
 };
 
@@ -287,12 +287,12 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”: “UPDATE airports SET type = 'international'”,
-  “status”: “cancelled”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-17T06:22:42Z”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query": "UPDATE airports SET type = 'international'",
+  "status": "cancelled",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-17T06:22:42Z"
 }
 ```
 
@@ -300,7 +300,7 @@ BODY: {
 
 ```bash
 errors: [
-  “The job status is done, cancel is not allowed”
+  "The job status is done, cancel is not allowed"
 ]
 ```
 
@@ -318,8 +318,8 @@ If you are using the Batch API cancel operation for a Node.js client DELETE requ
 var request = require("request");
 
 var options = {
-  method: 'DELETE',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
+  method: "DELETE",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
 };
 
 request(options, function (error, response, body) {
@@ -337,9 +337,9 @@ In some cases, you may need to run multiple SQL queries in one job. The Multi Qu
 HEADERS: POST /api/v2/sql/job
 BODY: {
   query: [
-    ‘UPDATE airports SET type = 'international'_0’,
-    ‘SELECT * FROM user_dataset_1’,
-    ‘SELECT * FROM user_dataset_2’
+    "UPDATE airports SET type = 'international'_0",
+    "SELECT * FROM user_dataset_1",
+    "SELECT * FROM user_dataset_2"
   ]
 }
 ```
@@ -349,21 +349,21 @@ BODY: {
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-  “user”: “cartofante”
-  “query”:  [{
-    “query”: “UPDATE airports SET type = 'international'_0”,
-    “status”: “pending”
+  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "user": "cartofante"
+  "query":  [{
+    "query": "UPDATE airports SET type = 'international'_0",
+    "status": "pending"
   }, {
-    “query”: “SELECT * FROM user_dataset_1”,
-    “status”: “pending”
+    "query": "SELECT * FROM user_dataset_1",
+    "status": "pending"
   }, {
-    “query”: “SELECT * FROM user_dataset_2”,
-    “status”: “pending”
+    "query": "SELECT * FROM user_dataset_2",
+    "status": "pending"
   }],
-  “status”: “pending”,
-  “created_at”: “2015-12-15T07:36:25Z”,
-  “updated_at”: “2015-12-15T07:36:25Z”
+  "status": "pending",
+  "created_at": "2015-12-15T07:36:25Z",
+  "updated_at": "2015-12-15T07:36:25Z"
 }
 ```
 
@@ -395,9 +395,9 @@ If you are using the Batch API Multi Query operation for a Node.js client POST r
 var request = require("request");
 
 var options = {
-  method: 'POST',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job',
-  headers: { 'content-type': 'application/json' },
+  method: "POST",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
+  headers: { "content-type": "application/json" },
   body: {
     "query": [
       "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
@@ -436,9 +436,9 @@ If you are using the Batch API Multi Query operation for a Node.js client PUT re
 var request = require("request");
 
 var options = {
-  method: 'PUT',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job/{job_id}',
-  headers: { 'content-type': 'application/json' },
+  method: "PUT",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
+  headers: { "content-type": "application/json" },
   body: {
     query: [
       "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
@@ -501,16 +501,16 @@ If you are using the Batch API create operation for a Node.js client POST reques
 var request = require("request");
 
 var options = {
-  method: 'POST',
-  url: 'http://{username}.cartodb.com/api/v2/sql/job',
+  method: "POST",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
   qs: {
-    'api_key': '{api_key}'
+    "api_key": "{api_key}"
   },
   headers: {
-    'content-type': 'application/json'
+    "content-type": "application/json"
   },
   body: {
-    query: '{your-expensive-query}'
+    query: "{your-expensive-query}"
   },
   json: true
 };
