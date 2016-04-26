@@ -32,12 +32,12 @@ Name | Description
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: UPDATE airports SET type = 'international'”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-15T07:36:25Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: UPDATE airports SET type = 'international'”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -48,9 +48,9 @@ To create an SQL Batch API job, make a POST request with the following parameter
 Creates an SQL Batch API job request.
 
 ```bash
-HEADERS: POST /api/v2/sql/job 
+HEADERS: POST /api/v2/sql/job
 BODY: {
-  	  query: ‘UPDATE airports SET type = 'international'’
+  query: ‘UPDATE airports SET type = 'international'’
 }
 ```
 
@@ -59,12 +59,12 @@ BODY: {
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “UPDATE airports SET type = 'international'”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-15T07:36:25Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: “UPDATE airports SET type = 'international'”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -74,7 +74,7 @@ If you are using the Batch API create operation for cURL POST request, use the f
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
+  "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
 }' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
@@ -114,12 +114,12 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “UPDATE airports SET type = 'international'”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-15T07:36:25Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: “UPDATE airports SET type = 'international'”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
@@ -162,19 +162,19 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: [{
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “UPDATE airports SET type = 'international'”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-15T07:36:25Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: “UPDATE airports SET type = 'international'”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-15T07:36:25Z”
 }, {
-	 “job_id”: “ba25ed54-75b4-431b-af27-eb6b9e5428ff”,
-	 “user”: “cartofante” 
-	 “query”: “DELETE FROM user_dataset”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:43:12Z”,
-	 “updated_at”: “2015-12-15T07:43:12Z”
+  “job_id”: “ba25ed54-75b4-431b-af27-eb6b9e5428ff”,
+  “user”: “cartofante”
+  “query”: “DELETE FROM user_dataset”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:43:12Z”,
+  “updated_at”: “2015-12-15T07:43:12Z”
 }]
 ```
 
@@ -210,7 +210,7 @@ To update an SQL Batch API job, make a PUT request with the following parameters
 ```bash
 HEADERS: PUT /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {
-	"query": “SELECT cartodb_id FROM user_dataset”
+  "query": “SELECT cartodb_id FROM user_dataset”
 }
 ```
 
@@ -219,12 +219,12 @@ BODY: {
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “SELECT cartodb_id FROM user_dataset”,
-	 “status”: “pending”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-17T15:45:56Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: “SELECT cartodb_id FROM user_dataset”,
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-17T15:45:56Z”
 }
 ```
 
@@ -232,7 +232,7 @@ BODY: {
 
 ```bash
 errors: [
-	 “The job status is not pending, it cannot be updated”
+  “The job status is not pending, it cannot be updated”
 ]
 ```
 
@@ -242,7 +242,7 @@ If you are using the Batch API update operation for cURL PUT request, use the fo
 
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
-    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
+  "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
 }' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
@@ -287,12 +287,12 @@ BODY: {}
 ```bash
 HEADERS: 200 OK; application/json
 BODY: {
-	 “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	 “user”: “cartofante” 
-	 “query”: “UPDATE airports SET type = 'international'”,
-	 “status”: “cancelled”,
-	 “created_at”: “2015-12-15T07:36:25Z”,
-	 “updated_at”: “2015-12-17T06:22:42Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”: “UPDATE airports SET type = 'international'”,
+  “status”: “cancelled”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-17T06:22:42Z”
 }
 ```
 
@@ -300,7 +300,7 @@ BODY: {
 
 ```bash
 errors: [
-	 “The job status is done, cancel is not allowed”
+  “The job status is done, cancel is not allowed”
 ]
 ```
 
@@ -331,16 +331,16 @@ request(options, function (error, response, body) {
 
 ## Multi Query Batch Jobs
 
-In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed. You can use any of the operations (create, read, list, update, cancel) for the queries in a Multi Query batch job. 
+In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed. You can use any of the operations (create, read, list, update, cancel) for the queries in a Multi Query batch job.
 
 ```bash
-HEADERS: POST /api/v2/sql/job 
+HEADERS: POST /api/v2/sql/job
 BODY: {
-	 query: [
-		   ‘UPDATE airports SET type = 'international'_0’,
-		   ‘SELECT * FROM user_dataset_1’,
-		   ‘SELECT * FROM user_dataset_2’
-	  ]
+  query: [
+    ‘UPDATE airports SET type = 'international'_0’,
+    ‘SELECT * FROM user_dataset_1’,
+    ‘SELECT * FROM user_dataset_2’
+  ]
 }
 ```
 
@@ -349,25 +349,25 @@ BODY: {
 ```bash
 HEADERS: 201 CREATED; application/json
 BODY: {
-	   “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
-	   “user”: “cartofante” 
-	   “query”:  [{
-			“query”: “UPDATE airports SET type = 'international'_0”,
-			“status”: “pending”
-	   }, {
-		    “query”: “SELECT * FROM user_dataset_1”,
-		    “status”: “pending”
-	   }, {
-		    “query”: “SELECT * FROM user_dataset_2”,
-			“status”: “pending”
-}],
-	    “status”: “pending”,
-		“created_at”: “2015-12-15T07:36:25Z”,
-		“updated_at”: “2015-12-15T07:36:25Z”
+  “job_id”: “de305d54-75b4-431b-adb2-eb6b9e546014”,
+  “user”: “cartofante”
+  “query”:  [{
+    “query”: “UPDATE airports SET type = 'international'_0”,
+    “status”: “pending”
+  }, {
+    “query”: “SELECT * FROM user_dataset_1”,
+    “status”: “pending”
+  }, {
+    “query”: “SELECT * FROM user_dataset_2”,
+    “status”: “pending”
+  }],
+  “status”: “pending”,
+  “created_at”: “2015-12-15T07:36:25Z”,
+  “updated_at”: “2015-12-15T07:36:25Z”
 }
 ```
 
-**Note:** The SQL Batch API returns a job status for both the parent Multi Query request, and for each child query within the request. The order in which each query is executed is guaranteed. Here are the possible status results for Multi Query batch jobs: 
+**Note:** The SQL Batch API returns a job status for both the parent Multi Query request, and for each child query within the request. The order in which each query is executed is guaranteed. Here are the possible status results for Multi Query batch jobs:
 
 - If one query within the Multi Query batch fails, the `"status": "failed"` is returned for both the job and the query, and any "pending" queries will not be processed
 
@@ -381,11 +381,11 @@ If you are using the Batch API Multi Query operation for cURL POST request, use 
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-    "query": [
-        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
-        "DROP TABLE airports",
-        "ALTER TABLE world_airports RENAME TO airport;"
-    ]
+  "query": [
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "DROP TABLE airports",
+    "ALTER TABLE world_airports RENAME TO airport;"
+  ]
 }' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
@@ -400,10 +400,10 @@ var options = {
   headers: { 'content-type': 'application/json' },
   body: {
     "query": [
-        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
-        "DROP TABLE airports",
-        "ALTER TABLE world_airports RENAME TO airport;"
-    ]  
+      "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+      "DROP TABLE airports",
+      "ALTER TABLE world_airports RENAME TO airport;"
+    ]
   },
   json: true
 };
@@ -421,12 +421,12 @@ If you are using the Batch API Multi Query operation for cURL PUT request, use t
 
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
-    "query": [
-        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
-        "DROP TABLE airports",
-        "ALTER TABLE world_airports RENAME TO airport;",
-        "UPDATE airports SET airport = upper(airport)"
-    ]
+  "query": [
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "DROP TABLE airports",
+    "ALTER TABLE world_airports RENAME TO airport;",
+    "UPDATE airports SET airport = upper(airport)"
+  ]
 }' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
@@ -441,10 +441,10 @@ var options = {
   headers: { 'content-type': 'application/json' },
   body: {
     query: [
-        "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
-        "DROP TABLE airports",
-        "ALTER TABLE world_airports RENAME TO airport;",
-        "UPDATE airports SET airport = upper(airport)"    
+      "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+      "DROP TABLE airports",
+      "ALTER TABLE world_airports RENAME TO airport;",
+      "UPDATE airports SET airport = upper(airport)"
     ]
   },
   json: true
@@ -491,7 +491,7 @@ For all access to private tables, and for write access to public tables, CartoDB
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-    "query": "{your-expensive-query}"
+  "query": "{your-expensive-query}"
 }' "http://{username}.cartodb.com/api/v2/sql/job?api_key={api_key}"
 ```
 
@@ -505,8 +505,8 @@ var options = {
   url: 'http://{username}.cartodb.com/api/v2/sql/job',
   qs: {
     'api_key': '{api_key}'
-  },   
-  headers: { 
+  },
+  headers: {
     'content-type': 'application/json'
   },
   body: {
