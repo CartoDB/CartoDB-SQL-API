@@ -337,9 +337,9 @@ In some cases, you may need to run multiple SQL queries in one job. The Multi Qu
 HEADERS: POST /api/v2/sql/job
 BODY: {
   query: [
-    "UPDATE airports SET type = 'international'_0",
-    "SELECT * FROM user_dataset_1",
-    "SELECT * FROM user_dataset_2"
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "DROP TABLE airports",
+    "ALTER TABLE world_airports RENAME TO airport"
   ]
 }
 ```
@@ -352,13 +352,13 @@ BODY: {
   "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
   "user": "cartofante"
   "query":  [{
-    "query": "UPDATE airports SET type = 'international'_0",
+    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "status": "pending"
   }, {
-    "query": "SELECT * FROM user_dataset_1",
+    "query": "DROP TABLE airports",
     "status": "pending"
   }, {
-    "query": "SELECT * FROM user_dataset_2",
+    "query": "ALTER TABLE world_airports RENAME TO airport",
     "status": "pending"
   }],
   "status": "pending",
@@ -384,7 +384,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "query": [
     "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "DROP TABLE airports",
-    "ALTER TABLE world_airports RENAME TO airport;"
+    "ALTER TABLE world_airports RENAME TO airport"
   ]
 }' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
@@ -402,7 +402,7 @@ var options = {
     "query": [
       "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
       "DROP TABLE airports",
-      "ALTER TABLE world_airports RENAME TO airport;"
+      "ALTER TABLE world_airports RENAME TO airport"
     ]
   },
   json: true
@@ -424,7 +424,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{
   "query": [
     "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "DROP TABLE airports",
-    "ALTER TABLE world_airports RENAME TO airport;",
+    "ALTER TABLE world_airports RENAME TO airport",
     "UPDATE airports SET airport = upper(airport)"
   ]
 }' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
@@ -443,7 +443,7 @@ var options = {
     query: [
       "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
       "DROP TABLE airports",
-      "ALTER TABLE world_airports RENAME TO airport;",
+      "ALTER TABLE world_airports RENAME TO airport",
       "UPDATE airports SET airport = upper(airport)"
     ]
   },
