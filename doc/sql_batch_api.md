@@ -4,7 +4,7 @@ The SQL Batch API enables you to request queries with long-running CPU processin
 
 _The Batch API is not intended to be used for large query payloads than contain over 4096 characters. If you are inserting a large number of rows (over 4kb) into your table, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. **Review the [Usage Notes](#usage-notes) for best practices about using the SQL Batch API.**
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. **Review [Best Practices](#best-practices) for usage notes regarding the SQL Batch API.**
 
 ## SQL Batch API Job Schema
 
@@ -41,7 +41,7 @@ BODY: {
 }
 ```
 
-## Create a Job
+### Create a Job
 
 To create an SQL Batch API job, make a POST request with the following parameters.
 
@@ -100,7 +100,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Read a Job
+### Read a Job
 
 To read an SQL Batch API job, make a GET request with the following parameters.
 
@@ -148,7 +148,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## List Jobs
+### List Jobs
 
 To list SQL Batch API jobs, make a GET request with the following parameters.
 
@@ -203,7 +203,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Update a Job
+### Update a Job
 
 To update an SQL Batch API job, make a PUT request with the following parameters.
 
@@ -268,7 +268,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Cancel a Job
+### Cancel a Job
 
 To cancel an SQL Batch API job, make a DELETE request with the following parameters.
 
@@ -329,7 +329,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Multi Query Batch Jobs
+### Multi Query Batch Jobs
 
 In some cases, you may need to run multiple SQL queries in one job. The Multi Query batch option enables you run an array of SQL statements, and define the order in which the queries are executed. You can use any of the operations (create, read, list, update, cancel) for the queries in a Multi Query batch job.
 
@@ -469,7 +469,7 @@ In some scenarios, you may need to collect the job results. If that is the case,
 
 Alternatively, use `UPDATE` as there is no need to wrap the query. For example, `UPDATE airports SET type = 'international'`.
 
-## Usage Notes
+## Best Practices
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
 
