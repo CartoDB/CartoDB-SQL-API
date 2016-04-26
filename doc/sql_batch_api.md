@@ -467,15 +467,15 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 
 3. Once the job is done, fetch the results through the [CartoDB SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), `SELECT * FROM job_result`
 
-**Note:**: If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
+**Note:** If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
 
 ## Private Datasets
 
-For access to all private tables, and for write access to public tables, an API Key is required to [authenticate]((http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
+For access to all private tables, and for write access to public tables, an API Key is required to [authenticate](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
 
 ```bash
-{ 
-  "error": [ 
+{
+  "error": [
     "permission denied"
   ]
 }
@@ -525,7 +525,7 @@ For best practices, ensure that you are following these recommended usage notes 
 - The Batch API is not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
 
 - There is a limit of 4kb per job. The following error message appears if your job exceeds this size:
-  
+
   `Your payload is too large. Max size allowed is 4096 (4kb)`
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the SQL Batch API and are read-only
