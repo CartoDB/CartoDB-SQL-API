@@ -45,9 +45,7 @@
         "sqlite3": "~3.0.8"
     },
     "scripts": {
-        "test": "make test-all",
-        "test:unit": "mocha test/unit/**/*.js",
-        "test:unit:watch": "npm run test:unit -- -w"
+        "test": "make test-all"
     },
     "engines": {
         "node": ">=0.8 <0.11",
