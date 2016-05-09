@@ -5,6 +5,7 @@ function JobAdapter() {
 
 module.exports = JobAdapter;
 
+// jshint maxcomplexity: 8
 JobAdapter.prototype.adapt = function (query) {
     var adaptedQuery = {};
 
@@ -20,14 +21,17 @@ JobAdapter.prototype.adapt = function (query) {
 
     adaptedQuery = { query: adaptedQuery };
 
-    if (query.onsuccess) {
+    if (query.onsuccess && typeof query.onsuccess !== 'string') {
+        throw new Error('Invalid query');
+    } else if (query.onsuccess) {
         adaptedQuery.onsuccess = query.onsuccess;
     }
 
-    if (query.onerror) {
+    if (query.onerror && typeof query.onerror !== 'string') {
+        throw new Error('Invalid query');
+    } else if (query.onerror) {
         adaptedQuery.onerror = query.onerror;
     }
-
 
     return adaptedQuery;
 };
@@ -44,7 +48,7 @@ function parseArray(queries) {
 
 function parseString(query) {
     if (typeof query !== 'string') {
-        throw new Error('Invalid job');
+        throw new Error('Invalid query');
     }
 
     return {

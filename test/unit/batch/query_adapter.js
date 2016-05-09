@@ -24,10 +24,10 @@ describe('batch API job adapter', function () {
         var query = { query: 'select * from wadus' };
         assert.throws(function () {
             this.queryAdapter.adapt(query);
-        }, 'Invalid query');
+        }.bind(this),  /Invalid query/);
     });
 
-    it('.adapt() should adapt one query job', function () {
+    it('.adapt() should throw error with simple object query', function () {
         var query = ['select * from wadus'];
         var adaptedQuery = this.queryAdapter.adapt(query);
 
@@ -39,11 +39,16 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should throw error with simple object query inside array', function () {
+    it('.adapt() should adapt array with one query object', function () {
         var query = [{ query: 'select * from wadus' }];
-        assert.throws(function () {
-            this.queryAdapter.adapt(query);
-        }, 'Invalid query');
+        var adaptedQuery = this.queryAdapter.adapt(query);
+
+        assert.deepEqual(adaptedQuery, {
+            query: [{
+                query: 'select * from wadus',
+                status: 'pending'
+            }]
+        });
     });
 
     it('.adapt() should adapt two queries job', function () {
@@ -72,7 +77,7 @@ describe('batch API job adapter', function () {
         ]];
         assert.throws(function () {
             this.queryAdapter.adapt(query);
-        }, 'Invalid query');
+        }.bind(this),  /Invalid query/);
     });
 
     it('.adapt() should adapt a query job with "onerror" fallback', function () {
@@ -91,6 +96,18 @@ describe('batch API job adapter', function () {
         });
     });
 
+    it('.adapt() throw error with nested queries', function () {
+        var query = [{
+            query: {
+                query: 'select * from wadus'
+            },
+            onerror: 'select * from wadus'
+        }];
+        assert.throws(function () {
+            this.queryAdapter.adapt(query);
+        }.bind(this), /Invalid query/);
+    });
+
     it('.adapt() should adapt one query job with "onsuccess" fallback', function () {
         var query = [{
             query: 'select * from wadus',
@@ -105,6 +122,42 @@ describe('batch API job adapter', function () {
                 onsuccess: 'select * from wadus'
             }]
         });
+    });
+
+    it('.adapt() throw error with nested queries', function () {
+        var query = [{
+            query: {
+                query: 'select * from wadus'
+            },
+            onerror: 'select * from wadus'
+        }];
+        assert.throws(function () {
+            this.queryAdapter.adapt(query);
+        }.bind(this), /Invalid query/);
+    });
+
+    it('.adapt() should throw error when "onsuccess" fallback is not a query', function () {
+        var query = {
+            query: ['select * from wadus'],
+            onsuccess: {
+                query: 'select * from wadus'
+            }
+        };
+        assert.throws(function () {
+            this.queryAdapter.adapt(query);
+        }.bind(this), /Invalid query/);
+    });
+
+    it('.adapt() should throw error when "onerror" fallback is not a query', function () {
+        var query = {
+            query: ['select * from wadus'],
+            onerror: {
+                query: 'select * from wadus'
+            }
+        };
+        assert.throws(function () {
+            this.queryAdapter.adapt(query);
+        }.bind(this), /Invalid query/);
     });
 
     it('.adapt() should adapt one query job with "onsuccess" and "onerror" fallback', function () {
@@ -125,7 +178,7 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should adapt two queries job with "onsuccess" overall fallback', function () {
+    it('.adapt() should adapt two queries job with "onsuccess"  overall fallback', function () {
         var query = {
             query: [
                 'select * from wadus',
@@ -146,6 +199,18 @@ describe('batch API job adapter', function () {
             }],
             onsuccess: 'select * from wadus'
         });
+    });
+
+    it('.adapt() should throw with nested query arrays', function () {
+        var query = {
+            query: [[
+                'select * from wadus'
+            ]]
+        };
+
+        assert.throws(function () {
+            this.queryAdapter.adapt(query);
+        }.bind(this), /Invalid query/);
     });
 
     it('.adapt() should adapt two queries job with "onerror" overall fallback', function () {
