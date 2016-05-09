@@ -1,5 +1,8 @@
-1.27.2 - 2016-mm-dd
+1.28.0 - 2016-mm-dd
 -------------------
+
+Announcements:
+ - Upgrades step-profiler to 0.3.0 to avoid dots in json keys #294
 
 
 1.27.1 - 2016-04-18
