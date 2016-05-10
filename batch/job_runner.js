@@ -31,11 +31,12 @@ function isLastQuery(job, index) {
     return false;
 }
 
-function JobRunner(jobBackend, jobQueue, queryRunner,userDatabaseMetadataService) {
+function JobRunner(jobBackend, jobQueue, queryRunner, userDatabaseMetadataService, queryAdapter) {
     this.jobBackend = jobBackend;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
+    this.queryAdapter = queryAdapter;
 }
 
 JobRunner.prototype.run = function (job_id, callback) {
@@ -98,7 +99,6 @@ JobRunner.prototype._run = function (job, query, callback) {
             }
 
             if (isLastQuery(job, query.index)) {
-                console.log('set done', query.index);
                 return self.jobBackend.setDone(job, query.index, callback);
             }
 

@@ -28,6 +28,7 @@ var JobQueue = require('../batch/job_queue');
 var UserIndexer = require('../batch/user_indexer');
 var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
+var queryAdapter = require('../batch/query_adapter');
 var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
 
 var cors = require('./middlewares/cors');
@@ -191,7 +192,7 @@ function App() {
     var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
-    var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller);
+    var jobController = new JobController(userDatabaseService, jobBackend, jobCanceller, queryAdapter);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);

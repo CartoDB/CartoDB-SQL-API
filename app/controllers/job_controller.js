@@ -37,10 +37,11 @@ function getMaxSizeErrorMessage(sql) {
     );
 }
 
-function JobController(userDatabaseService, jobBackend, jobCanceller) {
+function JobController(userDatabaseService, jobBackend, jobCanceller, queryAdapter) {
     this.userDatabaseService = userDatabaseService;
     this.jobBackend = jobBackend;
     this.jobCanceller = jobCanceller;
+    this.queryAdapter = queryAdapter;
 }
 
 JobController.prototype.route = function (app) {
@@ -249,23 +250,6 @@ JobController.prototype.getJob = function (req, res) {
     );
 };
 
-function isValidJob(sql) {
-    if (_.isArray(sql)) {
-        for (var i = 0; i < sql.length; i++) {
-            if (!_.isString(sql[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    if (!_.isString(sql)) {
-        return false;
-    }
-
-    return true;
-}
-
 JobController.prototype.createJob = function (req, res) {
     // jshint maxcomplexity: 7
     var self = this;
@@ -275,12 +259,14 @@ JobController.prototype.createJob = function (req, res) {
     var cdbUsername = cdbReq.userByReq(req);
 
 
-    if (!isValidJob(sql)) {
-        return handleException(new Error('You must indicate a valid SQL'), res);
-    }
-
     if (reachMaxQuerySizeLimit(sql)) {
         return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
+    }
+
+    try {
+        this.queryAdapter(sql);
+    } catch (err) {
+        return handleException(new Error('You must indicate a valid SQL'), res);
     }
 
     if ( req.profiler ) {
@@ -352,7 +338,9 @@ JobController.prototype.updateJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!isValidJob(sql)) {
+    try {
+        this.queryAdapter(sql);
+    } catch (err) {
         return handleException(new Error('You must indicate a valid SQL'), res);
     }
 

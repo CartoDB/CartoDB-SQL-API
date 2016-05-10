@@ -1,91 +1,80 @@
 'use strict';
 
 var assert = require('assert');
-var QueryAdapter = require('../../../batch/query_adapter');
+var queryAdapter = require('../../../batch/query_adapter');
 
 describe('batch API job adapter', function () {
     beforeEach(function () {
-        this.queryAdapter = new QueryAdapter();
+        this.queryAdapter = queryAdapter;
     });
 
-    it('.adapt() should adapt one query job', function () {
+    it('should validate simple query', function () {
         var query = 'select * from wadus';
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(query);
 
-        assert.deepEqual(adaptedQuery, {
-            query: [{
-                query: 'select * from wadus',
-                status: 'pending'
-            }]
-        });
+        assert.deepEqual(adaptedQuery, 'select * from wadus');
     });
 
-    it('.adapt() should throw error with simple object query', function () {
-        var query = { query: 'select * from wadus' };
+    it('should throw error with invalid fallback query (single query)', function () {
+        var fallbackQuery = { query: 'select * from wadus' };
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(fallbackQuery);
         }.bind(this),  /Invalid query/);
     });
 
-    it('.adapt() should throw error with simple object query', function () {
-        var query = ['select * from wadus'];
-        var adaptedQuery = this.queryAdapter.adapt(query);
+    it('should validate multiquery', function () {
+        var multiquery = ['select * from wadus'];
+        var adaptedQuery = this.queryAdapter(multiquery);
 
-        assert.deepEqual(adaptedQuery, {
-            query: [{
-                query: 'select * from wadus',
-                status: 'pending'
-            }]
-        });
+        assert.deepEqual(adaptedQuery, [{
+            query: 'select * from wadus',
+            status: 'pending'
+        }]);
     });
 
-    it('.adapt() should adapt array with one query object', function () {
+    it('should throw error with invalid fallback query (without fallbacks)', function () {
         var query = [{ query: 'select * from wadus' }];
-        var adaptedQuery = this.queryAdapter.adapt(query);
-
-        assert.deepEqual(adaptedQuery, {
-            query: [{
-                query: 'select * from wadus',
-                status: 'pending'
-            }]
-        });
+        assert.throws(function () {
+            this.queryAdapter(query);
+        }.bind(this),  /Invalid query/);
     });
 
-    it('.adapt() should adapt two queries job', function () {
-        var query = [
+    it('should validate multiquery (two queries)', function () {
+        var multiquery = [
             'select * from wadus',
             'select * from wadus'
         ];
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(multiquery);
 
-        assert.deepEqual(adaptedQuery, {
-            query: [{
-                query: 'select * from wadus',
-                status: 'pending'
-            }, {
-                query: 'select * from wadus',
-                status: 'pending'
-            }]
-        });
+        assert.deepEqual(adaptedQuery, [{
+            query: 'select * from wadus',
+            status: 'pending'
+        }, {
+            query: 'select * from wadus',
+            status: 'pending'
+        }]);
     });
 
-    it('.adapt() should throw error with array query wrapped array', function () {
-        var query = [[
+    it('should throw error with nested multiquery', function () {
+        var invalidQuery = [[
             'select * from wadus',
             'select * from wadus'
         ]];
+
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(invalidQuery);
         }.bind(this),  /Invalid query/);
     });
 
-    it('.adapt() should adapt a query job with "onerror" fallback', function () {
-        var query = [{
-            query: 'select * from wadus',
-            onerror: 'select * from wadus'
-        }];
-        var adaptedQuery = this.queryAdapter.adapt(query);
+    it('should initialize a fallback query ("onerror" for single query)', function () {
+        var fallbackQuery = {
+            query: [{
+                query: 'select * from wadus',
+                onerror: 'select * from wadus'
+            }]
+        };
+        var adaptedQuery = this.queryAdapter(fallbackQuery);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -96,77 +85,84 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() throw error with nested queries', function () {
-        var query = [{
+    it('should throw error with nested queries', function () {
+        var invalidQuery = [{
             query: {
                 query: 'select * from wadus'
             },
             onerror: 'select * from wadus'
         }];
+
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(invalidQuery);
         }.bind(this), /Invalid query/);
     });
 
-    it('.adapt() should adapt one query job with "onsuccess" fallback', function () {
-        var query = [{
-            query: 'select * from wadus',
+    it('should initilize fallback query with overall "onsuccess"', function () {
+        var fallbackQuery = {
+            query: [{
+                query: 'select * from wadus',
+            }],
             onsuccess: 'select * from wadus'
-        }];
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        };
+        var adaptedQuery = this.queryAdapter(fallbackQuery);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
                 query: 'select * from wadus',
                 status: 'pending',
-                onsuccess: 'select * from wadus'
-            }]
+            }],
+            onsuccess: 'select * from wadus'
         });
     });
 
-    it('.adapt() throw error with nested queries', function () {
-        var query = [{
-            query: {
+    it('should throw error with mixed multiquery-fallback', function () {
+        var invalidQuery = [{
+            query: [{
                 query: 'select * from wadus'
-            },
+            }],
             onerror: 'select * from wadus'
         }];
+
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(invalidQuery);
         }.bind(this), /Invalid query/);
     });
 
-    it('.adapt() should throw error when "onsuccess" fallback is not a query', function () {
-        var query = {
+    it('should throw error when overall "onsuccess" fallback is not a single query', function () {
+        var invalidQuery = {
             query: ['select * from wadus'],
             onsuccess: {
                 query: 'select * from wadus'
             }
         };
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(invalidQuery);
         }.bind(this), /Invalid query/);
     });
 
-    it('.adapt() should throw error when "onerror" fallback is not a query', function () {
-        var query = {
+    it('should throw error when overall "onerror" fallback is not a query', function () {
+        var invalidQuery = {
             query: ['select * from wadus'],
             onerror: {
                 query: 'select * from wadus'
             }
         };
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(invalidQuery);
         }.bind(this), /Invalid query/);
     });
 
-    it('.adapt() should adapt one query job with "onsuccess" and "onerror" fallback', function () {
-        var query = [{
-            query: 'select * from wadus',
-            onsuccess: 'select * from wadus',
-            onerror: 'select * from wadus'
-        }];
-        var adaptedQuery = this.queryAdapter.adapt(query);
+    it('should initilize fallback-query with "onsuccess" and "onerror" fallback', function () {
+        var fallbackQuery = {
+            query: [{
+                query: 'select * from wadus',
+                onsuccess: 'select * from wadus',
+                onerror: 'select * from wadus'
+            }]
+        };
+
+        var adaptedQuery = this.queryAdapter(fallbackQuery);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -178,8 +174,8 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should adapt two queries job with "onsuccess"  overall fallback', function () {
-        var query = {
+    it('should initilize fallback-query with overall "onsuccess" fallback', function () {
+        var fallbackQuery = {
             query: [
                 'select * from wadus',
                 'select * from wadus'
@@ -187,7 +183,7 @@ describe('batch API job adapter', function () {
             onsuccess: 'select * from wadus'
         };
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(fallbackQuery);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -201,19 +197,19 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should throw with nested query arrays', function () {
-        var query = {
+    it('should throw error with nested arrays in fallback-query', function () {
+        var fallbackQuery = {
             query: [[
                 'select * from wadus'
             ]]
         };
 
         assert.throws(function () {
-            this.queryAdapter.adapt(query);
+            this.queryAdapter(fallbackQuery);
         }.bind(this), /Invalid query/);
     });
 
-    it('.adapt() should adapt two queries job with "onerror" overall fallback', function () {
+    it('should initilize fallback-query wuth two queries with "onerror" overall fallback', function () {
         var query = {
             query: [
                 'select * from wadus',
@@ -222,7 +218,7 @@ describe('batch API job adapter', function () {
             onerror: 'select * from wadus'
         };
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(query);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -236,7 +232,7 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should adapt two queries job with "onerror" and "onsuccess" overall fallback', function () {
+    it('should initilize two queries job with "onerror" and "onsuccess" overall fallback', function () {
         var query = {
             query: [
                 'select * from wadus',
@@ -246,7 +242,7 @@ describe('batch API job adapter', function () {
             onsuccess: 'select * from wadus'
         };
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(query);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -261,7 +257,7 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should adapt two queries, one with "onsuccess" fallback,' +
+    it('should adapt two queries, one with "onsuccess" fallback,' +
         ' "onerror" and "onsuccess" overall fallback', function () {
         var query = {
             query: [{
@@ -274,7 +270,7 @@ describe('batch API job adapter', function () {
             onsuccess: 'select * from wadus'
         };
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(query);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
@@ -290,7 +286,7 @@ describe('batch API job adapter', function () {
         });
     });
 
-    it('.adapt() should adapt two queries, one with "onerror" fallback,' +
+    it('should adapt two queries, one with "onerror" fallback,' +
         ' "onerror" and "onsuccess" overall fallback', function () {
         var query = {
             query: [
@@ -303,7 +299,7 @@ describe('batch API job adapter', function () {
             onsuccess: 'select * from wadus'
         };
 
-        var adaptedQuery = this.queryAdapter.adapt(query);
+        var adaptedQuery = this.queryAdapter(query);
 
         assert.deepEqual(adaptedQuery, {
             query: [{
