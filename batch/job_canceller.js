@@ -1,6 +1,7 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
+var jobStatus = require('./job_status');
 
 function JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend) {
     this.metadataBackend = metadataBackend;
@@ -11,7 +12,7 @@ function JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend) 
 function getIndexOfRunningQuery(job) {
     if (Array.isArray(job.query)) {
         for (var i = 0; i < job.query.length; i++) {
-            if (job.query[i].status === 'running') {
+            if (job.query[i].status === jobStatus.RUNNING) {
                 return i;
             }
         }
@@ -26,11 +27,11 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
             return callback(err);
         }
 
-        if (job.status === 'pending') {
+        if (job.status === jobStatus.PENDING) {
             return self.jobBackend.setCancelled(job, callback);
         }
 
-        if (job.status !== 'running') {
+        if (job.status !== jobStatus.RUNNING) {
             var cancelNotAllowedError = new Error('Job is ' + job.status + ', cancel is not allowed');
             cancelNotAllowedError.name  = 'CancelNotAllowedError';
             return callback(cancelNotAllowedError);
