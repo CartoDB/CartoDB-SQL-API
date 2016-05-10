@@ -7,20 +7,20 @@ var fs      = require('fs');
 
 describe('geopackage query', function(){
     // Default name, cartodb-query, fails because of the hyphen.
-    var table_name = 'a_gpkg_table'
+    var table_name = 'a_gpkg_table';
+    var base_url = '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=gpkg&filename=' + table_name;
 
     it('returns a valid geopackage database', function(done){
         assert.response(app, {
-            url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=geopackage&filename=' + table_name,
+            url: base_url,
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
         },{ }, function(res) {
             assert.equal(res.statusCode, 200, res.body);
             assert.equal(res.headers["content-type"], "application/x-sqlite3; charset=utf-8");
-            console.log(res.headers["content-disposition"])
             assert.notEqual(res.headers["content-disposition"].indexOf(table_name + ".gpkg"), -1);
             var db = new sqlite.Database(':memory:', res.body);
-            var qr = db.get("PRAGMA database_list", function(err){
+            var qr = db.get("PRAGMA database_list", function(err) {
                 assert.equal(err, null);
                 done();
             });
@@ -31,7 +31,7 @@ describe('geopackage query', function(){
 
     it('gets database and geopackage schema', function(done){
         assert.response(app, {
-            url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=geopackage&filename=' + table_name,
+            url: base_url,
             headers: {host: 'vizzuality.cartodb.com'},
             encoding: 'binary',
             method: 'GET'

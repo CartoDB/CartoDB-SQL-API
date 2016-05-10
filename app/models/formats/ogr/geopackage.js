@@ -2,7 +2,7 @@ var ogr = require('./../ogr');
 
 function GeoPackageFormat() {}
 
-GeoPackageFormat.prototype = new ogr('geopackage');
+GeoPackageFormat.prototype = new ogr('gpkg');
 
 GeoPackageFormat.prototype._contentType = "application/x-sqlite3; charset=utf-8";
 GeoPackageFormat.prototype._fileExtension = "gpkg";
