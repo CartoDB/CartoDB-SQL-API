@@ -1,6 +1,6 @@
 'use strict';
 
-var queryDetector = require('./queryDetector');
+var queryDetector = require('./query_detector');
 
 var isSimple = queryDetector.isSimple;
 var isMultiple = queryDetector.isMultiple;
