@@ -4,6 +4,9 @@
 Announcements:
  - Upgrades step-profiler to 0.3.0 to avoid dots in json keys #294
 
+ New features:
+
+  * Add support for geopackage format (`format=gpkg` at the URL) #291
 
 1.27.1 - 2016-04-18
 -------------------
