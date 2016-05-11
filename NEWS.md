@@ -1,4 +1,4 @@
-1.28.0 - 2016-mm-dd
+1.28.0 - 2016-05-11
 -------------------
 
 Announcements:
@@ -7,6 +7,7 @@ Announcements:
  New features:
 
   * Add support for geopackage format (`format=gpkg` at the URL) #291
+
 
 1.27.1 - 2016-04-18
 -------------------
