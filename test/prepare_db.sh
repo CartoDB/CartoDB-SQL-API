@@ -85,10 +85,12 @@ if test x"$PREPARE_PGSQL" = xyes; then
 
   # TODO: send in a single run, togheter with test.sql
   psql -c "CREATE EXTENSION plpythonu;" ${TEST_DB}
-  curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/cdb/scripts-available/CDB_QueryStatements.sql -o support/CDB_QueryStatements.sql
-  curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/cdb/scripts-available/CDB_QueryTables.sql -o support/CDB_QueryTables.sql
-  psql -f support/CDB_QueryStatements.sql ${TEST_DB}
-  psql -f support/CDB_QueryTables.sql ${TEST_DB}
+  for i in CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_Overviews
+  do
+    curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql -o support/$i.sql
+    cat support/$i.sql | sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" \
+        | psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+  done
 
 fi
 

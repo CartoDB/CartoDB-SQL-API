@@ -3,11 +3,39 @@
 var _ = require('underscore');
 var step = require('step');
 var assert = require('assert');
+var util = require('util');
 
 var AuthApi = require('../auth/auth_api');
 var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
+
+var ONE_KILOBYTE_IN_BYTES = 1024;
+var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4 * ONE_KILOBYTE_IN_BYTES; // 4kb
+
+function reachMaxQuerySizeLimit(query) {
+    var querySize;
+
+    try {
+        querySize = (typeof query === 'string') ? query.length : JSON.stringify(query).length;
+    } catch (e) {
+        return false;
+    }
+
+    return querySize > MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+}
+
+function getMaxSizeErrorMessage(sql) {
+    return util.format([
+            'Your payload is too large (%s). Max size allowed is %s (%skb).',
+            'Are you trying to import data?.',
+            'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
+        ].join(' '),
+        sql.length,
+        MAX_LIMIT_QUERY_SIZE_IN_BYTES,
+        Math.round(MAX_LIMIT_QUERY_SIZE_IN_BYTES / ONE_KILOBYTE_IN_BYTES)
+    );
+}
 
 function JobController(userDatabaseService, jobBackend, jobCanceller) {
     this.userDatabaseService = userDatabaseService;
@@ -221,15 +249,38 @@ JobController.prototype.getJob = function (req, res) {
     );
 };
 
+function isValidJob(sql) {
+    if (_.isArray(sql)) {
+        for (var i = 0; i < sql.length; i++) {
+            if (!_.isString(sql[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    if (!_.isString(sql)) {
+        return false;
+    }
+
+    return true;
+}
+
 JobController.prototype.createJob = function (req, res) {
+    // jshint maxcomplexity: 7
     var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(sql)) {
-        return handleException(new Error("You must indicate a sql query"), res);
+
+    if (!isValidJob(sql)) {
+        return handleException(new Error('You must indicate a valid SQL'), res);
+    }
+
+    if (reachMaxQuerySizeLimit(sql)) {
+        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
 
     if ( req.profiler ) {
@@ -293,6 +344,7 @@ JobController.prototype.createJob = function (req, res) {
 
 
 JobController.prototype.updateJob = function (req, res) {
+    // jshint maxcomplexity: 7
     var self = this;
     var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
@@ -300,8 +352,12 @@ JobController.prototype.updateJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!_.isString(sql)) {
-        return handleException(new Error("You must indicate a sql query"), res);
+    if (!isValidJob(sql)) {
+        return handleException(new Error('You must indicate a valid SQL'), res);
+    }
+
+    if (reachMaxQuerySizeLimit(sql)) {
+        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
 
     if ( req.profiler ) {

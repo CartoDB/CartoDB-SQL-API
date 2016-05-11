@@ -26,7 +26,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var batchFactory = require('../../batch');
 
-describe('Use case 2: cancel a running job', function() {
+describe('Use case 9: modify a pending multiquery job', function() {
 
     var batch = batchFactory(metadataBackend);
 
@@ -42,15 +42,18 @@ describe('Use case 2: cancel a running job', function() {
     });
 
     var runningJob = {};
-    var cancelledJob = {};
+    var pendingJob = {};
 
-    it('Step 1, should create a new job', function (done){
+    it('Step 1, should create a multiquery job', function (done) {
         assert.response(app, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
-                query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
+                query: [
+                    "select pg_sleep(3)",
+                    "SELECT * FROM untitle_table_4"
+                ]
             })
         }, {
             status: 201
@@ -60,85 +63,74 @@ describe('Use case 2: cancel a running job', function() {
         });
     });
 
-    it('Step 2, job should be running', function (done){
+    it('Step 2, should create another multiquery job', function (done) {
+        assert.response(app, {
+            url: '/api/v2/sql/job?api_key=1234',
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'POST',
+            data: querystring.stringify({
+                query: [
+                    "SELECT pg_sleep(1)",
+                    "SELECT * FROM untitle_table_4"
+                ]
+            })
+        }, {
+            status: 201
+        }, function(res) {
+            pendingJob = JSON.parse(res.body);
+            done();
+        });
+    });
+
+    it('Step 3, multiquery job should be pending', function (done){
         var interval = setInterval(function () {
             assert.response(app, {
-                url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
+                url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
                 status: 200
             }, function(res) {
                 var job = JSON.parse(res.body);
-                if (job.status === "running") {
+                if (job.status === "pending") {
                     clearInterval(interval);
                     done();
-                } else if (job.status === "done" || job.status === "failed" || job.status === "cancelled") {
+                } else {
                     clearInterval(interval);
-                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
                 }
             });
         }, 50);
     });
 
-    it('Step 3, cancel a job', function (done){
+    it('Step 4, multiquery job should be modified', function (done){
         assert.response(app, {
-            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'DELETE'
-        }, {
-            status: 200
-        }, function(res) {
-            cancelledJob = JSON.parse(res.body);
-            assert.equal(cancelledJob.status, "cancelled");
-            done();
-        });
-    });
-
-    it('Step 4, job should be cancelled', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 200
-        }, function(res) {
-            var job = JSON.parse(res.body);
-            if (job.status === "cancelled") {
-                done();
-            } else {
-                done(new Error('Job status is not cancelled, ' + job.status));
-            }
-        });
-    });
-
-    it('Step 5, cancel a cancelled should give an error', function (done) {
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'DELETE'
-        }, {
-            status: 400
-        }, function(res) {
-            var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is cancelled, cancel is not allowed");
-            done();
-        });
-    });
-
-    it('Step 5, modify a cancelled job should give an error', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
                 query: "SELECT cartodb_id FROM untitle_table_4"
             })
         }, {
-            status: 400
+            status: 200
         }, function(res) {
-            var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is not pending, it cannot be updated");
+            var jobGot = JSON.parse(res.body);
+            assert.equal(jobGot.job_id, pendingJob.job_id);
+            assert.equal(jobGot.query, "SELECT cartodb_id FROM untitle_table_4");
+            done();
+        });
+    });
+
+    it('Step 5, running multiquery job should be cancelled', function (done){
+        assert.response(app, {
+            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'DELETE'
+        }, {
+            status: 200
+        }, function(res) {
+            var cancelledJob = JSON.parse(res.body);
+            assert.equal(cancelledJob.status, "cancelled");
             done();
         });
     });

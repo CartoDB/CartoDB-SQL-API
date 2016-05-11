@@ -1,6 +1,6 @@
-# Making calls to the SQL API
+# Making Calls to the SQL API
 
-CartoDB is based on the rock solid PostgreSQL database. All of your tables reside a single database, which means you can perform complex queries joining tables or carrying out geospatial operations. The best place to learn about PostgreSQL's SQL language is the [official documentation](http://www.postgresql.org/docs/9.1/static/).
+CartoDB is based on the rock solid PostgreSQL database. All of your tables reside a single database, which means you can perform complex queries joining tables, or carrying out geospatial operations. The best place to learn about PostgreSQL's SQL language is the [official documentation](http://www.postgresql.org/docs/9.1/static/).
 
 CartoDB is also based on PostGIS, so take a look at the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
 
@@ -12,7 +12,7 @@ All SQL API requests to your CartoDB account should follow this general pattern:
 #### SQL query example
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q={SQL statement}
+https://{username}.cartodb.com/api/v2/sql?q={SQL statement}
 ```
 
 If you encounter errors, double-check that you are using the correct account name, and that your SQL statement is valid. A simple example of this pattern is conducting a count of all the records in your table:
@@ -20,7 +20,7 @@ If you encounter errors, double-check that you are using the correct account nam
 #### Count example
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
+https://{username}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 ```
 
 #### Result
@@ -37,7 +37,7 @@ https://{account}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 }
 ```
 
-Finally, remember that in order to use the SQL API, either your table must be public, or you must be authenticated using API Keys, as discussed above.
+Finally, remember that in order to use the SQL API, either your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API Keys.
 
 
 ## POST and GET
@@ -49,7 +49,7 @@ The CartoDB SQL API is setup to handle both GET and POST requests. You can test 
 #### Call
 
 ```javascript
-$.getJSON('https://'+your_account_name+'.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
+$.getJSON('https://{username}.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
   $.each(data.rows, function(key, val) {
     // do something!
   });
@@ -68,7 +68,7 @@ The standard response from the CartoDB SQL API is JSON. If you are building a we
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -97,7 +97,7 @@ Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/ge
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -126,7 +126,7 @@ https://{account}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_n
 }
 ```
 
-The SQL API accepts other output formats that can be useful to export data. Right now you can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
+The SQL API accepts other output formats that can be useful to export data. You can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
 
 
 ## Output filename
@@ -136,7 +136,7 @@ To customize the output filename, add the `filename` parameter to your URL:
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 
@@ -147,13 +147,13 @@ Currently, there is no public method to access your table schemas. The simplest 
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 
 ## Response errors
 
-To help you debug your SQL queries, the CartoDB SQL API returns errors as part of the JSON response. Errors come back as follows,
+To help you debug your SQL queries, the CartoDB SQL API returns the full error provided by PostgreSQL, as part of the JSON response. Error responses appear in the following format,
 
 #### Result
 
@@ -165,27 +165,26 @@ To help you debug your SQL queries, the CartoDB SQL API returns errors as part o
 }
 ```
 
-You can use these errors to help understand your SQL. For more complete documentation see the Error Codes and Solutions section of this Users Guide.
-
+You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through the CartoDB Editor, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
 
 ## Write data to your CartoDB account
 
-Performing inserts or updates on your data is simple using your [API key](#authentication). All you need to do is supply a correct SQL [INSERT](http://www.postgresql.org/docs/9.1/static/sql-insert.html) or [UPDATE](http://www.postgresql.org/docs/9.1/static/sql-update.html) statement for your table along with the api_key parameter for your account. Be sure to keep these requests private, as anyone with your API key will be able to modify your tables. A correct SQL insert statement means that all the columns you want to insert into already exist in your table, and all the values for those columns are the right type (quoted string, unquoted string for geoms and dates, or numbers).
+Performing inserts or updates on your data is simple using your [API Key](#authentication). All you need to do is supply a correct SQL [INSERT](http://www.postgresql.org/docs/9.1/static/sql-insert.html) or [UPDATE](http://www.postgresql.org/docs/9.1/static/sql-update.html) statement for your table along with the api_key parameter for your account. Be sure to keep these requests private, as anyone with your API Key will be able to modify your tables. A correct SQL insert statement means that all the columns you want to insert into already exist in your table, and all the values for those columns are the right type (quoted string, unquoted string for geoms and dates, or numbers).
 
 ### Insert
 
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={Your API key}
+https://{username}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={api_key}
 ```
 
-Updates are just as simple. Here is an example, updating a row based on the value of the cartodb_id column.
+Updates are just as simple. Here is an example of updating a row based on the value of the cartodb_id column.
 
 ### Update
 
 #### Call
 
 ```bash
-https://{account}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={Your API key}
+https://{username}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={api_key}
 ```

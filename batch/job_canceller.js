@@ -1,11 +1,22 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
+var jobStatus = require('./job_status');
 
 function JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseMetadataService = userDatabaseMetadataService;
     this.jobBackend = jobBackend;
+}
+
+function getIndexOfRunningQuery(job) {
+    if (Array.isArray(job.query)) {
+        for (var i = 0; i < job.query.length; i++) {
+            if (job.query[i].status === jobStatus.RUNNING) {
+                return i;
+            }
+        }
+    }
 }
 
 JobCanceller.prototype.cancel = function (job_id, callback) {
@@ -16,11 +27,11 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
             return callback(err);
         }
 
-        if (job.status === 'pending') {
+        if (job.status === jobStatus.PENDING) {
             return self.jobBackend.setCancelled(job, callback);
         }
 
-        if (job.status !== 'running') {
+        if (job.status !== jobStatus.RUNNING) {
             var cancelNotAllowedError = new Error('Job is ' + job.status + ', cancel is not allowed');
             cancelNotAllowedError.name  = 'CancelNotAllowedError';
             return callback(cancelNotAllowedError);
@@ -36,7 +47,15 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
                     return callback(err);
                 }
 
-                self.jobBackend.setCancelled(job, callback);
+                var queryIndex = getIndexOfRunningQuery(job);
+
+                self.jobBackend.setCancelled(job, queryIndex, function (err, job) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, job, queryIndex);
+                });
             });
         });
     });
@@ -45,7 +64,7 @@ JobCanceller.prototype.cancel = function (job_id, callback) {
 JobCanceller.prototype.drain = function (job_id, callback) {
     var self = this;
 
-    this.cancel(job_id, function (err, job) {
+    this.cancel(job_id, function (err, job, queryIndex) {
         if (err && err.name === 'CancelNotAllowedError') {
             return callback(err);
         }
@@ -55,15 +74,14 @@ JobCanceller.prototype.drain = function (job_id, callback) {
             return self.jobBackend.setUnknown(job_id, callback);
         }
 
-        self.jobBackend.setPending(job, callback);
+        self.jobBackend.setPending(job, queryIndex, callback);
     });
 
 };
 
 JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
     var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-    var escapedJobQuery = pg.escapeLiteral(job.query + ' /* ' + job.job_id + ' */');
-    var getPIDQuery = 'SELECT pid FROM pg_stat_activity WHERE query = ' + escapedJobQuery;
+    var getPIDQuery = "SELECT pid FROM pg_stat_activity WHERE query LIKE '/* " + job.job_id + " */%'";
 
     pg.query(getPIDQuery, function(err, result) {
         if (err) {
@@ -71,7 +89,7 @@ JobCanceller.prototype._query = function (job, userDatabaseMetadata, callback) {
         }
 
         if (!result.rows[0] || !result.rows[0].pid) {
-            return callback(new Error('Query not running currently'));
+            return callback(new Error('Query is not running currently'));
         }
 
         var pid = result.rows[0].pid;

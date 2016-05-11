@@ -4,6 +4,7 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var forever = require('./forever');
 var queue = require('queue-async');
+var jobStatus = require('./job_status');
 
 function Batch(jobSubscriber, jobQueuePool, jobRunner, jobCanceller) {
     EventEmitter.call(this);
@@ -124,7 +125,7 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
                 return callback(err);
             }
 
-            if (job.status === 'failed') {
+            if (job.status === jobStatus.FAILED) {
                 console.log('Job %s %s in %s due to: %s', job_id, job.status, host, job.failed_reason);
             } else {
                 console.log('Job %s %s in %s', job_id, job.status, host);
