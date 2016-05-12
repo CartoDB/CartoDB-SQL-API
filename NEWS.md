@@ -1,6 +1,9 @@
 1.28.1 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ * OGR with _needSRS=true fails for empty tables #299
+
 
 1.28.0 - 2016-05-11
 -------------------
