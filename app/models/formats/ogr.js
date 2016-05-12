@@ -130,6 +130,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
           var srid = result.rows[0].srid;
           var type = result.rows[0].type;
           next(null, srid, type);
+        } else {
+          // continue as srid and geom type are not critical when there are no results
+          next(null);
         }
       });
 
