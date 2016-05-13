@@ -37,11 +37,12 @@ function getMaxSizeErrorMessage(sql) {
     );
 }
 
-function JobController(userDatabaseService, jobBackend, jobCanceller) {
+function JobController(userDatabaseService, jobService) {
     this.userDatabaseService = userDatabaseService;
-    this.jobBackend = jobBackend;
-    this.jobCanceller = jobCanceller;
+    this.jobService = jobService;
 }
+
+module.exports = JobController;
 
 JobController.prototype.route = function (app) {
     app.post(global.settings.base_url + '/sql/job',  this.createJob.bind(this));
@@ -84,13 +85,13 @@ JobController.prototype.cancelJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobCanceller.cancel(job_id, function (err, job) {
+            self.jobService.cancel(job_id, function (err, job) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    job: job,
+                    job: job.serialize(),
                     host: userDatabase.host
                 });
             });
@@ -149,13 +150,15 @@ JobController.prototype.listJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.list(cdbUsername, function (err, jobs) {
+            self.jobService.list(cdbUsername, function (err, jobs) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    jobs: jobs,
+                    jobs: jobs.map(function (job) {
+                        return job.serialize();
+                    }),
                     host: userDatabase.host
                 });
             });
@@ -215,13 +218,13 @@ JobController.prototype.getJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.get(job_id, function (err, job) {
+            self.jobService.get(job_id, function (err, job) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    job: job,
+                    job: job.serialize(),
                     host: userDatabase.host
                 });
             });
@@ -249,23 +252,6 @@ JobController.prototype.getJob = function (req, res) {
     );
 };
 
-function isValidJob(sql) {
-    if (_.isArray(sql)) {
-        for (var i = 0; i < sql.length; i++) {
-            if (!_.isString(sql[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    if (!_.isString(sql)) {
-        return false;
-    }
-
-    return true;
-}
-
 JobController.prototype.createJob = function (req, res) {
     // jshint maxcomplexity: 7
     var self = this;
@@ -274,11 +260,7 @@ JobController.prototype.createJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-
-    if (!isValidJob(sql)) {
-        return handleException(new Error('You must indicate a valid SQL'), res);
-    }
-
+    // TODO: in job.validate()
     if (reachMaxQuerySizeLimit(sql)) {
         return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
@@ -308,13 +290,19 @@ JobController.prototype.createJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.create(cdbUsername, sql, userDatabase.host, function (err, result) {
+            var data = {
+                user: cdbUsername,
+                query: sql,
+                host: userDatabase.host
+            };
+
+            self.jobService.create(data, function (err, job) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    job: result,
+                    job: job.serialize(),
                     host: userDatabase.host
                 });
             });
@@ -342,7 +330,6 @@ JobController.prototype.createJob = function (req, res) {
     );
 };
 
-
 JobController.prototype.updateJob = function (req, res) {
     // jshint maxcomplexity: 7
     var self = this;
@@ -352,10 +339,7 @@ JobController.prototype.updateJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if (!isValidJob(sql)) {
-        return handleException(new Error('You must indicate a valid SQL'), res);
-    }
-
+    // TODO: in jobValidate
     if (reachMaxQuerySizeLimit(sql)) {
         return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
     }
@@ -385,13 +369,18 @@ JobController.prototype.updateJob = function (req, res) {
                 req.profiler.done('setDBAuth');
             }
 
-            self.jobBackend.update(job_id, sql, function (err, job) {
+            var data = {
+                job_id: job_id,
+                query: sql
+            };
+
+            self.jobService.update(data, function (err, job) {
                 if (err) {
                     return next(err);
                 }
 
                 next(null, {
-                    job: job,
+                    job: job.serialize(),
                     host: userDatabase.host
                 });
             });
@@ -413,9 +402,8 @@ JobController.prototype.updateJob = function (req, res) {
             if (result.host) {
               res.header('X-Served-By-DB-Host', result.host);
             }
+
             res.send(result.job);
         }
     );
 };
-
-module.exports = JobController;

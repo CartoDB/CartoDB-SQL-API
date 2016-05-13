@@ -5,8 +5,9 @@ var PSQL = require('cartodb-psql');
 function QueryRunner() {
 }
 
-QueryRunner.prototype.run = function (job_id, sql, userDatabaseMetadata, callback) {
+module.exports = QueryRunner;
 
+QueryRunner.prototype.run = function (job_id, sql, userDatabaseMetadata, callback) {
     var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
 
     pg.query('SET statement_timeout=0', function (err) {
@@ -35,6 +36,3 @@ QueryRunner.prototype.run = function (job_id, sql, userDatabaseMetadata, callbac
     });
 
 };
-
-
-module.exports = QueryRunner;
