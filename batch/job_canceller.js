@@ -26,7 +26,7 @@ function doCancel(job_id, userDatabaseMetadata, callback) {
             return callback(err);
         }
 
-        cancelQuery(pg, pid, function (err, isCancelled) {
+        doCancelQuery(pg, pid, function (err, isCancelled) {
             if (err) {
                 return callback(err);
             }
@@ -56,7 +56,7 @@ function getQueryPID(pg, job_id, callback) {
     });
 }
 
-function cancelQuery(pg, pid, callback) {
+function doCancelQuery(pg, pid, callback) {
     var cancelQuery = 'SELECT pg_cancel_backend(' + pid + ')';
 
     pg.query(cancelQuery, function (err, result) {

@@ -19,23 +19,44 @@ function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer
     this.userIndexer = userIndexer;
 }
 
-JobBackend.prototype.toRedisParams = function (obj) {
-    var redisParams = [];
+JobBackend.prototype.toRedisParams = function (data) {
+    var redisParams = [this.redisPrefix + data.job_id];
+    var obj = JSON.parse(JSON.stringify(data));
+    delete obj.job_id;
+
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
-            redisParams.push(obj[property]);
+            if (property === 'query' && typeof obj[property] !== 'string') {
+                redisParams.push(JSON.stringify(obj[property]));
+            } else {
+                redisParams.push(obj[property]);
+            }
         }
     }
 
     return redisParams;
 };
 
-JobBackend.prototype.toObject = function (redisParams, redisValues) {
+JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
     var obj = {};
+
+    redisParams.shift(); // job_id value
+    redisParams.pop(); // WARN: weird function pushed by metadataBackend
+
     for (var i = 0; i < redisParams.length; i++) {
-        obj[redisParams[i]] = redisValues[i];
+        if (redisParams[i] === 'query') {
+            try {
+                obj[redisParams[i]] = JSON.parse(redisValues[i]);
+            } catch (e) {
+                obj[redisParams[i]] = redisValues[i];
+            }
+        } else {
+            obj[redisParams[i]] = redisValues[i];
+        }
     }
+
+    obj.job_id = job_id; // adds redisKey as object property
 
     return obj;
 };
@@ -54,6 +75,7 @@ JobBackend.prototype.get = function (job_id, callback) {
         'query',
         'created_at',
         'updated_at',
+        'host',
         'failed_reason'
     ];
 
@@ -68,8 +90,7 @@ JobBackend.prototype.get = function (job_id, callback) {
             return callback(notFoundError);
         }
 
-        var jobData = self.toObject(redisParams.slice(1), redisValues);
-        jobData.job_id = job_id;
+        var jobData = self.toObject(job_id, redisParams, redisValues);
 
         callback(null, jobData);
     });

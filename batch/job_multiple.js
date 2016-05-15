@@ -13,14 +13,19 @@ util.inherits(JobMultiple, JobBase);
 
 module.exports = JobMultiple;
 
-JobMultiple.prototype.is = function (query) {
+JobMultiple.is = function (query) {
     if (!Array.isArray(query)) {
         return false;
     }
 
+    // 1. From user: ['select * from ...', 'select * from ...']
+    // 2. From redis: [ { query: 'select * from ...', status: 'pending' },
+    //   { query: 'select * from ...', status: 'pending' } ]
     for (var i = 0; i < query.length; i++) {
         if (typeof query[i] !== 'string') {
-            return false;
+            if (typeof query[i].query !== 'string') {
+                return false;
+            }
         }
     }
 
@@ -29,48 +34,33 @@ JobMultiple.prototype.is = function (query) {
 
 JobMultiple.prototype.init = function () {
     for (var i = 0; i < this.data.query.length; i++) {
-        this.data.query[i] = {
-            query: this.data.query[i],
-            status: jobStatus.PENDING
-        };
+        if (!this.data.query[i].query && !this.data.query[i].status) {
+            this.data.query[i] = {
+                query: this.data.query[i],
+                status: jobStatus.PENDING
+            };
+        }
     }
-};
-
-JobMultiple.prototype.isPending = function (index) {
-    var isPending = JobMultiple.super_.prototype.isPending.call(this);
-
-    if (isPending && index) {
-        isPending = this.data.query[index].status === jobStatus.PENDING;
-    }
-
-    return isPending;
-};
-
-JobMultiple.prototype.hasNextQuery = function () {
-    return !!this.getNextQuery();
 };
 
 JobMultiple.prototype.getNextQuery = function () {
-    if (this.isPending()) {
-        for (var i = 0; i < this.data.query.length; i++) {
-            if (this.isPending(i)) {
-                return this.data.query[i].query;
-            }
+    for (var i = 0; i < this.data.query.length; i++) {
+        if (this.data.query[i].status === jobStatus.PENDING) {
+            return this.data.query[i].query;
         }
     }
 };
 
 JobMultiple.prototype.setQuery = function (query) {
-    var isMultiple = this.is(query);
-
-    if (this.isPending() && isMultiple) {
-        this.data.query = query;
+    if (!JobMultiple.is(query)) {
+        throw new Error('You must indicate a valid SQL');
     }
+
+    JobMultiple.super_.prototype.setQuery.call(this, query);
 };
 
 JobMultiple.prototype.setStatus = function (finalStatus) {
     var initialStatus = this.data.status;
-
     // if transition is to "done" and there are more queries to run
     // then job status must be "pending" instead of "done"
     // else job status transition to done (if "running")
@@ -81,7 +71,7 @@ JobMultiple.prototype.setStatus = function (finalStatus) {
     }
 
     for (var i = 0; i < this.data.query.length; i++) {
-        var isValid = JobMultiple.super_.isValidStatusTransition(this.data.query[i].status, finalStatus);
+        var isValid = JobMultiple.super_.prototype.isValidStatusTransition(this.data.query[i].status, finalStatus);
 
         if (isValid) {
             this.data.query[i].status = finalStatus;
@@ -90,16 +80,4 @@ JobMultiple.prototype.setStatus = function (finalStatus) {
     }
 
     throw new Error('Cannot set status from ' + initialStatus + ' to ' + finalStatus);
-};
-
-JobMultiple.prototype.set = function (data) {
-    JobMultiple.super_.prototype.set.call(this, data);
-
-    if (data.status) {
-        this.setStatus(data.status);
-    }
-
-    if (data.query) {
-        this.setQuery(data.query);
-    }
 };

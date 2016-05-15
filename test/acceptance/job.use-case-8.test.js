@@ -125,7 +125,7 @@ describe('Use case 8: cancel a running multiquery job', function() {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is cancelled, cancel is not allowed");
+            assert.equal(errors.error[0], "Cannot set status from cancelled to cancelled");
             done();
         });
     });
@@ -136,7 +136,12 @@ describe('Use case 8: cancel a running multiquery job', function() {
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
-                query: "SELECT cartodb_id FROM untitle_table_4"
+                query: [
+                    "select pg_sleep(1)",
+                    "select pg_sleep(1)",
+                    "select pg_sleep(1)",
+                    "select pg_sleep(1)"
+                ]
             })
         }, {
             status: 400

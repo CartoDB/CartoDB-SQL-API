@@ -26,7 +26,7 @@ var metadataBackend = require('cartodb-redis')({
 });
 var batchFactory = require('../../batch');
 
-describe('Use case 1: cancel and modify a done multiquery job', function () {
+describe('Use case 10: cancel and modify a done multiquery job', function () {
 
     var batch = batchFactory(metadataBackend);
 
@@ -95,7 +95,7 @@ describe('Use case 1: cancel and modify a done multiquery job', function () {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is done, cancel is not allowed");
+            assert.equal(errors.error[0], "Cannot set status from done to cancelled");
             done();
         });
     });
@@ -106,7 +106,10 @@ describe('Use case 1: cancel and modify a done multiquery job', function () {
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
-                query: "SELECT cartodb_id FROM untitle_table_4"
+                query: [
+                    "SELECT * FROM untitle_table_4",
+                    "SELECT * FROM untitle_table_4"
+                ]
             })
         }, {
             status: 400

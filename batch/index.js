@@ -26,7 +26,7 @@ module.exports = function batchFactory (metadataBackend) {
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     // TODO: down userDatabaseMetadataService
     var queryRunner = new QueryRunner();
-    var jobCanceller = new JobCanceller(metadataBackend, userDatabaseMetadataService, jobBackend);
+    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService);
 

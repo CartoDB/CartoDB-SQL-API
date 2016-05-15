@@ -103,20 +103,29 @@ describe('Use case 9: modify a pending multiquery job', function() {
         }, 50);
     });
 
-    it('Step 4, multiquery job should be modified', function (done){
+    it('Step 4, multiquery job should be modified', function (done) {
         assert.response(app, {
             url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'PUT',
             data: querystring.stringify({
-                query: "SELECT cartodb_id FROM untitle_table_4"
+                query: [
+                    "SELECT * FROM untitle_table_4",
+                    "SELECT * FROM untitle_table_4 limit 1"
+                ]
             })
         }, {
             status: 200
         }, function(res) {
             var jobGot = JSON.parse(res.body);
             assert.equal(jobGot.job_id, pendingJob.job_id);
-            assert.equal(jobGot.query, "SELECT cartodb_id FROM untitle_table_4");
+            assert.deepEqual(jobGot.query, [{
+                query: 'SELECT * FROM untitle_table_4',
+                status: 'pending'
+            }, {
+                query: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'pending'
+            }]);
             done();
         });
     });

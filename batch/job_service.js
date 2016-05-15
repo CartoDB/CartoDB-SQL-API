@@ -57,7 +57,12 @@ JobService.prototype.create = function (data, callback) {
     try {
         var job = JobFactory.create(data);
         job.validate();
-        this.jobBackend.create(job.data, callback);
+        this.jobBackend.create(job.data, function (err) {
+            if (err) {
+                return callback(err);
+            }
+            callback(null, job);
+        });
     } catch (err) {
         return callback(err);
     }
@@ -72,7 +77,7 @@ JobService.prototype.update = function (data, callback) {
         }
 
         try {
-            job.set(data);
+            job.setQuery(data.query);
             self.save(job, callback);
         } catch (err) {
             return callback(err);
@@ -85,10 +90,23 @@ JobService.prototype.save = function (job, callback) {
 
     try {
         job.validate();
-        self.jobBackend.update(job.data, callback);
     } catch (err) {
         return callback(err);
     }
+
+    self.jobBackend.update(job.data, function (err, data) {
+        if (err) {
+            return callback(err);
+        }
+
+        try {
+            job = JobFactory.create(data);
+        } catch (err) {
+            return callback(err);
+        }
+
+        callback(null, job);
+    });
 };
 
 JobService.prototype.cancel = function (job_id, callback) {
@@ -99,10 +117,16 @@ JobService.prototype.cancel = function (job_id, callback) {
             return callback(err);
         }
 
+        var isPending = job.isPending();
+
         try {
             job.setStatus(jobStatus.CANCELLED);
         } catch (err) {
             return callback(err);
+        }
+
+        if (isPending) {
+            return self.save(job, callback);
         }
 
         self.jobCanceller.cancel(job, function (err) {
@@ -110,7 +134,7 @@ JobService.prototype.cancel = function (job_id, callback) {
                 return callback(err);
             }
 
-            self.jobBackend.update(job.data, callback);
+            self.save(job, callback);
         });
     });
 };
@@ -125,7 +149,7 @@ JobService.prototype.drain = function (job_id, callback) {
 
         self.jobCanceller.cancel(job, function (err) {
             if (err) {
-                // console.error('There was an error while draining job %s, %s ', job_id, err);
+                console.error('There was an error while draining job %s, %s ', job_id, err);
                 return callback(err);
             }
 

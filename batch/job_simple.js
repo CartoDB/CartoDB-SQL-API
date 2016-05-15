@@ -10,36 +10,20 @@ util.inherits(JobSimple, JobBase);
 
 module.exports = JobSimple;
 
-JobSimple.prototype.is = function (query) {
+JobSimple.is = function (query) {
     return typeof query === 'string';
 };
 
-JobSimple.prototype.hasNextQuery = function () {
-    return this.isPending();
-};
-
 JobSimple.prototype.getNextQuery = function () {
-    if (this.hasNextQuery()) {
+    if (this.isPending()) {
         return this.data.query;
     }
 };
 
 JobSimple.prototype.setQuery = function (query) {
-    var isSimple = this.is(query);
-
-    if (this.isPending() && isSimple) {
-        this.data.query = query;
-    }
-};
-
-JobSimple.prototype.set = function (data) {
-    JobSimple.super_.prototype.set.call(this, data);
-
-    if (data.status) {
-        this.setStatus(data.status);
+    if (!JobSimple.is(query)) {
+        throw new Error('You must indicate a valid SQL');
     }
 
-    if (data.query) {
-        this.setQuery(data.query);
-    }
+    JobSimple.super_.prototype.setQuery.call(this, query);
 };

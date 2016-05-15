@@ -18,6 +18,8 @@ JobRunner.prototype.run = function (job_id, callback) {
             return callback(err);
         }
 
+        var query = job.getNextQuery();
+
         try {
             job.setStatus(jobStatus.RUNNING);
         } catch (err) {
@@ -29,15 +31,13 @@ JobRunner.prototype.run = function (job_id, callback) {
                 return callback(err);
             }
 
-            self._run(job, callback);
+            self._run(job, query, callback);
         });
     });
 };
 
-JobRunner.prototype._run = function (job, callback) {
+JobRunner.prototype._run = function (job, query, callback) {
     var self = this;
-
-    var query = job.getNextQuery();
 
     // TODO: move to query
     self.userDatabaseMetadataService.getUserMetadata(job.data.user, function (err, userDatabaseMetadata) {
@@ -59,7 +59,7 @@ JobRunner.prototype._run = function (job, callback) {
                     return callback(err);
                 }
 
-                    return self.jobService.save(job, callback);
+                return self.jobService.save(job, callback);
             }
 
             try {

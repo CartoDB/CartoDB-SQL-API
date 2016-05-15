@@ -47,7 +47,7 @@ function JobBase(data) {
 
 module.exports = JobBase;
 
-JobBase.isValidStatusTransition = function (initialStatus, finalStatus) {
+JobBase.prototype.isValidStatusTransition = function (initialStatus, finalStatus) {
     var transition = [ initialStatus, finalStatus ];
 
     for (var i = 0; i < validStatusTransitions.length; i++) {
@@ -67,10 +67,11 @@ JobBase.prototype.getNextQuery = function () {
     throw new Error('Unimplemented method');
 };
 
-// should be implemented by childs
 JobBase.prototype.hasNextQuery = function () {
-    throw new Error('Unimplemented method');
+    return !!this.getNextQuery();
 };
+
+
 
 JobBase.prototype.isPending = function () {
     return this.data.status === jobStatus.PENDING;
@@ -96,21 +97,19 @@ JobBase.prototype.isUnknown = function () {
     return this.data.status === jobStatus.UNKNOWN;
 };
 
-JobBase.prototype.set = function (data) {
+JobBase.prototype.setQuery = function (query) {
     var now = new Date().toISOString();
 
-    if (data.job_id !== this.data.job_id) {
-        throw new Error('Cannot modify id');
+    if (!this.isPending()) {
+        throw new Error('Job is not pending, it cannot be updated');
     }
 
-    this.data.update_at = now;
-};
-
-JobBase.prototype.setQuery = function (/* query */) {
-    throw new Error('Unimplemented method');
+    this.data.updated_at = now;
+    this.data.query = query;
 };
 
 JobBase.prototype.setStatus = function (finalStatus) {
+    var now = new Date().toISOString();
     var initialStatus = this.data.status;
     var isValid = this.isValidStatusTransition(initialStatus, finalStatus);
 
@@ -118,6 +117,7 @@ JobBase.prototype.setStatus = function (finalStatus) {
         throw new Error('Cannot set status from ' + initialStatus + ' to ' + finalStatus);
     }
 
+    this.data.updated_at = now;
     this.data.status = finalStatus;
 };
 

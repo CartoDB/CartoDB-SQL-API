@@ -1,22 +1,22 @@
 'use strict';
 
-var JobSimple = require('job_simple');
-var JobMultiple = require('job_multiple');
+var JobSimple = require('./job_simple');
+var JobMultiple = require('./job_multiple');
+var jobClasses = [ JobSimple, JobMultiple ];
 
 function JobFactory() {
-    this.jobClasses = [ JobSimple, JobMultiple ];
 }
 
 module.exports = JobFactory;
 
 JobFactory.create = function (data) {
     if (!data.query) {
-        throw new Error('param "query" is mandatory');
+        throw new Error('You must indicate a valid SQL');
     }
 
-    for (var i = 0; i < this.jobClasses.length; i++) {
-        if (this.jobClasses[i].is(data.query)) {
-            return new this.jobClasses[i](data);
+    for (var i = 0; i < jobClasses.length; i++) {
+        if (jobClasses[i].is(data.query)) {
+            return new jobClasses[i](data);
         }
     }
 
