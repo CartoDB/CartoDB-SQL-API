@@ -2,7 +2,8 @@
 
 var JobSimple = require('./job_simple');
 var JobMultiple = require('./job_multiple');
-var jobClasses = [ JobSimple, JobMultiple ];
+var JobFallback = require('./job_fallback');
+var jobClasses = [ JobSimple, JobMultiple, JobFallback ];
 
 function JobFactory() {
 }

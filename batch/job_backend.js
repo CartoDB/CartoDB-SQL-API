@@ -27,7 +27,10 @@ JobBackend.prototype.toRedisParams = function (data) {
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
+            // TODO: this should be moved to job model
             if (property === 'query' && typeof obj[property] !== 'string') {
+                redisParams.push(JSON.stringify(obj[property]));
+            } else if (property === 'status' && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
                 redisParams.push(obj[property]);
@@ -45,7 +48,8 @@ JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
     redisParams.pop(); // WARN: weird function pushed by metadataBackend
 
     for (var i = 0; i < redisParams.length; i++) {
-        if (redisParams[i] === 'query') {
+        // TODO: this should be moved to job model
+        if (redisParams[i] === 'query' || redisParams[i] === 'status') {
             try {
                 obj[redisParams[i]] = JSON.parse(redisValues[i]);
             } catch (e) {

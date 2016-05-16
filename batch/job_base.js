@@ -39,10 +39,6 @@ function JobBase(data) {
     if (!this.data.updated_at) {
         this.data.updated_at = now;
     }
-
-    if (!this.data.status) {
-        this.data.status = jobStatus.PENDING;
-    }
 }
 
 module.exports = JobBase;

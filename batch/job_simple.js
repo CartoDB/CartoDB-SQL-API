@@ -2,9 +2,14 @@
 
 var util = require('util');
 var JobBase = require('./job_base');
+var jobStatus = require('./job_status');
 
 function JobSimple(data) {
     JobBase.call(this, data);
+
+    if (!this.data.status) {
+        this.data.status = jobStatus.PENDING;
+    }
 }
 util.inherits(JobSimple, JobBase);
 

@@ -33,6 +33,11 @@ JobMultiple.is = function (query) {
 };
 
 JobMultiple.prototype.init = function () {
+
+    if (!this.data.status) {
+        this.data.status = jobStatus.PENDING;
+    }
+
     for (var i = 0; i < this.data.query.length; i++) {
         if (!this.data.query[i].query && !this.data.query[i].status) {
             this.data.query[i] = {

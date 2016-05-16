@@ -52,18 +52,14 @@ JobRunner.prototype._run = function (job, query, callback) {
                 if (errorCodes[err.code.toString()] === 'query_canceled') {
                     return self.jobService.get(job.data.job_id, callback);
                 }
-
-                try {
-                    job.setStatus(jobStatus.FAILED);
-                } catch (err) {
-                    return callback(err);
-                }
-
-                return self.jobService.save(job, callback);
             }
 
             try {
-                job.setStatus(jobStatus.DONE);
+                if (err) {
+                    job.setStatus(jobStatus.FAILED);
+                } else {
+                    job.setStatus(jobStatus.DONE);
+                }
             } catch (err) {
                 return callback(err);
             }
@@ -73,7 +69,7 @@ JobRunner.prototype._run = function (job, query, callback) {
                     return callback(err);
                 }
 
-                if (job.isDone()) {
+                if (!job.hasNextQuery()) {
                     return callback(null, job);
                 }
 
