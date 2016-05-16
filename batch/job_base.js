@@ -71,8 +71,6 @@ JobBase.prototype.hasNextQuery = function () {
     return !!this.getNextQuery();
 };
 
-
-
 JobBase.prototype.isPending = function () {
     return this.data.status === jobStatus.PENDING;
 };

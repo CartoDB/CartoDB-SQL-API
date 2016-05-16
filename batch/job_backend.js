@@ -51,7 +51,7 @@ JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
             } catch (e) {
                 obj[redisParams[i]] = redisValues[i];
             }
-        } else {
+        } else if (redisValues[i]) {
             obj[redisParams[i]] = redisValues[i];
         }
     }
@@ -166,7 +166,7 @@ JobBackend.prototype.save = function (data, callback) {
     });
 };
 
-function isFrozen(status) {
+function isFinalStatus(status) {
     return finalStatus.indexOf(status) !== -1;
 }
 
@@ -174,7 +174,7 @@ JobBackend.prototype.setTTL = function (data, callback) {
     var self = this;
     var redisKey = this.redisPrefix + data.job_id;
 
-    if (!isFrozen(data.status)) {
+    if (!isFinalStatus(data.status)) {
         return callback();
     }
 
