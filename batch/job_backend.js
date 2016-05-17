@@ -19,9 +19,9 @@ function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer
     this.userIndexer = userIndexer;
 }
 
-function toRedisParams(data) {
-    var redisParams = [REDIS_PREFIX + data.job_id];
-    var obj = JSON.parse(JSON.stringify(data));
+function toRedisParams(job) {
+    var redisParams = [REDIS_PREFIX + job.job_id];
+    var obj = JSON.parse(JSON.stringify(job));
     delete obj.job_id;
 
     for (var property in obj) {
@@ -96,66 +96,66 @@ JobBackend.prototype.get = function (job_id, callback) {
     });
 };
 
-JobBackend.prototype.create = function (data, callback) {
+JobBackend.prototype.create = function (job, callback) {
     var self = this;
 
-    self.get(data.job_id, function (err) {
+    self.get(job.job_id, function (err) {
         if (err && err.name !== 'NotFoundError') {
             return callback(err);
         }
 
-        self.save(data, function (err, job) {
+        self.save(job, function (err, jobSaved) {
             if (err) {
                 return callback(err);
             }
 
-            self.jobQueueProducer.enqueue(data.job_id, data.host, function (err) {
+            self.jobQueueProducer.enqueue(job.job_id, job.host, function (err) {
                 if (err) {
                     return callback(err);
                 }
 
                 // broadcast to consumers
-                self.jobPublisher.publish(data.host);
+                self.jobPublisher.publish(job.host);
 
-                self.userIndexer.add(data.user, data.job_id, function (err) {
+                self.userIndexer.add(job.user, job.job_id, function (err) {
                   if (err) {
                       return callback(err);
                   }
 
-                  callback(null, job);
+                  callback(null, jobSaved);
                 });
             });
         });
     });
 };
 
-JobBackend.prototype.update = function (data, callback) {
+JobBackend.prototype.update = function (job, callback) {
     var self = this;
 
-    self.get(data.job_id, function (err) {
+    self.get(job.job_id, function (err) {
         if (err) {
             return callback(err);
         }
 
-        self.save(data, callback);
+        self.save(job, callback);
     });
 };
 
-JobBackend.prototype.save = function (data, callback) {
+JobBackend.prototype.save = function (job, callback) {
     var self = this;
-    var redisParams = toRedisParams(data);
+    var redisParams = toRedisParams(job);
 
     self.metadataBackend.redisCmd(REDIS_DB, 'HMSET', redisParams , function (err) {
         if (err) {
             return callback(err);
         }
 
-        self.setTTL(data, function (err) {
+        self.setTTL(job, function (err) {
             if (err) {
                 return callback(err);
             }
 
-            self.get(data.job_id, function (err, job) {
+            self.get(job.job_id, function (err, job) {
                 if (err) {
                     return callback(err);
                 }
@@ -170,11 +170,11 @@ function isFrozen(status) {
     return finalStatus.indexOf(status) !== -1;
 }
 
-JobBackend.prototype.setTTL = function (data, callback) {
+JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
-    var redisKey = REDIS_PREFIX + data.job_id;
+    var redisKey = REDIS_PREFIX + job.job_id;
 
-    if (!isFrozen(data.status)) {
+    if (!isFrozen(job.status)) {
         return callback();
     }
 
