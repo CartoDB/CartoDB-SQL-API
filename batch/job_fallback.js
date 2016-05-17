@@ -23,6 +23,7 @@ module.exports = JobFallback;
 //     }
 // }
 // from redis: {
+//     status: [pending, pending]
 //     query: {
 //         query: [{
 //             query: 'select ...',
@@ -73,30 +74,18 @@ JobFallback.prototype.init = function () {
     }
 };
 
-// from redis: {
-//     query: {
-//         query: [{
-//             query: 'select ...',
-//             onsuccess: 'select ..'
-//             status: ['pending', 'pending']
-//         }],
-//         onerror: 'select ...'
-//     }
-// }
-
 // jshint maxcomplexity: 11
 JobFallback.prototype.getNextQuery = function () {
-
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (Array.isArray(this.data.query.query[i].status)) {
-            if (this.data.query.query[i].status[0] === jobStatus.PENDING) {
+            if (this._isNextQuery(i)) {
                 return this.data.query.query[i].query;
-            } else if (this.data.query.query[i].status[0] === jobStatus.DONE &&
-                this.data.query.query[i].onsuccess && this.data.query.query[i].status[1] === jobStatus.PENDING) {
+            } else if (this._isNextQueryOnSuccess(i)) {
                 return this.data.query.query[i].onsuccess;
-            } else if (this.data.query.query[i].status[0] === jobStatus.FAILED &&
-                this.data.query.query[i].onerror && this.data.query.query[i].status[1] === jobStatus.PENDING) {
+            } else if (this._isNextQueryOnError(i)) {
                 return this.data.query.query[i].onerror;
+            } else if (this.data.query.query[i].status[0] === jobStatus.FAILED) {
+                return;
             }
         } else if (this.data.query.query[i].status === jobStatus.PENDING) {
             return this.data.query.query[i].query;
@@ -104,14 +93,40 @@ JobFallback.prototype.getNextQuery = function () {
     }
 
     if (Array.isArray(this.data.status)) {
-        if (this.data.status[0] === jobStatus.DONE && this.data.query.onsuccess &&
-            this.data.status[1] === jobStatus.PENDING) {
+        if (this._isNextQueryOnSuccessJob()) {
             return this.data.query.onsuccess;
-        } else if (this.data.status[0] === jobStatus.FAILED &&  this.data.query.onerror &&
-            this.data.status[1] === jobStatus.PENDING) {
+        } else if (this._isNextQueryOnErrorJob()) {
             return this.data.query.onerror;
         }
     }
+};
+
+JobFallback.prototype._isNextQuery = function (index) {
+    return this.data.query.query[index].status[0] === jobStatus.PENDING;
+};
+
+JobFallback.prototype._isNextQueryOnSuccess = function (index) {
+    return this.data.query.query[index].status[0] === jobStatus.DONE &&
+        this.data.query.query[index].onsuccess &&
+        this.data.query.query[index].status[1] === jobStatus.PENDING;
+};
+
+JobFallback.prototype._isNextQueryOnError = function (index) {
+    return this.data.query.query[index].status[0] === jobStatus.FAILED &&
+        this.data.query.query[index].onerror &&
+        this.data.query.query[index].status[1] === jobStatus.PENDING;
+};
+
+JobFallback.prototype._isNextQueryOnSuccessJob = function () {
+    return this.data.status[0] === jobStatus.DONE &&
+        this.data.query.onsuccess &&
+        this.data.status[1] === jobStatus.PENDING;
+};
+
+JobFallback.prototype._isNextQueryOnErrorJob = function () {
+    return this.data.status[0] === jobStatus.FAILED &&
+        this.data.query.onerror &&
+        this.data.status[1] === jobStatus.PENDING;
 };
 
 JobFallback.prototype.setQuery = function (query) {
@@ -122,82 +137,84 @@ JobFallback.prototype.setQuery = function (query) {
     JobFallback.super_.prototype.setQuery.call(this, query);
 };
 
-// jshint maxcomplexity: 18
+
 JobFallback.prototype.setStatus = function (finalStatus) {
     var now = new Date().toISOString();
-    var initialStatus;
-    var isValid;
+    var resultFromQuery = this._setQueryStatus(finalStatus);
+    var resultFromJob = this._setJobStatus(finalStatus, resultFromQuery.isChangeAppliedToFallback);
 
-    if (Array.isArray(this.data.status)) {
-        initialStatus = this.data.status[0];
-    } else {
-        initialStatus = this.data.status;
+    if (!resultFromJob.isValid && !resultFromQuery.isValid) {
+        var initialStatus = Array.isArray(this.data.status) ? this.data.status[0] : this.data.status;
+        throw new Error('Cannot set status from ' + initialStatus+ ' to ' + finalStatus);
     }
 
-    if (initialStatus === jobStatus.PENDING || initialStatus === jobStatus.RUNNING) {
-        isValid = false;
-        for (var i = 0; i < this.data.query.query.length; i++) {
-            if (Array.isArray(this.data.query.query[i].status)) {
-                for (var j = 0; j < this.data.query.query[i].status.length; j++) {
-                    isValid = JobFallback.super_.prototype.isValidStatusTransition(
-                        this.data.query.query[i].status[j], finalStatus
-                    );
+    this.data.updated_at = now;
+};
 
-                    if (isValid) {
-                        this.data.query.query[i].status[j] = finalStatus;
-                        break;
-                    }
-                }
+JobFallback.prototype._setJobStatus = function (finalStatus, isChangeAppliedToFallback) {
+    var isValid = false;
 
-                if (isValid) {
-                    break;
-                }
-            } else {
-                isValid = JobFallback.super_.prototype.isValidStatusTransition(
-                    this.data.query.query[i].status, finalStatus
-                );
-
-                if (isValid) {
-                    this.data.query.query[i].status = finalStatus;
-                    break;
-                }
-            }
-        }
-
-        if (!isValid) {
-            throw new Error('Cannot set status from ' + initialStatus + ' to ' + finalStatus);
-        }
-    }
-
-
-    // if transition is to "done" and there are more queries to run
-    // then job status must be "pending" instead of "done"
-    // else job status transition to done (if "running")
     if (finalStatus === jobStatus.DONE && this.hasNextQuery()) {
         finalStatus = jobStatus.PENDING;
     } else if (finalStatus === jobStatus.FAILED && this.hasNextQuery()) {
         finalStatus = jobStatus.PENDING;
+    } else if (isChangeAppliedToFallback && finalStatus === jobStatus.FAILED && !this.hasNextQuery()) {
+        finalStatus = jobStatus.DONE;
+    } else if (isChangeAppliedToFallback && finalStatus === jobStatus.CANCELLED && !this.hasNextQuery()) {
+        finalStatus = jobStatus.DONE;
     }
 
-    isValid = false;
-    if (Array.isArray(this.data.status)) {
-        for (var k = 0; k < this.data.status.length; k++) {
-            isValid = JobFallback.super_.prototype.isValidStatusTransition(this.data.status[k], finalStatus);
-            if (isValid) {
-                this.data.status[k] = finalStatus;
-                break;
-            }
-        }
-    } else {
-        isValid = JobFallback.super_.prototype.isValidStatusTransition(this.data.status, finalStatus);
+    if (!Array.isArray(this.data.status)) {
+        isValid = this.isValidStatusTransition(this.data.status, finalStatus);
         if (isValid) {
             this.data.status = finalStatus;
         }
+    } else {
+        for (var i = 0; i < this.data.status.length; i++) {
+            isValid = this.isValidStatusTransition(this.data.status[i], finalStatus);
+            if (isValid) {
+                this.data.status[i] = finalStatus;
+                break;
+            }
+        }
     }
 
-    if (!isValid) {
-        throw new Error('Cannot set status from ' + initialStatus + ' to ' + finalStatus);
+    return {
+        isValid: isValid
+    };
+};
+
+JobFallback.prototype._setQueryStatus = function (finalStatus) {
+    var isValid = false;
+    var isChangeAppliedToFallback = false;
+
+
+    for (var i = 0; i < this.data.query.query.length; i++) {
+        if (Array.isArray(this.data.query.query[i].status)) {
+            for (var j = 0; j < this.data.query.query[i].status.length; j++) {
+                isValid = this.isValidStatusTransition(this.data.query.query[i].status[j], finalStatus);
+
+                if (isValid) {
+                    this.data.query.query[i].status[j] = finalStatus;
+                    isChangeAppliedToFallback = (j > 0);
+                    break;
+                }
+            }
+        } else {
+            isValid = this.isValidStatusTransition(this.data.query.query[i].status, finalStatus);
+
+            if (isValid) {
+                this.data.query.query[i].status = finalStatus;
+            }
+        }
+
+        if (isValid) {
+            break;
+        }
     }
 
-    this.data.updated_at = now;
+    return {
+        isValid: isValid,
+        isChangeAppliedToFallback: isChangeAppliedToFallback
+    };
 };

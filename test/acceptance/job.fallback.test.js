@@ -138,7 +138,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
@@ -195,7 +195,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
@@ -312,7 +312,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
@@ -370,7 +370,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
                         }
                     });
             }, 50);
@@ -429,7 +429,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
@@ -487,7 +487,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
                         }
                     });
             }, 50);
@@ -495,7 +495,7 @@ describe('Batch API fallback job', function () {
     });
 
 
-    describe('"onsuccess" & "onsucces" on query should be triggered', function () {
+    describe('"onsuccess" & "onsuccess" on query should be triggered', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
@@ -548,7 +548,7 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
@@ -613,10 +613,408 @@ describe('Batch API fallback job', function () {
                             done();
                         } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
                     });
             }, 50);
         });
     });
+
+    describe('"onsuccess" for each query should not be triggered', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM unexistent_table /* should fail */",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 2",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                        }]
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be failed', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM unexistent_table /* should fail */",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
+                    "status": ["failed", "pending"]
+                }, {
+                    "query": "SELECT * FROM untitle_table_4 limit 2",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
+                    "status": ["pending", "pending"]
+                }]
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                    .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status === jobStatus.FAILED) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
+
+    describe('"onsuccess" for second query should not be triggered', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 2",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                        }, {
+                            query: "SELECT * FROM unexistent_table /* should fail */",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                        }]
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be failed', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM untitle_table_4 limit 2",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
+                    "status": ["done", "done"]
+                }, {
+                    "query": "SELECT * FROM unexistent_table /* should fail */",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
+                    "status": ["failed", "pending"]
+                }]
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                    .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status === jobStatus.FAILED) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
+
+    describe('"onsuccess" for first query should fail', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 1",
+                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 2",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                        }]
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be done', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM untitle_table_4 limit 1",
+                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
+                    "status": ["done", "failed"]
+                }, {
+                    "query": "SELECT * FROM untitle_table_4 limit 2",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
+                    "status": ["done", "done"]
+                }]
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status === jobStatus.DONE) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
+    describe('"onsuccess" for second query should fail', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 1",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 3",
+                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                        }]
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be done', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM untitle_table_4 limit 1",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
+                    "status": ["done", "done"]
+                }, {
+                    "query": "SELECT * FROM untitle_table_4 limit 3",
+                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
+                    "status": ["done", "failed"]
+                }]
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status === jobStatus.DONE) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
+    describe('"onsuccess" for job & "onsuccess" for each query should be triggered', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 1",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 3",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 4"
+                        }],
+                        onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be done', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM untitle_table_4 limit 1",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
+                    "status": ["done", "done"]
+                }, {
+                    "query": "SELECT * FROM untitle_table_4 limit 3",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 4",
+                    "status": ["done", "done"]
+                }],
+                onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
+    describe('"onsuccess" for job & "onsuccess" for each query should be triggered ' +
+    '(even second "onsuccess" fails job should be done)', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 1",
+                            onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 3",
+                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                        }],
+                        onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be done', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT * FROM untitle_table_4 limit 1",
+                    "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
+                    "status": ["done", "done"]
+                }, {
+                    "query": "SELECT * FROM untitle_table_4 limit 3",
+                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
+                    "status": ["done", "failed"]
+                }],
+                "onsuccess": "SELECT * FROM untitle_table_4 limit 5"
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        }
+                    });
+            }, 50);
+        });
+    });
+
 });
