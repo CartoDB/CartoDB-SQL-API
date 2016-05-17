@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var uuid = require('node-uuid');
-var jobStatus = require('./job_status');
+var jobStatus = require('../job_status');
 var validStatusTransitions = [
     [jobStatus.PENDING, jobStatus.RUNNING],
     [jobStatus.PENDING, jobStatus.CANCELLED],

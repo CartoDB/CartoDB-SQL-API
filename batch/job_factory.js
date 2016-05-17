@@ -1,9 +1,6 @@
 'use strict';
 
-var JobSimple = require('./job_simple');
-var JobMultiple = require('./job_multiple');
-var JobFallback = require('./job_fallback');
-var jobClasses = [ JobSimple, JobMultiple, JobFallback ];
+var jobModels = require('./models');
 
 function JobFactory() {
 }
@@ -15,9 +12,9 @@ JobFactory.create = function (data) {
         throw new Error('You must indicate a valid SQL');
     }
 
-    for (var i = 0; i < jobClasses.length; i++) {
-        if (jobClasses[i].is(data.query)) {
-            return new jobClasses[i](data);
+    for (var i = 0; i < jobModels.length; i++) {
+        if (jobModels[i].is(data.query)) {
+            return new jobModels[i](data);
         }
     }
 

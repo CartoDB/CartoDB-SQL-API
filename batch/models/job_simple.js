@@ -2,7 +2,7 @@
 
 var util = require('util');
 var JobBase = require('./job_base');
-var jobStatus = require('./job_status');
+var jobStatus = require('../job_status');
 
 function JobSimple(data) {
     JobBase.call(this, data);
