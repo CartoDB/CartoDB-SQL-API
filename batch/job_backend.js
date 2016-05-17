@@ -1,6 +1,7 @@
 'use strict';
 
 var queue = require('queue-async');
+var REDIS_PREFIX = 'batch:jobs:';
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
 var jobStatus = require('./job_status');
 var finalStatus = [
@@ -12,15 +13,14 @@ var finalStatus = [
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     this.db = 5;
-    this.redisPrefix = 'batch:jobs:';
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
     this.jobPublisher = jobPublisher;
     this.userIndexer = userIndexer;
 }
 
-JobBackend.prototype.toRedisParams = function (data) {
-    var redisParams = [this.redisPrefix + data.job_id];
+function toRedisParams(data) {
+    var redisParams = [REDIS_PREFIX + data.job_id];
     var obj = JSON.parse(JSON.stringify(data));
     delete obj.job_id;
 
@@ -28,9 +28,7 @@ JobBackend.prototype.toRedisParams = function (data) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
             // TODO: this should be moved to job model
-            if (property === 'query' && typeof obj[property] !== 'string') {
-                redisParams.push(JSON.stringify(obj[property]));
-            } else if (property === 'status' && typeof obj[property] !== 'string') {
+            if ((property === 'query' || property === 'status') && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
                 redisParams.push(obj[property]);
@@ -39,9 +37,9 @@ JobBackend.prototype.toRedisParams = function (data) {
     }
 
     return redisParams;
-};
+}
 
-JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
+function toObject(job_id, redisParams, redisValues) {
     var obj = {};
 
     redisParams.shift(); // job_id value
@@ -63,7 +61,7 @@ JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
     obj.job_id = job_id; // adds redisKey as object property
 
     return obj;
-};
+}
 
 // TODO: is it really necessary??
 function isJobFound(redisValues) {
@@ -73,7 +71,7 @@ function isJobFound(redisValues) {
 JobBackend.prototype.get = function (job_id, callback) {
     var self = this;
     var redisParams = [
-        this.redisPrefix + job_id,
+        REDIS_PREFIX + job_id,
         'user',
         'status',
         'query',
@@ -83,7 +81,7 @@ JobBackend.prototype.get = function (job_id, callback) {
         'failed_reason'
     ];
 
-    this.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, redisValues) {
+    self.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, redisValues) {
         if (err) {
             return callback(err);
         }
@@ -94,7 +92,7 @@ JobBackend.prototype.get = function (job_id, callback) {
             return callback(notFoundError);
         }
 
-        var jobData = self.toObject(job_id, redisParams, redisValues);
+        var jobData = toObject(job_id, redisParams, redisValues);
 
         callback(null, jobData);
     });
@@ -147,7 +145,7 @@ JobBackend.prototype.update = function (data, callback) {
 
 JobBackend.prototype.save = function (data, callback) {
     var self = this;
-    var redisParams = self.toRedisParams(data);
+    var redisParams = toRedisParams(data);
 
     self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams , function (err) {
         if (err) {
@@ -176,7 +174,7 @@ function isFinalStatus(status) {
 
 JobBackend.prototype.setTTL = function (data, callback) {
     var self = this;
-    var redisKey = this.redisPrefix + data.job_id;
+    var redisKey = REDIS_PREFIX + data.job_id;
 
     if (!isFinalStatus(data.status)) {
         return callback();
