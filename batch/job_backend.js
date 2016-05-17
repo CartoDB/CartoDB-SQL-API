@@ -2,6 +2,7 @@
 
 var queue = require('queue-async');
 var REDIS_PREFIX = 'batch:jobs:';
+var REDIS_DB = 5;
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
 var jobStatus = require('./job_status');
 var finalStatus = [
@@ -12,7 +13,6 @@ var finalStatus = [
 ];
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
-    this.db = 5;
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
     this.jobPublisher = jobPublisher;
@@ -79,7 +79,7 @@ JobBackend.prototype.get = function (job_id, callback) {
         'failed_reason'
     ];
 
-    self.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, redisValues) {
+    self.metadataBackend.redisCmd(REDIS_DB, 'HMGET', redisParams , function (err, redisValues) {
         if (err) {
             return callback(err);
         }
@@ -145,7 +145,7 @@ JobBackend.prototype.save = function (data, callback) {
     var self = this;
     var redisParams = toRedisParams(data);
 
-    self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams , function (err) {
+    self.metadataBackend.redisCmd(REDIS_DB, 'HMSET', redisParams , function (err) {
         if (err) {
             return callback(err);
         }
@@ -178,7 +178,7 @@ JobBackend.prototype.setTTL = function (data, callback) {
         return callback();
     }
 
-    self.metadataBackend.redisCmd(self.db, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], callback);
+    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], callback);
 };
 
 JobBackend.prototype.list = function (user, callback) {
