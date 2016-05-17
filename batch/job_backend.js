@@ -1,6 +1,7 @@
 'use strict';
 
 var queue = require('queue-async');
+var REDIS_PREFIX = 'batch:jobs:';
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
 var jobStatus = require('./job_status');
 var finalStatus = [
@@ -12,7 +13,6 @@ var finalStatus = [
 
 function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
     this.db = 5;
-    this.redisPrefix = 'batch:jobs:';
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
     this.jobPublisher = jobPublisher;
@@ -20,7 +20,7 @@ function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer
 }
 
 JobBackend.prototype.toRedisParams = function (data) {
-    var redisParams = [this.redisPrefix + data.job_id];
+    var redisParams = [REDIS_PREFIX + data.job_id];
     var obj = JSON.parse(JSON.stringify(data));
     delete obj.job_id;
 
@@ -69,7 +69,7 @@ function isJobFound(redisValues) {
 JobBackend.prototype.get = function (job_id, callback) {
     var self = this;
     var redisParams = [
-        this.redisPrefix + job_id,
+        REDIS_PREFIX + job_id,
         'user',
         'status',
         'query',
@@ -172,7 +172,7 @@ function isFrozen(status) {
 
 JobBackend.prototype.setTTL = function (data, callback) {
     var self = this;
-    var redisKey = this.redisPrefix + data.job_id;
+    var redisKey = REDIS_PREFIX + data.job_id;
 
     if (!isFrozen(data.status)) {
         return callback();
