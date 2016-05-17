@@ -19,7 +19,7 @@ function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer
     this.userIndexer = userIndexer;
 }
 
-JobBackend.prototype.toRedisParams = function (data) {
+function toRedisParams(data) {
     var redisParams = [REDIS_PREFIX + data.job_id];
     var obj = JSON.parse(JSON.stringify(data));
     delete obj.job_id;
@@ -36,9 +36,9 @@ JobBackend.prototype.toRedisParams = function (data) {
     }
 
     return redisParams;
-};
+}
 
-JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
+function toObject(job_id, redisParams, redisValues) {
     var obj = {};
 
     redisParams.shift(); // job_id value
@@ -59,7 +59,7 @@ JobBackend.prototype.toObject = function (job_id, redisParams, redisValues) {
     obj.job_id = job_id; // adds redisKey as object property
 
     return obj;
-};
+}
 
 // TODO: is it really necessary??
 function isJobFound(redisValues) {
@@ -79,7 +79,7 @@ JobBackend.prototype.get = function (job_id, callback) {
         'failed_reason'
     ];
 
-    this.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, redisValues) {
+    self.metadataBackend.redisCmd(this.db, 'HMGET', redisParams , function (err, redisValues) {
         if (err) {
             return callback(err);
         }
@@ -90,7 +90,7 @@ JobBackend.prototype.get = function (job_id, callback) {
             return callback(notFoundError);
         }
 
-        var jobData = self.toObject(job_id, redisParams, redisValues);
+        var jobData = toObject(job_id, redisParams, redisValues);
 
         callback(null, jobData);
     });
@@ -143,7 +143,7 @@ JobBackend.prototype.update = function (data, callback) {
 
 JobBackend.prototype.save = function (data, callback) {
     var self = this;
-    var redisParams = self.toRedisParams(data);
+    var redisParams = toRedisParams(data);
 
     self.metadataBackend.redisCmd(self.db, 'HMSET', redisParams , function (err) {
         if (err) {
