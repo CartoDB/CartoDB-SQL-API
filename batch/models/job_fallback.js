@@ -188,7 +188,6 @@ JobFallback.prototype._setQueryStatus = function (finalStatus) {
     var isValid = false;
     var isChangeAppliedToFallback = false;
 
-
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (Array.isArray(this.data.query.query[i].status)) {
             for (var j = 0; j < this.data.query.query[i].status.length; j++) {

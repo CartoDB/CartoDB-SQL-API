@@ -1017,4 +1017,191 @@ describe('Batch API fallback job', function () {
         });
     });
 
+    describe('"onsuccess" for job & "onsuccess" for each query should not be triggered ' +
+    ' because it has been cancelled', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT pg_sleep(3)",
+                            onsuccess: "SELECT pg_sleep(0)"
+                        }],
+                        onsuccess: "SELECT pg_sleep(0)"
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job should be running', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT pg_sleep(3)",
+                    "onsuccess": "SELECT pg_sleep(0)",
+                    "status": ["running", "pending"]
+                }],
+                "onsuccess": "SELECT pg_sleep(0)"
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.status[0] === jobStatus.RUNNING && job.status[1] === jobStatus.PENDING) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.status[0] === jobStatus.DONE ||
+                                job.status[0] === jobStatus.FAILED ||
+                                job.status[0] === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        }
+                    });
+            }, 50);
+        });
+
+        it('job should be cancelled', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT pg_sleep(3)",
+                    "onsuccess": "SELECT pg_sleep(0)",
+                    "status": ["cancelled", "pending"]
+                }],
+                "onsuccess": "SELECT pg_sleep(0)"
+            };
+
+            request(app)
+                .del('/api/v2/sql/job/' + fallbackJob.job_id)
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = res.body;
+                    if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
+                    }
+                });
+        });
+    });
+
+    describe('first "onsuccess" should be triggered and it will be cancelled', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            request(app)
+                .post('/api/v2/sql/job')
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .send({
+                    query: {
+                        query: [{
+                            query: "SELECT pg_sleep(0)",
+                            onsuccess: "SELECT pg_sleep(3)"
+                        }],
+                        onsuccess: "SELECT pg_sleep(0)"
+                    }
+                })
+                .expect(201)
+                .end(function (err, res) {
+                    fallbackJob = res.body;
+                    done(err);
+                });
+        });
+
+        it('job "onsuccess" should be running', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT pg_sleep(0)",
+                    "onsuccess": "SELECT pg_sleep(3)",
+                    "status": ["done", "running"]
+                }],
+                "onsuccess": "SELECT pg_sleep(0)"
+            };
+
+            var interval = setInterval(function () {
+                request(app)
+                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
+                    .query({ api_key: '1234' })
+                    .set('Content-Type', 'application/json')
+                    .set('host', 'vizzuality.cartodb.com')
+                    .expect(200)
+                        .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+                        var job = res.body;
+                        if (job.query.query[0].status[0] === jobStatus.DONE &&
+                            job.query.query[0].status[1] === jobStatus.RUNNING) {
+                            clearInterval(interval);
+                            assert.deepEqual(job.query, expectedQuery);
+                            done();
+                        } else if (job.query.query[0].status[0] === jobStatus.DONE ||
+                                job.query.query[0].status[0] === jobStatus.FAILED ||
+                                job.query.query[0].status[0] === jobStatus.CANCELLED) {
+                            clearInterval(interval);
+                            done(new Error('Job ' + job.job_id + ' is ' +
+                                job.query.query[0].status +
+                                ', expected to be running'));
+                        }
+                    });
+            }, 50);
+        });
+
+        it('job should be cancelled', function (done) {
+            var expectedQuery = {
+                "query": [{
+                    "query": "SELECT pg_sleep(0)",
+                    "onsuccess": "SELECT pg_sleep(3)",
+                    "status": ["done", "cancelled"]
+                }],
+                "onsuccess": "SELECT pg_sleep(0)"
+            };
+
+            request(app)
+                .del('/api/v2/sql/job/' + fallbackJob.job_id)
+                .query({ api_key: '1234' })
+                .set('Content-Type', 'application/json')
+                .set('host', 'vizzuality.cartodb.com')
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = res.body;
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.PENDING) {
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status[0] === jobStatus.CANCELLED || job.status[0] === jobStatus.FAILED) {
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
+                    }
+                });
+        });
+    });
 });
