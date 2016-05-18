@@ -1,5 +1,6 @@
 'use strict';
 
+var debug = require('./util/debug')('job-service');
 var JobFactory = require('./job_factory');
 var jobStatus = require('./job_status');
 
@@ -40,7 +41,7 @@ JobService.prototype.list = function (user, callback) {
             try {
                 job = JobFactory.create(data);
             } catch (err) {
-                return console.err(err);
+                return debug(err);
             }
 
             return job;
@@ -149,7 +150,7 @@ JobService.prototype.drain = function (job_id, callback) {
 
         self.jobCanceller.cancel(job, function (err) {
             if (err) {
-                console.error('There was an error while draining job %s, %s ', job_id, err);
+                debug('There was an error while draining job %s, %s ', job_id, err);
                 return callback(err);
             }
 

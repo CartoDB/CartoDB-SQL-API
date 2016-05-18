@@ -2,6 +2,7 @@
 
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
+var debug = require('./util/debug')('batch');
 var forever = require('./forever');
 var queue = require('queue-async');
 var jobStatus = require('./job_status');
@@ -40,10 +41,10 @@ Batch.prototype._subscribe = function () {
             self.jobQueuePool.removeQueue(host);
 
             if (err.name === 'EmptyQueue') {
-                return console.log(err.message);
+                return debug(err.message);
             }
 
-            console.error(err);
+            debug(err);
         });
     });
 };
@@ -69,7 +70,7 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
             self.jobQueuePool.removeCurrentJobId(host);
 
             if (err && err.name === 'JobNotRunnable') {
-                console.log(err.message);
+                debug(err.message);
                 return callback();
             }
 
@@ -78,9 +79,9 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
             }
 
             if (job.data.status === jobStatus.FAILED) {
-                console.log('Job %s %s in %s due to: %s', job_id, job.data.status, host, job.failed_reason);
+                debug('Job %s %s in %s due to: %s', job_id, job.data.status, host, job.failed_reason);
             } else {
-                console.log('Job %s %s in %s', job_id, job.data.status, host);
+                debug('Job %s %s in %s', job_id, job.data.status, host);
             }
 
             self.emit('job:' + job.data.status, job_id);
@@ -101,9 +102,9 @@ Batch.prototype.drain = function (callback) {
 
     batchQueues.awaitAll(function (err) {
         if (err) {
-            console.error('Something went wrong draining', err);
+            debug('Something went wrong draining', err);
         } else {
-            console.log('Drain complete');
+            debug('Drain complete');
         }
 
         callback();

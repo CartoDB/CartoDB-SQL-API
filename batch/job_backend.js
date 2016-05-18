@@ -1,6 +1,8 @@
 'use strict';
 
+
 var queue = require('queue-async');
+var debug = require('./util/debug')('job-backend');
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
@@ -232,7 +234,7 @@ JobBackend.prototype._getIndexedJob = function (job_id, user, callback) {
         if (err && err.name === 'NotFoundError') {
             return self.userIndexer.remove(user, job_id, function (err) {
                 if (err) {
-                    console.error('Error removing key %s in user set', job_id, err);
+                    debug('Error removing key %s in user set', job_id, err);
                 }
                 callback();
             });
