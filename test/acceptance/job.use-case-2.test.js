@@ -121,7 +121,7 @@ describe('Use case 2: cancel a running job', function() {
             status: 400
         }, function(res) {
             var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is cancelled, cancel is not allowed");
+            assert.equal(errors.error[0], "Cannot set status from cancelled to cancelled");
             done();
         });
     });

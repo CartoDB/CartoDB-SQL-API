@@ -19,6 +19,7 @@
     "dependencies": {
         "cartodb-psql": "~0.6.0",
         "cartodb-redis": "~0.11.0",
+        "debug": "2.2.0",
         "express": "~2.5.11",
         "log4js": "https://github.com/CartoDB/log4js-node/tarball/cdb",
         "lru-cache": "~2.5.0",

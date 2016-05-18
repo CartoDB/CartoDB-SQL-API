@@ -3,10 +3,14 @@ var _ = require('underscore');
 var redis = require('redis');
 var queue = require('queue-async');
 var batchFactory = require('../../batch');
+
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueue = require('../../batch/job_queue');
 var UserIndexer = require('../../batch/user_indexer');
 var JobBackend = require('../../batch/job_backend');
+var JobService = require('../../batch/job_service');
+var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
+var JobCanceller = require('../../batch/job_canceller');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -22,6 +26,9 @@ describe('batch module', function() {
     var jobPublisher = new JobPublisher(redis);
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobService = new JobService(jobBackend, jobCanceller);
 
     var batch = batchFactory(metadataBackend);
 
@@ -37,12 +44,18 @@ describe('batch module', function() {
     });
 
     function createJob(sql, done) {
-        jobBackend.create(username, sql, dbInstance, function (err, job) {
+        var data = {
+            user: username,
+            query: sql,
+            host: dbInstance
+        };
+
+        jobService.create(data, function (err, job) {
             if (err) {
                 return done(err);
             }
 
-            done(null, job);
+            done(null, job.serialize());
         });
     }
 
@@ -196,8 +209,7 @@ describe('batch module', function() {
     });
 
     it('should perform job with array of select', function (done) {
-        var queries = ['select * from private_table', 'select * from private_table'];
-
+        var queries = ['select * from private_table limit 1', 'select * from private_table'];
 
         createJob(queries, function (err, job) {
             if (err) {

@@ -1,0 +1,29 @@
+'use strict';
+
+var util = require('util');
+var JobBase = require('./job_base');
+
+function JobSimple(data) {
+    JobBase.call(this, data);
+}
+util.inherits(JobSimple, JobBase);
+
+module.exports = JobSimple;
+
+JobSimple.is = function (query) {
+    return typeof query === 'string';
+};
+
+JobSimple.prototype.getNextQuery = function () {
+    if (this.isPending()) {
+        return this.data.query;
+    }
+};
+
+JobSimple.prototype.setQuery = function (query) {
+    if (!JobSimple.is(query)) {
+        throw new Error('You must indicate a valid SQL');
+    }
+
+    JobSimple.super_.prototype.setQuery.call(this, query);
+};

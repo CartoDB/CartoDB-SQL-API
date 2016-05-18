@@ -97,7 +97,7 @@ describe('Use case 3: cancel a pending job', function() {
         }, 50);
     });
 
-    it('Step 4, cancel a job should be cancelled', function (done){
+    it('Step 4, cancel a pending job should be cancelled', function (done){
         assert.response(app, {
             url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
