@@ -1,11 +1,12 @@
 'use strict';
 
+var debug = require('./util/debug')('job-subscriber');
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
 
 function _subscribe(client, channel, queueSeeker, onMessage) {
     queueSeeker.seek(onMessage, function (err) {
         if (err) {
-            console.error(err);
+            debug(err);
         }
 
         client.removeAllListeners('message');
