@@ -2,7 +2,6 @@ require('../helper');
 
 var assert = require('assert');
 var app = require(global.settings.app_root + '/app/app')();
-// var assert = require('../support/assert');
 var request = require('supertest');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
