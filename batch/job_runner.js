@@ -56,7 +56,7 @@ JobRunner.prototype._run = function (job, query, callback) {
 
             try {
                 if (err) {
-                    job.setStatus(jobStatus.FAILED);
+                    job.setStatus(jobStatus.FAILED, err.message);
                 } else {
                     job.setStatus(jobStatus.DONE);
                 }
