@@ -156,7 +156,7 @@ describe('Batch API fallback job', function () {
                 .send({
                     query: {
                         query: [{
-                            query: "SELECT * FROM unexistent_table /* query should fail */",
+                            query: "SELECT * FROM nonexistent_table /* query should fail */",
                             onerror: "SELECT * FROM untitle_table_4 limit 1"
                         }]
                     }
@@ -170,10 +170,11 @@ describe('Batch API fallback job', function () {
 
         it('job should be done', function (done){
             var expectedQuery = {
-                "query": [{
-                    "query": "SELECT * FROM unexistent_table /* query should fail */",
-                    "onerror": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["failed", "done"]
+                query: [{
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 1',
+                    status: ['failed', 'done'],
+                    failed_reason: 'relation "nonexistent_table" does not exist'
                 }]
             };
             var interval = setInterval(function () {
@@ -213,7 +214,7 @@ describe('Batch API fallback job', function () {
                 .send({
                     query: {
                         query: [{
-                            query: "SELECT * FROM unexistent_table /* query should fail */",
+                            query: "SELECT * FROM nonexistent_table /* query should fail */",
                             onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                         }]
                     }
@@ -227,10 +228,11 @@ describe('Batch API fallback job', function () {
 
         it('job should be failed', function (done){
             var expectedQuery = {
-                "query": [{
-                    "query": "SELECT * FROM unexistent_table /* query should fail */",
-                    "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["failed", "pending"]
+                query: [{
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                    status: ['failed', 'pending'],
+                    failed_reason: 'relation "nonexistent_table" does not exist'
                 }]
             };
 
@@ -330,7 +332,7 @@ describe('Batch API fallback job', function () {
                 .send({
                     query: {
                         query: [{
-                            query: "SELECT * FROM unexistent_table /* query should fail */",
+                            query: "SELECT * FROM nonexistent_table /* query should fail */",
                         }],
                         onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                     }
@@ -344,11 +346,12 @@ describe('Batch API fallback job', function () {
 
         it('job should be done', function (done) {
             var expectedQuery = {
-                "query": [{
-                    "query": "SELECT * FROM unexistent_table /* query should fail */",
-                    "status": "failed"
+                query: [{
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                    status: 'failed',
+                    failed_reason: 'relation "nonexistent_table" does not exist'
                 }],
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
             };
 
             var interval = setInterval(function () {
@@ -389,7 +392,7 @@ describe('Batch API fallback job', function () {
                 .send({
                     query: {
                         query: [{
-                            query: "SELECT * FROM unexistent_table /* query should fail */",
+                            query: "SELECT * FROM nonexistent_table /* query should fail */"
                         }],
                         onerror: "SELECT * FROM untitle_table_4 limit 1"
                     }
@@ -404,8 +407,9 @@ describe('Batch API fallback job', function () {
         it('job should be done', function (done) {
             var expectedQuery = {
                 "query": [{
-                    "query": "SELECT * FROM unexistent_table /* query should fail */",
-                    "status": "failed"
+                    "query": "SELECT * FROM nonexistent_table /* query should fail */",
+                    "status": "failed",
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }],
                 "onerror": "SELECT * FROM untitle_table_4 limit 1"
             };
@@ -631,7 +635,7 @@ describe('Batch API fallback job', function () {
                 .send({
                     query: {
                         query: [{
-                            query: "SELECT * FROM unexistent_table /* should fail */",
+                            query: "SELECT * FROM nonexistent_table /* should fail */",
                             onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                         }, {
                             query: "SELECT * FROM untitle_table_4 limit 2",
@@ -649,9 +653,10 @@ describe('Batch API fallback job', function () {
         it('job should be failed', function (done) {
             var expectedQuery = {
                 "query": [{
-                    "query": "SELECT * FROM unexistent_table /* should fail */",
+                    "query": "SELECT * FROM nonexistent_table /* should fail */",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["failed", "pending"]
+                    "status": ["failed", "pending"],
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
@@ -700,7 +705,7 @@ describe('Batch API fallback job', function () {
                             query: "SELECT * FROM untitle_table_4 limit 2",
                             onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                         }, {
-                            query: "SELECT * FROM unexistent_table /* should fail */",
+                            query: "SELECT * FROM nonexistent_table /* should fail */",
                             onsuccess: "SELECT * FROM untitle_table_4 limit 3"
                         }]
                     }
@@ -719,9 +724,10 @@ describe('Batch API fallback job', function () {
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
                     "status": ["done", "done"]
                 }, {
-                    "query": "SELECT * FROM unexistent_table /* should fail */",
+                    "query": "SELECT * FROM nonexistent_table /* should fail */",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                    "status": ["failed", "pending"]
+                    "status": ["failed", "pending"],
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }]
             };
 
@@ -764,7 +770,7 @@ describe('Batch API fallback job', function () {
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 1",
-                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                            onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
                         }, {
                             query: "SELECT * FROM untitle_table_4 limit 2",
                             onsuccess: "SELECT * FROM untitle_table_4 limit 3"
@@ -782,8 +788,9 @@ describe('Batch API fallback job', function () {
             var expectedQuery = {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 1",
-                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
-                    "status": ["done", "failed"]
+                    "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
+                    "status": ["done", "failed"],
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
@@ -832,7 +839,7 @@ describe('Batch API fallback job', function () {
                             onsuccess: "SELECT * FROM untitle_table_4 limit 2"
                         }, {
                             query: "SELECT * FROM untitle_table_4 limit 3",
-                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                            onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
                         }]
                     }
                 })
@@ -851,8 +858,9 @@ describe('Batch API fallback job', function () {
                     "status": ["done", "done"]
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 3",
-                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
-                    "status": ["done", "failed"]
+                    "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
+                    "status": ["done", "failed"],
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }]
             };
 
@@ -965,7 +973,7 @@ describe('Batch API fallback job', function () {
                             onsuccess: "SELECT * FROM untitle_table_4 limit 2"
                         }, {
                             query: "SELECT * FROM untitle_table_4 limit 3",
-                            onsuccess: "SELECT * FROM unexistent_table /* should fail */"
+                            onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
                         }],
                         onsuccess: "SELECT * FROM untitle_table_4 limit 5"
                     }
@@ -985,8 +993,9 @@ describe('Batch API fallback job', function () {
                     "status": ["done", "done"]
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 3",
-                    "onsuccess": "SELECT * FROM unexistent_table /* should fail */",
-                    "status": ["done", "failed"]
+                    "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
+                    "status": ["done", "failed"],
+                    "failed_reason": 'relation "nonexistent_table" does not exist'
                 }],
                 "onsuccess": "SELECT * FROM untitle_table_4 limit 5"
             };

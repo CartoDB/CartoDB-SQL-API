@@ -64,7 +64,7 @@ JobMultiple.prototype.setQuery = function (query) {
     JobMultiple.super_.prototype.setQuery.call(this, query);
 };
 
-JobMultiple.prototype.setStatus = function (finalStatus) {
+JobMultiple.prototype.setStatus = function (finalStatus, errorMesssage) {
     var initialStatus = this.data.status;
     // if transition is to "done" and there are more queries to run
     // then job status must be "pending" instead of "done"
@@ -80,6 +80,9 @@ JobMultiple.prototype.setStatus = function (finalStatus) {
 
         if (isValid) {
             this.data.query[i].status = finalStatus;
+            if (finalStatus === jobStatus.FAILED && errorMesssage) {
+                this.data.query[i].failed_reason = errorMesssage;
+            }
             return;
         }
     }
