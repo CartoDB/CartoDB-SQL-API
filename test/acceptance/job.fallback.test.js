@@ -189,11 +189,11 @@ describe('Batch API fallback job', function () {
                             return done(err);
                         }
                         var job = res.body;
-                        if (job.status === jobStatus.DONE) {
+                        if (job.status === jobStatus.FAILED) {
                             clearInterval(interval);
                             assert.deepEqual(job.query, expectedQuery);
                             done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                             clearInterval(interval);
                             done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                         }
@@ -1195,10 +1195,10 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = res.body;
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.PENDING) {
+                    if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.status[0] === jobStatus.CANCELLED || job.status[0] === jobStatus.FAILED) {
+                    } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
                         done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
                     }
                 });

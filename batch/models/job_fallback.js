@@ -3,6 +3,23 @@
 var util = require('util');
 var JobBase = require('./job_base');
 var jobStatus = require('../job_status');
+var breakStatus = [
+    jobStatus.CANCELLED,
+    jobStatus.FAILED,
+    jobStatus.UNKNOWN
+];
+function isBreakStatus(status) {
+    return breakStatus.indexOf(status) !== -1;
+}
+var finalStatus = [
+    jobStatus.CANCELLED,
+    jobStatus.DONE,
+    jobStatus.FAILED,
+    jobStatus.UNKNOWN
+];
+function isFinalStatus(status) {
+    return finalStatus.indexOf(status) !== -1;
+}
 
 function JobFallback(data) {
     JobBase.call(this, data);
@@ -74,8 +91,21 @@ JobFallback.prototype.init = function () {
     }
 };
 
-// jshint maxcomplexity: 11
 JobFallback.prototype.getNextQuery = function () {
+    var query = this._getNextQueryFromQuery();
+
+    if (!query) {
+        query = this._getNextQueryFromJobFallback();
+    }
+
+    return query;
+};
+
+JobFallback.prototype._hasNextQueryFromQuery = function () {
+    return !!this._getNextQueryFromQuery();
+};
+
+JobFallback.prototype._getNextQueryFromQuery = function () {
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (Array.isArray(this.data.query.query[i].status)) {
             if (this._isNextQuery(i)) {
@@ -84,14 +114,16 @@ JobFallback.prototype.getNextQuery = function () {
                 return this.data.query.query[i].onsuccess;
             } else if (this._isNextQueryOnError(i)) {
                 return this.data.query.query[i].onerror;
-            } else if (this.data.query.query[i].status[0] === jobStatus.FAILED) {
+            } else if (isBreakStatus(this.data.query.query[i].status[0])) {
                 return;
             }
         } else if (this.data.query.query[i].status === jobStatus.PENDING) {
             return this.data.query.query[i].query;
         }
     }
+};
 
+JobFallback.prototype._getNextQueryFromJobFallback = function () {
     if (Array.isArray(this.data.status)) {
         if (this._isNextQueryOnSuccessJob()) {
             return this.data.query.onsuccess;
@@ -137,11 +169,10 @@ JobFallback.prototype.setQuery = function (query) {
     JobFallback.super_.prototype.setQuery.call(this, query);
 };
 
-
 JobFallback.prototype.setStatus = function (finalStatus) {
     var now = new Date().toISOString();
     var resultFromQuery = this._setQueryStatus(finalStatus);
-    var resultFromJob = this._setJobStatus(finalStatus, resultFromQuery.isChangeAppliedToFallback);
+    var resultFromJob = this._setJobStatus(finalStatus, resultFromQuery.isChangeAppliedToQueryFallback);
 
     if (!resultFromJob.isValid && !resultFromQuery.isValid) {
         var initialStatus = Array.isArray(this.data.status) ? this.data.status[0] : this.data.status;
@@ -151,29 +182,43 @@ JobFallback.prototype.setStatus = function (finalStatus) {
     this.data.updated_at = now;
 };
 
-JobFallback.prototype._setJobStatus = function (finalStatus, isChangeAppliedToFallback) {
-    var isValid = false;
+JobFallback.prototype._getLastStatusFromFinishedQuery = function () {
+    var lastStatus =  jobStatus.DONE;
 
-    if (finalStatus === jobStatus.DONE && this.hasNextQuery()) {
-        finalStatus = jobStatus.PENDING;
-    } else if (finalStatus === jobStatus.FAILED && this.hasNextQuery()) {
-        finalStatus = jobStatus.PENDING;
-    } else if (isChangeAppliedToFallback && finalStatus === jobStatus.FAILED && !this.hasNextQuery()) {
-        finalStatus = jobStatus.DONE;
-    } else if (isChangeAppliedToFallback && finalStatus === jobStatus.CANCELLED && !this.hasNextQuery()) {
-        finalStatus = jobStatus.DONE;
+    for (var i = 0; i < this.data.query.query.length; i++) {
+        if (Array.isArray(this.data.query.query[i].status)) {
+            if (isFinalStatus(this.data.query.query[i].status[0])) {
+                lastStatus = this.data.query.query[i].status[0];
+            } else {
+                break;
+            }
+        } else {
+            if (isFinalStatus(this.data.query.query[i].status)) {
+                lastStatus = this.data.query.query[i].status;
+            } else {
+                break;
+            }
+        }
     }
 
+    return lastStatus;
+};
+
+JobFallback.prototype._setJobStatus = function (status, isChangeAppliedToQueryFallback) {
+    var isValid = false;
+
+    status = this._shiftJobStatus(status, isChangeAppliedToQueryFallback);
+
     if (!Array.isArray(this.data.status)) {
-        isValid = this.isValidStatusTransition(this.data.status, finalStatus);
+        isValid = this.isValidStatusTransition(this.data.status, status);
         if (isValid) {
-            this.data.status = finalStatus;
+            this.data.status = status;
         }
     } else {
         for (var i = 0; i < this.data.status.length; i++) {
-            isValid = this.isValidStatusTransition(this.data.status[i], finalStatus);
+            isValid = this.isValidStatusTransition(this.data.status[i], status);
             if (isValid) {
-                this.data.status[i] = finalStatus;
+                this.data.status[i] = status;
                 break;
             }
         }
@@ -184,26 +229,44 @@ JobFallback.prototype._setJobStatus = function (finalStatus, isChangeAppliedToFa
     };
 };
 
-JobFallback.prototype._setQueryStatus = function (finalStatus) {
+JobFallback.prototype._shiftJobStatus = function (status, isChangeAppliedToQueryFallback) {
+    // In some scenarios we have to change the normal flow in order to keep consistency
+    // between query's status and job's status.
+
+    if (isChangeAppliedToQueryFallback) {
+        if (!this._hasNextQueryFromQuery() && (status === jobStatus.DONE || status === jobStatus.FAILED)) {
+            status = this._getLastStatusFromFinishedQuery();
+        } else if (status === jobStatus.DONE || status === jobStatus.FAILED){
+            status = jobStatus.PENDING;
+        }
+    } else if (this._hasNextQueryFromQuery() && status !== jobStatus.RUNNING) {
+        status = jobStatus.PENDING;
+    }
+
+    return status;
+};
+
+
+JobFallback.prototype._setQueryStatus = function (status) {
     var isValid = false;
-    var isChangeAppliedToFallback = false;
+    var isChangeAppliedToQueryFallback = false;
 
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (Array.isArray(this.data.query.query[i].status)) {
             for (var j = 0; j < this.data.query.query[i].status.length; j++) {
-                isValid = this.isValidStatusTransition(this.data.query.query[i].status[j], finalStatus);
+                isValid = this.isValidStatusTransition(this.data.query.query[i].status[j], status);
 
                 if (isValid) {
-                    this.data.query.query[i].status[j] = finalStatus;
-                    isChangeAppliedToFallback = (j > 0);
+                    this.data.query.query[i].status[j] = status;
+                    isChangeAppliedToQueryFallback = (j > 0);
                     break;
                 }
             }
         } else {
-            isValid = this.isValidStatusTransition(this.data.query.query[i].status, finalStatus);
+            isValid = this.isValidStatusTransition(this.data.query.query[i].status, status);
 
             if (isValid) {
-                this.data.query.query[i].status = finalStatus;
+                this.data.query.query[i].status = status;
             }
         }
 
@@ -214,6 +277,6 @@ JobFallback.prototype._setQueryStatus = function (finalStatus) {
 
     return {
         isValid: isValid,
-        isChangeAppliedToFallback: isChangeAppliedToFallback
+        isChangeAppliedToQueryFallback: isChangeAppliedToQueryFallback
     };
 };
