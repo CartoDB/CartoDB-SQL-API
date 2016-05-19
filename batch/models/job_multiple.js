@@ -72,7 +72,7 @@ JobMultiple.prototype.setStatus = function (finalStatus, errorMesssage) {
     if (finalStatus === jobStatus.DONE && this.hasNextQuery()) {
         JobMultiple.super_.prototype.setStatus.call(this, jobStatus.PENDING);
     } else {
-        JobMultiple.super_.prototype.setStatus.call(this, finalStatus);
+        JobMultiple.super_.prototype.setStatus.call(this, finalStatus, errorMesssage);
     }
 
     for (var i = 0; i < this.data.query.length; i++) {
