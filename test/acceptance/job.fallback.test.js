@@ -1,8 +1,8 @@
 require('../helper');
 
-var assert = require('assert');
+var assert = require('../support/assert');
 var app = require(global.settings.app_root + '/app/app')();
-var request = require('supertest');
+var querystring = require('qs');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -12,7 +12,6 @@ var metadataBackend = require('cartodb-redis')({
 });
 var batchFactory = require('../../batch');
 var jobStatus = require('../../batch/job_status');
-
 
 describe('Batch API fallback job', function () {
 
@@ -32,13 +31,16 @@ describe('Batch API fallback job', function () {
     describe('"onsuccess" on first query should be triggered', function () {
         var fallbackJob = {};
 
+
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -46,11 +48,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -63,26 +69,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be running'));
+                    }
+                });
             }, 50);
         });
     });
@@ -91,12 +100,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -104,11 +115,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done){
@@ -120,26 +135,29 @@ describe('Batch API fallback job', function () {
                 }]
             };
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -148,12 +166,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM nonexistent_table /* query should fail */",
@@ -161,11 +181,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done){
@@ -178,26 +202,29 @@ describe('Batch API fallback job', function () {
                 }]
             };
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.FAILED) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.FAILED) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -206,12 +233,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM nonexistent_table /* query should fail */",
@@ -219,11 +248,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be failed', function (done){
@@ -237,26 +270,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.FAILED) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.FAILED) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                    }
+                });
             }, 50);
         });
     });
@@ -266,12 +302,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -279,11 +317,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -296,26 +338,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -324,12 +369,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM nonexistent_table /* query should fail */",
@@ -337,11 +384,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT * FROM untitle_table_4 limit 1"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -355,26 +406,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.PENDING) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.PENDING) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
+                    }
+                });
             }, 50);
         });
     });
@@ -384,12 +438,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM nonexistent_table /* query should fail */"
@@ -397,11 +453,15 @@ describe('Batch API fallback job', function () {
                         onerror: "SELECT * FROM untitle_table_4 limit 1"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -415,26 +475,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -443,12 +506,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -456,11 +521,15 @@ describe('Batch API fallback job', function () {
                         onerror: "SELECT * FROM untitle_table_4 limit 1"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -473,26 +542,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.PENDING) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.PENDING) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
+                    }
+                });
             }, 50);
         });
     });
@@ -502,12 +574,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -516,11 +590,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT * FROM untitle_table_4 limit 2"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -534,26 +612,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -562,12 +643,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4",
@@ -578,11 +661,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -599,26 +686,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -627,12 +717,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM nonexistent_table /* should fail */",
@@ -643,11 +735,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be failed', function (done) {
@@ -665,26 +761,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.FAILED) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.FAILED) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                    }
+                });
             }, 50);
         });
     });
@@ -694,12 +793,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 2",
@@ -710,11 +811,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be failed', function (done) {
@@ -732,26 +837,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                    .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.FAILED) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.FAILED) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                    }
+                });
             }, 50);
         });
     });
@@ -761,12 +869,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 1",
@@ -777,11 +887,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -799,26 +913,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -827,12 +944,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 1",
@@ -843,11 +962,15 @@ describe('Batch API fallback job', function () {
                         }]
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -865,26 +988,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -893,12 +1019,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 1",
@@ -910,11 +1038,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT * FROM untitle_table_4 limit 5"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -932,26 +1064,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -961,12 +1096,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT * FROM untitle_table_4 limit 1",
@@ -978,11 +1115,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT * FROM untitle_table_4 limit 5"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be done', function (done) {
@@ -1001,26 +1142,29 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
     });
@@ -1030,12 +1174,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT pg_sleep(3)",
@@ -1044,11 +1190,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT pg_sleep(0)"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job should be running', function (done) {
@@ -1062,28 +1212,31 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.status[0] === jobStatus.RUNNING && job.status[1] === jobStatus.PENDING) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.status[0] === jobStatus.DONE ||
-                                job.status[0] === jobStatus.FAILED ||
-                                job.status[0] === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status[0] === jobStatus.RUNNING && job.status[1] === jobStatus.PENDING) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status[0] === jobStatus.DONE ||
+                            job.status[0] === jobStatus.FAILED ||
+                            job.status[0] === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                    }
+                });
             }, 50);
         });
 
@@ -1097,24 +1250,27 @@ describe('Batch API fallback job', function () {
                 "onsuccess": "SELECT pg_sleep(0)"
             };
 
-            request(app)
-                .del('/api/v2/sql/job/' + fallbackJob.job_id)
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        return done(err);
-                    }
-                    var job = res.body;
-                    if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
-                        assert.deepEqual(job.query, expectedQuery);
-                        done();
-                    } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
-                    }
-                });
+            assert.response(app, {
+                url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'DELETE'
+            }, {
+                status: 200
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                var job = JSON.parse(res.body);
+                if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
+                    assert.deepEqual(job.query, expectedQuery);
+                    done();
+                } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
+                }
+            });
         });
     });
 
@@ -1122,12 +1278,14 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            request(app)
-                .post('/api/v2/sql/job')
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .send({
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
                     query: {
                         query: [{
                             query: "SELECT pg_sleep(0)",
@@ -1136,11 +1294,15 @@ describe('Batch API fallback job', function () {
                         onsuccess: "SELECT pg_sleep(0)"
                     }
                 })
-                .expect(201)
-                .end(function (err, res) {
-                    fallbackJob = res.body;
-                    done(err);
-                });
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
         });
 
         it('job "onsuccess" should be running', function (done) {
@@ -1154,31 +1316,34 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                request(app)
-                    .get('/api/v2/sql/job/' + fallbackJob.job_id)
-                    .query({ api_key: '1234' })
-                    .set('Content-Type', 'application/json')
-                    .set('host', 'vizzuality.cartodb.com')
-                    .expect(200)
-                        .end(function (err, res) {
-                        if (err) {
-                            return done(err);
-                        }
-                        var job = res.body;
-                        if (job.query.query[0].status[0] === jobStatus.DONE &&
-                            job.query.query[0].status[1] === jobStatus.RUNNING) {
-                            clearInterval(interval);
-                            assert.deepEqual(job.query, expectedQuery);
-                            done();
-                        } else if (job.query.query[0].status[0] === jobStatus.DONE ||
-                                job.query.query[0].status[0] === jobStatus.FAILED ||
-                                job.query.query[0].status[0] === jobStatus.CANCELLED) {
-                            clearInterval(interval);
-                            done(new Error('Job ' + job.job_id + ' is ' +
-                                job.query.query[0].status +
-                                ', expected to be running'));
-                        }
-                    });
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.query.query[0].status[0] === jobStatus.DONE &&
+                        job.query.query[0].status[1] === jobStatus.RUNNING) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.query.query[0].status[0] === jobStatus.DONE ||
+                            job.query.query[0].status[0] === jobStatus.FAILED ||
+                            job.query.query[0].status[0] === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' +
+                            job.query.query[0].status +
+                            ', expected to be running'));
+                    }
+                });
             }, 50);
         });
 
@@ -1192,24 +1357,27 @@ describe('Batch API fallback job', function () {
                 "onsuccess": "SELECT pg_sleep(0)"
             };
 
-            request(app)
-                .del('/api/v2/sql/job/' + fallbackJob.job_id)
-                .query({ api_key: '1234' })
-                .set('Content-Type', 'application/json')
-                .set('host', 'vizzuality.cartodb.com')
-                .expect(200)
-                .end(function (err, res) {
-                    if (err) {
-                        return done(err);
-                    }
-                    var job = res.body;
-                    if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
-                        assert.deepEqual(job.query, expectedQuery);
-                        done();
-                    } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
-                    }
-                });
+            assert.response(app, {
+                url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'DELETE'
+            }, {
+                status: 200
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                var job = JSON.parse(res.body);
+                if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
+                    assert.deepEqual(job.query, expectedQuery);
+                    done();
+                } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
+                }
+            });
         });
     });
 });
