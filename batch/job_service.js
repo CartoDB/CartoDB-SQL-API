@@ -36,19 +36,19 @@ JobService.prototype.list = function (user, callback) {
         }
 
         var jobList = dataList.map(function (data) {
-            var job;
+                var job;
 
-            try {
-                job = JobFactory.create(data);
-            } catch (err) {
-                return debug(err);
-            }
+                try {
+                    job = JobFactory.create(data);
+                } catch (err) {
+                    return debug(err);
+                }
 
-            return job;
-        })
-        .filter(function (job) {
-            return job !== undefined;
-        });
+                return job;
+            })
+            .filter(function (job) {
+                return job !== undefined;
+            });
 
         callback(null, jobList);
     });
