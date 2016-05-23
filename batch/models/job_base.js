@@ -19,7 +19,6 @@ var mandatoryProperties = [
     'query',
     'created_at',
     'updated_at',
-    'host',
     'user'
 ];
 
