@@ -29,7 +29,7 @@ function toRedisParams(job) {
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
-            // TODO: this should be moved to job model
+            // TODO: this should be moved to job model ??
             if ((property === 'query' || property === 'status') && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
@@ -49,7 +49,7 @@ function toObject(job_id, redisParams, redisValues) {
 
     for (var i = 0; i < redisParams.length; i++) {
         // TODO: this should be moved to job model
-        if (redisParams[i] === 'query' || redisParams[i] === 'status') {
+        if (redisParams[i] === 'query') {
             try {
                 obj[redisParams[i]] = JSON.parse(redisValues[i]);
             } catch (e) {
@@ -80,7 +80,8 @@ JobBackend.prototype.get = function (job_id, callback) {
         'created_at',
         'updated_at',
         'host',
-        'failed_reason'
+        'failed_reason',
+        'fallback_status'
     ];
 
     self.metadataBackend.redisCmd(REDIS_DB, 'HMGET', redisParams , function (err, redisValues) {
