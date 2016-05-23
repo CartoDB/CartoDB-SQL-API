@@ -73,8 +73,8 @@ JobFallback.is = function (query) {
     return true;
 };
 
-// jshint maxcomplexity: 10
 JobFallback.prototype.init = function () {
+    // jshint maxcomplexity: 10
     for (var i = 0; i < this.data.query.query.length; i++) {
         if ((this.data.query.query[i].onsuccess || this.data.query.query[i].onerror) &&
             !this.data.query.query[i].status) {
@@ -106,6 +106,7 @@ JobFallback.prototype._hasNextQueryFromQuery = function () {
 };
 
 JobFallback.prototype._getNextQueryFromQuery = function () {
+    // jshint maxcomplexity: 10
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (Array.isArray(this.data.query.query[i].status)) {
             if (this._isNextQuery(i)) {
@@ -234,6 +235,8 @@ JobFallback.prototype._setJobStatus = function (status, isChangeAppliedToQueryFa
 };
 
 JobFallback.prototype._shiftJobStatus = function (status, isChangeAppliedToQueryFallback) {
+    // jshint maxcomplexity: 10
+
     // In some scenarios we have to change the normal flow in order to keep consistency
     // between query's status and job's status.
 
@@ -252,6 +255,7 @@ JobFallback.prototype._shiftJobStatus = function (status, isChangeAppliedToQuery
 
 
 JobFallback.prototype._setQueryStatus = function (status, errorMesssage) {
+    // jshint maxcomplexity: 10
     var isValid = false;
     var isChangeAppliedToQueryFallback = false;
 
