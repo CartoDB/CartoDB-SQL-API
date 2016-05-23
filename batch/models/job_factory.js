@@ -1,8 +1,8 @@
 'use strict';
 
-var JobSimple = require('./models/job_simple');
-var JobMultiple = require('./models/job_multiple');
-var JobFallback = require('./models/job_fallback');
+var JobSimple = require('./job_simple');
+var JobMultiple = require('./job_multiple');
+var JobFallback = require('./job_fallback');
 
 var Models = [ JobSimple, JobMultiple, JobFallback ];
 
