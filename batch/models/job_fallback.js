@@ -21,8 +21,8 @@ function isFinalStatus(status) {
     return finalStatus.indexOf(status) !== -1;
 }
 
-function JobFallback(data) {
-    JobBase.call(this, data);
+function JobFallback(jobDefinition) {
+    JobBase.call(this, jobDefinition);
 
     this.init();
 }
