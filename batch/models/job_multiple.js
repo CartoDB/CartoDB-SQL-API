@@ -4,8 +4,8 @@ var util = require('util');
 var JobBase = require('./job_base');
 var jobStatus = require('../job_status');
 
-function JobMultiple(data) {
-    JobBase.call(this, data);
+function JobMultiple(jobDefinition) {
+    JobBase.call(this, jobDefinition);
 
     this.init();
 }

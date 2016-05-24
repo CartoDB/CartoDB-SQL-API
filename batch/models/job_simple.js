@@ -4,8 +4,8 @@ var util = require('util');
 var JobBase = require('./job_base');
 var jobStatus = require('../job_status');
 
-function JobSimple(data) {
-    JobBase.call(this, data);
+function JobSimple(jobDefinition) {
+    JobBase.call(this, jobDefinition);
 
     if (!this.data.status) {
         this.data.status = jobStatus.PENDING;

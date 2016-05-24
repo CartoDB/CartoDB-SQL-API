@@ -64,7 +64,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }]
             };
 
@@ -131,7 +132,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4",
                     "onerror": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["done", "pending"]
+                    "status": "done",
+                    "fallback_status": "pending"
                 }]
             };
             var interval = setInterval(function () {
@@ -197,7 +199,8 @@ describe('Batch API fallback job', function () {
                 query: [{
                     query: 'SELECT * FROM nonexistent_table /* query should fail */',
                     onerror: 'SELECT * FROM untitle_table_4 limit 1',
-                    status: ['failed', 'done'],
+                    status: 'failed',
+                    fallback_status: 'done',
                     failed_reason: 'relation "nonexistent_table" does not exist'
                 }]
             };
@@ -264,7 +267,8 @@ describe('Batch API fallback job', function () {
                 query: [{
                     query: 'SELECT * FROM nonexistent_table /* query should fail */',
                     onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
-                    status: ['failed', 'pending'],
+                    status: 'failed',
+                    fallback_status: 'pending',
                     failed_reason: 'relation "nonexistent_table" does not exist'
                 }]
             };
@@ -352,7 +356,7 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                    if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
@@ -420,7 +424,7 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.PENDING) {
+                    if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.PENDING) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
@@ -489,13 +493,13 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.FAILED && job.status[1] === jobStatus.DONE) {
+                    if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
                     }
                 });
             }, 50);
@@ -556,13 +560,13 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.PENDING) {
+                    if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.PENDING) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                     }
                 });
             }, 50);
@@ -606,7 +610,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }],
                 "onsuccess": "SELECT * FROM untitle_table_4 limit 2"
             };
@@ -626,7 +631,7 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                    if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
@@ -677,11 +682,13 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }]
             };
 
@@ -751,12 +758,14 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM nonexistent_table /* should fail */",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["failed", "pending"],
+                    "status": "failed",
+                    "fallback_status": "pending",
                     "failed_reason": 'relation "nonexistent_table" does not exist'
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                    "status": ["pending", "pending"]
+                    "status": "pending",
+                    "fallback_status": "pending"
                 }]
             };
 
@@ -827,11 +836,13 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }, {
                     "query": "SELECT * FROM nonexistent_table /* should fail */",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                    "status": ["failed", "pending"],
+                    "status": "failed",
+                    "fallback_status": "pending",
                     "failed_reason": 'relation "nonexistent_table" does not exist'
                 }]
             };
@@ -903,12 +914,14 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 1",
                     "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                    "status": ["done", "failed"],
+                    "status": "done",
+                    "fallback_status": "failed",
                     "failed_reason": 'relation "nonexistent_table" does not exist'
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 2",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }]
             };
 
@@ -978,11 +991,13 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 1",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 3",
                     "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                    "status": ["done", "failed"],
+                    "status": "done",
+                    "fallback_status": "failed",
                     "failed_reason": 'relation "nonexistent_table" does not exist'
                 }]
             };
@@ -1054,11 +1069,13 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 1",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 3",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 4",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }],
                 onsuccess: "SELECT * FROM untitle_table_4 limit 5"
             };
@@ -1078,11 +1095,11 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                    if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
                         done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                     }
@@ -1131,11 +1148,13 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT * FROM untitle_table_4 limit 1",
                     "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                    "status": ["done", "done"]
+                    "status": "done",
+                    "fallback_status": "done"
                 }, {
                     "query": "SELECT * FROM untitle_table_4 limit 3",
                     "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                    "status": ["done", "failed"],
+                    "status": "done",
+                    "fallback_status": "failed",
                     "failed_reason": 'relation "nonexistent_table" does not exist'
                 }],
                 "onsuccess": "SELECT * FROM untitle_table_4 limit 5"
@@ -1156,11 +1175,11 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.DONE && job.status[1] === jobStatus.DONE) {
+                    if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.status[0] === jobStatus.FAILED || job.status[0] === jobStatus.CANCELLED) {
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
                         done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                     }
@@ -1206,7 +1225,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT pg_sleep(3)",
                     "onsuccess": "SELECT pg_sleep(0)",
-                    "status": ["running", "pending"]
+                    "status": "running",
+                    "fallback_status": "pending"
                 }],
                 "onsuccess": "SELECT pg_sleep(0)"
             };
@@ -1226,13 +1246,13 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.status[0] === jobStatus.RUNNING && job.status[1] === jobStatus.PENDING) {
+                    if (job.status === jobStatus.RUNNING && job.fallback_status === jobStatus.PENDING) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.status[0] === jobStatus.DONE ||
-                            job.status[0] === jobStatus.FAILED ||
-                            job.status[0] === jobStatus.CANCELLED) {
+                    } else if (job.status === jobStatus.DONE ||
+                            job.status === jobStatus.FAILED ||
+                            job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
                         done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
                     }
@@ -1245,7 +1265,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT pg_sleep(3)",
                     "onsuccess": "SELECT pg_sleep(0)",
-                    "status": ["cancelled", "pending"]
+                    "status": "cancelled",
+                    "fallback_status": "pending"
                 }],
                 "onsuccess": "SELECT pg_sleep(0)"
             };
@@ -1264,10 +1285,10 @@ describe('Batch API fallback job', function () {
                     return done(err);
                 }
                 var job = JSON.parse(res.body);
-                if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
+                if (job.status === jobStatus.CANCELLED && job.fallback_status === jobStatus.PENDING) {
                     assert.deepEqual(job.query, expectedQuery);
                     done();
-                } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
+                } else if (job.status === jobStatus.DONE || job.status === jobStatus.FAILED) {
                     done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
                 }
             });
@@ -1310,7 +1331,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT pg_sleep(0)",
                     "onsuccess": "SELECT pg_sleep(3)",
-                    "status": ["done", "running"]
+                    "status": "done",
+                    "fallback_status": "running"
                 }],
                 "onsuccess": "SELECT pg_sleep(0)"
             };
@@ -1330,14 +1352,14 @@ describe('Batch API fallback job', function () {
                         return done(err);
                     }
                     var job = JSON.parse(res.body);
-                    if (job.query.query[0].status[0] === jobStatus.DONE &&
-                        job.query.query[0].status[1] === jobStatus.RUNNING) {
+                    if (job.query.query[0].status === jobStatus.DONE &&
+                        job.query.query[0].fallback_status === jobStatus.RUNNING) {
                         clearInterval(interval);
                         assert.deepEqual(job.query, expectedQuery);
                         done();
-                    } else if (job.query.query[0].status[0] === jobStatus.DONE ||
-                            job.query.query[0].status[0] === jobStatus.FAILED ||
-                            job.query.query[0].status[0] === jobStatus.CANCELLED) {
+                    } else if (job.query.query[0].status === jobStatus.DONE ||
+                            job.query.query[0].status === jobStatus.FAILED ||
+                            job.query.query[0].status === jobStatus.CANCELLED) {
                         clearInterval(interval);
                         done(new Error('Job ' + job.job_id + ' is ' +
                             job.query.query[0].status +
@@ -1352,7 +1374,8 @@ describe('Batch API fallback job', function () {
                 "query": [{
                     "query": "SELECT pg_sleep(0)",
                     "onsuccess": "SELECT pg_sleep(3)",
-                    "status": ["done", "cancelled"]
+                    "status": "done",
+                    "fallback_status": "cancelled"
                 }],
                 "onsuccess": "SELECT pg_sleep(0)"
             };
@@ -1371,10 +1394,10 @@ describe('Batch API fallback job', function () {
                     return done(err);
                 }
                 var job = JSON.parse(res.body);
-                if (job.status[0] === jobStatus.CANCELLED && job.status[1] === jobStatus.PENDING) {
+                if (job.status === jobStatus.CANCELLED && job.fallback_status === jobStatus.PENDING) {
                     assert.deepEqual(job.query, expectedQuery);
                     done();
-                } else if (job.status[0] === jobStatus.DONE || job.status[0] === jobStatus.FAILED) {
+                } else if (job.status === jobStatus.DONE || job.status === jobStatus.FAILED) {
                     done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
                 }
             });
