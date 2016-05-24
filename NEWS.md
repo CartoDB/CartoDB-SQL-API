@@ -1,6 +1,9 @@
 1.29.1 - 2016-mm-dd
 -------------------
 
+Announcements:
+ * Change Batch API size limit: 8kb per job.
+
 
 1.29.0 - 2016-05-24
 -------------------
