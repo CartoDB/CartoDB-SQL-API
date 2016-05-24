@@ -3,7 +3,7 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
-var forever = require('./forever');
+var forever = require('./util/forever');
 var queue = require('queue-async');
 var jobStatus = require('./job_status');
 

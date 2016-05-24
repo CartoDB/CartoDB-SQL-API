@@ -4,8 +4,8 @@ var util = require('util');
 var JobBase = require('./job_base');
 var jobStatus = require('../job_status');
 
-function JobMultiple(data) {
-    JobBase.call(this, data);
+function JobMultiple(jobDefinition) {
+    JobBase.call(this, jobDefinition);
 
     this.init();
 }
@@ -33,6 +33,11 @@ JobMultiple.is = function (query) {
 };
 
 JobMultiple.prototype.init = function () {
+
+    if (!this.data.status) {
+        this.data.status = jobStatus.PENDING;
+    }
+
     for (var i = 0; i < this.data.query.length; i++) {
         if (!this.data.query[i].query && !this.data.query[i].status) {
             this.data.query[i] = {
@@ -59,7 +64,7 @@ JobMultiple.prototype.setQuery = function (query) {
     JobMultiple.super_.prototype.setQuery.call(this, query);
 };
 
-JobMultiple.prototype.setStatus = function (finalStatus) {
+JobMultiple.prototype.setStatus = function (finalStatus, errorMesssage) {
     var initialStatus = this.data.status;
     // if transition is to "done" and there are more queries to run
     // then job status must be "pending" instead of "done"
@@ -67,7 +72,7 @@ JobMultiple.prototype.setStatus = function (finalStatus) {
     if (finalStatus === jobStatus.DONE && this.hasNextQuery()) {
         JobMultiple.super_.prototype.setStatus.call(this, jobStatus.PENDING);
     } else {
-        JobMultiple.super_.prototype.setStatus.call(this, finalStatus);
+        JobMultiple.super_.prototype.setStatus.call(this, finalStatus, errorMesssage);
     }
 
     for (var i = 0; i < this.data.query.length; i++) {
@@ -75,6 +80,9 @@ JobMultiple.prototype.setStatus = function (finalStatus) {
 
         if (isValid) {
             this.data.query[i].status = finalStatus;
+            if (finalStatus === jobStatus.FAILED && errorMesssage) {
+                this.data.query[i].failed_reason = errorMesssage;
+            }
             return;
         }
     }

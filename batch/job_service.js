@@ -1,7 +1,7 @@
 'use strict';
 
 var debug = require('./util/debug')('job-service');
-var JobFactory = require('./job_factory');
+var JobFactory = require('./models/job_factory');
 var jobStatus = require('./job_status');
 
 function JobService(jobBackend, jobCanceller) {

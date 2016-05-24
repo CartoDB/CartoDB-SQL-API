@@ -29,7 +29,8 @@ function toRedisParams(job) {
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
-            if (property === 'query' && typeof obj[property] !== 'string') {
+            // TODO: this should be moved to job model ??
+            if ((property === 'query' || property === 'status') && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
                 redisParams.push(obj[property]);
@@ -47,13 +48,14 @@ function toObject(job_id, redisParams, redisValues) {
     redisParams.pop(); // WARN: weird function pushed by metadataBackend
 
     for (var i = 0; i < redisParams.length; i++) {
+        // TODO: this should be moved to job model
         if (redisParams[i] === 'query') {
             try {
                 obj[redisParams[i]] = JSON.parse(redisValues[i]);
             } catch (e) {
                 obj[redisParams[i]] = redisValues[i];
             }
-        } else {
+        } else if (redisValues[i]) {
             obj[redisParams[i]] = redisValues[i];
         }
     }
@@ -78,7 +80,8 @@ JobBackend.prototype.get = function (job_id, callback) {
         'created_at',
         'updated_at',
         'host',
-        'failed_reason'
+        'failed_reason',
+        'fallback_status'
     ];
 
     self.metadataBackend.redisCmd(REDIS_DB, 'HMGET', redisParams , function (err, redisValues) {
@@ -168,7 +171,7 @@ JobBackend.prototype.save = function (job, callback) {
     });
 };
 
-function isFrozen(status) {
+function isFinalStatus(status) {
     return finalStatus.indexOf(status) !== -1;
 }
 
@@ -176,7 +179,7 @@ JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
     var redisKey = REDIS_PREFIX + job.job_id;
 
-    if (!isFrozen(job.status)) {
+    if (!isFinalStatus(job.status)) {
         return callback();
     }
 

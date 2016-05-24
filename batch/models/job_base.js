@@ -19,7 +19,6 @@ var mandatoryProperties = [
     'query',
     'created_at',
     'updated_at',
-    'host',
     'user'
 ];
 
@@ -38,10 +37,6 @@ function JobBase(data) {
 
     if (!this.data.updated_at) {
         this.data.updated_at = now;
-    }
-
-    if (!this.data.status) {
-        this.data.status = jobStatus.PENDING;
     }
 }
 
@@ -70,8 +65,6 @@ JobBase.prototype.getNextQuery = function () {
 JobBase.prototype.hasNextQuery = function () {
     return !!this.getNextQuery();
 };
-
-
 
 JobBase.prototype.isPending = function () {
     return this.data.status === jobStatus.PENDING;
@@ -108,7 +101,7 @@ JobBase.prototype.setQuery = function (query) {
     this.data.query = query;
 };
 
-JobBase.prototype.setStatus = function (finalStatus) {
+JobBase.prototype.setStatus = function (finalStatus, errorMesssage) {
     var now = new Date().toISOString();
     var initialStatus = this.data.status;
     var isValid = this.isValidStatusTransition(initialStatus, finalStatus);
@@ -119,6 +112,9 @@ JobBase.prototype.setStatus = function (finalStatus) {
 
     this.data.updated_at = now;
     this.data.status = finalStatus;
+    if (finalStatus === jobStatus.FAILED && errorMesssage) {
+        this.data.failed_reason = errorMesssage;
+    }
 };
 
 JobBase.prototype.validate = function () {
