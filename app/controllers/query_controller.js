@@ -243,7 +243,7 @@ QueryController.prototype.handleQuery = function (req, res) {
                 }
 
                 if ( req.profiler ) {
-                  req.profiler.sendStats(); // TODO: do on nextTick ?
+                  req.profiler.sendStats();
                 }
                 if (self.statsd_client) {
                   if ( err ) {

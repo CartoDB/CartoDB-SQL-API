@@ -3,11 +3,12 @@
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
 var jobStatus = require('./job_status');
 
-function JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService) {
+function JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService, profiler) {
     this.jobService = jobService;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
     this.userDatabaseMetadataService = userDatabaseMetadataService; // TODO: move to queryRunner
+    this.profiler = profiler;
 }
 
 JobRunner.prototype.run = function (job_id, callback) {
@@ -25,6 +26,8 @@ JobRunner.prototype.run = function (job_id, callback) {
         } catch (err) {
             return callback(err);
         }
+
+        self.profiler.start('batch.job.' + job_id);
 
         self.jobService.save(job, function (err, job) {
             if (err) {
@@ -44,6 +47,8 @@ JobRunner.prototype._run = function (job, query, callback) {
         if (err) {
             return callback(err);
         }
+
+        self.profiler.done('getUserMetadata');
 
         self.queryRunner.run(job.data.job_id, query, userDatabaseMetadata, function (err /*, result */) {
             if (err) {

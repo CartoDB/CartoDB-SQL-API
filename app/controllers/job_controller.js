@@ -37,9 +37,10 @@ function getMaxSizeErrorMessage(sql) {
     );
 }
 
-function JobController(userDatabaseService, jobService) {
+function JobController(userDatabaseService, jobService, statsdClient) {
     this.userDatabaseService = userDatabaseService;
     this.jobService = jobService;
+    this.statsdClient = statsdClient;
 }
 
 module.exports = JobController;
@@ -390,17 +391,28 @@ JobController.prototype.updateJob = function (req, res) {
                 return handleException(err, res);
             }
 
-            if ( req.profiler ) {
-                req.profiler.done('updateJob');
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
             if (global.settings.api_hostname) {
-              res.header('X-Served-By-Host', global.settings.api_hostname);
+                res.header('X-Served-By-Host', global.settings.api_hostname);
             }
 
             if (result.host) {
-              res.header('X-Served-By-DB-Host', result.host);
+                res.header('X-Served-By-DB-Host', result.host);
+            }
+
+            if ( req.profiler ) {
+                req.profiler.done('updateJob');
+                req.profiler.end();
+                req.profiler.sendStats();
+
+                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+            }
+
+            if (self.statsdClient) {
+                if ( err ) {
+                    self.statsdClient.increment('sqlapi.job.error');
+                } else {
+                    self.statsdClient.increment('sqlapi.job.success');
+                }
             }
 
             res.send(result.job);

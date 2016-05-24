@@ -14,8 +14,9 @@ var UserIndexer = require('./user_indexer');
 var JobBackend = require('./job_backend');
 var JobService = require('./job_service');
 var Batch = require('./batch');
+var Profiler = require('step-profiler');
 
-module.exports = function batchFactory (metadataBackend) {
+module.exports = function batchFactory (metadataBackend, statsdClient) {
     var queueSeeker = new QueueSeeker(metadataBackend);
     var jobSubscriber = new JobSubscriber(redis, queueSeeker);
     var jobQueuePool = new JobQueuePool(metadataBackend);
@@ -28,7 +29,8 @@ module.exports = function batchFactory (metadataBackend) {
     var queryRunner = new QueryRunner();
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
-    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService);
+    var profiler = new Profiler({ statsd_client: statsdClient });
+    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService, profiler);
 
     return new Batch(jobSubscriber, jobQueuePool, jobRunner, jobService);
 };
