@@ -11,7 +11,8 @@ var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
-var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4 * ONE_KILOBYTE_IN_BYTES; // 4kb
+var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
+var MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
 function getMaxSizeErrorMessage(sql) {
     return util.format([
