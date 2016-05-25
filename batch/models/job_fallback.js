@@ -257,6 +257,11 @@ JobFallback.prototype._shiftJobStatus = function (status, isChangeAppliedToQuery
 };
 
 
+JobFallback.prototype._shouldTryToApplyStatusTransitionToQueryFallback = function (index) {
+    return (this.data.query.query[index].status === jobStatus.DONE && this.data.query.query[index].onsuccess) ||
+        (this.data.query.query[index].status === jobStatus.FAILED && this.data.query.query[index].onerror);
+};
+
 JobFallback.prototype._setQueryStatus = function (status, errorMesssage) {
     // jshint maxcomplexity: 7
     var isValid = false;
@@ -275,7 +280,7 @@ JobFallback.prototype._setQueryStatus = function (status, errorMesssage) {
             break;
         }
 
-        if (this.data.query.query[i].fallback_status) {
+        if (this._shouldTryToApplyStatusTransitionToQueryFallback(i)) {
             isValid = this.isValidStatusTransition(this.data.query.query[i].fallback_status, status);
 
             if (isValid) {

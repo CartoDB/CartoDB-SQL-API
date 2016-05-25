@@ -875,6 +875,81 @@ describe('Batch API fallback job', function () {
         });
     });
 
+    describe('"onerror" should not be triggered for any query', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
+                    query: {
+                        query: [{
+                            query: "SELECT * FROM untitle_table_4 limit 1",
+                            onerror: "SELECT * FROM untitle_table_4 limit 2"
+                        }, {
+                            query: "SELECT * FROM untitle_table_4 limit 3",
+                            onerror: "SELECT * FROM untitle_table_4 limit 4"
+                        }]
+                    }
+                })
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
+        });
+
+        it('job should be failed', function (done) {
+            var expectedQuery = {
+                query: [{
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 2',
+                    status: 'done',
+                    fallback_status: 'pending'
+                }, {
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 4',
+                    status: 'done',
+                    fallback_status: 'pending'
+                }]
+            };
+
+            var interval = setInterval(function () {
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        assert.deepEqual(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                    }
+                });
+            }, 50);
+        });
+    });
 
     describe('"onsuccess" for first query should fail', function () {
         var fallbackJob = {};
