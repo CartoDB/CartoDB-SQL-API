@@ -379,13 +379,15 @@ it('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fai
     });
 });
 
-it('GET /api/v1/sql with INSERT. header based db - should fail', function(){
+it('GET /api/v1/sql with INSERT. header based db - should fail', function (done) {
     assert.response(app, {
         url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(id)%20VALUES%20(1)",
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{
+    }, {
         status: 400
+    }, function (res, err) {
+        done(err);
     });
 });
 

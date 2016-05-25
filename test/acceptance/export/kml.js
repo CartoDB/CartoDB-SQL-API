@@ -397,4 +397,28 @@ it('check point coordinates, authenticated', function(done){
         );
     });
 
+    it('should work with queries returning no results', function(done) {
+        assert.response(
+            app,
+            {
+                url: "/api/v1/sql?" + querystring.stringify({
+                    q: "SELECT * FROM populated_places_simple_reduced LIMIT 0",
+                    format: 'kml'
+                }),
+                headers: {
+                    host: 'vizzuality.cartodb.com'
+                },
+                encoding: 'binary',
+                method: 'GET'
+            },
+            {
+                status: 200
+            },
+            function(res) {
+                assert.equal(res.body.match(/<Placemark>/g), null);
+                done();
+            }
+        );
+    });
+
 });

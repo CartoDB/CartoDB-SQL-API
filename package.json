@@ -5,7 +5,7 @@
     "keywords": [
         "cartodb"
     ],
-    "version": "1.28.0",
+    "version": "1.29.1",
     "repository": {
         "type": "git",
         "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
@@ -19,6 +19,7 @@
     "dependencies": {
         "cartodb-psql": "~0.6.0",
         "cartodb-redis": "~0.11.0",
+        "debug": "2.2.0",
         "express": "~2.5.11",
         "log4js": "https://github.com/CartoDB/log4js-node/tarball/cdb",
         "lru-cache": "~2.5.0",
@@ -42,6 +43,7 @@
         "jshint": "~2.6.0",
         "zipfile": "~0.5.0",
         "libxmljs": "~0.8.1",
+        "qs": "6.2.0",
         "sqlite3": "~3.0.8"
     },
     "scripts": {
