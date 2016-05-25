@@ -1,5 +1,8 @@
-1.29.2 - 2016-mm-dd
+1.29.2 - 2016-05-25
 -------------------
+
+Bug fixes:
+ * Fixed issue with status transition in fallback jobs #308
 
 
 1.29.1 - 2016-05-24
