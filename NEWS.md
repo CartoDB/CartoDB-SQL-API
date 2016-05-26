@@ -1,12 +1,36 @@
-1.28.2 - 2016-mm-dd
+1.29.3 - 2016-mm-dd
 -------------------
+
+
+1.29.2 - 2016-05-25
+-------------------
+
+Bug fixes:
+ * Fixed issue with status transition in fallback jobs #308
+
+
+1.29.1 - 2016-05-24
+-------------------
+
+Announcements:
+ * Change Batch API size limit: 8kb per job.
+
+
+1.29.0 - 2016-05-24
+-------------------
+
+New features:
+ * Add support for fallback-jobs in Batch API #296
+
+Bug fixes:
+ * Fix issue in Batch API when a 'no longer running' job reports as 'running' before and after a job cancel #293
 
 
 1.28.1 - 2016-05-12
 -------------------
 
 Bug fixes:
- * OGR with _needSRS=true fails for empty tables #299
+ * OGR with _needSRS=true_ fails for empty tables #299
 
 
 1.28.0 - 2016-05-11

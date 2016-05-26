@@ -11,23 +11,12 @@ var handleException = require('../utils/error_handler');
 var cdbReq = new CdbRequest();
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
-var MAX_LIMIT_QUERY_SIZE_IN_BYTES = 4 * ONE_KILOBYTE_IN_BYTES; // 4kb
-
-function reachMaxQuerySizeLimit(query) {
-    var querySize;
-
-    try {
-        querySize = (typeof query === 'string') ? query.length : JSON.stringify(query).length;
-    } catch (e) {
-        return false;
-    }
-
-    return querySize > MAX_LIMIT_QUERY_SIZE_IN_BYTES;
-}
+var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
+var MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
 function getMaxSizeErrorMessage(sql) {
     return util.format([
-            'Your payload is too large (%s). Max size allowed is %s (%skb).',
+            'Your payload is too large: %s bytes. Max size allowed is %s bytes (%skb).',
             'Are you trying to import data?.',
             'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
         ].join(' '),
@@ -43,15 +32,26 @@ function JobController(userDatabaseService, jobService, statsdClient) {
     this.statsdClient = statsdClient;
 }
 
+function bodyPayloadSizeMiddleware(req, res, next) {
+    var payload = JSON.stringify(req.body);
+    if (payload.length > MAX_LIMIT_QUERY_SIZE_IN_BYTES) {
+        return handleException(new Error(getMaxSizeErrorMessage(payload)), res);
+    } else {
+        return next(null);
+    }
+}
+
 module.exports = JobController;
+module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/sql/job',  this.createJob.bind(this));
+    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, this.createJob.bind(this));
     app.get(global.settings.base_url + '/sql/job',  this.listJob.bind(this));
     app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
     app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
-    app.put(global.settings.base_url + '/sql/job/:job_id',  this.updateJob.bind(this));
-    app.patch(global.settings.base_url + '/sql/job/:job_id',  this.updateJob.bind(this));
+    app.put(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
+    app.patch(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {
@@ -254,17 +254,11 @@ JobController.prototype.getJob = function (req, res) {
 };
 
 JobController.prototype.createJob = function (req, res) {
-    // jshint maxcomplexity: 7
     var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
-
-    // TODO: in job.validate()
-    if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
-    }
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
@@ -332,18 +326,12 @@ JobController.prototype.createJob = function (req, res) {
 };
 
 JobController.prototype.updateJob = function (req, res) {
-    // jshint maxcomplexity: 7
     var self = this;
     var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
-
-    // TODO: in jobValidate
-    if (reachMaxQuerySizeLimit(sql)) {
-        return handleException(new Error(getMaxSizeErrorMessage(sql)), res);
-    }
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.job');
