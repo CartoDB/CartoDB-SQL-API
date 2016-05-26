@@ -185,7 +185,77 @@ JobFallback.prototype.setStatus = function (status, errorMesssage) {
         throw new Error('Cannot set status from ' + this.data.status + ' to ' + status);
     }
 
+    if (!resultFromQuery.isChangeAppliedToQueryFallback || status === jobStatus.CANCELLED) {
+        this._setSkipped(status);
+    }
+
     this.data.updated_at = now;
+};
+
+JobFallback.prototype._setSkipped = function (status) {
+    this._setSkippedQueryStatus();
+    this._setSkippedJobStatus();
+
+    if (status === jobStatus.CANCELLED || status === jobStatus.FAILED) {
+        this._setRestPendingToSkipped(status);
+    }
+};
+
+JobFallback.prototype._setSkippedQueryStatus = function () {
+    // jshint maxcomplexity: 8
+    for (var i = 0; i < this.data.query.query.length; i++) {
+        if (this.data.query.query[i].status === jobStatus.FAILED && this.data.query.query[i].onsuccess) {
+            if (this.isValidStatusTransition(this.data.query.query[i].fallback_status, jobStatus.SKIPPED)) {
+                this.data.query.query[i].fallback_status = jobStatus.SKIPPED;
+            }
+        }
+
+        if (this.data.query.query[i].status === jobStatus.DONE && this.data.query.query[i].onerror) {
+            if (this.isValidStatusTransition(this.data.query.query[i].fallback_status, jobStatus.SKIPPED)) {
+                this.data.query.query[i].fallback_status = jobStatus.SKIPPED;
+            }
+        }
+
+        if (this.data.query.query[i].status === jobStatus.CANCELLED && this.data.query.query[i].fallback_status) {
+            if (this.isValidStatusTransition(this.data.query.query[i].fallback_status, jobStatus.SKIPPED)) {
+                this.data.query.query[i].fallback_status = jobStatus.SKIPPED;
+            }
+        }
+    }
+};
+
+JobFallback.prototype._setSkippedJobStatus = function () {
+    // jshint maxcomplexity: 7
+
+    if (this.data.status === jobStatus.FAILED && this.data.query.onsuccess) {
+        if (this.isValidStatusTransition(this.data.fallback_status, jobStatus.SKIPPED)) {
+            this.data.fallback_status = jobStatus.SKIPPED;
+        }
+    }
+
+    if (this.data.status === jobStatus.DONE && this.data.query.onerror) {
+        if (this.isValidStatusTransition(this.data.fallback_status, jobStatus.SKIPPED)) {
+            this.data.fallback_status = jobStatus.SKIPPED;
+        }
+    }
+
+    if (this.data.status === jobStatus.CANCELLED && this.data.fallback_status) {
+        if (this.isValidStatusTransition(this.data.fallback_status, jobStatus.SKIPPED)) {
+            this.data.fallback_status = jobStatus.SKIPPED;
+        }
+    }
+};
+
+JobFallback.prototype._setRestPendingToSkipped = function (status) {
+    for (var i = 0; i < this.data.query.query.length; i++) {
+        if (this.data.query.query[i].status === jobStatus.PENDING) {
+            this.data.query.query[i].status = jobStatus.SKIPPED;
+        }
+        if (this.data.query.query[i].status !== status &&
+            this.data.query.query[i].fallback_status === jobStatus.PENDING) {
+            this.data.query.query[i].fallback_status = jobStatus.SKIPPED;
+        }
+    }
 };
 
 JobFallback.prototype._getLastStatusFromFinishedQuery = function () {
@@ -263,7 +333,7 @@ JobFallback.prototype._shouldTryToApplyStatusTransitionToQueryFallback = functio
 };
 
 JobFallback.prototype._setQueryStatus = function (status, errorMesssage) {
-    // jshint maxcomplexity: 7
+    // jshint maxcomplexity: 8
     var isValid = false;
     var isChangeAppliedToQueryFallback = false;
 
