@@ -210,7 +210,7 @@ function App() {
     var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
-        app.batch = batchFactory(metadataBackend);
+        app.batch = batchFactory(metadataBackend, statsd_client);
         app.batch.start();
     }
 

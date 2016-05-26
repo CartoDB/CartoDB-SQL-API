@@ -2,17 +2,21 @@
 
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
 var jobStatus = require('./job_status');
+var Profiler = require('step-profiler');
 
-function JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService, profiler) {
+function JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService, statsdClient) {
     this.jobService = jobService;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
     this.userDatabaseMetadataService = userDatabaseMetadataService; // TODO: move to queryRunner
-    this.profiler = profiler;
+    this.statsdClient = statsdClient;
 }
 
 JobRunner.prototype.run = function (job_id, callback) {
     var self = this;
+
+    self.profiler = new Profiler({ statsd_client: self.statsdClient });
+    self.profiler.start('sqlapi.batch.' + job_id);
 
     self.jobService.get(job_id, function (err, job) {
         if (err) {
@@ -27,12 +31,12 @@ JobRunner.prototype.run = function (job_id, callback) {
             return callback(err);
         }
 
-        self.profiler.start('batch.job.' + job_id);
-
         self.jobService.save(job, function (err, job) {
             if (err) {
                 return callback(err);
             }
+
+            self.profiler.done('running');
 
             self._run(job, query, callback);
         });
@@ -48,8 +52,6 @@ JobRunner.prototype._run = function (job, query, callback) {
             return callback(err);
         }
 
-        self.profiler.done('getUserMetadata');
-
         self.queryRunner.run(job.data.job_id, query, userDatabaseMetadata, function (err /*, result */) {
             if (err) {
                 // if query has been cancelled then it's going to get the current
@@ -61,8 +63,10 @@ JobRunner.prototype._run = function (job, query, callback) {
 
             try {
                 if (err) {
+                    self.profiler.done('failed');
                     job.setStatus(jobStatus.FAILED, err.message);
                 } else {
+                    self.profiler.done('done');
                     job.setStatus(jobStatus.DONE);
                 }
             } catch (err) {
@@ -73,6 +77,9 @@ JobRunner.prototype._run = function (job, query, callback) {
                 if (err) {
                     return callback(err);
                 }
+
+                self.profiler.end();
+                self.profiler.sendStats();
 
                 if (!job.hasNextQuery()) {
                     return callback(null, job);
