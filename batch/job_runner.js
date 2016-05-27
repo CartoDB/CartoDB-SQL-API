@@ -66,7 +66,7 @@ JobRunner.prototype._run = function (job, query, callback) {
                     self.profiler.done('failed');
                     job.setStatus(jobStatus.FAILED, err.message);
                 } else {
-                    self.profiler.done('done');
+                    self.profiler.done('success');
                     job.setStatus(jobStatus.DONE);
                 }
             } catch (err) {
@@ -78,6 +78,7 @@ JobRunner.prototype._run = function (job, query, callback) {
                     return callback(err);
                 }
 
+                self.profiler.done('done');
                 self.profiler.end();
                 self.profiler.sendStats();
 
