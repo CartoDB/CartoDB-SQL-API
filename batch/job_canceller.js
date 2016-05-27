@@ -26,6 +26,10 @@ function doCancel(job_id, userDatabaseMetadata, callback) {
             return callback(err);
         }
 
+        if (!pid) {
+            return callback();
+        }
+
         doCancelQuery(pg, pid, function (err, isCancelled) {
             if (err) {
                 return callback(err);
@@ -35,7 +39,7 @@ function doCancel(job_id, userDatabaseMetadata, callback) {
                 return callback(new Error('Query has not been cancelled'));
             }
 
-            callback(null);
+            callback();
         });
     });
 }
@@ -49,7 +53,8 @@ function getQueryPID(pg, job_id, callback) {
         }
 
         if (!result.rows[0] || !result.rows[0].pid) {
-            return callback(new Error('Query is not running currently'));
+            // query is not running actually, but we have to callback w/o error to cancel the job anyway.
+            return callback();
         }
 
         callback(null, result.rows[0].pid);

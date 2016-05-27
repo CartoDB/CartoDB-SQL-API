@@ -13,10 +13,11 @@
  *
  */
 require('../helper');
+var JobController = require('../../app/controllers/job_controller');
 
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
-var querystring = require('querystring');
+var querystring = require('qs');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -25,10 +26,22 @@ var metadataBackend = require('cartodb-redis')({
     reapIntervalMillis: global.settings.redisReapIntervalMillis
 });
 
-var queryMaxSize = new Array(4097).join('a');
+function payload(query) {
+    return JSON.stringify({query: query});
+}
+function payloadSize(query) {
+    return payload(query).length;
+}
+
+var minPayloadSize = payloadSize('');
+var queryMaxSize = new Array(JobController.MAX_LIMIT_QUERY_SIZE_IN_BYTES - minPayloadSize + 1).join('a');
 var queryTooLong = queryMaxSize.concat('a');
 
 describe('job query limit', function() {
+
+    function expectedErrorMessage(query) {
+        return JobController.getMaxSizeErrorMessage(payload(query));
+    }
 
     after(function (done) {
         // batch services is not activate, so we need empty the queue to avoid unexpected
@@ -49,13 +62,7 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [
-                [
-                    'Your payload is too large (4097). Max size allowed is 4096 (4kb).',
-                    'Are you trying to import data?.',
-                    'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
-                ].join(' ')
-            ]});
+            assert.deepEqual(error, { error: [expectedErrorMessage(queryTooLong)] });
             done();
         });
     });
@@ -73,13 +80,7 @@ describe('job query limit', function() {
             status: 400
         }, function (res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [
-                [
-                    'Your payload is too large (4097). Max size allowed is 4096 (4kb).',
-                    'Are you trying to import data?.',
-                    'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
-                ].join(' ')
-            ]});
+            assert.deepEqual(error, { error: [expectedErrorMessage(queryTooLong)] });
             done();
         });
     });
@@ -98,6 +99,50 @@ describe('job query limit', function() {
         }, function (res) {
             var job = JSON.parse(res.body);
             assert.ok(job.job_id);
+            done();
+        });
+    });
+
+    it('POST /api/v2/sql/job with a invalid query size should consider multiple queries', function (done){
+        var queries = [queryTooLong, 'select 1'];
+        assert.response(app, {
+            url: '/api/v2/sql/job?api_key=1234',
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'POST',
+            data: querystring.stringify({
+                query: queries
+            })
+        }, {
+            status: 400
+        }, function (res) {
+            var error = JSON.parse(res.body);
+            assert.deepEqual(error, { error: [expectedErrorMessage(queries)] });
+            done();
+        });
+    });
+
+    it('POST /api/v2/sql/job with a invalid query size should consider fallback queries/callbacks', function (done){
+        var fallbackQueries = {
+            query: [{
+                query: queryTooLong,
+                onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+            }, {
+                query: "SELECT * FROM untitle_table_4 limit 2",
+                onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+            }]
+        };
+        assert.response(app, {
+            url: '/api/v2/sql/job?api_key=1234',
+            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            method: 'POST',
+            data: querystring.stringify({
+                query: fallbackQueries
+            })
+        }, {
+            status: 400
+        }, function (res) {
+            var error = JSON.parse(res.body);
+            assert.deepEqual(error, { error: [expectedErrorMessage(fallbackQueries)] });
             done();
         });
     });
