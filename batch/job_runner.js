@@ -16,7 +16,7 @@ JobRunner.prototype.run = function (job_id, callback) {
     var self = this;
 
     self.profiler = new Profiler({ statsd_client: self.statsdClient });
-    self.profiler.start('sqlapi.batch.' + job_id);
+    self.profiler.start('sqlapi.batch.job');
 
     self.jobService.get(job_id, function (err, job) {
         if (err) {
