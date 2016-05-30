@@ -29,7 +29,7 @@ function getMaxSizeErrorMessage(sql) {
 function JobController(userDatabaseService, jobService, statsdClient) {
     this.userDatabaseService = userDatabaseService;
     this.jobService = jobService;
-    this.statsdClient = statsdClient;
+    this.statsdClient = statsdClient || { increment: function () {} };
 }
 
 function bodyPayloadSizeMiddleware(req, res, next) {
@@ -98,7 +98,6 @@ JobController.prototype.cancelJob = function (req, res) {
             });
         },
         function handleResponse(err, result) {
-            // jshint maxcomplexity: 8
             if ( err ) {
                 return handleException(err, res);
             }
@@ -119,12 +118,10 @@ JobController.prototype.cancelJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if (self.statsdClient) {
-                if ( err ) {
-                    self.statsdClient.increment('sqlapi.job.error');
-                } else {
-                    self.statsdClient.increment('sqlapi.job.success');
-                }
+            if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
+            } else {
+                self.statsdClient.increment('sqlapi.job.success');
             }
 
             res.send(result.job);
@@ -177,7 +174,6 @@ JobController.prototype.listJob = function (req, res) {
             });
         },
         function handleResponse(err, result) {
-            // jshint maxcomplexity: 8
             if ( err ) {
                 return handleException(err, res);
             }
@@ -198,12 +194,10 @@ JobController.prototype.listJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if (self.statsdClient) {
-                if ( err ) {
-                    self.statsdClient.increment('sqlapi.job.error');
-                } else {
-                    self.statsdClient.increment('sqlapi.job.success');
-                }
+            if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
+            } else {
+                self.statsdClient.increment('sqlapi.job.success');
             }
 
             res.send(result.jobs);
@@ -255,7 +249,6 @@ JobController.prototype.getJob = function (req, res) {
             });
         },
         function handleResponse(err, result) {
-            // jshint maxcomplexity: 8
             if ( err ) {
                 return handleException(err, res);
             }
@@ -276,12 +269,10 @@ JobController.prototype.getJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if (self.statsdClient) {
-                if ( err ) {
-                    self.statsdClient.increment('sqlapi.job.error');
-                } else {
-                    self.statsdClient.increment('sqlapi.job.success');
-                }
+            if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
+            } else {
+                self.statsdClient.increment('sqlapi.job.success');
             }
 
             res.send(result.job);
@@ -339,7 +330,6 @@ JobController.prototype.createJob = function (req, res) {
             });
         },
         function handleResponse(err, result) {
-            // jshint maxcomplexity: 8
             if ( err ) {
                 return handleException(err, res);
             }
@@ -360,12 +350,10 @@ JobController.prototype.createJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if (self.statsdClient) {
-                if ( err ) {
-                    self.statsdClient.increment('sqlapi.job.error');
-                } else {
-                    self.statsdClient.increment('sqlapi.job.success');
-                }
+            if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
+            } else {
+                self.statsdClient.increment('sqlapi.job.success');
             }
 
             res.status(201).send(result.job);
@@ -423,7 +411,6 @@ JobController.prototype.updateJob = function (req, res) {
             });
         },
         function handleResponse(err, result) {
-            // jshint maxcomplexity: 8
             if ( err ) {
                 return handleException(err, res);
             }
@@ -444,12 +431,10 @@ JobController.prototype.updateJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if (self.statsdClient) {
-                if ( err ) {
-                    self.statsdClient.increment('sqlapi.job.error');
-                } else {
-                    self.statsdClient.increment('sqlapi.job.success');
-                }
+            if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
+            } else {
+                self.statsdClient.increment('sqlapi.job.success');
             }
 
             res.send(result.job);
