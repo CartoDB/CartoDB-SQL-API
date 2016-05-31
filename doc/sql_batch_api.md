@@ -8,7 +8,7 @@ _The Batch API is not intended to be used for large query payloads than contain 
 
 ## SQL Batch API Job Schema
 
-The SQL Batch API request to your Carto account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the SQL Batch API and are read-only.
+The SQL Batch API request to your CARTO account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the SQL Batch API and are read-only.
 
 Name | Description
 --- | ---
@@ -74,8 +74,8 @@ If you are using the Batch API create operation for cURL POST request, use the f
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-  "query": "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
-}' "http://{username}.carto.com/api/v2/sql/job"
+  "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
+}' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API create operation for a Node.js client POST request, use the following code:
@@ -85,10 +85,10 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
-    query: "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
+    query: "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
   },
   json: true
 };
@@ -128,7 +128,7 @@ BODY: {
 If you are using the Batch API read operation for cURL GET request, use the following code:
 
 ```bash
-curl -X GET "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+curl -X GET "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API read operation for a Node.js client GET request, use the following code:
@@ -138,7 +138,7 @@ var request = require("request");
 
 var options = {
   method: "GET",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 };
 
 request(options, function (error, response, body) {
@@ -171,7 +171,7 @@ BODY: [{
 }, {
   "job_id": "ba25ed54-75b4-431b-af27-eb6b9e5428ff",
   "user": "cartofante"
-  "query": "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+  "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
   "status": "pending",
   "created_at": "2015-12-15T07:43:12Z",
   "updated_at": "2015-12-15T07:43:12Z"
@@ -183,7 +183,7 @@ BODY: [{
 If you are using the Batch API list operation for cURL GET request, use the following code:
 
 ```bash
-curl -X GET "http://{username}.carto.com/api/v2/sql/job"
+curl -X GET "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API list operation for a Node.js client GET request, use the following code:
@@ -193,7 +193,7 @@ var request = require("request");
 
 var options = {
   method: "GET",
-  url: "http://{username}.carto.com/api/v2/sql/job"
+  url: "http://{username}.cartodb.com/api/v2/sql/job"
 };
 
 request(options, function (error, response, body) {
@@ -243,7 +243,7 @@ If you are using the Batch API update operation for cURL PUT request, use the fo
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
   "query": "UPDATE airports SET type = 'military'"
-}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API update operation for a Node.js client PUT request, use the following code:
@@ -253,7 +253,7 @@ var request = require("request");
 
 var options = {
   method: "PUT",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
   headers: {
     "content-type": "application/json"
   },
@@ -309,7 +309,7 @@ errors: [
 If you are using the Batch API cancel operation for cURL DELETE request, use the following code:
 
 ```bash
-curl -X DELETE  "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+curl -X DELETE  "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API cancel operation for a Node.js client DELETE request, use the following code:
@@ -319,7 +319,7 @@ var request = require("request");
 
 var options = {
   method: "DELETE",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
 };
 
 request(options, function (error, response, body) {
@@ -337,7 +337,7 @@ In some cases, you may need to run multiple SQL queries in one job. The Multi Qu
 HEADERS: POST /api/v2/sql/job
 BODY: {
   query: [
-    "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "DROP TABLE airports",
     "ALTER TABLE world_airports RENAME TO airport"
   ]
@@ -352,7 +352,7 @@ BODY: {
   "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
   "user": "cartofante"
   "query":  [{
-    "query": "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "status": "pending"
   }, {
     "query": "DROP TABLE airports",
@@ -382,11 +382,11 @@ If you are using the Batch API Multi Query operation for cURL POST request, use 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": [
-    "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "DROP TABLE airports",
     "ALTER TABLE world_airports RENAME TO airport"
   ]
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "http://{username}.cartodb.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API Multi Query operation for a Node.js client POST request, use the following code:
@@ -396,11 +396,11 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
     "query": [
-      "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+      "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
       "DROP TABLE airports",
       "ALTER TABLE world_airports RENAME TO airport"
     ]
@@ -422,12 +422,12 @@ If you are using the Batch API Multi Query operation for cURL PUT request, use t
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
   "query": [
-    "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+    "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
     "DROP TABLE airports",
     "ALTER TABLE world_airports RENAME TO airport",
     "UPDATE airports SET airport = upper(airport)"
   ]
-}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API Multi Query operation for a Node.js client PUT request, use the following code:
@@ -437,11 +437,11 @@ var request = require("request");
 
 var options = {
   method: "PUT",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
   headers: { "content-type": "application/json" },
   body: {
     query: [
-      "CREATE TABLE world_airports AS SELECT a.carto_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
+      "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
       "DROP TABLE airports",
       "ALTER TABLE world_airports RENAME TO airport",
       "UPDATE airports SET airport = upper(airport)"
@@ -465,9 +465,9 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 
 2. [Create a job](#create-a-job), as described previously
 
-3. Once the job is done, fetch the results through the [Carto SQL API](http://docs.carto.com/carto-engine/sql-api/), `SELECT * FROM job_result`
+3. Once the job is done, fetch the results through the [CARTO SQL API](http://docs.carto.com/carto-engine/sql-api/), `SELECT * FROM job_result`
 
-**Note:** If you need to create a map or analysis with the new table, use the [CDB_CartofyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
+**Note:** If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
 
 ## Private Datasets
 
@@ -488,7 +488,7 @@ Using cURL tool:
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "{query}"
-}' "http://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
+}' "http://{username}.cartodb.com/api/v2/sql/job?api_key={api_key}"
 ```
 
 Using Node.js request client:
@@ -498,7 +498,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "http://{username}.cartodb.com/api/v2/sql/job",
   qs: {
     "api_key": "{api_key}"
   },
