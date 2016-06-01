@@ -65,6 +65,7 @@ export PGHOST PGPORT
 if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
+  echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
   psql -c 'CREATE EXTENSION "uuid-ossp";' ${TEST_DB}
