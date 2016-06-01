@@ -31,7 +31,6 @@ describe('Batch API fallback job', function () {
     describe('"onsuccess" on first query should be triggered', function () {
         var fallbackJob = {};
 
-
         it('should create a job', function (done) {
             assert.response(app, {
                 url: '/api/v2/sql/job?api_key=1234',
@@ -951,7 +950,7 @@ describe('Batch API fallback job', function () {
         });
     });
 
-    describe('"onsuccess" should not be triggered for any query and "skipped"', function () {
+    describe('"onsuccess" should be "skipped"', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {

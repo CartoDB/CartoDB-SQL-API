@@ -3,17 +3,7 @@
 var assert = require('assert');
 var uuid = require('node-uuid');
 var jobStatus = require('../job_status');
-var validStatusTransitions = [
-    [jobStatus.PENDING, jobStatus.RUNNING],
-    [jobStatus.PENDING, jobStatus.CANCELLED],
-    [jobStatus.PENDING, jobStatus.UNKNOWN],
-    [jobStatus.PENDING, jobStatus.SKIPPED],
-    [jobStatus.RUNNING, jobStatus.DONE],
-    [jobStatus.RUNNING, jobStatus.FAILED],
-    [jobStatus.RUNNING, jobStatus.CANCELLED],
-    [jobStatus.RUNNING, jobStatus.PENDING],
-    [jobStatus.RUNNING, jobStatus.UNKNOWN]
-];
+var validStatusTransitions = require('./job_status_transitions');
 var mandatoryProperties = [
     'job_id',
     'status',
@@ -21,6 +11,12 @@ var mandatoryProperties = [
     'created_at',
     'updated_at',
     'user'
+];
+var finalStatus = [
+    jobStatus.CANCELLED,
+    jobStatus.DONE,
+    jobStatus.FAILED,
+    jobStatus.UNKNOWN
 ];
 
 function JobBase(data) {
@@ -56,6 +52,10 @@ JobBase.prototype.isValidStatusTransition = function (initialStatus, finalStatus
     }
 
     return false;
+};
+
+JobBase.prototype.isFinalStatus = function (status) {
+    return finalStatus.indexOf(status) !== -1;
 };
 
 // should be implemented by childs
