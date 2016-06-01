@@ -68,29 +68,31 @@ if test x"$PREPARE_PGSQL" = xyes; then
   echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
-  psql -c 'CREATE EXTENSION "uuid-ossp";' ${TEST_DB}
-  cat test.sql |
-    sed "s/:PUBLICUSER/${PUBLICUSER}/" |
-    sed "s/:PUBLICPASS/${PUBLICPASS}/" |
-    sed "s/:TESTUSER/${TESTUSER}/" |
-    sed "s/:TESTPASS/${TESTPASS}/" |
-    psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+  psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
+  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
 
-  echo "Populating windshaft_test database with reduced populated places data"
-  cat ./fixtures/populated_places_simple_reduced.sql |
-    sed "s/:PUBLICUSER/${PUBLICUSER}/" |
-    sed "s/:PUBLICPASS/${PUBLICPASS}/" |
-    sed "s/:TESTUSER/${TESTUSER}/" |
-    sed "s/:TESTPASS/${TESTPASS}/" |
-    psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced'
+  REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_Overviews'
 
-  # TODO: send in a single run, togheter with test.sql
-  psql -c "CREATE EXTENSION plpythonu;" ${TEST_DB}
-  for i in CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_Overviews
+  CURL_ARGS=""
+  for i in ${REMOTE_SQL_SCRIPTS}
   do
-    curl -L -s https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql -o support/$i.sql
-    cat support/$i.sql | sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" \
-        | psql -v ON_ERROR_STOP=1 ${TEST_DB} || exit 1
+    CURL_ARGS="${CURL_ARGS}\"https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql\" -o support/sql/$i.sql "
+  done
+  echo "Downloading and updating: ${REMOTE_SQL_SCRIPTS}"
+  echo ${CURL_ARGS} | xargs curl -L -s
+
+  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
+  ALL_SQL_SCRIPTS="${REMOTE_SQL_SCRIPTS} ${LOCAL_SQL_SCRIPTS}"
+  for i in ${ALL_SQL_SCRIPTS}
+  do
+    cat support/sql/${i}.sql |
+      sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |
+      sed "s/:PUBLICUSER/${PUBLICUSER}/" |
+      sed "s/:PUBLICPASS/${PUBLICPASS}/" |
+      sed "s/:TESTUSER/${TESTUSER}/" |
+      sed "s/:TESTPASS/${TESTPASS}/" |
+      PGOPTIONS='--client-min-messages=WARNING' psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
   done
 
 fi
