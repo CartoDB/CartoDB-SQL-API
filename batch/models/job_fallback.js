@@ -188,12 +188,12 @@ JobFallback.prototype.setFallbackStatus = function (status, job, hasChanged) {
 JobFallback.prototype.shiftStatus = function (status, hasChanged) {
     // jshint maxcomplexity: 7
     if (hasChanged.appliedToFallback) {
-        if (!this.getNextQueryFromQueries() && (status === jobStatus.DONE || status === jobStatus.FAILED)) {
+        if (!this.hasNextQueryFromQueries() && (status === jobStatus.DONE || status === jobStatus.FAILED)) {
             status = this.getLastFinishedStatus();
         } else if (status === jobStatus.DONE || status === jobStatus.FAILED){
             status = jobStatus.PENDING;
         }
-    } else if (this.getNextQueryFromQueries() && status !== jobStatus.RUNNING) {
+    } else if (this.hasNextQueryFromQueries() && status !== jobStatus.RUNNING) {
         status = jobStatus.PENDING;
     }
 
