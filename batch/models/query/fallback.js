@@ -49,15 +49,15 @@ Fallback.prototype.hasOnError = function (job) {
     return !!this.getOnError(job);
 };
 
-Fallback.prototype.setStatus = function (status, job, errorMesssage) {
+Fallback.prototype.setStatus = function (status, job, errorMessage) {
     var isValid = false;
 
     isValid = this.isValidTransition(job.query.query[this.index].fallback_status, status);
 
     if (isValid) {
         job.query.query[this.index].fallback_status = status;
-        if (status === jobStatus.FAILED && errorMesssage) {
-            job.query.query[this.index].failed_reason = errorMesssage;
+        if (status === jobStatus.FAILED && errorMessage) {
+            job.query.query[this.index].failed_reason = errorMessage;
         }
     }
 

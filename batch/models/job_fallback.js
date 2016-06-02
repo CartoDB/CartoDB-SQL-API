@@ -124,7 +124,6 @@ JobFallback.prototype.setQuery = function (query) {
 
 JobFallback.prototype.setStatus = function (status, errorMesssage) {
     // jshint maxcomplexity: 7
-
     var now = new Date().toISOString();
     var hasChanged = {
         isValid: false,
