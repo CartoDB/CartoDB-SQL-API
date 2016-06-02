@@ -67,27 +67,35 @@ JobFallback.is = function (query) {
 };
 
 JobFallback.prototype.init = function () {
-    // jshint maxcomplexity: 9
     for (var i = 0; i < this.data.query.query.length; i++) {
-        if ((this.data.query.query[i].onsuccess || this.data.query.query[i].onerror) &&
-            !this.data.query.query[i].status) {
+        if (shouldInitStatus(this.data.query.query[i])){
             this.data.query.query[i].status = jobStatus.PENDING;
+        }
+        if (shouldInitQueryFallbackStatus(this.data.query.query[i])) {
             this.data.query.query[i].fallback_status = jobStatus.PENDING;
-        } else if (!this.data.query.query[i].status){
-            this.data.query.query[i].status = jobStatus.PENDING;
         }
     }
 
-    if (!this.data.status) {
-        this.data.status = jobStatus.PENDING;
-        if (this.data.query.onsuccess || this.data.query.onerror) {
-            this.data.status = jobStatus.PENDING;
-            this.data.fallback_status = jobStatus.PENDING;
-        }
-    } else if (!this.data.status) {
+    if (shouldInitStatus(this.data)) {
         this.data.status = jobStatus.PENDING;
     }
+
+    if (shouldInitFallbackStatus(this.data)) {
+        this.data.fallback_status = jobStatus.PENDING;
+    }
 };
+
+function shouldInitStatus(jobOrQuery) {
+    return !jobOrQuery.status;
+}
+
+function shouldInitQueryFallbackStatus(query) {
+    return (query.onsuccess || query.onerror) && !query.fallback_status;
+}
+
+function shouldInitFallbackStatus(job) {
+    return (job.query.onsuccess || job.query.onerror) && !job.fallback_status;
+}
 
 JobFallback.prototype.getNextQueryFromQueries = function () {
     for (var i = 0; i < this.queries.length; i++) {
