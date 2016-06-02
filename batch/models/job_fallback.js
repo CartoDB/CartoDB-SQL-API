@@ -25,7 +25,7 @@ util.inherits(JobFallback, JobBase);
 
 module.exports = JobFallback;
 
-// from user: {
+// 1. from user: {
 //     query: {
 //         query: [{
 //             query: 'select ...',
@@ -34,7 +34,8 @@ module.exports = JobFallback;
 //         onerror: 'select ...'
 //     }
 // }
-// from redis: {
+//
+// 2. from redis: {
 //     status: 'pending',
 //     fallback_status: 'pending'
 //     query: {
@@ -190,7 +191,7 @@ JobFallback.prototype.shiftStatus = function (status, hasChanged) {
     // jshint maxcomplexity: 7
     if (hasChanged.appliedToFallback) {
         if (!this.getNextQueryFromQueries() && (status === jobStatus.DONE || status === jobStatus.FAILED)) {
-            status = this._getLastStatusFromFinishedQuery();
+            status = this.getLastFinishedStatus();
         } else if (status === jobStatus.DONE || status === jobStatus.FAILED){
             status = jobStatus.PENDING;
         }
@@ -201,25 +202,15 @@ JobFallback.prototype.shiftStatus = function (status, hasChanged) {
     return status;
 };
 
-
-JobFallback.prototype._getLastStatusFromFinishedQuery = function () {
+JobFallback.prototype.getLastFinishedStatus = function () {
     var lastStatus =  jobStatus.DONE;
 
-    for (var i = 0; i < this.data.query.query.length; i++) {
-        if (this.data.query.query[i].fallback_status) {
-            if (this.isFinalStatus(this.data.query.query[i].status)) {
-                lastStatus = this.data.query.query[i].status;
-            } else {
-                break;
-            }
-        } else {
-            if (this.isFinalStatus(this.data.query.query[i].status)) {
-                lastStatus = this.data.query.query[i].status;
-            } else {
-                break;
-            }
+    this.queries.forEach(function (query) {
+        var status = query.getStatus(this.data);
+        if (this.isFinalStatus(status)) {
+            lastStatus = status;
         }
-    }
+    }, this);
 
     return lastStatus;
 };

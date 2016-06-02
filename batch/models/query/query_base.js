@@ -25,3 +25,7 @@ QueryBase.prototype.getNextQuery = function () {
 QueryBase.prototype.hasNextQuery = function (job) {
     return !!this.getNextQuery(job);
 };
+
+QueryBase.prototype.getStatus = function () {
+    throw new Error('Unimplemented method');
+};

@@ -1691,7 +1691,7 @@ describe('Batch API fallback job', function () {
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
                     }
                 });
             }, 50);
@@ -1771,7 +1771,7 @@ describe('Batch API fallback job', function () {
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
                     }
                 });
             }, 50);

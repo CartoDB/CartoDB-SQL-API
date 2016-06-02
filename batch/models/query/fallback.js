@@ -63,3 +63,7 @@ Fallback.prototype.setStatus = function (status, job, errorMessage) {
 
     return isValid;
 };
+
+Fallback.prototype.getStatus = function (job) {
+    return job.query.query[this.index].fallback_status;
+};

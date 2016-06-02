@@ -68,4 +68,8 @@ QueryFallback.prototype.setStatus = function (status, job, previous, errorMesssa
     return { isValid: isValid, appliedToFallback: appliedToFallback };
 };
 
+QueryFallback.prototype.getStatus = function (job) {
+    return this.query.getStatus(job);
+};
+
 module.exports = QueryFallback;
