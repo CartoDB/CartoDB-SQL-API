@@ -39,3 +39,7 @@ Query.prototype.setStatus = function (status, job, errorMesssage) {
 
     return isValid;
 };
+
+Query.prototype.getStatus = function (job) {
+    return job.query.query[this.index].status;
+};
