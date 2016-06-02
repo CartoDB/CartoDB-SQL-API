@@ -76,7 +76,7 @@ JobMultiple.prototype.setStatus = function (finalStatus, errorMesssage) {
     }
 
     for (var i = 0; i < this.data.query.length; i++) {
-        var isValid = JobMultiple.super_.prototype.isValidStatusTransition(this.data.query[i].status, finalStatus);
+        var isValid = JobMultiple.super_.prototype.isValidTransition(this.data.query[i].status, finalStatus);
 
         if (isValid) {
             this.data.query[i].status = finalStatus;

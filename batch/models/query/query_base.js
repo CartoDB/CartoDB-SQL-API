@@ -1,24 +1,16 @@
 'use strict';
 
-var jobStatus = require('../../job_status');
-var assert = require('assert');
-var validStatusTransitions = require('../job_status_transitions');
-var finalStatus = [
-    jobStatus.CANCELLED,
-    jobStatus.DONE,
-    jobStatus.FAILED,
-    jobStatus.UNKNOWN
-];
+var util = require('util');
+var JobStateMachine = require('../job_state_machine');
 
 function QueryBase(index) {
+    JobStateMachine.call(this);
+
     this.index = index;
 }
+util.inherits(QueryBase, JobStateMachine);
 
 module.exports = QueryBase;
-
-QueryBase.prototype.isFinalStatus = function (status) {
-    return finalStatus.indexOf(status) !== -1;
-};
 
 // should be implemented
 QueryBase.prototype.setStatus = function () {
@@ -32,20 +24,4 @@ QueryBase.prototype.getNextQuery = function () {
 
 QueryBase.prototype.hasNextQuery = function (job) {
     return !!this.getNextQuery(job);
-};
-
-
-QueryBase.prototype.isValidTransition = function (initialStatus, finalStatus) {
-    var transition = [ initialStatus, finalStatus ];
-
-    for (var i = 0; i < validStatusTransitions.length; i++) {
-        try {
-            assert.deepEqual(transition, validStatusTransitions[i]);
-            return true;
-        } catch (e) {
-            continue;
-        }
-    }
-
-    return false;
 };

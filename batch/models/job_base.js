@@ -1,9 +1,9 @@
 'use strict';
 
-var assert = require('assert');
+var util = require('util');
 var uuid = require('node-uuid');
+var JobStateMachine = require('./job_state_machine');
 var jobStatus = require('../job_status');
-var validStatusTransitions = require('./job_status_transitions');
 var mandatoryProperties = [
     'job_id',
     'status',
@@ -12,14 +12,10 @@ var mandatoryProperties = [
     'updated_at',
     'user'
 ];
-var finalStatus = [
-    jobStatus.CANCELLED,
-    jobStatus.DONE,
-    jobStatus.FAILED,
-    jobStatus.UNKNOWN
-];
 
 function JobBase(data) {
+    JobStateMachine.call(this);
+
     var now = new Date().toISOString();
 
     this.data = data;
@@ -36,27 +32,9 @@ function JobBase(data) {
         this.data.updated_at = now;
     }
 }
+util.inherits(JobBase, JobStateMachine);
 
 module.exports = JobBase;
-
-JobBase.prototype.isValidStatusTransition = function (initialStatus, finalStatus) {
-    var transition = [ initialStatus, finalStatus ];
-
-    for (var i = 0; i < validStatusTransitions.length; i++) {
-        try {
-            assert.deepEqual(transition, validStatusTransitions[i]);
-            return true;
-        } catch (e) {
-            continue;
-        }
-    }
-
-    return false;
-};
-
-JobBase.prototype.isFinalStatus = function (status) {
-    return finalStatus.indexOf(status) !== -1;
-};
 
 // should be implemented by childs
 JobBase.prototype.getNextQuery = function () {
@@ -105,7 +83,7 @@ JobBase.prototype.setQuery = function (query) {
 JobBase.prototype.setStatus = function (finalStatus, errorMesssage) {
     var now = new Date().toISOString();
     var initialStatus = this.data.status;
-    var isValid = this.isValidStatusTransition(initialStatus, finalStatus);
+    var isValid = this.isValidTransition(initialStatus, finalStatus);
 
     if (!isValid) {
         throw new Error('Cannot set status from ' + initialStatus + ' to ' + finalStatus);

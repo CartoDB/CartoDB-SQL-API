@@ -166,7 +166,7 @@ JobFallback.prototype.setJobStatus = function (status, job, hasChanged, errorMes
 
     status = this.shiftStatus(status, hasChanged);
 
-    isValid = this.isValidStatusTransition(job.status, status);
+    isValid = this.isValidTransition(job.status, status);
 
     if (isValid) {
         job.status = status;
