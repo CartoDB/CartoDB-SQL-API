@@ -106,6 +106,10 @@ JobFallback.prototype.getNextQueryFromQueries = function () {
     }
 };
 
+JobFallback.prototype.hasNextQueryFromQueries = function () {
+    return !!this.getNextQueryFromQueries();
+};
+
 JobFallback.prototype.getNextQueryFromFallback = function () {
     if (this.fallback && this.fallback.hasNextQuery(this.data)) {
 
@@ -132,35 +136,11 @@ JobFallback.prototype.setQuery = function (query) {
 };
 
 JobFallback.prototype.setStatus = function (status, errorMesssage) {
-    // jshint maxcomplexity: 7
     var now = new Date().toISOString();
-    var hasChanged = {
-        isValid: false,
-        appliedToFallback: false
-    };
-    var result = {};
 
-    for (var i = 0; i < this.queries.length; i++) {
-        result = this.queries[i].setStatus(status, this.data, hasChanged, errorMesssage);
-
-        if (result.isValid) {
-            hasChanged = result;
-        }
-    }
-
-    result = this.setJobStatus(status, this.data, hasChanged, errorMesssage);
-
-    if (result.isValid) {
-        hasChanged = result;
-    }
-
-    if (!this.getNextQueryFromQueries() && this.fallback) {
-        result = this.fallback.setStatus(status, this.data, hasChanged);
-
-        if (result.isValid) {
-            hasChanged = result;
-        }
-    }
+    var hasChanged = this.setQueryStatus(status, this.data, errorMesssage);
+    hasChanged = this.setJobStatus(status, this.data, hasChanged, errorMesssage);
+    hasChanged = this.setFallbackStatus(status, this.data, hasChanged);
 
     if (!hasChanged.isValid) {
         throw new Error('Cannot set status to ' + status);
@@ -169,22 +149,40 @@ JobFallback.prototype.setStatus = function (status, errorMesssage) {
     this.data.updated_at = now;
 };
 
+JobFallback.prototype.setQueryStatus = function (status, job, errorMesssage) {
+    return this.queries.reduce(function (hasChanged, query) {
+        var result = query.setStatus(status, this.data, hasChanged, errorMesssage);
+        return result.isValid ? result : hasChanged;
+    }.bind(this), { isValid: false, appliedToFallback: false });
+};
+
 JobFallback.prototype.setJobStatus = function (status, job, hasChanged, errorMesssage) {
-    var isValid = false;
+    var result = {
+        isValid: false,
+        appliedToFallback: false
+    };
 
     status = this.shiftStatus(status, hasChanged);
 
-    isValid = this.isValidTransition(job.status, status);
-
-    if (isValid) {
+    result.isValid = this.isValidTransition(job.status, status);
+    if (result.isValid) {
         job.status = status;
+        if (status === jobStatus.FAILED && errorMesssage && !hasChanged.appliedToFallback) {
+            job.failed_reason = errorMesssage;
+        }
     }
 
-    if (status === jobStatus.FAILED && errorMesssage && !hasChanged.appliedToFallback) {
-        job.failed_reason = errorMesssage;
+    return result.isValid ? result : hasChanged;
+};
+
+JobFallback.prototype.setFallbackStatus = function (status, job, hasChanged) {
+    var result = hasChanged;
+
+    if (this.fallback && !this.hasNextQueryFromQueries()) {
+        result = this.fallback.setStatus(status, job, hasChanged);
     }
 
-    return { isValid: isValid, appliedToFallback: false };
+    return result.isValid ? result : hasChanged;
 };
 
 JobFallback.prototype.shiftStatus = function (status, hasChanged) {
