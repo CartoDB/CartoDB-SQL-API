@@ -24,11 +24,10 @@ module.exports = function batchFactory (metadataBackend, statsdClient) {
     var userIndexer = new UserIndexer(metadataBackend);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    // TODO: down userDatabaseMetadataService
-    var queryRunner = new QueryRunner();
+    var queryRunner = new QueryRunner(userDatabaseMetadataService);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
-    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService, statsdClient);
+    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, statsdClient);
 
     return new Batch(jobSubscriber, jobQueuePool, jobRunner, jobService);
 };
