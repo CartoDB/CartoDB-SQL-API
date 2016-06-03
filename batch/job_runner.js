@@ -47,6 +47,9 @@ JobRunner.prototype._run = function (job, query, callback) {
 
         self.queryRunner.run(job.data.job_id, query, userDatabaseMetadata, function (err /*, result */) {
             if (err) {
+                if (!err.code) {
+                    return callback(err);
+                }
                 // if query has been cancelled then it's going to get the current
                 // job status saved by query_canceller
                 if (errorCodes[err.code.toString()] === 'query_canceled') {
