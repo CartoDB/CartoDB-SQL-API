@@ -2,15 +2,20 @@
 
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
 var jobStatus = require('./job_status');
+var Profiler = require('step-profiler');
 
-function JobRunner(jobService, jobQueue, queryRunner) {
+function JobRunner(jobService, jobQueue, queryRunner, statsdClient) {
     this.jobService = jobService;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
+    this.statsdClient = statsdClient;
 }
 
 JobRunner.prototype.run = function (job_id, callback) {
     var self = this;
+
+    self.profiler = new Profiler({ statsd_client: self.statsdClient });
+    self.profiler.start('sqlapi.batch.job');
 
     self.jobService.get(job_id, function (err, job) {
         if (err) {
@@ -29,6 +34,8 @@ JobRunner.prototype.run = function (job_id, callback) {
             if (err) {
                 return callback(err);
             }
+
+            self.profiler.done('running');
 
             self._run(job, query, callback);
         });
@@ -52,8 +59,10 @@ JobRunner.prototype._run = function (job, query, callback) {
 
         try {
             if (err) {
+                self.profiler.done('failed');
                 job.setStatus(jobStatus.FAILED, err.message);
             } else {
+                self.profiler.done('success');
                 job.setStatus(jobStatus.DONE);
             }
         } catch (err) {
@@ -64,6 +73,10 @@ JobRunner.prototype._run = function (job, query, callback) {
             if (err) {
                 return callback(err);
             }
+
+            self.profiler.done('done');
+            self.profiler.end();
+            self.profiler.sendStats();
 
             if (!job.hasNextQuery()) {
                 return callback(null, job);
