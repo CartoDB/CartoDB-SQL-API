@@ -1,5 +1,12 @@
-1.29.3 - 2016-mm-dd
+1.30.0 - 2016-06-14
 -------------------
+
+Announcements:
+ * Now Batch API sends stats metrics to statsd server #312
+ * Now Batch API sets "skipped" instead of "pending" to queries that won't be performed #311
+
+ Bug fixes:
+  * Fixed issue with error handling in Batch API #316
 
 
 1.29.2 - 2016-05-25
