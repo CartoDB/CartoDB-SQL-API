@@ -72,7 +72,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
   psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
 
   LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced'
-  REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_Overviews'
+  REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
 
   CURL_ARGS=""
   for i in ${REMOTE_SQL_SCRIPTS}
