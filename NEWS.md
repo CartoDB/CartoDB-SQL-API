@@ -1,5 +1,8 @@
-1.30.1 - 2016-mm-dd
+1.30.1 - 2016-06-23
 -------------------
+
+Bug fixes:
+ * Fixed issue with profiling in Batch API #318
 
 
 1.30.0 - 2016-06-14
