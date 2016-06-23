@@ -14,8 +14,8 @@ function JobRunner(jobService, jobQueue, queryRunner, statsdClient) {
 JobRunner.prototype.run = function (job_id, callback) {
     var self = this;
 
-    self.profiler = new Profiler({ statsd_client: self.statsdClient });
-    self.profiler.start('sqlapi.batch.job');
+    var profiler = new Profiler({ statsd_client: self.statsdClient });
+    profiler.start('sqlapi.batch.job');
 
     self.jobService.get(job_id, function (err, job) {
         if (err) {
@@ -35,14 +35,14 @@ JobRunner.prototype.run = function (job_id, callback) {
                 return callback(err);
             }
 
-            self.profiler.done('running');
+            profiler.done('running');
 
-            self._run(job, query, callback);
+            self._run(job, query, profiler, callback);
         });
     });
 };
 
-JobRunner.prototype._run = function (job, query, callback) {
+JobRunner.prototype._run = function (job, query, profiler, callback) {
     var self = this;
 
     self.queryRunner.run(job.data.job_id, query, job.data.user, function (err /*, result */) {
@@ -59,10 +59,10 @@ JobRunner.prototype._run = function (job, query, callback) {
 
         try {
             if (err) {
-                self.profiler.done('failed');
+                profiler.done('failed');
                 job.setStatus(jobStatus.FAILED, err.message);
             } else {
-                self.profiler.done('success');
+                profiler.done('success');
                 job.setStatus(jobStatus.DONE);
             }
         } catch (err) {
@@ -74,9 +74,9 @@ JobRunner.prototype._run = function (job, query, callback) {
                 return callback(err);
             }
 
-            self.profiler.done('done');
-            self.profiler.end();
-            self.profiler.sendStats();
+            profiler.done('done');
+            profiler.end();
+            profiler.sendStats();
 
             if (!job.hasNextQuery()) {
                 return callback(null, job);
