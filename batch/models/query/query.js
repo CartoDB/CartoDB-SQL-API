@@ -32,6 +32,12 @@ Query.prototype.setStatus = function (status, job, errorMesssage) {
 
     if (isValid) {
         job.query.query[this.index].status = status;
+        if (status === jobStatus.RUNNING) {
+            job.query.query[this.index].started_at = new Date().toISOString();
+        }
+        if (this.isFinalStatus(status)) {
+            job.query.query[this.index].ended_at = new Date().toISOString();
+        }
         if (status === jobStatus.FAILED && errorMesssage) {
             job.query.query[this.index].failed_reason = errorMesssage;
         }
