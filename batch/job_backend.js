@@ -14,10 +14,9 @@ var finalStatus = [
     jobStatus.UNKNOWN
 ];
 
-function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
+function JobBackend(metadataBackend, jobQueueProducer, userIndexer) {
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
-    this.jobPublisher = jobPublisher;
     this.userIndexer = userIndexer;
 }
 
@@ -116,9 +115,6 @@ JobBackend.prototype.create = function (job, callback) {
                 if (err) {
                     return callback(err);
                 }
-
-                // broadcast to consumers
-                self.jobPublisher.publish(job.host);
 
                 self.userIndexer.add(job.user, job.job_id, function (err) {
                   if (err) {
