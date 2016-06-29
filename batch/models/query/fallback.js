@@ -41,7 +41,11 @@ Fallback.prototype.hasOnSuccess = function (job) {
 Fallback.prototype.getOnError = function (job) {
     if (job.query.query[this.index].status === jobStatus.FAILED &&
         job.query.query[this.index].fallback_status === jobStatus.PENDING) {
-        return job.query.query[this.index].onerror;
+        var onerrorQuery = job.query.query[this.index].onerror;
+        if (onerrorQuery) {
+            onerrorQuery = onerrorQuery.replace(/<%=\s*error_message\s*%>/g, job.query.query[this.index].failed_reason);
+        }
+        return onerrorQuery;
     }
 };
 

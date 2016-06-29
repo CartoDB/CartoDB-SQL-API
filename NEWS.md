@@ -3,6 +3,7 @@
 
 New features:
  * Adds start and end time for batch queries with fallback.
+ * Add `<%= error_message %>` template support for onerror fallback queries.
 
 
 1.30.1 - 2016-06-23
