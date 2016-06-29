@@ -15,6 +15,25 @@ var jobStatus = require('../../batch/job_status');
 
 describe('Batch API fallback job', function () {
 
+    function validateExpectedResponse(actual, expected) {
+        actual.query.forEach(function(actualQuery, index) {
+            var expectedQuery = expected.query[index];
+            assert.ok(expectedQuery);
+            Object.keys(expectedQuery).forEach(function(expectedKey) {
+                assert.equal(actualQuery[expectedKey], expectedQuery[expectedKey]);
+            });
+            var propsToCheckDate = ['started_at', 'ended_at'];
+            propsToCheckDate.forEach(function(propToCheckDate) {
+                if (actualQuery.hasOwnProperty(propToCheckDate)) {
+                    assert.ok(new Date(actualQuery[propToCheckDate]));
+                }
+            });
+        });
+
+        assert.equal(actual.onsuccess, expected.onsuccess);
+        assert.equal(actual.onerror, expected.onerror);
+    }
+
     var batch = batchFactory(metadataBackend);
 
     before(function () {
@@ -85,7 +104,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -152,7 +171,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -220,7 +239,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -289,7 +308,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -357,7 +376,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -425,7 +444,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.SKIPPED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -494,7 +513,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -561,7 +580,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.SKIPPED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -632,7 +651,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -708,7 +727,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -785,7 +804,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -863,7 +882,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -939,7 +958,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1008,7 +1027,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1077,7 +1096,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.SKIPPED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1154,7 +1173,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1231,7 +1250,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1309,7 +1328,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1389,7 +1408,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.DONE && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1460,7 +1479,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.RUNNING && job.fallback_status === jobStatus.PENDING) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE ||
                             job.status === jobStatus.FAILED ||
@@ -1498,7 +1517,7 @@ describe('Batch API fallback job', function () {
                 }
                 var job = JSON.parse(res.body);
                 if (job.status === jobStatus.CANCELLED && job.fallback_status === jobStatus.SKIPPED) {
-                    assert.deepEqual(job.query, expectedQuery);
+                    validateExpectedResponse(job.query, expectedQuery);
                     done();
                 } else if (job.status === jobStatus.DONE || job.status === jobStatus.FAILED) {
                     done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
@@ -1567,7 +1586,7 @@ describe('Batch API fallback job', function () {
                     if (job.query.query[0].status === jobStatus.DONE &&
                         job.query.query[0].fallback_status === jobStatus.RUNNING) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.query.query[0].status === jobStatus.DONE ||
                             job.query.query[0].status === jobStatus.FAILED ||
@@ -1607,7 +1626,7 @@ describe('Batch API fallback job', function () {
                 }
                 var job = JSON.parse(res.body);
                 if (job.status === jobStatus.CANCELLED && job.fallback_status === jobStatus.SKIPPED) {
-                    assert.deepEqual(job.query, expectedQuery);
+                    validateExpectedResponse(job.query, expectedQuery);
                     done();
                 } else if (job.status === jobStatus.DONE || job.status === jobStatus.FAILED) {
                     done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be cancelled'));
@@ -1687,7 +1706,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.DONE) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
@@ -1767,7 +1786,7 @@ describe('Batch API fallback job', function () {
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        assert.deepEqual(job.query, expectedQuery);
+                        validateExpectedResponse(job.query, expectedQuery);
                         done();
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
