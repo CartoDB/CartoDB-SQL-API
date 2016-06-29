@@ -1,6 +1,9 @@
 1.30.2 - 2016-mm-dd
 -------------------
 
+New features:
+ * Adds start and end time for batch queries with fallback.
+
 
 1.30.1 - 2016-06-23
 -------------------
