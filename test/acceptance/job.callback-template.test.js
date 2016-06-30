@@ -77,7 +77,8 @@ describe('Batch API callback templates', function () {
                     actualQuery[expectedKey],
                     expectedQuery[expectedKey],
                     'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
-                    expectedQuery[expectedKey] + ' at query index=' + index
+                    expectedQuery[expectedKey] + ' at query index=' + index + '. Full response: ' +
+                    JSON.stringify(actual, null, 4)
                 );
             });
             var propsToCheckDate = ['started_at', 'ended_at'];
