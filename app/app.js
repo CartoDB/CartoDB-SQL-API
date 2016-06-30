@@ -180,14 +180,13 @@ function App() {
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
 
-    var jobQueue = new JobQueue(metadataBackend);
     var jobPublisher = new JobPublisher(redis);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
-
 
     var genericController = new GenericController();
     genericController.route(app);
