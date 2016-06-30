@@ -13,7 +13,7 @@ var metadataBackend = require('cartodb-redis')({
 var batchFactory = require('../../batch');
 var jobStatus = require('../../batch/job_status');
 
-describe('Batch API query timing', function () {
+describe('Batch API callback templates', function () {
 
     function createJob(jobDefinition, callback) {
         assert.response(app, {
@@ -100,18 +100,18 @@ describe('Batch API query timing', function () {
         });
     });
 
-    describe('should report start and end time for each query with fallback queries', function () {
+    describe('should use templates for error_message and job_id onerror callback', function () {
         var jobResponse;
         before(function(done) {
             createJob({
                 "query": {
                     "query": [
                         {
-                            "query": "create table batch_errors (error_message text)"
+                            "query": "create table batch_errors (job_id text, error_message text)"
                         },
                         {
                             "query": "SELECT * FROM invalid_table",
-                            "onerror": "INSERT INTO batch_errors values ('<%= error_message %>')"
+                            "onerror": "INSERT INTO batch_errors values ('<%= job_id %>', '<%= error_message %>')"
                         }
                     ]
                 }
@@ -125,12 +125,12 @@ describe('Batch API query timing', function () {
             var expectedQuery = {
                 query: [
                     {
-                        "query": "create table batch_errors (error_message text)",
+                        "query": "create table batch_errors (job_id text, error_message text)",
                         status: 'done'
                     },
                     {
                         "query": "SELECT * FROM invalid_table",
-                        "onerror": "INSERT INTO batch_errors values ('<%= error_message %>')",
+                        "onerror": "INSERT INTO batch_errors values ('<%= job_id %>', '<%= error_message %>')",
                         status: 'failed',
                         fallback_status: 'done'
                     }
@@ -146,12 +146,71 @@ describe('Batch API query timing', function () {
                             if (err) {
                                 return done(err);
                             }
+                            assert.equal(result.rows[0].job_id, jobResponse.job_id);
                             assert.equal(result.rows[0].error_message, 'relation "invalid_table" does not exist');
                             getQueryResult('drop table batch_errors', done);
                         });
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
                         done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be "failed"'));
+                    }
+                });
+            }, 50);
+        });
+    });
+
+    describe('should use template for job_id onsuccess callback', function () {
+        var jobResponse;
+        before(function(done) {
+            createJob({
+                "query": {
+                    "query": [
+                        {
+                            query: "create table batch_jobs (job_id text)"
+                        },
+                        {
+                            "query": "SELECT 1",
+                            "onsuccess": "INSERT INTO batch_jobs values ('<%= job_id %>')"
+                        }
+                    ]
+                }
+            }, function(err, job) {
+                jobResponse = job;
+                return done(err);
+            });
+        });
+
+        it('should keep the original templated query but use the job_id', function (done) {
+            var expectedQuery = {
+                query: [
+                    {
+                        query: "create table batch_jobs (job_id text)",
+                        status: 'done'
+                    },
+                    {
+                        query: "SELECT 1",
+                        onsuccess: "INSERT INTO batch_jobs values ('<%= job_id %>')",
+                        status: 'done',
+                        fallback_status: 'done'
+                    }
+                ]
+            };
+
+            var interval = setInterval(function () {
+                getJobStatus(jobResponse.job_id, function(err, job) {
+                    if (job.status === jobStatus.DONE) {
+                        clearInterval(interval);
+                        validateExpectedResponse(job.query, expectedQuery);
+                        getQueryResult('select * from batch_jobs', function(err, result) {
+                            if (err) {
+                                return done(err);
+                            }
+                            assert.equal(result.rows[0].job_id, jobResponse.job_id);
+                            getQueryResult('drop table batch_jobs', done);
+                        });
+                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be "done"'));
                     }
                 });
             }, 50);
