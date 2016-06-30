@@ -1,5 +1,8 @@
-1.31.1 - 2016-mm-dd
+1.32.0 - 2016-06-30
 -------------------
+
+New features:
+ * Broadcast after enqueue jobs to improve query distribution load.
 
 
 1.31.0 - 2016-06-29
