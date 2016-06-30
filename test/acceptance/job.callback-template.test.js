@@ -73,7 +73,12 @@ describe('Batch API callback templates', function () {
             var expectedQuery = expected.query[index];
             assert.ok(expectedQuery);
             Object.keys(expectedQuery).forEach(function(expectedKey) {
-                assert.equal(actualQuery[expectedKey], expectedQuery[expectedKey]);
+                assert.equal(
+                    actualQuery[expectedKey],
+                    expectedQuery[expectedKey],
+                    'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
+                    expectedQuery[expectedKey] + 'at query index=' + index
+                );
             });
             var propsToCheckDate = ['started_at', 'ended_at'];
             propsToCheckDate.forEach(function(propToCheckDate) {
