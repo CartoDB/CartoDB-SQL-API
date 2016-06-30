@@ -112,11 +112,11 @@ describe('Batch API callback templates', function () {
                 "query": {
                     "query": [
                         {
-                            "query": "create table batch_errors (job_id text, error_message text)"
+                            "query": "create table test_batch_errors (job_id text, error_message text)"
                         },
                         {
                             "query": "SELECT * FROM invalid_table",
-                            "onerror": "INSERT INTO batch_errors values ('<%= job_id %>', '<%= error_message %>')"
+                            "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')"
                         }
                     ]
                 }
@@ -127,17 +127,33 @@ describe('Batch API callback templates', function () {
         });
 
         it('should keep the original templated query but use the error message', function (done) {
+            var expectedQuery = {
+                query: [
+                    {
+                        "query": "create table test_batch_errors (job_id text, error_message text)",
+                        status: 'done'
+                    },
+                    {
+                        "query": "SELECT * FROM invalid_table",
+                        "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
+                        status: 'failed',
+                        fallback_status: 'done'
+                    }
+                ]
+            };
+
             var interval = setInterval(function () {
                 getJobStatus(jobResponse.job_id, function(err, job) {
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        getQueryResult('select * from batch_errors', function(err, result) {
+                        validateExpectedResponse(job.query, expectedQuery);
+                        getQueryResult('select * from test_batch_errors', function(err, result) {
                             if (err) {
                                 return done(err);
                             }
                             assert.equal(result.rows[0].job_id, jobResponse.job_id);
                             assert.equal(result.rows[0].error_message, 'relation "invalid_table" does not exist');
-                            getQueryResult('drop table batch_errors', done);
+                            getQueryResult('drop table test_batch_errors', done);
                         });
                     } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
                         clearInterval(interval);
