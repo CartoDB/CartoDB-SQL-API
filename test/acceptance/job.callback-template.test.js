@@ -77,7 +77,7 @@ describe('Batch API callback templates', function () {
                     actualQuery[expectedKey],
                     expectedQuery[expectedKey],
                     'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
-                    expectedQuery[expectedKey] + 'at query index=' + index
+                    expectedQuery[expectedKey] + ' at query index=' + index
                 );
             });
             var propsToCheckDate = ['started_at', 'ended_at'];
@@ -127,26 +127,10 @@ describe('Batch API callback templates', function () {
         });
 
         it('should keep the original templated query but use the error message', function (done) {
-            var expectedQuery = {
-                query: [
-                    {
-                        "query": "create table batch_errors (job_id text, error_message text)",
-                        status: 'done'
-                    },
-                    {
-                        "query": "SELECT * FROM invalid_table",
-                        "onerror": "INSERT INTO batch_errors values ('<%= job_id %>', '<%= error_message %>')",
-                        status: 'failed',
-                        fallback_status: 'done'
-                    }
-                ]
-            };
-
             var interval = setInterval(function () {
                 getJobStatus(jobResponse.job_id, function(err, job) {
                     if (job.status === jobStatus.FAILED) {
                         clearInterval(interval);
-                        validateExpectedResponse(job.query, expectedQuery);
                         getQueryResult('select * from batch_errors', function(err, result) {
                             if (err) {
                                 return done(err);
