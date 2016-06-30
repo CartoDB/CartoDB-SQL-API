@@ -1635,6 +1635,85 @@ describe('Batch API fallback job', function () {
         });
     });
 
+    describe('should fail first "onerror" and job "onerror" and skip the other ones', function () {
+        var fallbackJob = {};
+
+        it('should create a job', function (done) {
+            assert.response(app, {
+                url: '/api/v2/sql/job?api_key=1234',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'host': 'vizzuality.cartodb.com'
+                },
+                method: 'POST',
+                data: querystring.stringify({
+                    "query": {
+                        "query": [{
+                            "query": "SELECT * FROM atm_madrid limit 1, should fail",
+                            "onerror": "SELECT * FROM atm_madrid limit 2"
+                        }, {
+                            "query": "SELECT * FROM atm_madrid limit 3",
+                            "onerror": "SELECT * FROM atm_madrid limit 4"
+                        }],
+                        "onerror": "SELECT * FROM atm_madrid limit 5"
+                    }
+                })
+            }, {
+                status: 201
+            }, function (res, err) {
+                if (err) {
+                    return done(err);
+                }
+                fallbackJob = JSON.parse(res.body);
+                done();
+            });
+        });
+
+        it('job should fail', function (done) {
+            var expectedQuery = {
+                query: [{
+                    query: 'SELECT * FROM atm_madrid limit 1, should fail',
+                    onerror: 'SELECT * FROM atm_madrid limit 2',
+                    status: 'failed',
+                    fallback_status: 'failed',
+                    failed_reason: 'relation "atm_madrid" does not exist'
+                }, {
+                    query: 'SELECT * FROM atm_madrid limit 3',
+                    onerror: 'SELECT * FROM atm_madrid limit 4',
+                    status: 'skipped',
+                    fallback_status: 'skipped'
+                }],
+                onerror: 'SELECT * FROM atm_madrid limit 5'
+            };
+
+            var interval = setInterval(function () {
+                assert.response(app, {
+                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'host': 'vizzuality.cartodb.com'
+                    },
+                    method: 'GET'
+                }, {
+                    status: 200
+                }, function (res, err) {
+                    if (err) {
+                        return done(err);
+                    }
+                    var job = JSON.parse(res.body);
+                    if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.FAILED) {
+                        clearInterval(interval);
+                        validateExpectedResponse(job.query, expectedQuery);
+                        done();
+                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
+                        clearInterval(interval);
+                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
+                    }
+                });
+            }, 50);
+        });
+    });
+
     describe('should run first "onerror" and job "onerror" and skip the other ones', function () {
         var fallbackJob = {};
 
@@ -1705,86 +1784,6 @@ describe('Batch API fallback job', function () {
                     }
                     var job = JSON.parse(res.body);
                     if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.DONE) {
-                        clearInterval(interval);
-                        validateExpectedResponse(job.query, expectedQuery);
-                        done();
-                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                        clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be failed'));
-                    }
-                });
-            }, 50);
-        });
-    });
-
-
-    describe('should fail first "onerror" and job "onerror" and skip the other ones', function () {
-        var fallbackJob = {};
-
-        it('should create a job', function (done) {
-            assert.response(app, {
-                url: '/api/v2/sql/job?api_key=1234',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'host': 'vizzuality.cartodb.com'
-                },
-                method: 'POST',
-                data: querystring.stringify({
-                    "query": {
-                        "query": [{
-                            "query": "SELECT * FROM atm_madrid limit 1, should fail",
-                            "onerror": "SELECT * FROM atm_madrid limit 2"
-                        }, {
-                            "query": "SELECT * FROM atm_madrid limit 3",
-                            "onerror": "SELECT * FROM atm_madrid limit 4"
-                        }],
-                        "onerror": "SELECT * FROM atm_madrid limit 5"
-                    }
-                })
-            }, {
-                status: 201
-            }, function (res, err) {
-                if (err) {
-                    return done(err);
-                }
-                fallbackJob = JSON.parse(res.body);
-                done();
-            });
-        });
-
-        it('job should fail', function (done) {
-            var expectedQuery = {
-                query: [{
-                    query: 'SELECT * FROM atm_madrid limit 1, should fail',
-                    onerror: 'SELECT * FROM atm_madrid limit 2',
-                    status: 'failed',
-                    fallback_status: 'failed',
-                    failed_reason: 'relation "atm_madrid" does not exist'
-                }, {
-                    query: 'SELECT * FROM atm_madrid limit 3',
-                    onerror: 'SELECT * FROM atm_madrid limit 4',
-                    status: 'skipped',
-                    fallback_status: 'skipped'
-                }],
-                onerror: 'SELECT * FROM atm_madrid limit 5'
-            };
-
-            var interval = setInterval(function () {
-                assert.response(app, {
-                    url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'host': 'vizzuality.cartodb.com'
-                    },
-                    method: 'GET'
-                }, {
-                    status: 200
-                }, function (res, err) {
-                    if (err) {
-                        return done(err);
-                    }
-                    var job = JSON.parse(res.body);
-                    if (job.status === jobStatus.FAILED && job.fallback_status === jobStatus.FAILED) {
                         clearInterval(interval);
                         validateExpectedResponse(job.query, expectedQuery);
                         done();
