@@ -109,31 +109,29 @@ describe('Batch API callback templates', function () {
     describe('should use templates for error_message and job_id onerror callback', function () {
         var jobResponse;
         before(function(done) {
-            createJob({
-                "query": {
-                    "query": [
-                        {
-                            "query": "create table test_batch_errors (job_id text, error_message text)"
-                        },
-                        {
-                            "query": "SELECT * FROM invalid_table",
-                            "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')"
-                        }
-                    ]
+            getQueryResult('create table test_batch_errors (job_id text, error_message text)', function(err) {
+                if (err) {
+                    return done(err);
                 }
-            }, function(err, job) {
-                jobResponse = job;
-                return done(err);
+                createJob({
+                    "query": {
+                        "query": [
+                            {
+                                "query": "SELECT * FROM invalid_table",
+                                "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')"
+                            }
+                        ]
+                    }
+                }, function(err, job) {
+                    jobResponse = job;
+                    return done(err);
+                });
             });
         });
 
         it('should keep the original templated query but use the error message', function (done) {
             var expectedQuery = {
                 query: [
-                    {
-                        "query": "create table test_batch_errors (job_id text, error_message text)",
-                        status: 'done'
-                    },
                     {
                         "query": "SELECT * FROM invalid_table",
                         "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
