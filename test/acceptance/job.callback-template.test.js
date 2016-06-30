@@ -118,7 +118,8 @@ describe('Batch API callback templates', function () {
                         "query": [
                             {
                                 "query": "SELECT * FROM invalid_table",
-                                "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')"
+                                "onerror": "INSERT INTO test_batch_errors " +
+                                    "values ('<%= job_id %>', '<%= error_message %>')"
                             }
                         ]
                     }
