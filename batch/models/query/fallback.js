@@ -30,7 +30,11 @@ Fallback.prototype.getNextQuery = function (job) {
 Fallback.prototype.getOnSuccess = function (job) {
     if (job.query.query[this.index].status === jobStatus.DONE &&
         job.query.query[this.index].fallback_status === jobStatus.PENDING) {
-        return job.query.query[this.index].onsuccess;
+        var onsuccessQuery = job.query.query[this.index].onsuccess;
+        if (onsuccessQuery) {
+            onsuccessQuery = onsuccessQuery.replace(/<%=\s*job_id\s*%>/g, job.job_id);
+        }
+        return onsuccessQuery;
     }
 };
 
@@ -43,6 +47,7 @@ Fallback.prototype.getOnError = function (job) {
         job.query.query[this.index].fallback_status === jobStatus.PENDING) {
         var onerrorQuery = job.query.query[this.index].onerror;
         if (onerrorQuery) {
+            onerrorQuery = onerrorQuery.replace(/<%=\s*job_id\s*%>/g, job.job_id);
             onerrorQuery = onerrorQuery.replace(/<%=\s*error_message\s*%>/g, job.query.query[this.index].failed_reason);
         }
         return onerrorQuery;
