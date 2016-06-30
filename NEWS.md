@@ -2,7 +2,7 @@
 -------------------
 
 New features:
- * Broadcast after enqueue jobs to improve query distribution load.
+ * Broadcast after enqueueing jobs to improve query distribution load.
 
 
 1.31.0 - 2016-06-29
