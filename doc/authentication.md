@@ -13,5 +13,5 @@ To use your API Key, pass it as a parameter in an URL call to the CARTO API. For
 #### Example
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q={SQL statement}&api_key={api_key}
+https://{username}.carto.com/api/v2/sql?q={SQL statement}&api_key={api_key}
 ```

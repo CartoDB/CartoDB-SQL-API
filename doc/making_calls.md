@@ -12,7 +12,7 @@ All SQL API requests to your CARTO account should follow this general pattern:
 #### SQL query example
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q={SQL statement}
+https://{username}.carto.com/api/v2/sql?q={SQL statement}
 ```
 
 If you encounter errors, double-check that you are using the correct account name, and that your SQL statement is valid. A simple example of this pattern is conducting a count of all the records in your table:
@@ -20,7 +20,7 @@ If you encounter errors, double-check that you are using the correct account nam
 #### Count example
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
+https://{username}.carto.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 ```
 
 #### Result
@@ -49,7 +49,7 @@ The CARTO SQL API is setup to handle both GET and POST requests. You can test th
 #### Call
 
 ```javascript
-$.getJSON('https://{username}.cartodb.com/api/v2/sql/?q='+sql_statement, function(data) {
+$.getJSON('https://{username}.carto.com/api/v2/sql/?q='+sql_statement, function(data) {
   $.each(data.rows, function(key, val) {
     // do something!
   });
@@ -68,7 +68,7 @@ The standard response from the CARTO SQL API is JSON. If you are building a web-
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -97,7 +97,7 @@ Alternatively, you can use the [GeoJSON specification](http://www.geojson.org/ge
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -136,7 +136,7 @@ To customize the output filename, add the `filename` parameter to your URL:
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?filename={custom_filename}&q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 
@@ -147,7 +147,7 @@ Currently, there is no public method to access your table schemas. The simplest 
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 
@@ -176,7 +176,7 @@ Performing inserts or updates on your data is simple using your [API Key](#authe
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={api_key}
+https://{username}.carto.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={api_key}
 ```
 
 Updates are just as simple. Here is an example of updating a row based on the value of the cartodb_id column.
@@ -186,5 +186,5 @@ Updates are just as simple. Here is an example of updating a row based on the va
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={api_key}
+https://{username}.carto.com/api/v2/sql?q=UPDATE test_table SET column_name = 'my new string value' WHERE cartodb_id = 1 &api_key={api_key}
 ```
