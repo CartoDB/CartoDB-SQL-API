@@ -1,9 +1,27 @@
 'use strict';
 
-var debug = require('./util/debug')('job-subscriber');
+var debug = require('./util/debug')('pubsub');
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
+var redisServer = global.settings.redis_host + ':' + global.settings.redis_port;
+
+function onReady() {
+    debug('redis subscriber connected to ' + redisServer);
+}
+
+function onError(err) {
+    debug('redis subscriber connection error: ' + err.message);
+}
+
+function onEnd() {
+    debug('redis subscriber connection ends');
+}
+
+function onReconnect() {
+    debug('redis subscriber reconnecting to ' + redisServer);
+}
 
 function _subscribe(client, channel, queueSeeker, onMessage) {
+
     queueSeeker.seek(onMessage, function (err) {
         if (err) {
             debug(err);
@@ -12,14 +30,24 @@ function _subscribe(client, channel, queueSeeker, onMessage) {
         client.removeAllListeners('message');
         client.unsubscribe(channel);
         client.subscribe(channel);
-        client.on('message', onMessage);
+
+        client.on('message', function (channel, host) {
+            debug('message received from: ' + channel + ':' + host);
+            onMessage(channel, host);
+        });
     });
 }
 
 function JobSubscriber(redis, queueSeeker) {
     this.channel = 'batch:hosts';
-    this.client = redis.createClient(global.settings.redis_port, global.settings.redis_host);
     this.queueSeeker = queueSeeker;
+
+    this.client = redis.createClient(global.settings.redis_port, global.settings.redis_host);
+
+    this.client.on('ready', onReady);
+    this.client.on('error', onError);
+    this.client.on('end', onEnd);
+    this.client.on('reconnecting', onReconnect);
 }
 
 module.exports = JobSubscriber;

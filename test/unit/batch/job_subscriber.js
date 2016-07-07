@@ -14,9 +14,9 @@ describe('batch API job subscriber', function () {
                 self.redis.subscribeIsCalledWithValidArgs = isValidFirstArg;
             },
             on: function () {
-                var isValidFirstArg = arguments[0] === 'message';
-                var isValidSecondArg = arguments[1] === self.onMessageListener;
-                self.redis.onIsCalledWithValidArgs = isValidFirstArg && isValidSecondArg;
+                if (arguments[0] === 'message') {
+                    self.redis.onIsCalledWithValidArgs = true;
+                }
             },
             unsubscribe: function () {
                 var isValidFirstArg = arguments[0] === 'batch:hosts';

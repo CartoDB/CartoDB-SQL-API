@@ -13,6 +13,10 @@ describe('batch API job publisher', function () {
                 var isValidFirstArg = arguments[0] === 'batch:hosts';
                 var isValidSecondArg = arguments[1] === self.host;
                 self.redis.publishIsCalledWithValidArgs = isValidFirstArg && isValidSecondArg;
+            },
+            on: function () {},
+            ping: function (cb) {
+                cb();
             }
         };
 
