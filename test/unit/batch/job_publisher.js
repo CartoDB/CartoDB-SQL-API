@@ -19,8 +19,13 @@ describe('batch API job publisher', function () {
                 cb();
             }
         };
+        this.pool = {
+            acquire: function (db, cb) {
+                cb(null, self.redis);
+            }
+        };
 
-        this.jobPublisher = new JobPublisher(this.redis);
+        this.jobPublisher = new JobPublisher(this.pool);
     });
 
     it('.publish() should publish new messages', function () {

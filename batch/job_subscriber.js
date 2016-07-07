@@ -1,30 +1,16 @@
 'use strict';
 
-var debug = require('./util/debug')('pubsub');
+var debug = require('./util/debug')('pubsub:subscriber');
+var error = require('./util/debug')('pubsub:subscriber:error');
+
+var DB = 0;
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
-var redisServer = global.settings.redis_host + ':' + global.settings.redis_port;
-
-function onReady() {
-    debug('redis subscriber connected to ' + redisServer);
-}
-
-function onError(err) {
-    debug('redis subscriber connection error: ' + err.message);
-}
-
-function onEnd() {
-    debug('redis subscriber connection ends');
-}
-
-function onReconnect() {
-    debug('redis subscriber reconnecting to ' + redisServer);
-}
 
 function _subscribe(client, channel, queueSeeker, onMessage) {
 
     queueSeeker.seek(onMessage, function (err) {
         if (err) {
-            debug(err);
+            error(err);
         }
 
         client.removeAllListeners('message');
@@ -38,16 +24,10 @@ function _subscribe(client, channel, queueSeeker, onMessage) {
     });
 }
 
-function JobSubscriber(redis, queueSeeker) {
+function JobSubscriber(pool, queueSeeker) {
     this.channel = 'batch:hosts';
+    this.pool = pool;
     this.queueSeeker = queueSeeker;
-
-    this.client = redis.createClient(global.settings.redis_port, global.settings.redis_host);
-
-    this.client.on('ready', onReady);
-    this.client.on('error', onError);
-    this.client.on('end', onEnd);
-    this.client.on('reconnecting', onReconnect);
 }
 
 module.exports = JobSubscriber;
@@ -55,19 +35,30 @@ module.exports = JobSubscriber;
 JobSubscriber.prototype.subscribe = function (onMessage) {
     var self = this;
 
-    _subscribe(this.client, this.channel, this.queueSeeker, onMessage);
+    this.pool.acquire(DB, function (err, client) {
+        if (err) {
+            return error('Error adquiring redis client: ' + err.message);
+        }
 
-    this.seekerInterval = setInterval(
-        _subscribe,
-        SUBSCRIBE_INTERVAL_IN_MILLISECONDS,
-        this.client,
-        this.channel,
-        self.queueSeeker,
-        onMessage
-    );
+        self.client = client;
+
+        _subscribe(self.client, self.channel, self.queueSeeker, onMessage);
+
+        self.seekerInterval = setInterval(
+            _subscribe,
+            SUBSCRIBE_INTERVAL_IN_MILLISECONDS,
+            self.client,
+            self.channel,
+            self.queueSeeker,
+            onMessage
+        );
+    });
+
 };
 
 JobSubscriber.prototype.unsubscribe = function () {
     clearInterval(this.seekerInterval);
-    this.client.unsubscribe(this.channel);
+    if (this.client && this.client.connected) {
+        this.client.unsubscribe(this.channel);
+    }
 };
