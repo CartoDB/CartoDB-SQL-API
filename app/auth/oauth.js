@@ -3,6 +3,8 @@ var _ = require('underscore');
 var OAuthUtil = require('oauth-client');
 var step = require('step');
 var assert = require('assert');
+var CdbRequest = require('../models/cartodb_request');
+var cdbReq = new CdbRequest();
 
 var oAuth = (function(){
   var me = {
@@ -60,79 +62,87 @@ var oAuth = (function(){
     return removed;
   };
 
+  me.getAllowedHosts= function() {
+    var oauthConfig = global.settings.oauth || {};
+    return oauthConfig.allowedHosts || ['carto.com', 'cartodb.com'];
+  };
 
   // do new fancy get User ID
   me.verifyRequest = function(req, metadataBackend, callback) {
     var that = this;
     //TODO: review this
     var httpProto = req.protocol;
-    var passed_tokens;
-    var ohash;
+    if(!httpProto || (httpProto !== 'http' && httpProto !== 'https')) {
+      var msg = "Unknown HTTP protocol " + httpProto + ".";
+      var unknownProtocolErr = new Error(msg);
+      unknownProtocolErr.http_status = 500;
+      return callback(unknownProtocolErr);
+    }
+
+    var username = cdbReq.userByReq(req);
+    var requestTokens;
     var signature;
 
     step(
       function getTokensFromURL(){
         return oAuth.parseTokens(req);
       },
-      function getOAuthHash(err, data){
+      function getOAuthHash(err, _requestTokens) {
         assert.ifError(err);
 
         // this is oauth request only if oauth headers are present
-        this.is_oauth_request = !_.isEmpty(data);
+        this.is_oauth_request = !_.isEmpty(_requestTokens);
 
         if (this.is_oauth_request) {
-          passed_tokens = data;
-          that.getOAuthHash(metadataBackend, passed_tokens.oauth_token, this);
+          requestTokens = _requestTokens;
+          that.getOAuthHash(metadataBackend, requestTokens.oauth_token, this);
         } else {
           return null;
         }
       },
-      function regenerateSignature(err, data){
+      function regenerateSignature(err, oAuthHash){
         assert.ifError(err);
         if (!this.is_oauth_request) {
             return null;
         }
 
-        ohash = data;
-        var consumer     = OAuthUtil.createConsumer(ohash.consumer_key, ohash.consumer_secret);
-        var access_token = OAuthUtil.createToken(ohash.access_token_token, ohash.access_token_secret);
+        var consumer     = OAuthUtil.createConsumer(oAuthHash.consumer_key, oAuthHash.consumer_secret);
+        var access_token = OAuthUtil.createToken(oAuthHash.access_token_token, oAuthHash.access_token_secret);
         var signer       = OAuthUtil.createHmac(consumer, access_token);
 
         var method = req.method;
-        var host   = req.headers.host;
+        var hostsToValidate = {};
+        var requestHost = req.headers.host;
+        hostsToValidate[requestHost] = true;
+        that.getAllowedHosts().forEach(function(allowedHost) {
+            hostsToValidate[username + '.' + allowedHost] = true;
+        });
 
-        if(!httpProto || (httpProto !== 'http' && httpProto !== 'https')) {
-          var msg = "Unknown HTTP protocol " + httpProto + ".";
-          err = new Error(msg);
-          err.http_status = 500;
-          callback(err);
-          return;
-        }
-        
-        var path   = httpProto + '://' + host + req.path;
         that.splitParams(req.query);
-
-        // remove signature from passed_tokens
-        signature = passed_tokens.oauth_signature;
-        delete passed_tokens.oauth_signature;
-
-        var joined = {};
-
         // remove oauth_signature from body
         if(req.body) {
             delete req.body.oauth_signature;
         }
-        _.extend(joined, req.body ? req.body : null);
-        _.extend(joined, passed_tokens);
-        _.extend(joined, req.query);
+        signature = requestTokens.oauth_signature;
+        // remove signature from requestTokens
+        delete requestTokens.oauth_signature;
+        var requestParams = _.extend({}, req.body, requestTokens, req.query);
 
-        return signer.sign(method, path, joined);
+        var hosts = Object.keys(hostsToValidate);
+        var requestSignatures = hosts.map(function(host) {
+            var url = httpProto + '://' + host + req.path;
+            return signer.sign(method, url, requestParams);
+        });
+
+        return requestSignatures.reduce(function(validSignature, requestSignature) {
+            if (signature === requestSignature && !_.isUndefined(requestSignature)) {
+                validSignature = true;
+            }
+            return validSignature;
+        }, false);
       },
-      function checkSignature(err, data){
-        assert.ifError(err);
-
-        //console.log(data + " should equal the provided signature: " + signature);
-        callback(err, (signature === data && !_.isUndefined(data)) ? true : null);
+      function finishValidation(err, hasValidSignature) {
+        return callback(err, hasValidSignature || null);
       }
     );
   };

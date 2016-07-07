@@ -1,6 +1,9 @@
 1.33.1 - 2016-mm-dd
 -------------------
 
+New features:
+ * Allow to setup more than one domain to validate oauth against.
+
 
 1.33.0 - 2016-07-01
 -------------------
