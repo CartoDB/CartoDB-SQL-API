@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.32.0",
+  "version": "1.33.1",
   "dependencies": {
     "cartodb-psql": {
       "version": "0.6.1",

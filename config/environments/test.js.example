@@ -74,4 +74,7 @@ module.exports.health = {
     username: 'vizzuality',
     query: 'select 1'
 };
+module.exports.oauth = {
+    allowedHosts: ['localhost.lan:8080', 'localhostdb.lan:8080']
+};
 module.exports.disabled_file = 'pids/disabled';
