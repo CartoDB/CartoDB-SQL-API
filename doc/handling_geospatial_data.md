@@ -9,7 +9,7 @@ The first is to use the format=GeoJSON method described above. Others can be han
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -32,7 +32,7 @@ https://{username}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_g
 #### Call
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
 ```
 
 #### Result
@@ -57,7 +57,7 @@ All data returned from *the_geom* column is in WGS 84 (EPSG:4326). You can chang
 ### ST_Transform
 
 ```bash
-https://{username}.cartodb.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1
+https://{username}.carto.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1
 ```
 
-CartoDB also stores a second geometry column, *the_geom_webmercator*. We use this internally to build your map tiles as fast as we can. In the user-interface it is hidden, but it is visible and available for use. In this column, we store a reprojected version of all your geometries using Web Mercator (EPSG:3857).
+CARTO also stores a second geometry column, *the_geom_webmercator*. We use this internally to build your map tiles as fast as we can. In the user-interface it is hidden, but it is visible and available for use. In this column, we store a reprojected version of all your geometries using Web Mercator (EPSG:3857).
