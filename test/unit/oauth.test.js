@@ -78,7 +78,7 @@ it('test can access oauth hash for a user based on access token (oauth_token)', 
 });
 
 it('test non existant oauth hash for a user based on oauth_token returns empty hash', function(done){
-    var req = {query:{}, headers:{authorization:full_oauth_header}};
+    var req = {query:{}, params: { user: 'vizzuality' }, headers:{authorization:full_oauth_header}};
     var tokens = oAuth.parseTokens(req);
 
     oAuth.getOAuthHash(metadataBackend, tokens.oauth_token, function(err, data){
@@ -91,6 +91,7 @@ it('test non existant oauth hash for a user based on oauth_token returns empty h
 it('can return user for verified signature', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testhost.lan' },
+        params: { user: 'vizzuality' },
         protocol: 'http',
         method: 'GET',
         path: '/api/v1/tables'
@@ -103,9 +104,31 @@ it('can return user for verified signature', function(done){
     });
 });
 
+it('can return user for verified signature (for other allowed domains)', function(done){
+    var oAuthGetAllowedHostsFn = oAuth.getAllowedHosts;
+    oAuth.getAllowedHosts = function() {
+        return ['testhost.lan', 'testhostdb.lan'];
+    };
+    var req = {query:{},
+        headers:{authorization:real_oauth_header, host: 'vizzuality.testhostdb.lan' },
+        params: { user: 'vizzuality' },
+        protocol: 'http',
+        method: 'GET',
+        path: '/api/v1/tables'
+    };
+
+    oAuth.verifyRequest(req, metadataBackend, function(err, data){
+        oAuth.getAllowedHosts = oAuthGetAllowedHostsFn;
+        assert.ok(!err, err);
+        assert.equal(data, 1);
+        done();
+    });
+});
+
 it('returns null user for unverified signatures', function(done){
     var req = {query:{},
         headers:{authorization:real_oauth_header, host: 'vizzuality.testyhost.lan' },
+        params: { user: 'vizzuality' },
         protocol: 'http',
         method: 'GET',
         path: '/api/v1/tables'
@@ -121,6 +144,7 @@ it('returns null user for no oauth', function(done){
     var req = {
         query:{},
         headers:{},
+        params: { user: 'vizzuality' },
         protocol: 'http',
         method: 'GET',
         path: '/api/v1/tables'

@@ -1,5 +1,55 @@
-1.29.2 - 2016-mm-dd
+1.33.1 - 2016-mm-dd
 -------------------
+
+New features:
+ * Allow to setup more than one domain to validate oauth against.
+
+
+1.33.0 - 2016-07-01
+-------------------
+
+New features:
+ * Add `<%= job_id %>` template support for onerror and onsuccess fallback queries.
+
+
+1.32.0 - 2016-06-30
+-------------------
+
+New features:
+ * Broadcast after enqueueing jobs to improve query distribution load.
+
+
+1.31.0 - 2016-06-29
+-------------------
+
+New features:
+ * Adds start and end time for batch queries with fallback.
+ * Add `<%= error_message %>` template support for onerror fallback queries.
+
+
+1.30.1 - 2016-06-23
+-------------------
+
+Bug fixes:
+ * Fixed issue with profiling in Batch API #318
+
+
+1.30.0 - 2016-06-14
+-------------------
+
+Announcements:
+ * Now Batch API sends stats metrics to statsd server #312
+ * Now Batch API sets "skipped" instead of "pending" to queries that won't be performed #311
+
+ Bug fixes:
+  * Fixed issue with error handling in Batch API #316
+
+
+1.29.2 - 2016-05-25
+-------------------
+
+Bug fixes:
+ * Fixed issue with status transition in fallback jobs #308
 
 
 1.29.1 - 2016-05-24

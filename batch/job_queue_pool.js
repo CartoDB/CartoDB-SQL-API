@@ -2,8 +2,9 @@
 
 var JobQueue = require('./job_queue');
 
-function JobQueuePool(metadataBackend) {
+function JobQueuePool(metadataBackend, jobPublisher) {
     this.metadataBackend = metadataBackend;
+    this.jobPublisher = jobPublisher;
     this.queues = {};
 }
 
@@ -29,7 +30,7 @@ JobQueuePool.prototype.list = function () {
 
 JobQueuePool.prototype.createQueue = function (host) {
     this.queues[host] = {
-        queue: new JobQueue(this.metadataBackend),
+        queue: new JobQueue(this.metadataBackend, this.jobPublisher),
         currentJobId: null
     };
 

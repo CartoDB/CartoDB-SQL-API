@@ -14,10 +14,9 @@ var finalStatus = [
     jobStatus.UNKNOWN
 ];
 
-function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
+function JobBackend(metadataBackend, jobQueueProducer, userIndexer) {
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
-    this.jobPublisher = jobPublisher;
     this.userIndexer = userIndexer;
 }
 
@@ -29,8 +28,7 @@ function toRedisParams(job) {
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
-            // TODO: this should be moved to job model ??
-            if ((property === 'query' || property === 'status') && typeof obj[property] !== 'string') {
+            if (property === 'query' && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
                 redisParams.push(obj[property]);
@@ -65,7 +63,6 @@ function toObject(job_id, redisParams, redisValues) {
     return obj;
 }
 
-// TODO: is it really necessary??
 function isJobFound(redisValues) {
     return redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4];
 }
@@ -118,9 +115,6 @@ JobBackend.prototype.create = function (job, callback) {
                 if (err) {
                     return callback(err);
                 }
-
-                // broadcast to consumers
-                self.jobPublisher.publish(job.host);
 
                 self.userIndexer.add(job.user, job.job_id, function (err) {
                   if (err) {
