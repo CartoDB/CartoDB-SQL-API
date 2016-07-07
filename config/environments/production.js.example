@@ -85,4 +85,7 @@ module.exports.health = {
     username: 'development',
     query: 'select 1'
 };
+module.exports.oauth = {
+    allowedHosts: ['carto.com', 'cartodb.com']
+};
 module.exports.disabled_file = 'pids/disabled';
