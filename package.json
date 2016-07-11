@@ -33,7 +33,7 @@
         "topojson": "0.0.8",
         "underscore": "~1.6.0",
         "queue-async": "~1.0.7",
-        "cartodb-query-tables": "0.1.0"
+        "cartodb-query-tables": "0.2.0"
     },
     "devDependencies": {
         "istanbul": "~0.4.2",
