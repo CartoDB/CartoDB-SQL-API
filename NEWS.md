@@ -2,6 +2,7 @@
 -------------------
 
 New features:
+ * Skip tables with no updated_at registered in cdb_tablemetadata.
  * Allow to setup more than one domain to validate oauth against.
 
 
