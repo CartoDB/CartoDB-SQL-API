@@ -209,25 +209,37 @@
       "from": "queue-async@>=1.0.7 <1.1.0",
       "resolved": "https://registry.npmjs.org/queue-async/-/queue-async-1.0.7.tgz"
     },
-    "redis": {
-      "version": "2.6.2",
-      "from": "redis@>=2.4.2 <3.0.0",
-      "resolved": "https://registry.npmjs.org/redis/-/redis-2.6.2.tgz",
+    "redis-mpool": {
+      "version": "0.4.0",
+      "from": "redis-mpool@0.4.0",
+      "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.4.0.tgz",
       "dependencies": {
-        "double-ended-queue": {
-          "version": "2.1.0-0",
-          "from": "double-ended-queue@>=2.1.0-0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/double-ended-queue/-/double-ended-queue-2.1.0-0.tgz"
+        "generic-pool": {
+          "version": "2.1.1",
+          "from": "generic-pool@>=2.1.1 <2.2.0",
+          "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.1.1.tgz"
         },
-        "redis-commands": {
-          "version": "1.2.0",
-          "from": "redis-commands@>=1.2.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/redis-commands/-/redis-commands-1.2.0.tgz"
+        "redis": {
+          "version": "0.12.1",
+          "from": "redis@>=0.12.1 <0.13.0",
+          "resolved": "https://registry.npmjs.org/redis/-/redis-0.12.1.tgz"
         },
-        "redis-parser": {
-          "version": "2.0.3",
-          "from": "redis-parser@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/redis-parser/-/redis-parser-2.0.3.tgz"
+        "hiredis": {
+          "version": "0.1.17",
+          "from": "hiredis@>=0.1.17 <0.2.0",
+          "resolved": "https://registry.npmjs.org/hiredis/-/hiredis-0.1.17.tgz",
+          "dependencies": {
+            "bindings": {
+              "version": "1.2.1",
+              "from": "bindings@*",
+              "resolved": "https://registry.npmjs.org/bindings/-/bindings-1.2.1.tgz"
+            },
+            "nan": {
+              "version": "1.1.2",
+              "from": "nan@>=1.1.0 <1.2.0",
+              "resolved": "https://registry.npmjs.org/nan/-/nan-1.1.2.tgz"
+            }
+          }
         }
       }
     },

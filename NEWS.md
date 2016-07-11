@@ -22,6 +22,7 @@ New features:
 
 New features:
  * Broadcast after enqueueing jobs to improve query distribution load.
+ * Batch pub-sub channel handles its connections using `redis-mpool`.
 
 
 1.31.0 - 2016-06-29

@@ -17,18 +17,19 @@ require('../helper');
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
-var metadataBackend = require('cartodb-redis')({
+var redisConfig = {
     host: global.settings.redis_host,
     port: global.settings.redis_port,
     max: global.settings.redisPool,
     idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
     reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
+};
+var metadataBackend = require('cartodb-redis')(redisConfig);
 var batchFactory = require('../../batch');
 
 describe('Use case 8: cancel a running multiquery job', function() {
 
-    var batch = batchFactory(metadataBackend);
+    var batch = batchFactory(metadataBackend, redisConfig);
 
     before(function () {
         batch.start();
