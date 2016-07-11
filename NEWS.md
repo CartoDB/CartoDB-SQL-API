@@ -1,5 +1,8 @@
-1.34.1 - 2016-mm-dd
+1.34.1 - 2016-07-11
 -------------------
+
+Bug fixes:
+ * Fixed issue with redis connections in Batch API #326
 
 
 1.34.0 - 2016-07-11
