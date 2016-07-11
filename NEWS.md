@@ -1,7 +1,12 @@
-1.33.1 - 2016-mm-dd
+1.34.1 - 2016-mm-dd
+-------------------
+
+
+1.34.0 - 2016-07-11
 -------------------
 
 New features:
+ * Skip tables with no updated_at registered in cdb_tablemetadata.
  * Allow to setup more than one domain to validate oauth against.
 
 

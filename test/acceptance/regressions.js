@@ -45,7 +45,8 @@ describe('regressions', function() {
                                     return done(err);
                                 }
 
-                                assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public."foo.bar"');
+                                // table should not get a cache channel as it won't get invalidated
+                                assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
                                 var parsedBody = JSON.parse(res.body);
                                 assert.equal(parsedBody.total_rows, 2);
                                 assert.deepEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
