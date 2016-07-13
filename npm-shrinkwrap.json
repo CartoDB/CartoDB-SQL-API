@@ -32,24 +32,19 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "0.11.0",
-      "from": "cartodb-redis@>=0.11.0 <0.12.0",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.11.0.tgz",
+      "version": "0.13.1",
+      "from": "cartodb-redis@0.13.1",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.13.1.tgz",
       "dependencies": {
-        "strftime": {
-          "version": "0.8.4",
-          "from": "strftime@>=0.8.2 <0.9.0",
-          "resolved": "https://registry.npmjs.org/strftime/-/strftime-0.8.4.tgz"
-        },
         "dot": {
           "version": "1.0.3",
           "from": "dot@>=1.0.2 <1.1.0",
           "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
         },
         "redis-mpool": {
-          "version": "0.1.0",
-          "from": "git://github.com/CartoDB/node-redis-mpool.git#0.1.0",
-          "resolved": "git://github.com/CartoDB/node-redis-mpool.git#47510b8d4525ee24aa2e5328976372274a1d144e",
+          "version": "0.4.0",
+          "from": "redis-mpool@>=0.4.0 <0.5.0",
+          "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.4.0.tgz",
           "dependencies": {
             "generic-pool": {
               "version": "2.1.1",
