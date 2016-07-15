@@ -4,7 +4,56 @@ The SQL Batch API enables you to request queries with long-running CPU processin
 
 _The Batch API is not intended to be used for large query payloads than contain over 4096 characters (4kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](http://docs.carto.com/carto-engine/import-api/) or [SQL API](http://docs.carto.com/carto-engine/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
 
-**Note:** In order to use the SQL Batch API, your table must be public, and you **must** be [authenticated](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) using API keys. For details about how to manipulate private datasets with the SQL Batch API, see [Private Datasets](#private-datasets).
+**Note:** In order to use the SQL Batch API, you **must** be [authenticated](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) using API keys.
+
+## Authentication
+
+An API Key is required to manage your jobs. The following error message appears if you are not [authenticated](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) :
+
+```bash
+{
+  "error": [
+    "permission denied"
+  ]
+}
+```
+
+In order to get full access, you must use your API Key.
+
+Using cURL tool:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "query": "{query}"
+}' "http://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
+```
+
+Using Node.js request client:
+
+```bash
+var request = require("request");
+
+var options = {
+  method: "POST",
+  url: "http://{username}.carto.com/api/v2/sql/job",
+  qs: {
+    "api_key": "{api_key}"
+  },
+  headers: {
+    "content-type": "application/json"
+  },
+  body: {
+    query: "{query}"
+  },
+  json: true
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+```
 
 ## SQL Batch API Job Schema
 
@@ -468,55 +517,6 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 3. Once the job is done, fetch the results through the [CARTO SQL API](http://docs.carto.com/carto-engine/sql-api/), `SELECT * FROM job_result`
 
 **Note:** If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
-
-## Private Datasets
-
-For access to all private tables, and for write access to public tables, an **API Key is required** to [authenticate](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
-
-```bash
-{
-  "error": [
-    "permission denied"
-  ]
-}
-```
-
-In order to get full access, you must use your API Key.
-
-Using cURL tool:
-
-```bash
-curl -X POST -H "Content-Type: application/json" -d '{
-  "query": "{query}"
-}' "http://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
-```
-
-Using Node.js request client:
-
-```bash
-var request = require("request");
-
-var options = {
-  method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
-  qs: {
-    "api_key": "{api_key}"
-  },
-  headers: {
-    "content-type": "application/json"
-  },
-  body: {
-    query: "{query}"
-  },
-  json: true
-};
-
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
-
-  console.log(body);
-});
-```
 
 ## Best Practices
 
