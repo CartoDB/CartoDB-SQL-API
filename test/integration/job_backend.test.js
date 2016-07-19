@@ -4,7 +4,6 @@ require('../helper');
 
 var BATCH_SOURCE = '../../batch/';
 
-
 var assert = require('../support/assert');
 
 var _ = require('underscore');
@@ -46,11 +45,7 @@ function createWadusJob() {
 }
 
 describe('job backend', function() {
-    var jobBackend = {};
-
-    beforeEach(function () {
-        jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
-    });
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
 
     it('.create() should persist a job', function (done) {
         var job = createWadusJob();
