@@ -64,7 +64,7 @@ function toObject(job_id, redisParams, redisValues) {
 }
 
 function isJobFound(redisValues) {
-    return redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4];
+    return !!(redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4]);
 }
 
 JobBackend.prototype.get = function (job_id, callback) {
@@ -132,6 +132,7 @@ JobBackend.prototype.update = function (job, callback) {
     var self = this;
 
     self.get(job.job_id, function (err) {
+
         if (err) {
             return callback(err);
         }
