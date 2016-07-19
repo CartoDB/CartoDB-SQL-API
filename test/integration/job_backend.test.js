@@ -41,11 +41,19 @@ var JOB = {
     host: HOST
 };
 
+function createWadusJob() {
+    return JobFactory.create(JSON.parse(JSON.stringify(JOB)));
+}
+
 describe('job backend', function() {
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+    var jobBackend = {};
+
+    beforeEach(function () {
+        jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+    });
 
     it('.create() should persist a job', function (done) {
-        var job = JobFactory.create(JOB);
+        var job = createWadusJob();
 
         jobBackend.create(job.data, function (err, jobCreated) {
             if (err) {
@@ -58,8 +66,8 @@ describe('job backend', function() {
         });
     });
 
-    it('.create() should throw an error', function (done) {
-        var job = JobFactory.create(JOB);
+    it('.create() should return error', function (done) {
+        var job = createWadusJob();
 
         delete job.data.job_id;
 
@@ -71,4 +79,71 @@ describe('job backend', function() {
         });
     });
 
+    it('.update() should update an existent job', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.create(job.data, function (err, jobCreated) {
+            if (err) {
+                return done(err);
+            }
+
+            jobCreated.query = 'select pg_sleep(1)';
+
+            var job = JobFactory.create(jobCreated);
+
+            jobBackend.update(job.data, function (err, jobUpdated) {
+                if (err) {
+                    return done(err);
+                }
+
+                assert.equal(jobUpdated.query, 'select pg_sleep(1)');
+                done();
+            });
+        });
+    });
+
+    it('.update() should return error when updates a nonexistent job', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.update(job.data, function (err) {
+            assert.ok(err, err);
+            assert.equal(err.name, 'NotFoundError');
+            assert.equal(err.message, 'Job with id ' + job.data.job_id + ' not found');
+            done();
+        });
+    });
+
+    it('.list() should return a list of user\'s jobs', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.create(job.data, function (err, jobCreated) {
+            if (err) {
+                return done(err);
+            }
+
+            jobBackend.list(USER, function (err, jobs) {
+                var found = false;
+
+                assert.ok(!err, err);
+                assert.ok(jobs.length);
+
+                jobs.forEach(function (job) {
+                    if (job.job_id === jobCreated.job_id) {
+                        found = true;
+                    }
+                });
+
+                assert.ok(found, 'Job expeted to be listed not found');
+                done();
+            });
+        });
+    });
+
+    it('.list() should return a empty list for nonexitent user', function (done) {
+        jobBackend.list('wadus_user', function (err, jobs) {
+            assert.ok(!err, err);
+            assert.ok(!jobs.length);
+            done();
+        });
+    });
 });
