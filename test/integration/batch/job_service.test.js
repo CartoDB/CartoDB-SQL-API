@@ -1,10 +1,10 @@
 'use strict';
 
-require('../helper');
+require('../../helper');
 
-var BATCH_SOURCE = '../../batch/';
+var BATCH_SOURCE = '../../../batch/';
 
-var assert = require('../support/assert');
+var assert = require('../../support/assert');
 
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
