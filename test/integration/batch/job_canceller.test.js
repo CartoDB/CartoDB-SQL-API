@@ -6,6 +6,8 @@ var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
 
+var errorCodes = require('../../../app/postgresql/error_codes').codeToCondition;
+
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
@@ -38,11 +40,6 @@ var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
 var HOST = 'localhost';
-var JOB = {
-    user: USER,
-    query: QUERY,
-    host: HOST
-};
 
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
@@ -78,15 +75,20 @@ function runQueryHelper(job, callback) {
     });
 }
 
-function createWadusJob() {
-    return JobFactory.create(JSON.parse(JSON.stringify(JOB)));
+function createWadusJob(query) {
+    query = query || QUERY;
+    return JobFactory.create(JSON.parse(JSON.stringify({
+        user: USER,
+        query: query,
+        host: HOST
+    })));
 }
 
 describe('job canceller', function() {
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
 
     it('.cancel() should cancel a job', function (done) {
-        var job = createWadusJob();
+        var job = createWadusJob('select pg_sleep(1)');
 
         jobBackend.create(job.data, function (err, jobCreated) {
             if (err) {
