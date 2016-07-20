@@ -27,47 +27,29 @@ var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var UserIndexer = require(BATCH_SOURCE + 'user_indexer');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
-var JobService = require(BATCH_SOURCE + 'job_service');
-var UserDatabaseMetadataService = require(BATCH_SOURCE + 'user_database_metadata_service');
-var JobCanceller = require(BATCH_SOURCE + 'job_canceller');
+var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 
 var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var userIndexer = new UserIndexer(metadataBackend);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
-var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-var jobCanceller = new JobCanceller(userDatabaseMetadataService);
-var jobService = new JobService(jobBackend, jobCanceller);
+
 
 var USER = 'vizzuality';
 var HOST = 'localhost';
 
-var batch = batchFactory(metadataBackend, redisConfig, statsdClient);
-
-function createJob(query, done) {
-    var data = {
-        user: USER,
-        query: query,
-        host: HOST
-    };
-
-    jobService.create(data, function (err, job) {
-        if (err) {
-            return done(err);
-        }
-
-        done(null, job.serialize());
-    });
+function createJob(job) {
+    jobBackend.create(job, function () {});
 }
 
 function getJob(job_id, callback) {
-    jobService.get(job_id, function (err, job) {
+    jobBackend.get(job_id, function (err, job) {
         if (err) {
             return callback(err);
         }
 
-        callback(null, job.serialize());
+        callback(null, job);
     });
 }
 
@@ -86,18 +68,16 @@ function assertJob(job, expectedStatus, done) {
     };
 }
 
-describe('batch multiquery', function() {
+describe.skip('batch multiquery', function() {
+    var batch = batchFactory(metadataBackend, redisConfig, statsdClient);
 
     beforeEach(function () {
         batch.start();
     });
 
-    afterEach(function (done) {
-        batch.stop();
+    afterEach(function () {
         batch.removeAllListeners();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
-        });
+        batch.stop();
     });
 
     it('should perform one multiquery job with two queries', function (done) {
@@ -106,13 +86,12 @@ describe('batch multiquery', function() {
             'select pg_sleep(0)'
         ];
 
-        createJob(queries, function (err, job) {
-            if (err) {
-                return done(err);
-            }
+        var job = JobFactory.create({ user: USER, host: HOST, query: queries});
+        var assertCallback = assertJob(job.data, jobStatus.DONE, done);
 
-            batch.on('job:done', assertJob(job, jobStatus.DONE, done));
-        });
+        batch.on('job:done', assertCallback);
+
+        createJob(job.data);
     });
 
     it('should perform one multiquery job with two queries and fail on last one', function (done) {
@@ -121,13 +100,12 @@ describe('batch multiquery', function() {
             'select shouldFail()'
         ];
 
-        createJob(queries, function (err, job) {
-            if (err) {
-                return done(err);
-            }
+        var job = JobFactory.create({ user: USER, host: HOST, query: queries});
+        var assertCallback = assertJob(job.data, jobStatus.FAILED, done);
 
-            batch.on('job:failed', assertJob(job, jobStatus.FAILED, done));
-        });
+        batch.on('job:failed', assertCallback);
+
+        createJob(job.data);
     });
 
     it('should perform one multiquery job with three queries and fail on last one', function (done) {
@@ -137,13 +115,12 @@ describe('batch multiquery', function() {
             'select shouldFail()'
         ];
 
-        createJob(queries, function (err, job) {
-            if (err) {
-                return done(err);
-            }
+        var job = JobFactory.create({ user: USER, host: HOST, query: queries});
+        var assertCallback = assertJob(job.data, jobStatus.FAILED, done);
 
-            batch.on('job:failed', assertJob(job, jobStatus.FAILED, done));
-        });
+        batch.on('job:failed', assertCallback);
+
+        createJob(job.data);
     });
 
 
@@ -154,95 +131,92 @@ describe('batch multiquery', function() {
             'select pg_sleep(0)'
         ];
 
-        createJob(queries, function (err, job) {
-            if (err) {
-                return done(err);
-            }
+        var job = JobFactory.create({ user: USER, host: HOST, query: queries});
+        var assertCallback = assertJob(job.data, jobStatus.FAILED, done);
 
-            batch.on('job:failed', assertJob(job, jobStatus.FAILED, done));
-        });
+        batch.on('job:failed', assertCallback);
+
+        createJob(job.data);
     });
 
     it('should perform two multiquery job with two queries for each one', function (done) {
-        var jobs = [[
+        var jobs = [];
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
             'select pg_sleep(0)'
-        ], [
+        ]}));
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
             'select pg_sleep(0)'
-        ]];
+        ]}));
 
         var jobsQueue = queue(jobs.length);
 
-        jobs.forEach(function(job) {
-            jobsQueue.defer(createJob, job);
-        });
-
-        jobsQueue.awaitAll(function (err, jobs) {
-            if (err) {
-                return done(err);
-            }
-
-            jobs.forEach(function (job) {
-                batch.on('job:done', assertJob(job, jobStatus.DONE, done));
+        jobs.forEach(function (job) {
+            jobsQueue.defer(function (callback) {
+                batch.on('job:done', assertJob(job.data, jobStatus.DONE, callback));
+                createJob(job.data);
             });
         });
+
+        jobsQueue.awaitAll(done);
     });
 
     it('should perform two multiquery job with two queries for each one and fail the first one', function (done) {
-        var jobs = [[
+        var jobs = [];
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
             'select shouldFail()'
-        ], [
+        ]}));
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
             'select pg_sleep(0)'
-        ]];
+        ]}));
 
-        queue(jobs.length)
-            .defer(createJob, jobs[0])
-            .defer(createJob, jobs[1])
-            .awaitAll(function (err, createdJobs) {
-                if (err) {
-                    return done(err);
-                }
+        var jobsQueue = queue(jobs.length);
 
-                queue(createdJobs.length)
-                    .defer(function (callback) {
-                        batch.on('job:failed', assertJob(createdJobs[0], jobStatus.FAILED, callback));
-                    })
-                    .defer(function (callback) {
-                        batch.on('job:done', assertJob(createdJobs[1], jobStatus.DONE, callback));
-                    })
-                    .awaitAll(done);
-            });
+        jobsQueue.defer(function (callback) {
+            batch.on('job:failed', assertJob(jobs[0].data, jobStatus.FAILED, callback));
+            createJob(jobs[0].data);
+        });
+
+        jobsQueue.defer(function (callback) {
+            batch.on('job:done', assertJob(jobs[1].data, jobStatus.DONE, callback));
+            createJob(jobs[1].data);
+        });
+
+        jobsQueue.awaitAll(done);
     });
 
     it('should perform two multiquery job with two queries for each one and fail the second one', function (done) {
-        var jobs = [[
+        var jobs = [];
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
             'select pg_sleep(0)'
-        ], [
+        ]}));
+
+        jobs.push(JobFactory.create({ user: USER, host: HOST, query: [
             'select pg_sleep(0)',
-            'select shouldFail()',
-        ]];
+            'select shouldFail()'
+        ]}));
 
-        queue(jobs.length)
-            .defer(createJob, jobs[0])
-            .defer(createJob, jobs[1])
-            .awaitAll(function (err, createdJobs) {
-                if (err) {
-                    return done(err);
-                }
+        var jobsQueue = queue(jobs.length);
 
-                queue(createdJobs.length)
-                    .defer(function (callback) {
-                        batch.on('job:done', assertJob(createdJobs[0], jobStatus.DONE, callback));
-                    })
-                    .defer(function (callback) {
-                        batch.on('job:failed', assertJob(createdJobs[1], jobStatus.FAILED, callback));
-                    })
-                    .awaitAll(done);
-            });
+        jobsQueue.defer(function (callback) {
+            batch.on('job:done', assertJob(jobs[0].data, jobStatus.DONE, callback));
+            createJob(jobs[0].data);
+        });
+
+        jobsQueue.defer(function (callback) {
+            batch.on('job:failed', assertJob(jobs[1].data, jobStatus.FAILED, callback));
+            createJob(jobs[1].data);
+        });
+
+        jobsQueue.awaitAll(done);
     });
-
 });
