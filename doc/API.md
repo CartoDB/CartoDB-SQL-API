@@ -14,7 +14,7 @@ Remember that in order to access, read or modify data in private tables, you wil
 
 * [Authentication](authentication.md)
 * [Making calls to the SQL API](making_calls.md)
-* [Batch Queries](sql_batch_api.md)
+* [Batch Queries](batch_queries.md)
 * [Handling Geospatial Data](handling_geospatial_data.md)
 * [Query Optimizations](query_optimizations.md)
 * [API Version Vumber](version.md)
