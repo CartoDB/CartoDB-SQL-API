@@ -6,8 +6,6 @@ var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
 
-var errorCodes = require('../../../app/postgresql/error_codes').codeToCondition;
-
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
