@@ -28,6 +28,7 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var batchFactory = require('../../batch');
 
 describe('Use case 6: modify a done job', function() {
+    this.timeout(30000);
 
     var batch = batchFactory(metadataBackend, redisConfig);
 
