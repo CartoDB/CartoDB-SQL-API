@@ -2,7 +2,7 @@
 
 A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
 
-_Batch Queries are not intended to be used for large query payloads that contain over 4096 characters (4kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
+_Batch Queries are not intended to be used for large query payloads that contain over 81922 characters (8kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
 **Note:** In order to use Batch Queries, you **must** be [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/) using API keys.
 
@@ -524,8 +524,8 @@ For best practices, follow these recommended usage notes when using Batch Querie
 
 - Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](https://carto.com/docs/carto-engine/import-api/) for this type of data management
 
-- There is a limit of 4kb per job. The following error message appears if your job exceeds this size:
+- There is a limit of 8kb per job. The following error message appears if your job exceeds this size:
 
-  `Your payload is too large. Max size allowed is 4096 (4kb)`
+  `Your payload is too large. Max size allowed is 8192 (8kb)`
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the Batch Query and are read-only
