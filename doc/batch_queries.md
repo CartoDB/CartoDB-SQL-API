@@ -515,14 +515,14 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
       "query": "UPDATE nasdaq SET price = '100.00' WHERE company = 'CARTO'",
-      "onsuccess": "UPDATE market_registry SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq_index'"
+      "onsuccess": "UPDATE market_registry SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'"
       "onerror": "UPDATE market_registry SET status = 'outdated' WHERE table_name = 'nasdaq_index'"
     }]
   }
 }' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
-If `query` finishes successfully then `onsuccess` fallback is fired otherwise `onerror` will be fired. You can define fallbacks per query:
+If `query` finishes successfully then `onsuccess` fallback will be fired otherwise `onerror` will be. You can define fallbacks per query:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
@@ -556,16 +556,16 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
-If a `query` of a job fails and `onerror` fallbacks for that query and job are defined then Batch Queries runs first the fallback for that query, then runs the fallback for the job and finally sets the job as failed, remaining queries won't be executed. Furthermore, Batch Queries will run the `onsuccess` fallback at job level if and only if every query of that job has finished successfully.
+If a `query` of a job fails and `onerror` fallbacks for that query and job are defined then Batch Queries runs first the fallback for that query, then runs the fallback for the job and finally sets the job as failed, remaining queries won't be executed. Furthermore, Batch Queries will run the `onsuccess` fallback at job level if and only if every query has finished successfully.
 
 ### Templates
 
-Batch Queries provides a flexible way to get the `error message` and the `job identifier` to be used in your fallbacks using a the following templates:
+Batch Queries provides a simple way to get the `error message` and the `job identifier` to be used in your fallbacks using the following templates:
 
- - `<%= error_message %>`: will be replaced by the error message that the database provides.
+ - `<%= error_message %>`: will be replaced by the error message raised by the database.
  - `<%= job_id %>`: will be replaced by the job identifier that Batch Queries provides.
 
-This is helpful when you want to save into a table the error thrown by any query:
+This is helpful when you want to save into a table the error thrown by a query:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
