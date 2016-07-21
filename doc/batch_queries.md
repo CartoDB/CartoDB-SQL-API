@@ -2,7 +2,7 @@
 
 A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
 
-_Batch Queries are not intended to be used for large query payloads that contain over 81922 characters (8kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
+_Batch Queries are not intended to be used for large query payloads that contain over 8192 characters (8kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
 **Note:** In order to use Batch Queries, you **must** be [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/) using API keys.
 
@@ -506,6 +506,80 @@ request(options, function (error, response, body) {
 });
 ```
 
+## Chaining Batch Queries with fallbacks
+
+Batch Queries enables you to define `onerror` and `onsuccess` fallbacks when you need to run an extra query depending on how a _chaining query_ finishes. This feature is powerful and opens a huge range of possibilities, for instance, you can create jobs periodically in order to get updated your data and you want to have a place where you can check quickly if your tables are updated or not and when was the last time that your table was updated. You may want to create a the following job:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "query": {
+    "query": [{
+      "query": "UPDATE nasdaq SET price = '100.00' WHERE company = 'CARTO'",
+      "onsuccess": "UPDATE market_registry SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq_index'"
+      "onerror": "UPDATE market_registry SET status = 'outdated' WHERE table_name = 'nasdaq_index'"
+    }]
+  }
+}' "http://{username}.carto.com/api/v2/sql/job"
+```
+
+If `query` finishes successfully then `onsuccess` fallback is fired otherwise `onerror` will be fired. You can define fallbacks per query:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "query": {
+    "query": [{
+      "query": "UPDATE nasdaq SET price = '100.00' WHERE company = 'Esri'",
+      "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'",
+      "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq'"
+    }, {
+      "query": "UPDATE down_jones SET price = '101.00' WHERE company = 'CARTO'",
+      "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'down_jones'",
+      "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'down_jones'"
+    }]
+  }
+}' "http://{username}.carto.com/api/v2/sql/job"
+```
+
+Also, you can define fallbacks at job level:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "query": {
+    "query": [{
+      "query": "UPDATE down_jones SET price = '100.00' WHERE company = 'Esri'"
+    }, {
+      "query": "UPDATE nasdaq SET price = '101.00' WHERE company = 'CARTO'"
+    }],
+    "onsuccess": "UPDATE market_status SET status = 'ok', updated_at = NOW()",
+    "onerror": "UPDATE market_status SET status = 'outdated'"
+  }
+}' "http://{username}.carto.com/api/v2/sql/job"
+```
+
+If a `query` of a job fails and `onerror` fallbacks for that query and job are defined then Batch Queries runs first the fallback for that query, then runs the fallback for the job and finally sets the job as failed, remaining queries won't be executed. Furthermore, Batch Queries will run the `onsuccess` fallback at job level if and only if every query of that job has finished successfully.
+
+### Templates
+
+Batch Queries provides a flexible way to get the `error message` and the `job identifier` to be used in your fallbacks using a the following templates:
+
+ - `<%= error_message %>`: will be replaced by the error message that the database provides.
+ - `<%= job_id %>`: will be replaced by the job identifier that Batch Queries provides.
+
+This is helpful when you want to save into a table the error thrown by any query:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "query": {
+    "query": [{
+      "query": "UPDATE wrong_table SET price = '100.00' WHERE company = 'CARTO'"
+    }],
+    "onerror": "INSERT INTO errors_log (job_id, error_message, date) VALUES ('<%= job_id %>', '<%= error_message %>', NOW())"
+  }
+}' "http://{username}.carto.com/api/v2/sql/job"
+```
+
+More templates are coming soon.
+
 ## Fetching Job Results
 
 In some scenarios, you may need to fetch the output of a job. If that is the case, wrap the query with `SELECT * INTO`, or `CREATE TABLE AS`. The output is stored in a new table in your database. For example, if using the query `SELECT * FROM airports`:
@@ -529,3 +603,5 @@ For best practices, follow these recommended usage notes when using Batch Querie
   `Your payload is too large. Max size allowed is 8192 (8kb)`
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the Batch Query and are read-only
+
+- Have in mind that creating several jobs not guarantees that jobs are going to be executed in the same order that were created. If you need run queries in a specific order you may want use [Chaining Batch Queries](https://carto.com/docs/carto-engine/sql-api/batch-queries/#chaining-batch-queries).
