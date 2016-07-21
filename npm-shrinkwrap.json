@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.34.1",
+  "version": "1.34.2",
   "dependencies": {
     "cartodb-psql": {
       "version": "0.6.1",
@@ -40,40 +40,6 @@
           "version": "1.0.3",
           "from": "dot@>=1.0.2 <1.1.0",
           "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
-        },
-        "redis-mpool": {
-          "version": "0.4.0",
-          "from": "redis-mpool@>=0.4.0 <0.5.0",
-          "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.4.0.tgz",
-          "dependencies": {
-            "generic-pool": {
-              "version": "2.1.1",
-              "from": "generic-pool@>=2.1.1 <2.2.0",
-              "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.1.1.tgz"
-            },
-            "redis": {
-              "version": "0.12.1",
-              "from": "redis@>=0.12.1 <0.13.0",
-              "resolved": "https://registry.npmjs.org/redis/-/redis-0.12.1.tgz"
-            },
-            "hiredis": {
-              "version": "0.1.17",
-              "from": "hiredis@>=0.1.17 <0.2.0",
-              "resolved": "https://registry.npmjs.org/hiredis/-/hiredis-0.1.17.tgz",
-              "dependencies": {
-                "bindings": {
-                  "version": "1.2.1",
-                  "from": "bindings@*",
-                  "resolved": "https://registry.npmjs.org/bindings/-/bindings-1.2.1.tgz"
-                },
-                "nan": {
-                  "version": "1.1.2",
-                  "from": "nan@>=1.1.0 <1.2.0",
-                  "resolved": "https://registry.npmjs.org/nan/-/nan-1.1.2.tgz"
-                }
-              }
-            }
-          }
         }
       }
     },
@@ -125,8 +91,8 @@
     },
     "log4js": {
       "version": "0.6.25",
-      "from": "https://github.com/CartoDB/log4js-node/tarball/cdb",
-      "resolved": "https://github.com/CartoDB/log4js-node/tarball/cdb",
+      "from": "cartodb/log4js-node#cdb",
+      "resolved": "git://github.com/cartodb/log4js-node.git#145d5f91e35e7fb14a6278cbf7a711ced6603727",
       "dependencies": {
         "async": {
           "version": "0.2.10",
