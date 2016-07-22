@@ -6,21 +6,31 @@ var error = require('./util/debug')('pubsub:subscriber:error');
 var DB = 0;
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
 
-function _subscribe(client, channel, queueSeeker, onMessage) {
+function _subscribe(client, channel, queueSeeker, onMessage, callback) {
+
+    client.removeAllListeners('message');
+    client.unsubscribe(channel);
+    client.subscribe(channel);
+
+    client.on('message', function (channel, host) {
+        debug('message received from: ' + channel + ':' + host);
+        onMessage(channel, host);
+    });
 
     queueSeeker.seek(onMessage, function (err) {
         if (err) {
             error(err);
+
+            if (callback) {
+                callback(err);
+            }
+        } else {
+            debug('queues found successfully');
+
+            if (callback) {
+                callback();
+            }
         }
-
-        client.removeAllListeners('message');
-        client.unsubscribe(channel);
-        client.subscribe(channel);
-
-        client.on('message', function (channel, host) {
-            debug('message received from: ' + channel + ':' + host);
-            onMessage(channel, host);
-        });
     });
 }
 
@@ -32,7 +42,7 @@ function JobSubscriber(pool, queueSeeker) {
 
 module.exports = JobSubscriber;
 
-JobSubscriber.prototype.subscribe = function (onMessage) {
+JobSubscriber.prototype.subscribe = function (onMessage, callback) {
     var self = this;
 
     this.pool.acquire(DB, function (err, client) {
@@ -42,8 +52,6 @@ JobSubscriber.prototype.subscribe = function (onMessage) {
 
         self.client = client;
 
-        _subscribe(self.client, self.channel, self.queueSeeker, onMessage);
-
         self.seekerInterval = setInterval(
             _subscribe,
             SUBSCRIBE_INTERVAL_IN_MILLISECONDS,
@@ -52,6 +60,8 @@ JobSubscriber.prototype.subscribe = function (onMessage) {
             self.queueSeeker,
             onMessage
         );
+
+        _subscribe(self.client, self.channel, self.queueSeeker, onMessage, callback);
     });
 
 };

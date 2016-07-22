@@ -25,7 +25,7 @@ Batch.prototype.start = function () {
 Batch.prototype._subscribe = function () {
     var self = this;
 
-    this.jobSubscriber.subscribe(function (channel, host) {
+    this.jobSubscriber.subscribe(function onMessage(channel, host) {
         var queue = self.jobQueuePool.getQueue(host);
 
         // there is nothing to do. It is already running jobs
@@ -46,6 +46,12 @@ Batch.prototype._subscribe = function () {
 
             debug(err);
         });
+    }, function (err) {
+        if (err) {
+            return self.emit('error', err);
+        }
+
+        self.emit('ready');
     });
 };
 
