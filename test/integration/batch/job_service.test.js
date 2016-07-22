@@ -45,6 +45,10 @@ var JOB = {
     host: HOST
 };
 
+function createWadusDataJob() {
+    return JSON.parse(JSON.stringify(JOB));
+}
+
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
 function runQueryHelper(job, callback) {
@@ -82,8 +86,15 @@ function runQueryHelper(job, callback) {
 describe('job service', function() {
     var jobService = new JobService(jobBackend, jobCanceller);
 
+    after(function (done) {
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
+    });
+
     it('.get() should return a job', function (done) {
-        jobService.create(JOB, function (err, jobCreated) {
+        jobService.create(createWadusDataJob(), function (err, jobCreated) {
             if (err) {
                 return done(err);
             }
@@ -108,7 +119,7 @@ describe('job service', function() {
     });
 
     it('.create() should persist a job', function (done) {
-        jobService.create(JOB, function (err, jobCreated) {
+        jobService.create(createWadusDataJob(), function (err, jobCreated) {
             if (err) {
                 return done(err);
             }
@@ -120,7 +131,7 @@ describe('job service', function() {
     });
 
     it('.create() should return error with invalid job data', function (done) {
-        var job = JSON.parse(JSON.stringify(JOB));
+        var job = createWadusDataJob();
 
         delete job.query;
 
@@ -132,7 +143,7 @@ describe('job service', function() {
     });
 
     it('.list() should return a list of user\'s jobs', function (done) {
-        jobService.create(JOB, function (err, jobCreated) {
+        jobService.create(createWadusDataJob(), function (err, jobCreated) {
             if (err) {
                 return done(err);
             }
@@ -164,7 +175,7 @@ describe('job service', function() {
     });
 
     it('.update() should update a job', function (done) {
-        jobService.create(JOB, function (err, jobCreated) {
+        jobService.create(createWadusDataJob(), function (err, jobCreated) {
             if (err) {
                 return done(err);
             }
@@ -184,7 +195,8 @@ describe('job service', function() {
     });
 
     it('.update() should return error when updates a nonexistent job', function (done) {
-        var job = JSON.parse(JSON.stringify(JOB));
+        var job = createWadusDataJob();
+
         job.job_id = 'wadus_job_id';
 
         jobService.update(job, function (err) {
@@ -196,11 +208,8 @@ describe('job service', function() {
     });
 
     it('.cancel() should cancel a running job', function (done) {
-        var job = {
-            user: USER,
-            query: 'select pg_sleep(3)',
-            host: HOST
-        };
+        var job = createWadusDataJob();
+        job.query = 'select pg_sleep(3)';
 
         jobService.create(job, function (err, job) {
             if (err) {
@@ -235,11 +244,8 @@ describe('job service', function() {
     });
 
     it('.drain() should draing a running job', function (done) {
-        var job = {
-            user: USER,
-            query: 'select pg_sleep(3)',
-            host: HOST
-        };
+        var job = createWadusDataJob();
+        job.query = 'select pg_sleep(3)';
 
         jobService.create(job, function (err, job) {
             if (err) {

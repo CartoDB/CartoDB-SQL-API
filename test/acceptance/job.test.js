@@ -31,7 +31,10 @@ describe('job module', function() {
     after(function (done) {
         // batch services is not activate, so we need empty the queue to avoid unexpected
         // behaviour in further tests
-        metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
     });
 
     it('POST /api/v2/sql/job should respond with 200 and the created job', function (done){

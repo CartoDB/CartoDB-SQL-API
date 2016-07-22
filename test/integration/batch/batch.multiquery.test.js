@@ -35,7 +35,6 @@ var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var userIndexer = new UserIndexer(metadataBackend);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
 
-
 var USER = 'vizzuality';
 var HOST = 'localhost';
 
@@ -68,16 +67,21 @@ function assertJob(job, expectedStatus, done) {
     };
 }
 
-describe.skip('batch multiquery', function() {
+describe('batch multiquery', function() {
     var batch = batchFactory(metadataBackend, redisConfig, statsdClient);
 
-    beforeEach(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
-    afterEach(function () {
+    after(function (done) {
         batch.removeAllListeners();
         batch.stop();
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
     });
 
     it('should perform one multiquery job with two queries', function (done) {

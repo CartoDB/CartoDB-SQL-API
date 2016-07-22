@@ -46,7 +46,10 @@ describe('job query limit', function() {
     after(function (done) {
         // batch services is not activate, so we need empty the queue to avoid unexpected
         // behaviour in further tests
-        metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
     });
 
     it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done){

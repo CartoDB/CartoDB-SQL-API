@@ -96,18 +96,20 @@ describe('Batch API callback templates', function () {
 
     var batch = batchFactory(metadataBackend, redisConfig);
 
-    before(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
     after(function (done) {
         batch.stop();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
         });
     });
 
-    describe.skip('should use templates for error_message and job_id onerror callback', function () {
+    describe('should use templates for error_message and job_id onerror callback', function () {
         var jobResponse;
         before(function(done) {
             getQueryResult('create table test_batch_errors (job_id text, error_message text)', function(err) {

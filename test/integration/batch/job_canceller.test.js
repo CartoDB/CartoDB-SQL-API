@@ -85,6 +85,14 @@ function createWadusJob(query) {
 describe('job canceller', function() {
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
 
+    after(function (done) {
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
+    });
+
+
     it('.cancel() should cancel a job', function (done) {
         var job = createWadusJob('select pg_sleep(1)');
 

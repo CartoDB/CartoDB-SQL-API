@@ -47,6 +47,13 @@ function createWadusJob() {
 describe('job backend', function() {
     var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
 
+    after(function (done) {
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
+    });
+
     it('.create() should persist a job', function (done) {
         var job = createWadusJob();
 

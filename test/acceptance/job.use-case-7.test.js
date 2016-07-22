@@ -32,14 +32,16 @@ describe('Use case 7: cancel a job with quotes', function() {
 
     var batch = batchFactory(metadataBackend, redisConfig);
 
-    before(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
     after(function (done) {
         batch.stop();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
         });
     });
 

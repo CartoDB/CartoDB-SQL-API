@@ -53,6 +53,13 @@ var JOB = {
 describe('job runner', function() {
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, statsdClient);
 
+    after(function (done) {
+        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
+            if (err) { return done(err); }
+            metadataBackend.redisCmd(5, 'DEL', keys, done);
+        });
+    });
+
     it('.run() should run a job', function (done) {
         jobService.create(JOB, function (err, job) {
             if (err) {
