@@ -16,6 +16,7 @@ require('../helper');
 
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
 var redisConfig = {
     host: global.settings.redis_host,
@@ -28,18 +29,16 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var batchFactory = require('../../batch');
 
 describe('Use case 7: cancel a job with quotes', function() {
-
     var batch = batchFactory(metadataBackend, redisConfig);
 
-    before(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
     after(function (done) {
         batch.stop();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     var runningJob = {};

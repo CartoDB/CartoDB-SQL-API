@@ -14,17 +14,10 @@
  */
 require('../helper');
 var JobController = require('../../app/controllers/job_controller');
-
+var redisUtils = require('../support/redis_utils');
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('qs');
-var metadataBackend = require('cartodb-redis')({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
 
 function payload(query) {
     return JSON.stringify({query: query});
@@ -44,9 +37,7 @@ describe('job query limit', function() {
     }
 
     after(function (done) {
-        // batch services is not activate, so we need empty the queue to avoid unexpected
-        // behaviour in further tests
-        metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
+        redisUtils.clean('batch:*', done);
     });
 
     it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done){

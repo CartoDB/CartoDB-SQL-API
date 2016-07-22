@@ -1,6 +1,7 @@
 require('../helper');
 
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var app = require(global.settings.app_root + '/app/app')();
 var querystring = require('qs');
 var redisConfig = {
@@ -37,15 +38,14 @@ describe('Batch API fallback job', function () {
 
     var batch = batchFactory(metadataBackend, redisConfig);
 
-    before(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
     after(function (done) {
         batch.stop();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     describe('"onsuccess" on first query should be triggered', function () {

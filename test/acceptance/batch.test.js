@@ -1,4 +1,5 @@
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 var queue = require('queue-async');
@@ -34,15 +35,14 @@ describe('batch module', function() {
 
     var batch = batchFactory(metadataBackend, redisConfig);
 
-    before(function () {
+    before(function (done) {
         batch.start();
+        batch.on('ready', done);
     });
 
     after(function (done) {
         batch.stop();
-        batch.drain(function () {
-            metadataBackend.redisCmd(5, 'DEL', [ 'batch:queues:localhost' ], done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     function createJob(sql, done) {
