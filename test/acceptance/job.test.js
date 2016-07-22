@@ -18,13 +18,6 @@ var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
-var metadataBackend = require('cartodb-redis')({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
 
 describe('job module', function() {
     var job = {};

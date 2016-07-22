@@ -18,13 +18,6 @@ var redisUtils = require('../support/redis_utils');
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
 var querystring = require('qs');
-var metadataBackend = require('cartodb-redis')({
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
 
 function payload(query) {
     return JSON.stringify({query: query});
