@@ -424,6 +424,8 @@ BODY: {
 
 - Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Chained Batch Query job
 
+- Creating several jobs does not guarantee that jobs are going to be executed in the same order that they were created. If you need run queries in a specific order, you may want use Chaining Batch Queries.
+
 ##### POST Examples
 
 If you are using the Chained Batch Query operation for cURL POST request, use the following code:
@@ -508,31 +510,35 @@ request(options, function (error, response, body) {
 
 ## Chaining Batch Queries with fallbacks
 
-Batch Queries enables you to define `onerror` and `onsuccess` fallbacks when you need to run an extra query depending on how a _chaining query_ finishes. This feature is powerful and opens a huge range of possibilities, for instance, you can create jobs periodically in order to get updated your data and you want to have a place where you can check quickly if your tables are updated or not and when was the last time that your table was updated. You may want to create a the following job:
+When you need to run an extra query based on how a chaining query finished, Batch Queries enable you to define onerror and onsuccess fallbacks. This powerful feature opens a huge range of possibilities, for instance:
+
+- You can create jobs periodically in order to get updated data and create a new table where you can check the status of your tables.
+
+For this example, you can create the following job:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE nasdaq SET price = '100.00' WHERE company = 'CARTO'",
-      "onsuccess": "UPDATE market_registry SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'"
-      "onerror": "UPDATE market_registry SET status = 'outdated' WHERE table_name = 'nasdaq_index'"
+      "query": "UPDATE nasdaq SET price = '$100.00' WHERE company = 'CARTO'",
+      "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'"
+      "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq_index'"
     }]
   }
 }' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
-If `query` finishes successfully then `onsuccess` fallback will be fired otherwise `onerror` will be. You can define fallbacks per query:
+If query finishes successfully, then onsuccess fallback will be fired. Otherwise, onerror will be fired. You can define fallbacks per query:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE nasdaq SET price = '100.00' WHERE company = 'Esri'",
+      "query": "UPDATE nasdaq SET price = '$100.00' WHERE company = 'Esri'",
       "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'",
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq'"
     }, {
-      "query": "UPDATE down_jones SET price = '101.00' WHERE company = 'CARTO'",
+      "query": "UPDATE down_jones SET price = '$101.00' WHERE company = 'CARTO'",
       "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'down_jones'",
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'down_jones'"
     }]
@@ -540,15 +546,15 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
-Also, you can define fallbacks at job level:
+...at the job level..
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE down_jones SET price = '100.00' WHERE company = 'Esri'"
+      "query": "UPDATE down_jones SET price = '$100.00' WHERE company = 'Esri'"
     }, {
-      "query": "UPDATE nasdaq SET price = '101.00' WHERE company = 'CARTO'"
+      "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'"
     }],
     "onsuccess": "UPDATE market_status SET status = 'ok', updated_at = NOW()",
     "onerror": "UPDATE market_status SET status = 'outdated'"
@@ -556,22 +562,22 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
-If a `query` of a job fails and `onerror` fallbacks for that query and job are defined then Batch Queries runs first the fallback for that query, then runs the fallback for the job and finally sets the job as failed, remaining queries won't be executed. Furthermore, Batch Queries will run the `onsuccess` fallback at job level if and only if every query has finished successfully.
+If a query of a job fails (and onerror fallbacks for that query and job are defined), then Batch Queries runs the first fallback for that query. The job fallback runs next and sets the job as failed. Remaining queries will not be executed. Furthermore, Batch Queries will run the onsuccess fallback at the job level, if (and only if), every query has finished successfully.
 
 ### Templates
 
-Batch Queries provides a simple way to get the `error message` and the `job identifier` to be used in your fallbacks using the following templates:
+Batch Queries provide a simple way to get the error message and the job identifier to be used in your fallbacks, by using the following templates:
 
  - `<%= error_message %>`: will be replaced by the error message raised by the database.
  - `<%= job_id %>`: will be replaced by the job identifier that Batch Queries provides.
 
-This is helpful when you want to save into a table the error thrown by a query:
+This is helpful when you want to save error messages into a table:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE wrong_table SET price = '100.00' WHERE company = 'CARTO'"
+      "query": "UPDATE wrong_table SET price = '$100.00' WHERE company = 'CARTO'"
     }],
     "onerror": "INSERT INTO errors_log (job_id, error_message, date) VALUES ('<%= job_id %>', '<%= error_message %>', NOW())"
   }
@@ -603,5 +609,3 @@ For best practices, follow these recommended usage notes when using Batch Querie
   `Your payload is too large. Max size allowed is 8192 (8kb)`
 
 - Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the Batch Query and are read-only
-
-- Have in mind that creating several jobs not guarantees that jobs are going to be executed in the same order that were created. If you need run queries in a specific order you may want use [Chaining Batch Queries](https://carto.com/docs/carto-engine/sql-api/batch-queries/#chaining-batch-queries).
