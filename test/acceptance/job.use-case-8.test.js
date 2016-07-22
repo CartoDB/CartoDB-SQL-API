@@ -28,8 +28,6 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var batchFactory = require('../../batch');
 
 describe('Use case 8: cancel a running multiquery job', function() {
-    this.timeout(30000);
-
     var batch = batchFactory(metadataBackend, redisConfig);
 
     before(function (done) {
