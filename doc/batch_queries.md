@@ -534,11 +534,11 @@ If query finishes successfully, then onsuccess fallback will be fired. Otherwise
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE nasdaq SET price = '$100.00' WHERE company = 'Esri'",
+      "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'",
       "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'",
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq'"
     }, {
-      "query": "UPDATE down_jones SET price = '$101.00' WHERE company = 'CARTO'",
+      "query": "UPDATE down_jones SET price = '$100.00' WHERE company = 'Esri'",
       "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'down_jones'",
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'down_jones'"
     }]
@@ -552,9 +552,9 @@ curl -X POST -H "Content-Type: application/json" -d '{
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE down_jones SET price = '$100.00' WHERE company = 'Esri'"
-    }, {
       "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'"
+    }, {
+      "query": "UPDATE down_jones SET price = '$100.00' WHERE company = 'Esri'"
     }],
     "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW()",
     "onerror": "UPDATE market_status SET status = 'outdated'"
