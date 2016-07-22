@@ -522,7 +522,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "query": [{
       "query": "UPDATE nasdaq SET price = '$100.00' WHERE company = 'CARTO'",
       "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW() WHERE table_name = 'nasdaq'"
-      "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq_index'"
+      "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq'"
     }]
   }
 }' "http://{username}.carto.com/api/v2/sql/job"
@@ -556,7 +556,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     }, {
       "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'"
     }],
-    "onsuccess": "UPDATE market_status SET status = 'ok', updated_at = NOW()",
+    "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW()",
     "onerror": "UPDATE market_status SET status = 'outdated'"
   }
 }' "http://{username}.carto.com/api/v2/sql/job"
