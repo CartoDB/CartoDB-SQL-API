@@ -1,6 +1,7 @@
 require('../helper');
 
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var app = require(global.settings.app_root + '/app/app')();
 var querystring = require('qs');
 var redisConfig = {
@@ -80,10 +81,7 @@ describe('Batch API query timing', function () {
 
     after(function (done) {
         batch.stop();
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     describe('should report start and end time for each query with fallback queries', function () {

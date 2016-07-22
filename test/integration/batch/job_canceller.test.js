@@ -5,7 +5,7 @@ require('../../helper');
 var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
-
+var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
@@ -86,12 +86,8 @@ describe('job canceller', function() {
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
 
     after(function (done) {
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
-
 
     it('.cancel() should cancel a job', function (done) {
         var job = createWadusJob('select pg_sleep(1)');

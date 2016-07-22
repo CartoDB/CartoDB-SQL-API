@@ -16,6 +16,7 @@ require('../helper');
 
 var app = require(global.settings.app_root + '/app/app')();
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')({
     host: global.settings.redis_host,
@@ -29,12 +30,7 @@ describe('job module', function() {
     var job = {};
 
     after(function (done) {
-        // batch services is not activate, so we need empty the queue to avoid unexpected
-        // behaviour in further tests
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     it('POST /api/v2/sql/job should respond with 200 and the created job', function (done){

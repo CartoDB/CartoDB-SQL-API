@@ -5,7 +5,7 @@ require('../../helper');
 var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
-
+var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
@@ -15,7 +15,6 @@ var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
-
 
 var redisConfig = {
     host: global.settings.redis_host,
@@ -48,10 +47,7 @@ describe('job backend', function() {
     var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
 
     after(function (done) {
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     it('.create() should persist a job', function (done) {

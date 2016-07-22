@@ -1,6 +1,7 @@
 require('../helper');
 
 var assert = require('../support/assert');
+var redisUtils = require('../support/redis_utils');
 var app = require(global.settings.app_root + '/app/app')();
 var querystring = require('qs');
 var redisConfig = {
@@ -103,10 +104,7 @@ describe('Batch API callback templates', function () {
 
     after(function (done) {
         batch.stop();
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     describe.skip('should use templates for error_message and job_id onerror callback', function () {

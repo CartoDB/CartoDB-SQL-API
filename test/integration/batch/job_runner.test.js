@@ -5,7 +5,7 @@ require('../../helper');
 var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
-
+var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
@@ -54,10 +54,7 @@ describe('job runner', function() {
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, statsdClient);
 
     after(function (done) {
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     it('.run() should run a job', function (done) {

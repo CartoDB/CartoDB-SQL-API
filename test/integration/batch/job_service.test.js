@@ -5,7 +5,7 @@ require('../../helper');
 var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
-
+var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
@@ -87,10 +87,7 @@ describe('job service', function() {
     var jobService = new JobService(jobBackend, jobCanceller);
 
     after(function (done) {
-        metadataBackend.redisCmd(5, 'KEYS', [ 'batch:*'], function (err, keys) {
-            if (err) { return done(err); }
-            metadataBackend.redisCmd(5, 'DEL', keys, done);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     it('.get() should return a job', function (done) {
