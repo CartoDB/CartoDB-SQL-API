@@ -424,7 +424,7 @@ BODY: {
 
 - Suppose the first query job status is `"status": "done"`, the second query is `"status": "running"`, and the third query `"status": "pending"`. If the second query fails for some reason, the job status changes to `"status": "failed"` and the last query will not be processed. It is indicated which query failed in the Chained Batch Query job
 
-- Creating several jobs does not guarantee that jobs are going to be executed in the same order that they were created. If you need run queries in a specific order, you may want use Chaining Batch Queries.
+- Creating several jobs does not guarantee that jobs are going to be executed in the same order that they were created. If you need run queries in a specific order, you may want use [Chaining Batch Queries](#chaining-batch-queries).
 
 ##### POST Examples
 
