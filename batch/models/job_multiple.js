@@ -13,20 +13,50 @@ util.inherits(JobMultiple, JobBase);
 
 module.exports = JobMultiple;
 
+function isJobParsed(query) {
+    // From backend: [{ query: 'select * from ...', status: 'pending' },
+    //   { query: 'select * from ...', status: 'pending' } ]
+
+    for (var i = 0; i < query.length; i++) {
+        if (typeof query[i] !== 'object') {
+            return false;
+        }
+
+        if (typeof query[i].query !== 'string') {
+            return false;
+        }
+
+        if (typeof query[i].status !== 'string') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function isJobRaw(query) {
+    // From user: ['select * from ...', 'select * from ...']
+    for (var i = 0; i < query.length; i++) {
+        if (typeof query[i] !== 'string') {
+            return false;
+        }
+
+        if (!query[i].length) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 JobMultiple.is = function (query) {
+
     if (!Array.isArray(query)) {
         return false;
     }
 
-    // 1. From user: ['select * from ...', 'select * from ...']
-    // 2. From redis: [ { query: 'select * from ...', status: 'pending' },
-    //   { query: 'select * from ...', status: 'pending' } ]
-    for (var i = 0; i < query.length; i++) {
-        if (typeof query[i] !== 'string') {
-            if (typeof query[i].query !== 'string') {
-                return false;
-            }
-        }
+    if (!isJobRaw(query) && !isJobParsed(query)) {
+        return false;
     }
 
     return true;
