@@ -20,16 +20,9 @@ var JobService = require(BATCH_SOURCE + 'job_service');
 var JobRunner = require(BATCH_SOURCE + 'job_runner');
 var QueryRunner = require(BATCH_SOURCE + 'query_runner');
 
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
 
-var metadataBackend = require('cartodb-redis')(redisConfig);
-var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var userIndexer = new UserIndexer(metadataBackend);

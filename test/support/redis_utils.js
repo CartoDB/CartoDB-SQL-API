@@ -18,3 +18,7 @@ module.exports.clean = function clean(pattern, callback) {
         metadataBackend.redisCmd(5, 'DEL', keys, callback);
     });
 };
+
+module.exports.getConfig = function getConfig() {
+    return redisConfig;
+};
