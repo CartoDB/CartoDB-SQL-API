@@ -21,7 +21,7 @@ var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
 
-var redis = require('redis');
+var RedisPool = require('redis-mpool');
 var UserDatabaseService = require('./services/user_database_service');
 var JobPublisher = require('../batch/job_publisher');
 var JobQueue = require('../batch/job_queue');
@@ -53,13 +53,14 @@ function App() {
 
     var app = express.createServer();
 
-    var metadataBackend = require('cartodb-redis')({
+    var redisConfig = {
         host: global.settings.redis_host,
         port: global.settings.redis_port,
         max: global.settings.redisPool,
         idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
         reapIntervalMillis: global.settings.redisReapIntervalMillis
-    });
+    };
+    var metadataBackend = require('cartodb-redis')(redisConfig);
 
 
     // Set default configuration
@@ -180,14 +181,14 @@ function App() {
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
 
-    var jobQueue = new JobQueue(metadataBackend);
-    var jobPublisher = new JobPublisher(redis);
+    var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'job-publisher'}));
+    var jobPublisher = new JobPublisher(redisPoolPublisher);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
-
 
     var genericController = new GenericController();
     genericController.route(app);
@@ -195,7 +196,7 @@ function App() {
     var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
     queryController.route(app);
 
-    var jobController = new JobController(userDatabaseService, jobService, jobCanceller);
+    var jobController = new JobController(userDatabaseService, jobService, statsd_client);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);
@@ -210,7 +211,7 @@ function App() {
     var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
-        app.batch = batchFactory(metadataBackend);
+        app.batch = batchFactory(metadataBackend, redisConfig, statsd_client);
         app.batch.start();
     }
 

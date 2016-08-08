@@ -2,13 +2,13 @@
 
 The SQL Batch API enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use the SQL Batch API to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run [multiple](#multi-query-batch-jobs) SQL queries in one job. The SQL Batch API schedules the incoming jobs and allows you to request the job status for each query.
 
-_The Batch API is not intended to be used for large query payloads than contain over 4096 characters (4kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) or [SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
+_The Batch API is not intended to be used for large query payloads than contain over 4096 characters (4kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](http://docs.carto.com/carto-engine/import-api/) or [SQL API](http://docs.carto.com/carto-engine/sql-api/) for this type of data management. The Batch API is specific to queries and CPU usage._
 
-**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) using API keys. For details about how to manipulate private datasets with the SQL Batch API, see [Private Datasets](#private-datasets).
+**Note:** In order to use the SQL Batch API, your table must be public, or you must be [authenticated](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) using API keys. For details about how to manipulate private datasets with the SQL Batch API, see [Private Datasets](#private-datasets).
 
 ## SQL Batch API Job Schema
 
-The SQL Batch API request to your CartoDB account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the SQL Batch API and are read-only.
+The SQL Batch API request to your CARTO account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the SQL Batch API and are read-only.
 
 Name | Description
 --- | ---
@@ -75,7 +75,7 @@ If you are using the Batch API create operation for cURL POST request, use the f
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
-}' "http://{username}.cartodb.com/api/v2/sql/job"
+}' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API create operation for a Node.js client POST request, use the following code:
@@ -85,7 +85,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.cartodb.com/api/v2/sql/job",
+  url: "http://{username}.carto.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
     query: "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
@@ -128,7 +128,7 @@ BODY: {
 If you are using the Batch API read operation for cURL GET request, use the following code:
 
 ```bash
-curl -X GET "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+curl -X GET "http://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API read operation for a Node.js client GET request, use the following code:
@@ -138,7 +138,7 @@ var request = require("request");
 
 var options = {
   method: "GET",
-  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}"
 };
 
 request(options, function (error, response, body) {
@@ -183,7 +183,7 @@ BODY: [{
 If you are using the Batch API list operation for cURL GET request, use the following code:
 
 ```bash
-curl -X GET "http://{username}.cartodb.com/api/v2/sql/job"
+curl -X GET "http://{username}.carto.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API list operation for a Node.js client GET request, use the following code:
@@ -193,7 +193,7 @@ var request = require("request");
 
 var options = {
   method: "GET",
-  url: "http://{username}.cartodb.com/api/v2/sql/job"
+  url: "http://{username}.carto.com/api/v2/sql/job"
 };
 
 request(options, function (error, response, body) {
@@ -243,7 +243,7 @@ If you are using the Batch API update operation for cURL PUT request, use the fo
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{
   "query": "UPDATE airports SET type = 'military'"
-}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API update operation for a Node.js client PUT request, use the following code:
@@ -253,7 +253,7 @@ var request = require("request");
 
 var options = {
   method: "PUT",
-  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
   headers: {
     "content-type": "application/json"
   },
@@ -309,7 +309,7 @@ errors: [
 If you are using the Batch API cancel operation for cURL DELETE request, use the following code:
 
 ```bash
-curl -X DELETE  "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+curl -X DELETE  "http://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API cancel operation for a Node.js client DELETE request, use the following code:
@@ -319,7 +319,7 @@ var request = require("request");
 
 var options = {
   method: "DELETE",
-  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
 };
 
 request(options, function (error, response, body) {
@@ -386,7 +386,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "DROP TABLE airports",
     "ALTER TABLE world_airports RENAME TO airport"
   ]
-}' "http://{username}.cartodb.com/api/v2/sql/job"
+}' "http://{username}.carto.com/api/v2/sql/job"
 ```
 
 If you are using the Batch API Multi Query operation for a Node.js client POST request, use the following code:
@@ -396,7 +396,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.cartodb.com/api/v2/sql/job",
+  url: "http://{username}.carto.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
     "query": [
@@ -427,7 +427,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{
     "ALTER TABLE world_airports RENAME TO airport",
     "UPDATE airports SET airport = upper(airport)"
   ]
-}' "http://{username}.cartodb.com/api/v2/sql/job/{job_id}"
+}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch API Multi Query operation for a Node.js client PUT request, use the following code:
@@ -437,7 +437,7 @@ var request = require("request");
 
 var options = {
   method: "PUT",
-  url: "http://{username}.cartodb.com/api/v2/sql/job/{job_id}",
+  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
   headers: { "content-type": "application/json" },
   body: {
     query: [
@@ -465,13 +465,13 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 
 2. [Create a job](#create-a-job), as described previously
 
-3. Once the job is done, fetch the results through the [CartoDB SQL API](http://docs.cartodb.com/cartodb-platform/sql-api/), `SELECT * FROM job_result`
+3. Once the job is done, fetch the results through the [CARTO SQL API](http://docs.carto.com/carto-engine/sql-api/), `SELECT * FROM job_result`
 
 **Note:** If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
 
 ## Private Datasets
 
-For access to all private tables, and for write access to public tables, an API Key is required to [authenticate](http://docs.cartodb.com/cartodb-platform/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
+For access to all private tables, and for write access to public tables, an API Key is required to [authenticate](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) your queries with the Batch API. The following error message appears if you are using private tables and are not authenticated:
 
 ```bash
 {
@@ -488,7 +488,7 @@ Using cURL tool:
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "{query}"
-}' "http://{username}.cartodb.com/api/v2/sql/job?api_key={api_key}"
+}' "http://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
 ```
 
 Using Node.js request client:
@@ -498,7 +498,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.cartodb.com/api/v2/sql/job",
+  url: "http://{username}.carto.com/api/v2/sql/job",
   qs: {
     "api_key": "{api_key}"
   },
@@ -522,7 +522,7 @@ request(options, function (error, response, body) {
 
 For best practices, ensure that you are following these recommended usage notes when using the SQL Batch API:
 
-- The Batch API is not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](http://docs.cartodb.com/cartodb-platform/import-api/) for this type of data management
+- The Batch API is not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](http://docs.carto.com/carto-engine/import-api/) for this type of data management
 
 - There is a limit of 4kb per job. The following error message appears if your job exceeds this size:
 

@@ -4,6 +4,7 @@ var assert = require('assert');
 describe('batch API job subscriber', function () {
     beforeEach(function () {
         var self = this;
+
         this.onMessageListener = function () {};
         this.redis = {
             createClient: function () {
@@ -14,9 +15,9 @@ describe('batch API job subscriber', function () {
                 self.redis.subscribeIsCalledWithValidArgs = isValidFirstArg;
             },
             on: function () {
-                var isValidFirstArg = arguments[0] === 'message';
-                var isValidSecondArg = arguments[1] === self.onMessageListener;
-                self.redis.onIsCalledWithValidArgs = isValidFirstArg && isValidSecondArg;
+                if (arguments[0] === 'message') {
+                    self.redis.onIsCalledWithValidArgs = true;
+                }
             },
             unsubscribe: function () {
                 var isValidFirstArg = arguments[0] === 'batch:hosts';
@@ -24,6 +25,12 @@ describe('batch API job subscriber', function () {
             },
             removeAllListeners: function () {
                 return this;
+            },
+            connected: true
+        };
+        this.pool = {
+            acquire: function (db, cb) {
+                cb(null, self.redis);
             }
         };
         this.queueSeeker = {
@@ -34,7 +41,7 @@ describe('batch API job subscriber', function () {
             }
         };
 
-        this.jobSubscriber = new JobSubscriber(this.redis, this.queueSeeker);
+        this.jobSubscriber = new JobSubscriber(this.pool, this.queueSeeker);
     });
 
     it('.subscribe() should listen for incoming messages', function () {
@@ -44,6 +51,7 @@ describe('batch API job subscriber', function () {
     });
 
     it('.unsubscribe() should stop listening for incoming messages', function () {
+        this.jobSubscriber.subscribe(this.onMessageListener);
         this.jobSubscriber.unsubscribe();
         assert.ok(this.redis.unsubscribeIsCalledWithValidArgs);
     });

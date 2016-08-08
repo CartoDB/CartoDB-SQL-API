@@ -745,7 +745,8 @@ it('TRUNCATE TABLE with GET and auth', function(done){
           method: 'GET'
       },{}, function(res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
-        assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.test_table');
+        // table should not get a cache channel as it won't get invalidated
+        assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
         assert.equal(res.headers['cache-control'], expected_cache_control);
         var pbody = JSON.parse(res.body);
         assert.equal(pbody.total_rows, 1);

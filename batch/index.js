@@ -1,6 +1,8 @@
 'use strict';
 
-var redis = require('redis');
+
+var RedisPool = require('redis-mpool');
+var _ = require('underscore');
 var JobRunner = require('./job_runner');
 var QueryRunner = require('./query_runner');
 var JobCanceller = require('./job_canceller');
@@ -15,20 +17,21 @@ var JobBackend = require('./job_backend');
 var JobService = require('./job_service');
 var Batch = require('./batch');
 
-module.exports = function batchFactory (metadataBackend) {
+module.exports = function batchFactory (metadataBackend, redisConfig, statsdClient) {
+    var redisPoolSubscriber = new RedisPool(_.extend(redisConfig, { name: 'batch-subscriber'}));
+    var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
     var queueSeeker = new QueueSeeker(metadataBackend);
-    var jobSubscriber = new JobSubscriber(redis, queueSeeker);
-    var jobQueuePool = new JobQueuePool(metadataBackend);
-    var jobPublisher = new JobPublisher(redis);
-    var jobQueue =  new JobQueue(metadataBackend);
+    var jobSubscriber = new JobSubscriber(redisPoolSubscriber, queueSeeker);
+    var jobPublisher = new JobPublisher(redisPoolPublisher);
+    var jobQueuePool = new JobQueuePool(metadataBackend, jobPublisher);
+    var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    // TODO: down userDatabaseMetadataService
-    var queryRunner = new QueryRunner();
+    var queryRunner = new QueryRunner(userDatabaseMetadataService);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
-    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, userDatabaseMetadataService);
+    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, statsdClient);
 
     return new Batch(jobSubscriber, jobQueuePool, jobRunner, jobService);
 };

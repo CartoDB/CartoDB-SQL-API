@@ -6,6 +6,7 @@ var JOB_STATUS_ENUM = {
     DONE: 'done',
     CANCELLED: 'cancelled',
     FAILED: 'failed',
+    SKIPPED: 'skipped',
     UNKNOWN: 'unknown'
 };
 

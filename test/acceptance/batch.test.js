@@ -1,6 +1,6 @@
 var assert = require('../support/assert');
 var _ = require('underscore');
-var redis = require('redis');
+var RedisPool = require('redis-mpool');
 var queue = require('queue-async');
 var batchFactory = require('../../batch');
 
@@ -11,26 +11,28 @@ var JobBackend = require('../../batch/job_backend');
 var JobService = require('../../batch/job_service');
 var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
 var JobCanceller = require('../../batch/job_canceller');
-var metadataBackend = require('cartodb-redis')({
+var redisConfig = {
     host: global.settings.redis_host,
     port: global.settings.redis_port,
     max: global.settings.redisPool,
     idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
     reapIntervalMillis: global.settings.redisReapIntervalMillis
-});
+};
+var metadataBackend = require('cartodb-redis')(redisConfig);
 
 describe('batch module', function() {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
-    var jobQueue =  new JobQueue(metadataBackend);
-    var jobPublisher = new JobPublisher(redis);
+    var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
+    var jobPublisher = new JobPublisher(redisPoolPublisher);
+    var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, jobPublisher, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
 
-    var batch = batchFactory(metadataBackend);
+    var batch = batchFactory(metadataBackend, redisConfig);
 
     before(function () {
         batch.start();
