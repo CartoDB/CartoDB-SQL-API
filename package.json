@@ -1,58 +1,58 @@
 {
-    "private": true,
-    "name": "cartodb_sql_api",
-    "description": "high speed SQL api for cartodb",
-    "keywords": [
-        "cartodb"
-    ],
-    "version": "1.34.2",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
-    },
-    "license": "BSD-3-Clause",
-    "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
-    "contributors": [
-        "Simon Tokumine <simon@vizzuality.com>",
-        "Sandro Santilli <strk@vizzuality.com>"
-    ],
-    "dependencies": {
-        "cartodb-psql": "~0.6.0",
-        "cartodb-redis": "0.13.1",
-        "debug": "2.2.0",
-        "express": "~2.5.11",
-        "log4js": "cartodb/log4js-node#cdb",
-        "lru-cache": "~2.5.0",
-        "node-statsd": "~0.0.7",
-        "node-uuid": "^1.4.7",
-        "oauth-client": "0.3.0",
-        "rollbar": "~0.3.2",
-        "step": "~0.0.5",
-        "step-profiler": "~0.3.0",
-        "topojson": "0.0.8",
-        "underscore": "~1.6.0",
-        "queue-async": "~1.0.7",
-        "redis-mpool": "0.4.0",
-        "cartodb-query-tables": "0.2.0"
-    },
-    "devDependencies": {
-        "istanbul": "~0.4.2",
-        "request": "~2.60.0",
-        "shapefile": "0.3.0",
-        "mocha": "~1.21.4",
-        "jshint": "~2.6.0",
-        "zipfile": "~0.5.0",
-        "libxmljs": "~0.8.1",
-        "qs": "6.2.0",
-        "sqlite3": "~3.0.8"
-    },
-    "scripts": {
-        "test": "make test-all" ,
-        "test:unit": "mocha test/unit/**/*.js",
-        "test:unit:watch": "npm run test:unit -- -w"
-    },
-    "engines": {
-        "node": ">=0.8 <0.11",
-        "npm": ">=1.2.1"
-    }
+  "private": true,
+  "name": "cartodb_sql_api",
+  "description": "high speed SQL api for cartodb",
+  "keywords": [
+    "cartodb"
+  ],
+  "version": "1.34.2",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
+  },
+  "license": "BSD-3-Clause",
+  "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
+  "contributors": [
+    "Simon Tokumine <simon@vizzuality.com>",
+    "Sandro Santilli <strk@vizzuality.com>"
+  ],
+  "dependencies": {
+    "cartodb-psql": "~0.6.0",
+    "cartodb-query-tables": "0.2.0",
+    "cartodb-redis": "0.13.1",
+    "debug": "2.2.0",
+    "express": "~2.5.11",
+    "log4js": "cartodb/log4js-node#cdb",
+    "lru-cache": "~2.5.0",
+    "node-statsd": "~0.0.7",
+    "node-uuid": "^1.4.7",
+    "oauth-client": "0.3.0",
+    "queue-async": "~1.0.7",
+    "redis-mpool": "0.4.0",
+    "rollbar": "~0.3.2",
+    "step": "~0.0.5",
+    "step-profiler": "~0.3.0",
+    "topojson": "0.0.8",
+    "underscore": "~1.6.0"
+  },
+  "devDependencies": {
+    "istanbul": "~0.4.2",
+    "request": "~2.60.0",
+    "shapefile": "0.3.0",
+    "mocha": "~1.21.4",
+    "jshint": "~2.6.0",
+    "zipfile": "~0.5.0",
+    "libxmljs": "~0.8.1",
+    "qs": "6.2.0",
+    "sqlite3": "~3.0.8"
+  },
+  "scripts": {
+    "test": "make test-all",
+    "test:unit": "mocha test/unit/**/*.js",
+    "test:unit:watch": "npm run test:unit -- -w"
+  },
+  "engines": {
+    "node": ">=0.8 <0.11",
+    "npm": ">=1.2.1"
+  }
 }
