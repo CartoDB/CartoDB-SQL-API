@@ -14,6 +14,8 @@ var ONE_KILOBYTE_IN_BYTES = 1024;
 var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
 var MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
+var RateLimiter = require('limiter').RateLimiter;
+
 function getMaxSizeErrorMessage(sql) {
     return util.format([
             'Your payload is too large: %s bytes. Max size allowed is %s bytes (%skb).',
@@ -41,17 +43,47 @@ function bodyPayloadSizeMiddleware(req, res, next) {
     }
 }
 
+var limiters = {};
+function limiterMiddleware(throttledUsers) {
+    return function (req, res, next) {
+        var username = cdbReq.userByReq(req);
+        if (throttledUsers.hasOwnProperty(username) && throttledUsers[username]) {
+            if (!limiters.hasOwnProperty(username)) {
+                limiters[username] = new RateLimiter(1, 1000, true);
+            }
+            var limiter = limiters[username];
+            limiter.removeTokens(1, function(err, remainingRequests) {
+                if (remainingRequests < 0) {
+                    var tooManyRequestsErr = new Error('Too Many Requests');
+                    tooManyRequestsErr.http_status = 429;
+                    return handleException(tooManyRequestsErr, res);
+                } else {
+                    return next(null);
+                }
+            });
+        } else {
+            return next(null);
+        }
+    };
+}
+
 module.exports = JobController;
 module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, this.createJob.bind(this));
+
+    var throttledUsers = global.settings.throttledUsers || {};
+
+    app.post(global.settings.base_url + '/sql/job',
+        limiterMiddleware(throttledUsers), bodyPayloadSizeMiddleware, this.createJob.bind(this));
     app.get(global.settings.base_url + '/sql/job',  this.listJob.bind(this));
     app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
     app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
-    app.put(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
-    app.patch(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
+    app.put(global.settings.base_url + '/sql/job/:job_id',
+        limiterMiddleware(throttledUsers), bodyPayloadSizeMiddleware, this.updateJob.bind(this));
+    app.patch(global.settings.base_url + '/sql/job/:job_id',
+        limiterMiddleware(throttledUsers), bodyPayloadSizeMiddleware, this.updateJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {
