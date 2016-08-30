@@ -97,24 +97,6 @@ describe('Use case 4: modify a pending job', function() {
         }, 50);
     });
 
-    it('Step 4, job should be modified', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'PUT',
-            data: querystring.stringify({
-                query: "SELECT cartodb_id FROM untitle_table_4"
-            })
-        }, {
-            status: 200
-        }, function(res) {
-            var jobGot = JSON.parse(res.body);
-            assert.equal(jobGot.job_id, pendingJob.job_id);
-            assert.equal(jobGot.query, "SELECT cartodb_id FROM untitle_table_4");
-            done();
-        });
-    });
-
     it('Step 5, running job should be cancelled', function (done){
         assert.response(app, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
