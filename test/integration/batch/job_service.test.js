@@ -139,38 +139,6 @@ describe('job service', function() {
         });
     });
 
-    it('.list() should return a list of user\'s jobs', function (done) {
-        jobService.create(createWadusDataJob(), function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobService.list(USER, function (err, jobs) {
-                var found = false;
-
-                assert.ok(!err, err);
-                assert.ok(jobs.length);
-
-                jobs.forEach(function (job) {
-                    if (job.data.job_id === jobCreated.data.job_id) {
-                        found = true;
-                    }
-                });
-
-                assert.ok(found, 'Job expeted to be listed not found');
-                done();
-            });
-        });
-    });
-
-    it('.list() should return a empty list for nonexitent user', function (done) {
-        jobService.list('wadus_user', function (err, jobs) {
-            assert.ok(!err, err);
-            assert.ok(!jobs.length);
-            done();
-        });
-    });
-
     it('.cancel() should cancel a running job', function (done) {
         var job = createWadusDataJob();
         job.query = 'select pg_sleep(3)';

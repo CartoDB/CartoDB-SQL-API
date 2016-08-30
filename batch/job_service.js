@@ -29,31 +29,6 @@ JobService.prototype.get = function (job_id, callback) {
     });
 };
 
-JobService.prototype.list = function (user, callback) {
-    this.jobBackend.list(user, function (err, dataList) {
-        if (err) {
-            return callback(err);
-        }
-
-        var jobList = dataList.map(function (data) {
-                var job;
-
-                try {
-                    job = JobFactory.create(data);
-                } catch (err) {
-                    return debug(err);
-                }
-
-                return job;
-            })
-            .filter(function (job) {
-                return job !== undefined;
-            });
-
-        callback(null, jobList);
-    });
-};
-
 JobService.prototype.create = function (data, callback) {
     try {
         var job = JobFactory.create(data);
