@@ -110,38 +110,4 @@ describe('job backend', function() {
             done();
         });
     });
-
-    it('.list() should return a list of user\'s jobs', function (done) {
-        var job = createWadusJob();
-
-        jobBackend.create(job.data, function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobBackend.list(USER, function (err, jobs) {
-                var found = false;
-
-                assert.ok(!err, err);
-                assert.ok(jobs.length);
-
-                jobs.forEach(function (job) {
-                    if (job.job_id === jobCreated.job_id) {
-                        found = true;
-                    }
-                });
-
-                assert.ok(found, 'Job expeted to be listed not found');
-                done();
-            });
-        });
-    });
-
-    it('.list() should return a empty list for nonexitent user', function (done) {
-        jobBackend.list('wadus_user', function (err, jobs) {
-            assert.ok(!err, err);
-            assert.ok(!jobs.length);
-            done();
-        });
-    });
 });
