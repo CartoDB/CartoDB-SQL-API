@@ -7,7 +7,6 @@ var batchFactory = require('../../batch');
 
 var JobPublisher = require('../../batch/job_publisher');
 var JobQueue = require('../../batch/job_queue');
-var UserIndexer = require('../../batch/user_indexer');
 var JobBackend = require('../../batch/job_backend');
 var JobService = require('../../batch/job_service');
 var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
@@ -27,8 +26,7 @@ describe('batch module', function() {
     var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
     var jobPublisher = new JobPublisher(redisPoolPublisher);
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-    var userIndexer = new UserIndexer(metadataBackend);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);

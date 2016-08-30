@@ -26,15 +26,13 @@ var RedisPool = require('redis-mpool');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
 var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
-var UserIndexer = require(BATCH_SOURCE + 'user_indexer');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 
 var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-var userIndexer = new UserIndexer(metadataBackend);
-var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+var jobBackend = new JobBackend(metadataBackend, jobQueue);
 
 var USER = 'vizzuality';
 var HOST = 'localhost';

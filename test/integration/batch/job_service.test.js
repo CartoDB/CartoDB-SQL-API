@@ -9,7 +9,6 @@ var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
-var UserIndexer = require(BATCH_SOURCE + 'user_indexer');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
@@ -31,8 +30,7 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-var userIndexer = new UserIndexer(metadataBackend);
-var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+var jobBackend = new JobBackend(metadataBackend, jobQueue);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 var jobCanceller = new JobCanceller(userDatabaseMetadataService);
 
