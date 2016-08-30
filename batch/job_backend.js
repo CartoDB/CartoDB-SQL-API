@@ -5,7 +5,7 @@ var queue = require('queue-async');
 var debug = require('./util/debug')('job-backend');
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
-var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 48 * 3600; // 48 hours
+var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 var jobStatus = require('./job_status');
 var finalStatus = [
     jobStatus.CANCELLED,
