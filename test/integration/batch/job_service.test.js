@@ -171,39 +171,6 @@ describe('job service', function() {
         });
     });
 
-    it('.update() should update a job', function (done) {
-        jobService.create(createWadusDataJob(), function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobCreated.data.query = 'select pg_sleep(1)';
-
-            jobService.update(jobCreated.data, function (err, jobUpdated) {
-                if (err) {
-                    return done(err);
-                }
-
-                assert.equal(jobUpdated.data.job_id, jobCreated.data.job_id);
-                assert.equal(jobUpdated.data.query, 'select pg_sleep(1)');
-                done();
-            });
-        });
-    });
-
-    it('.update() should return error when updates a nonexistent job', function (done) {
-        var job = createWadusDataJob();
-
-        job.job_id = 'wadus_job_id';
-
-        jobService.update(job, function (err) {
-            assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id ' + job.job_id + ' not found');
-            done();
-        });
-    });
-
     it('.cancel() should cancel a running job', function (done) {
         var job = createWadusDataJob();
         job.query = 'select pg_sleep(3)';

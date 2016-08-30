@@ -69,23 +69,6 @@ JobService.prototype.create = function (data, callback) {
     }
 };
 
-JobService.prototype.update = function (data, callback) {
-    var self = this;
-
-    self.get(data.job_id, function (err, job) {
-        if (err) {
-            return callback(err);
-        }
-
-        try {
-            job.setQuery(data.query);
-            self.save(job, callback);
-        } catch (err) {
-            return callback(err);
-        }
-    });
-};
-
 JobService.prototype.save = function (job, callback) {
     var self = this;
 
