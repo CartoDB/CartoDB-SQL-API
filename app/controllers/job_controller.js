@@ -354,6 +354,13 @@ JobController.prototype.createJob = function (req, res) {
                 self.statsdClient.increment('sqlapi.job.success');
             }
 
+            console.info(JSON.stringify({
+                type: 'sql_api_batch_job',
+                username: cdbUsername,
+                action: 'create',
+                job_id: result.job.job_id
+            }));
+
             res.status(201).send(result.job);
         }
     );
