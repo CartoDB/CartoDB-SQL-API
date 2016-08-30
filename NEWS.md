@@ -1,8 +1,9 @@
-1.34.2 - 2016-mm-dd
+1.34.2 - 2016-08-30
 -------------------
 
 Announcements:
  * Upgrades cartodb-redis to 0.13.1.
+ * Set TTL of finished job to 2h
 
 
 1.34.1 - 2016-07-11
