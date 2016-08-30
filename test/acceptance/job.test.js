@@ -148,25 +148,6 @@ describe('job module', function() {
         });
     });
 
-    it('GET /api/v2/sql/job/ with wrong host header respond with 404 not found', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'wrong-host.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 404
-        }, function(res) {
-            var error = JSON.parse(res.body);
-            assert.deepEqual(error , {
-                error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
-                    'Please check that you have entered the correct domain.'
-                ]
-            });
-            done();
-        });
-    });
-
     it('GET /api/v2/sql/job/:jobId with wrong jobId header respond with 400 and an error', function (done){
         assert.response(app, {
             url: '/api/v2/sql/job/irrelevantJob?api_key=1234',
@@ -179,58 +160,6 @@ describe('job module', function() {
             console.log(error);
             assert.deepEqual(error , {
                 error: ['Job with id irrelevantJob not found']
-            });
-            done();
-        });
-    });
-
-    it('GET /api/v2/sql/job/ should respond with 200 and a job\'s list', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 200
-        }, function(res) {
-            var jobs = JSON.parse(res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.ok(jobs instanceof Array);
-            assert.ok(jobs.length > 0);
-            assert.ok(jobs[0].job_id);
-            assert.ok(jobs[0].status);
-            assert.ok(jobs[0].query);
-            done();
-        });
-    });
-
-    it('GET /api/v2/sql/job/ with wrong api key should respond with 401 permission denied', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job?api_key=wrong',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 401
-        }, function(res) {
-            var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'permission denied' ] });
-            done();
-        });
-    });
-
-    it('GET /api/v2/sql/job/ without host header respond with 404 not found', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'wrong-host.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'GET'
-        }, {
-            status: 404
-        }, function(res) {
-            var error = JSON.parse(res.body);
-            assert.deepEqual(error , {
-                error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
-                    'Please check that you have entered the correct domain.'
-                ]
             });
             done();
         });
