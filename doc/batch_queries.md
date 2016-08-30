@@ -1,6 +1,6 @@
 # Batch Queries
 
-A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job), [list](#list-jobs), [update](#update-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
+A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
 
 _Batch Queries are not intended to be used for large query payloads that contain over 8192 characters (8kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
@@ -188,126 +188,6 @@ var request = require("request");
 var options = {
   method: "GET",
   url: "http://{username}.carto.com/api/v2/sql/job/{job_id}"
-};
-
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
-
-  console.log(body);
-});
-```
-
-### List Jobs
-
-To list jobs from a Batch Query, make a GET request with the following parameters.
-
-```bash
-HEADERS: GET /api/v2/sql/job
-BODY: {}
-```
-
-#### Response
-
-```bash
-HEADERS: 200 OK; application/json
-BODY: [{
-  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
-  "user": "cartofante"
-  "query": "UPDATE airports SET type = 'international'",
-  "status": "pending",
-  "created_at": "2015-12-15T07:36:25Z",
-  "updated_at": "2015-12-15T07:36:25Z"
-}, {
-  "job_id": "ba25ed54-75b4-431b-af27-eb6b9e5428ff",
-  "user": "cartofante"
-  "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)",
-  "status": "pending",
-  "created_at": "2015-12-15T07:43:12Z",
-  "updated_at": "2015-12-15T07:43:12Z"
-}]
-```
-
-##### GET Examples
-
-If you are using the Batch Query list operation for cURL GET request, use the following code:
-
-```bash
-curl -X GET "http://{username}.carto.com/api/v2/sql/job"
-```
-
-If you are using the Batch Query list operation for a Node.js client GET request, use the following code:
-
-```bash
-var request = require("request");
-
-var options = {
-  method: "GET",
-  url: "http://{username}.carto.com/api/v2/sql/job"
-};
-
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
-
-  console.log(body);
-});
-```
-
-### Update a Job
-
-To update a Batch Query, make a PUT request with the following parameters.
-
-```bash
-HEADERS: PUT /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
-BODY: {
-  "query": "UPDATE airports SET type = 'military'"
-}
-```
-
-#### Response
-
-```bash
-HEADERS: 200 OK; application/json
-BODY: {
-  "job_id": "de305d54-75b4-431b-adb2-eb6b9e546014",
-  "user": "cartofante"
-  "query": "UPDATE airports SET type = 'military'",
-  "status": "pending",
-  "created_at": "2015-12-15T07:36:25Z",
-  "updated_at": "2015-12-17T15:45:56Z"
-}
-```
-
-**Note:** Jobs can only be updated while the `status: "pending"`, otherwise the Batch Query update operation is not allowed. You will receive an error if the job status is anything but "pending".
-
-```bash
-errors: [
-  "The job status is not pending, it cannot be updated"
-]
-```
-
-##### PUT Examples
-
-If you are using the Batch Query update operation for cURL PUT request, use the following code:
-
-```bash
-curl -X PUT -H "Content-Type: application/json" -d '{
-  "query": "UPDATE airports SET type = 'military'"
-}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
-```
-
-If you are using the Batch Query update operation for a Node.js client PUT request, use the following code:
-
-```bash
-var request = require("request");
-
-var options = {
-  method: "PUT",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
-  headers: {
-    "content-type": "application/json"
-  },
-  body: { query: "UPDATE airports SET type = 'military'" },
-  json: true
 };
 
 request(options, function (error, response, body) {
