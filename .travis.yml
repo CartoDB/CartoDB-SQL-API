@@ -1,7 +1,6 @@
 before_script:
-  - ls /etc/apt/sources.list.d
   - lsb_release -a
-  - sudo mv /etc/apt/sources.list.d/pgdg-source.list* /tmp
+  - sudo mv /etc/apt/sources.list.d/pgdg.list* /tmp
   - sudo apt-get -qq purge postgis* postgresql*
   - sudo rm -Rf /var/lib/postgresql /etc/postgresql
   - sudo apt-add-repository --yes ppa:cartodb/postgresql-9.5
@@ -11,7 +10,6 @@ before_script:
   - sudo apt-get install -q postgresql-contrib-9.5
   - sudo apt-get install -q postgresql-plpython-9.5
   - sudo apt-get install -q postgis
-  - sudo apt-get install libgdal1h
   - sudo apt-get install -q gdal-bin
   - sudo apt-get install -q ogr2ogr2-static-bin
   - echo -e "local\tall\tall\ttrust\nhost\tall\tall\t127.0.0.1/32\ttrust\nhost\tall\tall\t::1/128\ttrust" |sudo tee /etc/postgresql/9.5/main/pg_hba.conf
