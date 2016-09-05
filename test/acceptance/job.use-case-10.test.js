@@ -99,24 +99,4 @@ describe('Use case 10: cancel and modify a done multiquery job', function () {
             done();
         });
     });
-
-    it('Step 4, modify a done multiquery job should give an error', function (done){
-        assert.response(app, {
-            url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'PUT',
-            data: querystring.stringify({
-                query: [
-                    "SELECT * FROM untitle_table_4",
-                    "SELECT * FROM untitle_table_4"
-                ]
-            })
-        }, {
-            status: 400
-        }, function(res) {
-            var errors = JSON.parse(res.body);
-            assert.equal(errors.error[0], "Job is not pending, it cannot be updated");
-            done();
-        });
-    });
 });

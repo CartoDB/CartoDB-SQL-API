@@ -47,11 +47,8 @@ module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
     app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, this.createJob.bind(this));
-    app.get(global.settings.base_url + '/sql/job',  this.listJob.bind(this));
     app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
     app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
-    app.put(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
-    app.patch(global.settings.base_url + '/sql/job/:job_id', bodyPayloadSizeMiddleware, this.updateJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {
@@ -125,82 +122,6 @@ JobController.prototype.cancelJob = function (req, res) {
             }
 
             res.send(result.job);
-        }
-    );
-};
-
-JobController.prototype.listJob = function (req, res) {
-    var self = this;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var cdbUsername = cdbReq.userByReq(req);
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
-
-    step(
-        function getUserDBInfo() {
-            var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
-        },
-        function listJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
-
-            self.jobService.list(cdbUsername, function (err, jobs) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    jobs: jobs.map(function (job) {
-                        return job.serialize();
-                    }),
-                    host: userDatabase.host
-                });
-            });
-        },
-        function handleResponse(err, result) {
-            if ( err ) {
-                return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('listJob');
-                req.profiler.end();
-                req.profiler.sendStats();
-
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
-
-            res.send(result.jobs);
         }
     );
 };
@@ -356,88 +277,14 @@ JobController.prototype.createJob = function (req, res) {
                 self.statsdClient.increment('sqlapi.job.success');
             }
 
+            console.info(JSON.stringify({
+                type: 'sql_api_batch_job',
+                username: cdbUsername,
+                action: 'create',
+                job_id: result.job.job_id
+            }));
+
             res.status(201).send(result.job);
-        }
-    );
-};
-
-JobController.prototype.updateJob = function (req, res) {
-    var self = this;
-    var job_id = req.params.job_id;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
-    var cdbUsername = cdbReq.userByReq(req);
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
-
-    step(
-        function getUserDBInfo() {
-            var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
-        },
-        function updateJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
-
-            var data = {
-                job_id: job_id,
-                query: sql
-            };
-
-            self.jobService.update(data, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize(),
-                    host: userDatabase.host
-                });
-            });
-        },
-        function handleResponse(err, result) {
-            if ( err ) {
-                return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('updateJob');
-                req.profiler.end();
-                req.profiler.sendStats();
-
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
-
-            res.send(result.job);
         }
     );
 };

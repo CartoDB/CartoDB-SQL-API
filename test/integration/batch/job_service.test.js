@@ -9,7 +9,6 @@ var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
-var UserIndexer = require(BATCH_SOURCE + 'user_indexer');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
@@ -31,8 +30,7 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-var userIndexer = new UserIndexer(metadataBackend);
-var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+var jobBackend = new JobBackend(metadataBackend, jobQueue);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 var jobCanceller = new JobCanceller(userDatabaseMetadataService);
 
@@ -135,71 +133,6 @@ describe('job service', function() {
         jobService.create(job, function (err) {
             assert.ok(err);
             assert.equal(err.message, 'You must indicate a valid SQL');
-            done();
-        });
-    });
-
-    it('.list() should return a list of user\'s jobs', function (done) {
-        jobService.create(createWadusDataJob(), function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobService.list(USER, function (err, jobs) {
-                var found = false;
-
-                assert.ok(!err, err);
-                assert.ok(jobs.length);
-
-                jobs.forEach(function (job) {
-                    if (job.data.job_id === jobCreated.data.job_id) {
-                        found = true;
-                    }
-                });
-
-                assert.ok(found, 'Job expeted to be listed not found');
-                done();
-            });
-        });
-    });
-
-    it('.list() should return a empty list for nonexitent user', function (done) {
-        jobService.list('wadus_user', function (err, jobs) {
-            assert.ok(!err, err);
-            assert.ok(!jobs.length);
-            done();
-        });
-    });
-
-    it('.update() should update a job', function (done) {
-        jobService.create(createWadusDataJob(), function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobCreated.data.query = 'select pg_sleep(1)';
-
-            jobService.update(jobCreated.data, function (err, jobUpdated) {
-                if (err) {
-                    return done(err);
-                }
-
-                assert.equal(jobUpdated.data.job_id, jobCreated.data.job_id);
-                assert.equal(jobUpdated.data.query, 'select pg_sleep(1)');
-                done();
-            });
-        });
-    });
-
-    it('.update() should return error when updates a nonexistent job', function (done) {
-        var job = createWadusDataJob();
-
-        job.job_id = 'wadus_job_id';
-
-        jobService.update(job, function (err) {
-            assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id ' + job.job_id + ' not found');
             done();
         });
     });

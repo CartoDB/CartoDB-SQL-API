@@ -9,7 +9,6 @@ var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 
-var UserIndexer = require(BATCH_SOURCE + 'user_indexer');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
@@ -28,7 +27,6 @@ var metadataBackend = require('cartodb-redis')(redisConfig);
 var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-var userIndexer = new UserIndexer(metadataBackend);
 
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
@@ -44,7 +42,7 @@ function createWadusJob() {
 }
 
 describe('job backend', function() {
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, userIndexer);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue);
 
     after(function (done) {
         redisUtils.clean('batch:*', done);
@@ -107,40 +105,6 @@ describe('job backend', function() {
             assert.ok(err, err);
             assert.equal(err.name, 'NotFoundError');
             assert.equal(err.message, 'Job with id ' + job.data.job_id + ' not found');
-            done();
-        });
-    });
-
-    it('.list() should return a list of user\'s jobs', function (done) {
-        var job = createWadusJob();
-
-        jobBackend.create(job.data, function (err, jobCreated) {
-            if (err) {
-                return done(err);
-            }
-
-            jobBackend.list(USER, function (err, jobs) {
-                var found = false;
-
-                assert.ok(!err, err);
-                assert.ok(jobs.length);
-
-                jobs.forEach(function (job) {
-                    if (job.job_id === jobCreated.job_id) {
-                        found = true;
-                    }
-                });
-
-                assert.ok(found, 'Job expeted to be listed not found');
-                done();
-            });
-        });
-    });
-
-    it('.list() should return a empty list for nonexitent user', function (done) {
-        jobBackend.list('wadus_user', function (err, jobs) {
-            assert.ok(!err, err);
-            assert.ok(!jobs.length);
             done();
         });
     });

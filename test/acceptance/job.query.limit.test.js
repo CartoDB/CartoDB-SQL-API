@@ -58,24 +58,6 @@ describe('job query limit', function() {
         });
     });
 
-    it('PUT /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done){
-
-        assert.response(app, {
-            url: '/api/v2/sql/job/wadus?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'PUT',
-            data: querystring.stringify({
-                query: queryTooLong
-            })
-        }, {
-            status: 400
-        }, function (res) {
-            var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [expectedErrorMessage(queryTooLong)] });
-            done();
-        });
-    });
-
     it('POST /api/v2/sql/job with a valid query size should respond with 201 created', function (done){
 
         assert.response(app, {

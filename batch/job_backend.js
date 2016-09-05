@@ -1,8 +1,5 @@
 'use strict';
 
-
-var queue = require('queue-async');
-var debug = require('./util/debug')('job-backend');
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
@@ -14,10 +11,9 @@ var finalStatus = [
     jobStatus.UNKNOWN
 ];
 
-function JobBackend(metadataBackend, jobQueueProducer, userIndexer) {
+function JobBackend(metadataBackend, jobQueueProducer) {
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
-    this.userIndexer = userIndexer;
 }
 
 function toRedisParams(job) {
@@ -116,13 +112,7 @@ JobBackend.prototype.create = function (job, callback) {
                     return callback(err);
                 }
 
-                self.userIndexer.add(job.user, job.job_id, function (err) {
-                  if (err) {
-                      return callback(err);
-                  }
-
-                  callback(null, jobSaved);
-                });
+                return callback(null, jobSaved);
             });
         });
     });
@@ -179,71 +169,6 @@ JobBackend.prototype.setTTL = function (job, callback) {
     }
 
     self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, FINISHED_JOBS_TTL_IN_SECONDS ], callback);
-};
-
-JobBackend.prototype.list = function (user, callback) {
-    var self = this;
-
-    this.userIndexer.list(user, function (err, job_ids) {
-        if (err) {
-            return callback(err);
-        }
-
-        var initialLength = job_ids.length;
-
-        self._getCleanedList(user, job_ids, function (err, jobs) {
-            if (err) {
-                return callback(err);
-            }
-
-            if (jobs.length < initialLength) {
-                return self.list(user, callback);
-            }
-
-            callback(null, jobs);
-        });
-    });
-};
-
-JobBackend.prototype._getCleanedList = function (user, job_ids, callback) {
-    var self = this;
-
-    var jobsQueue = queue(job_ids.length);
-
-    job_ids.forEach(function(job_id) {
-        jobsQueue.defer(self._getIndexedJob.bind(self), job_id, user);
-    });
-
-    jobsQueue.awaitAll(function (err, jobs) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, jobs.filter(function (job) {
-            return job ? true : false;
-        }));
-    });
-};
-
-JobBackend.prototype._getIndexedJob = function (job_id, user, callback) {
-    var self = this;
-
-    this.get(job_id, function (err, job) {
-        if (err && err.name === 'NotFoundError') {
-            return self.userIndexer.remove(user, job_id, function (err) {
-                if (err) {
-                    debug('Error removing key %s in user set', job_id, err);
-                }
-                callback();
-            });
-        }
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, job);
-    });
 };
 
 module.exports = JobBackend;
