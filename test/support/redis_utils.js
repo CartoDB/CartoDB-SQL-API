@@ -15,6 +15,10 @@ module.exports.clean = function clean(pattern, callback) {
             return callback(err);
         }
 
+        if (!keys || !keys.length) {
+            return callback();
+        }
+
         metadataBackend.redisCmd(5, 'DEL', keys, callback);
     });
 };
