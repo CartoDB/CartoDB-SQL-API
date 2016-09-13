@@ -1,6 +1,9 @@
 1.34.3 - 2016-mm-dd
 -------------------
 
+Announcements:
+ * limited batch queries to 12 hours
+
 
 1.34.2 - 2016-08-30
 -------------------
