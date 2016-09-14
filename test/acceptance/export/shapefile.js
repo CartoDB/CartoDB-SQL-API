@@ -1,6 +1,6 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var shapefile = require('shapefile');
@@ -9,14 +9,14 @@ var zipfile = require('zipfile');
 var fs      = require('fs');
 
 // allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
+server.setMaxListeners(0);
 
 describe('export.shapefile', function() {
 
 // SHP tests
 
 it('SHP format, unauthenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -43,7 +43,7 @@ it('SHP format, unauthenticated', function(done){
 });
 
 it('SHP format, unauthenticated, POST', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -58,7 +58,7 @@ it('SHP format, unauthenticated, POST', function(done){
 });
 
 it('SHP format, big size, POST', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: querystring.stringify({
           q: 'SELECT 0 as fname, st_makepoint(i,i) FROM generate_series(0,81920) i',
@@ -77,7 +77,7 @@ it('SHP format, big size, POST', function(done){
 });
 
 it('SHP format, unauthenticated, with custom filename', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=myshape',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -103,7 +103,7 @@ it('SHP format, unauthenticated, with custom filename', function(done){
 });
 
 it('SHP format, unauthenticated, with custom, dangerous filename', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=b;"%20()[]a',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -130,7 +130,7 @@ it('SHP format, unauthenticated, with custom, dangerous filename', function(done
 });
 
 it('SHP format, authenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -163,7 +163,7 @@ it('SHP format, unauthenticated, with utf8 data', function(done){
         format: 'shp',
         filename: 'myshape'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -190,7 +190,7 @@ it('mixed type geometry', function(done){
         q: "SELECT 'POINT(0 0)'::geometry as g UNION ALL SELECT 'LINESTRING(0 0, 1 0)'::geometry",
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -215,7 +215,7 @@ it('errors are not confused with warnings', function(done){
         ].join(" UNION ALL "),
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -238,7 +238,7 @@ it('skipfields controls fields included in SHP output', function(done){
         skipfields: 'skipme',
         filename: 'myshape'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -284,7 +284,7 @@ it('SHP format, concurrently', function(done){
     }
     for (var i=0; i<concurrency; ++i) {
         assert.response(
-            app,
+            server,
             {
                 url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
                 headers: {host: 'vizzuality.cartodb.com'},
@@ -305,7 +305,7 @@ it('point with null first', function(done){
         q: "SELECT null::geometry as g UNION ALL SELECT 'SRID=4326;POINT(0 0)'::geometry",
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
@@ -336,7 +336,7 @@ it('point with null first', function(done){
 
         var filename = 'test_1200';
 
-        assert.response(app, {
+        assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
                     q: "SELECT * from populated_places_simple_reduced limit " + limit,
                     format: 'shp',

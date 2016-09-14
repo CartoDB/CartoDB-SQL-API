@@ -69,8 +69,8 @@ if ( ! global.settings.base_url ) {
 
 var version = require("./package").version;
 
-var app = require(global.settings.app_root + '/app/app')();
-app.listen(global.settings.node_port, global.settings.node_host, function() {
+var server = require('app/server')();
+server.listen(global.settings.node_port, global.settings.node_host, function() {
   console.log(
       "CartoDB SQL API %s listening on %s:%s with base_url %s (%s)",
       version, global.settings.node_host, global.settings.node_port, global.settings.base_url, ENV
@@ -90,8 +90,8 @@ process.on('SIGHUP', function() {
 });
 
 process.on('SIGTERM', function () {
-    app.batch.stop();
-    app.batch.drain(function (err) {
+    server.batch.stop();
+    server.batch.drain(function (err) {
         if (err) {
             console.log('Exit with error');
             return process.exit(1);

@@ -1,6 +1,6 @@
 require('../helper');
 
-var app    = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
 
@@ -25,13 +25,13 @@ describe('regressions', function() {
             statusCode: 200
         };
 
-        assert.response(app, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
+        assert.response(server, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
             function(res, err) {
                 if (err) {
                     return done(err);
                 }
 
-                assert.response(app, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
+                assert.response(server, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
                     function(res, err) {
                         if (err) {
                             return done(err);
@@ -39,7 +39,7 @@ describe('regressions', function() {
                         var parsedBody = JSON.parse(res.body);
                         assert.equal(parsedBody.total_rows, 2);
 
-                        assert.response(app, createRequest('SELECT * FROM "foo.bar"'), responseOk,
+                        assert.response(server, createRequest('SELECT * FROM "foo.bar"'), responseOk,
                             function(res, err) {
                                 if (err) {
                                     return done(err);

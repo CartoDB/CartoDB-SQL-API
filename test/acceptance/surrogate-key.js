@@ -1,13 +1,13 @@
 require('../helper');
 
-var app    = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 var QueryTables = require('cartodb-query-tables');
 var _ = require('underscore');
 
 // allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
+server.setMaxListeners(0);
 
 describe('Surrogate-Key header', function() {
 
@@ -53,7 +53,7 @@ describe('Surrogate-Key header', function() {
         var sql = "SELECT a.name as an, b.name as bn FROM untitle_table_4 a " +
                 "left join private_table b ON (a.cartodb_id = b.cartodb_id)";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'private_table'},
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'untitle_table_4'}
         ], done));
@@ -62,7 +62,7 @@ describe('Surrogate-Key header', function() {
     it('supports multistatements', function(done) {
         var sql = "SELECT * FROM untitle_table_4; SELECT * FROM private_table";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'private_table'},
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'untitle_table_4'}
         ], done));
@@ -71,7 +71,7 @@ describe('Surrogate-Key header', function() {
     it('supports explicit transactions', function(done) {
         var sql =  "BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'private_table'},
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'untitle_table_4'}
         ], done));
@@ -80,14 +80,14 @@ describe('Surrogate-Key header', function() {
     it('survives partial transactions', function(done) {
         var sql = "BEGIN; SELECT * FROM untitle_table_4";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInSurrogateKeyHeader([
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'untitle_table_4'}
         ], done));
     });
 
     it('should not add header for functions', function(done) {
         var sql = "SELECT format('%s', 'wadus')";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(res) {
             assert.ok(!res.headers.hasOwnProperty('surrogate-key'), res.headers['surrogate-key']);
             done();
         });
@@ -95,7 +95,7 @@ describe('Surrogate-Key header', function() {
 
     it('should not add header for CDB_QueryTables', function(done) {
         var sql = "SELECT CDB_QueryTablesText('select * from untitle_table_4')";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(res) {
             assert.ok(!res.headers.hasOwnProperty('surrogate-key'), res.headers['surrogate-key']);
             done();
         });
@@ -103,7 +103,7 @@ describe('Surrogate-Key header', function() {
 
     it('should not add header for non table results', function(done) {
         var sql = "SELECT 'wadus'::text";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(res) {
             assert.ok(!res.headers.hasOwnProperty('surrogate-key'), res.headers['surrogate-key']);
             done();
         });

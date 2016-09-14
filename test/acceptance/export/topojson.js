@@ -1,12 +1,12 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');
 
 // allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
+server.setMaxListeners(0);
 
 
 describe('export.topojson', function() {
@@ -29,7 +29,7 @@ describe('export.topojson', function() {
     }
 
 it('GET two polygons sharing an edge as topojson', function(done){
-    assert.response(app,
+    assert.response(server,
         getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
             " UNION ALL " +
@@ -135,7 +135,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
 });
 
 it('null geometries', function(done){
-    assert.response(app, getRequest(
+    assert.response(server, getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
             " UNION ALL " +
             "SELECT 2, 'D', null::geometry as the_geom "
@@ -193,7 +193,7 @@ it('null geometries', function(done){
 });
 
     it('skipped fields are not returned', function(done) {
-        assert.response(app,
+        assert.response(server,
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
                 {
@@ -214,7 +214,7 @@ it('null geometries', function(done){
 
     it('jsonp callback is invoked', function(done){
         assert.response(
-            app,
+            server,
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
                 {
@@ -242,7 +242,7 @@ it('null geometries', function(done){
 
     it('should close on error and error must be the only key in the body', function(done) {
         assert.response(
-            app,
+            server,
             {
                 url: "/api/v1/sql?" + querystring.stringify({
                     q: "SELECT the_geom, 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4",

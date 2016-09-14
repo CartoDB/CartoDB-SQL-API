@@ -26,11 +26,11 @@ it('after configured milliseconds', function(done){
 //console.log("settings:"); console.dir(global.settings);
   var timeoutBackup = global.settings.node_socket_timeout;
   global.settings.node_socket_timeout = testTimeout;
-  var app = require(global.settings.app_root + '/app/app')();
+  var server = require('../../app/server')();
   step(
     function sendLongQuery() {
       var next = this;
-      assert.response(app, {
+      assert.response(server, {
           url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }

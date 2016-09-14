@@ -14,7 +14,7 @@
  */
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
@@ -45,7 +45,7 @@ describe('Use case 2: cancel a running job', function() {
     var cancelledJob = {};
 
     it('Step 1, should create a new job', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -62,7 +62,7 @@ describe('Use case 2: cancel a running job', function() {
 
     it('Step 2, job should be running', function (done){
         var interval = setInterval(function () {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
@@ -82,7 +82,7 @@ describe('Use case 2: cancel a running job', function() {
     });
 
     it('Step 3, cancel a job', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
@@ -96,7 +96,7 @@ describe('Use case 2: cancel a running job', function() {
     });
 
     it('Step 4, job should be cancelled', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
@@ -113,7 +113,7 @@ describe('Use case 2: cancel a running job', function() {
     });
 
     it('Step 5, cancel a cancelled should give an error', function (done) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
