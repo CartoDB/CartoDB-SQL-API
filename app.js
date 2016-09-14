@@ -60,13 +60,6 @@ if ( env.log_filename ) {
     );
 }
 
-if ( global.settings.rollbar ) {
-  log4js_config.appenders.push({
-    type: __dirname + "/app/models/log4js_rollbar.js",
-    options: global.settings.rollbar
-  });
-}
-
 global.log4js.configure(log4js_config, { cwd: __dirname });
 global.logger = global.log4js.getLogger();
 
