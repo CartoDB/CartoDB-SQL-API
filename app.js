@@ -12,25 +12,39 @@
 var fs = require('fs');
 var path = require('path');
 
-var ENV = process.env.NODE_ENV || 'development';
+var argv = require('yargs')
+    .usage('Usage: $0 <environment> [options]')
+    .help('h')
+    .example(
+        '$0 production -c /etc/sql-api/config.js',
+        'start server in production environment with /etc/sql-api/config.js as config file'
+    )
+    .alias('h', 'help')
+    .alias('c', 'config')
+    .nargs('c', 1)
+    .describe('c', 'Load configuration from path')
+    .argv;
 
-if (process.argv[2]) {
-    ENV = process.argv[2];
+var environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
+var configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
+if (!fs.existsSync(configurationFile)) {
+    console.error('Configuration file "%s" does not exist', configurationFile);
+    process.exit(1);
 }
 
-process.env.NODE_ENV = ENV;
+global.settings = require(configurationFile);
+var ENVIRONMENT = argv._[0] || process.env.NODE_ENV || global.settings.environment;
+process.env.NODE_ENV = ENVIRONMENT;
 
 var availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 // sanity check arguments
-if (availableEnvironments.indexOf(ENV) === -1) {
-  console.error("\nnode app.js [environment]");
-  console.error("environments: " + availableEnvironments.join(', '));
+if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
+  console.error("node app.js [environment]");
+  console.error("Available environments: " + availableEnvironments.join(', '));
   process.exit(1);
 }
 
-// set Node.js app settings and boot
-global.settings = require('./config/environments/' + ENV);
 global.settings.api_hostname = require('os').hostname().split('.')[0];
 
 global.log4js = require('log4js');
@@ -68,10 +82,11 @@ var version = require("./package").version;
 
 var server = require('./app/server')();
 server.listen(global.settings.node_port, global.settings.node_host, function() {
-  console.log(
-      "CartoDB SQL API %s listening on %s:%s with base_url %s PID=%d (%s)",
-      version, global.settings.node_host, global.settings.node_port, global.settings.base_url, process.pid, ENV
-  );
+    console.info('Using configuration file "%s"', configurationFile);
+    console.log(
+        "CartoDB SQL API %s listening on %s:%s PID=%d (%s)",
+        version, global.settings.node_host, global.settings.node_port, process.pid, ENVIRONMENT
+    );
 });
 
 process.on('uncaughtException', function(err) {
