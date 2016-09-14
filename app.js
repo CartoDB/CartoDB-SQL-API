@@ -37,30 +37,28 @@ env.api_hostname = require('os').hostname().split('.')[0];
 _.extend(global.settings, env);
 
 global.log4js = require('log4js');
-var log4js_config = {
-  appenders: [],
-  replaceConsole:true
+var log4jsConfig = {
+    appenders: [],
+    replaceConsole: true
 };
 
 if ( env.log_filename ) {
-    var logdir = path.dirname(env.log_filename);
-    // See cwd inlog4js.configure call below
-    logdir = path.resolve(__dirname, logdir);
-    if ( ! fs.existsSync(logdir) ) {
-        console.error("Log filename directory does not exist: " + logdir);
+    var logFilename = path.resolve(env.log_filename);
+    var logDirectory = path.dirname(logFilename);
+    if (!fs.existsSync(logDirectory)) {
+        console.error("Log filename directory does not exist: " + logDirectory);
         process.exit(1);
     }
-    console.log("Logs will be written to " + env.log_filename);
-    log4js_config.appenders.push(
-        { type: "file", filename: env.log_filename }
+    console.log("Logs will be written to " + logFilename);
+    log4jsConfig.appenders.push(
+        { type: "file", absolute: true, filename: logFilename }
     );
 } else {
-    log4js_config.appenders.push(
+    log4jsConfig.appenders.push(
         { type: "console", layout: { type:'basic' } }
     );
 }
-
-global.log4js.configure(log4js_config, { cwd: __dirname });
+global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
 
@@ -85,7 +83,7 @@ process.on('uncaughtException', function(err) {
 
 process.on('SIGHUP', function() {
     global.log4js.clearAndShutdownAppenders(function() {
-        global.log4js.configure(log4js_config);
+        global.log4js.configure(log4jsConfig);
         global.logger = global.log4js.getLogger();
         console.log('Log files reloaded');
     });

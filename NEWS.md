@@ -1,6 +1,9 @@
 1.35.0 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ * Allow to use absolute paths for log files.
+
 Announcements:
  * Removes support for optional rollbar logging.
 
