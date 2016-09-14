@@ -1,6 +1,6 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var libxmljs = require('libxmljs');
@@ -8,7 +8,7 @@ var http = require('http');
 var server_utils = require('../../support/server_utils');
 
 // allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
+server.setMaxListeners(0);
 
 describe('export.kml', function() {
 
@@ -109,7 +109,7 @@ var extractFolderName = function(kml) {
 // KML tests
 
 it('KML format, unauthenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
@@ -132,7 +132,7 @@ it('KML format, unauthenticated', function(done){
 });
 
 it('KML format, unauthenticated, POST', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -147,7 +147,7 @@ it('KML format, unauthenticated, POST', function(done){
 });
 
 it('KML format, bigger than 81920 bytes', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: querystring.stringify({
           q: 'SELECT 0 as fname FROM generate_series(0,81920)',
@@ -166,7 +166,7 @@ it('KML format, bigger than 81920 bytes', function(done){
 });
 
 it('KML format, skipfields', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&skipfields=address,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
@@ -189,7 +189,7 @@ it('KML format, skipfields', function(done){
 });
 
 it('KML format, unauthenticated, custom filename', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&filename=kmltest',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
@@ -205,7 +205,7 @@ it('KML format, unauthenticated, custom filename', function(done){
 });
 
 it('KML format, authenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
@@ -243,7 +243,7 @@ it('KML format, unauthenticated, concurrent requests', function(done){
             assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
             assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             if ( ! --waiting ) {
-                app.close();
+                server.close();
                 done();
             }
         });
@@ -253,8 +253,8 @@ it('KML format, unauthenticated, concurrent requests', function(done){
         console.log("Response error" + err);
     }
 
-    server_utils.startOnNextPort(app, function() { 
-      var port = app.address().port;
+    server_utils.startOnNextPort(server, function() {
+      var port = server.address().port;
       //console.log("Listening on port " + port);
       for (var i=0; i<concurrency; ++i) {
         //console.log("Sending request");
@@ -274,7 +274,7 @@ it('KML format, unauthenticated, concurrent requests', function(done){
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
 it('GET /api/v1/sql as kml with no rows', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
@@ -294,7 +294,7 @@ it('GET /api/v1/sql as kml with no rows', function(done){
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/90
 it('GET /api/v1/sql as kml with ending semicolon', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT true WHERE false;',
           format: 'kml'
@@ -317,7 +317,7 @@ it('GET /api/v1/sql as kml with ending semicolon', function(done){
 
 // See https://github.com/CartoDB/cartodb/issues/276
 it('check point coordinates, unauthenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
           format: 'kml'
@@ -335,7 +335,7 @@ it('check point coordinates, unauthenticated', function(done){
 
 // See https://github.com/CartoDB/cartodb/issues/276
 it('check point coordinates, authenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + querystring.stringify({
           q: 'SELECT * from untitle_table_4 WHERE cartodb_id = -1',
           api_key: 1234,
@@ -357,7 +357,7 @@ it('check point coordinates, authenticated', function(done){
 
     it('expects ' + limit + ' placemarks in public table', function(done){
 
-        assert.response(app, {
+        assert.response(server, {
                 url: '/api/v1/sql',
                 data: querystring.stringify({
                     q: "SELECT * from populated_places_simple_reduced limit " + limit,
@@ -378,7 +378,7 @@ it('check point coordinates, authenticated', function(done){
 
     it('expects ' + limit + ' placemarks in private table using the API KEY', function(done){
 
-        assert.response(app, {
+        assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
                     q: "SELECT * from populated_places_simple_reduced limit " + limit,
                     api_key: 1234,
@@ -399,7 +399,7 @@ it('check point coordinates, authenticated', function(done){
 
     it('should work with queries returning no results', function(done) {
         assert.response(
-            app,
+            server,
             {
                 url: "/api/v1/sql?" + querystring.stringify({
                     q: "SELECT * FROM populated_places_simple_reduced LIMIT 0",

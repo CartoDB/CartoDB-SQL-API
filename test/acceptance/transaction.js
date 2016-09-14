@@ -10,7 +10,7 @@ describe('transaction', function() {
 
     var server;
     before(function(done) {
-        server = require(global.settings.app_root + '/app/app')();
+        server = require('../../app/server')();
         server.listen(SERVER_PORT, '127.0.0.1', done);
     });
 

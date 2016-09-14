@@ -14,7 +14,7 @@
  */
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
@@ -45,7 +45,7 @@ describe('Use case 9: modify a pending multiquery job', function() {
     var pendingJob = {};
 
     it('Step 1, should create a multiquery job', function (done) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -64,7 +64,7 @@ describe('Use case 9: modify a pending multiquery job', function() {
     });
 
     it('Step 2, should create another multiquery job', function (done) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -84,7 +84,7 @@ describe('Use case 9: modify a pending multiquery job', function() {
 
     it('Step 3, multiquery job should be pending', function (done){
         var interval = setInterval(function () {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
@@ -104,7 +104,7 @@ describe('Use case 9: modify a pending multiquery job', function() {
     });
 
     it('Step 5, running multiquery job should be cancelled', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'

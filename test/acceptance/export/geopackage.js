@@ -1,6 +1,6 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var sqlite = require('sqlite3');
 var fs      = require('fs');
@@ -11,7 +11,7 @@ describe('geopackage query', function(){
     var base_url = '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=gpkg&filename=' + table_name;
 
     it('returns a valid geopackage database', function(done){
-        assert.response(app, {
+        assert.response(server, {
             url: base_url,
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
@@ -30,7 +30,7 @@ describe('geopackage query', function(){
     });
 
     it('gets database and geopackage schema', function(done){
-        assert.response(app, {
+        assert.response(server, {
             url: base_url,
             headers: {host: 'vizzuality.cartodb.com'},
             encoding: 'binary',

@@ -14,7 +14,7 @@
  */
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
@@ -27,7 +27,7 @@ describe('job module', function() {
     });
 
     it('POST /api/v2/sql/job should respond with 200 and the created job', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -48,7 +48,7 @@ describe('job module', function() {
 
     it('POST /api/v2/sql/job without query should respond with 400 and the corresponding message of error',
     function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -63,7 +63,7 @@ describe('job module', function() {
     });
 
     it('POST /api/v2/sql/job with bad query param should respond with 400 and message of error', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -80,7 +80,7 @@ describe('job module', function() {
     });
 
     it('POST /api/v2/sql/job with wrong api key should respond with 401 permission denied', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -97,7 +97,7 @@ describe('job module', function() {
     });
 
     it('POST /api/v2/sql/job with wrong host header should respond with 404 not found', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=wrong',
             headers: { 'host': 'wrong-host.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -119,7 +119,7 @@ describe('job module', function() {
     });
 
     it('GET /api/v2/sql/job/:job_id should respond with 200 and the requested job', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
@@ -135,7 +135,7 @@ describe('job module', function() {
     });
 
     it('GET /api/v2/sql/job/:job_id with wrong api key should respond with 401 permission denied', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
@@ -149,7 +149,7 @@ describe('job module', function() {
     });
 
     it('GET /api/v2/sql/job/:jobId with wrong jobId header respond with 400 and an error', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/irrelevantJob?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
@@ -166,7 +166,7 @@ describe('job module', function() {
     });
 
     it('DELETE /api/v2/sql/job/:job_id should respond with 200 and the requested job', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
@@ -184,7 +184,7 @@ describe('job module', function() {
     });
 
     it('DELETE /api/v2/sql/job/:job_id with wrong api key should respond with 401 permission denied', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
@@ -198,7 +198,7 @@ describe('job module', function() {
     });
 
     it('DELETE /api/v2/sql/job/ with wrong host header respond with 404 not found', function (done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=1234',
             headers: { 'host': 'wrong-host.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'

@@ -15,7 +15,7 @@
 require('../helper');
 var JobController = require('../../app/controllers/job_controller');
 var redisUtils = require('../support/redis_utils');
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('qs');
 
@@ -42,7 +42,7 @@ describe('job query limit', function() {
 
     it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done){
 
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -60,7 +60,7 @@ describe('job query limit', function() {
 
     it('POST /api/v2/sql/job with a valid query size should respond with 201 created', function (done){
 
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -78,7 +78,7 @@ describe('job query limit', function() {
 
     it('POST /api/v2/sql/job with a invalid query size should consider multiple queries', function (done){
         var queries = [queryTooLong, 'select 1'];
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -104,7 +104,7 @@ describe('job query limit', function() {
                 onsuccess: "SELECT * FROM untitle_table_4 limit 3"
             }]
         };
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',

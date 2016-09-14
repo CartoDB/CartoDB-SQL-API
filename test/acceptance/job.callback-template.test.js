@@ -2,7 +2,7 @@ require('../helper');
 
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var querystring = require('qs');
 var redisConfig = {
     host: global.settings.redis_host,
@@ -18,7 +18,7 @@ var jobStatus = require('../../batch/job_status');
 describe('Batch API callback templates', function () {
 
     function createJob(jobDefinition, callback) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -37,7 +37,7 @@ describe('Batch API callback templates', function () {
     }
 
     function getJobStatus(jobId, callback) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + jobId + '?api_key=1234&',
             headers: {
                 host: 'vizzuality.cartodb.com'
@@ -54,7 +54,7 @@ describe('Batch API callback templates', function () {
     }
 
     function getQueryResult(query, callback) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql?' + querystring.stringify({q: query, api_key: 1234}),
             headers: {
                 host: 'vizzuality.cartodb.com'
