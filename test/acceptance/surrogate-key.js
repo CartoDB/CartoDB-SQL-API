@@ -6,9 +6,6 @@ var querystring = require('querystring');
 var QueryTables = require('cartodb-query-tables');
 var _ = require('underscore');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('Surrogate-Key header', function() {
 
     function createGetRequest(sqlQuery) {

@@ -5,9 +5,6 @@ var assert = require('../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('X-Cache-Channel header', function() {
 
     function createGetRequest(sqlQuery) {

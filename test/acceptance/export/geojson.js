@@ -4,10 +4,6 @@ var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 
-// allow lots of emitters to be set to silence warning
-// TODO: check if still needed ...
-server.setMaxListeners(0);
-
 // use dec_sep for internationalization
 var checkDecimals = function(x, dec_sep){
     var tmp='' + x;

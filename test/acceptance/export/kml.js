@@ -7,9 +7,6 @@ var libxmljs = require('libxmljs');
 var http = require('http');
 var server_utils = require('../../support/server_utils');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('export.kml', function() {
 
 // Check if an attribute is in the KML output

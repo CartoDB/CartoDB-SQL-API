@@ -4,9 +4,6 @@ var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('export.svg', function() {
 
 it('GET /api/v1/sql with SVG format', function(done){

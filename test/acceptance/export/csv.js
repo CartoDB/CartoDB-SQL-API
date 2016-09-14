@@ -6,9 +6,6 @@ var server = require('../../../app/server')();
 var assert = require('assert');
 var querystring = require('querystring');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('export.csv', function() {
 
 it('CSV format', function(done){

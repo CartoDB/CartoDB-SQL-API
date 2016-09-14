@@ -8,9 +8,6 @@ var _ = require('underscore');
 var zipfile = require('zipfile');
 var fs      = require('fs');
 
-// allow lots of emitters to be set to silence warning
-server.setMaxListeners(0);
-
 describe('export.shapefile', function() {
 
 // SHP tests
