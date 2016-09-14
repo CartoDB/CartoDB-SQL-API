@@ -15,22 +15,22 @@ var path = require('path');
 var ENV = process.env.NODE_ENV || 'development';
 
 if (process.argv[2]) {
-    ENV = process.argv[2];
+    ENVIRONMENT = process.argv[2];
 }
 
-process.env.NODE_ENV = ENV;
+process.env.NODE_ENV = ENVIRONMENT;
 
 var availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 // sanity check arguments
-if (availableEnvironments.indexOf(ENV) === -1) {
+if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
   console.error("\nnode app.js [environment]");
   console.error("environments: " + availableEnvironments.join(', '));
   process.exit(1);
 }
 
 // set Node.js app settings and boot
-global.settings = require('./config/environments/' + ENV);
+global.settings = require('./config/environments/' + ENVIRONMENT);
 global.settings.api_hostname = require('os').hostname().split('.')[0];
 
 global.log4js = require('log4js');
@@ -70,7 +70,7 @@ var server = require('./app/server')();
 server.listen(global.settings.node_port, global.settings.node_host, function() {
   console.log(
       "CartoDB SQL API %s listening on %s:%s with base_url %s PID=%d (%s)",
-      version, global.settings.node_host, global.settings.node_port, global.settings.base_url, process.pid, ENV
+      version, global.settings.node_host, global.settings.node_port, global.settings.base_url, process.pid, ENVIRONMENT
   );
 });
 
