@@ -16,8 +16,8 @@ var argv = require('yargs')
     .usage('Usage: $0 <environment> [options]')
     .help('h')
     .example(
-        '$0 production -c /etc/windshaft/config.js',
-        'start server in production environment with /etc/windshaft/config.js as configuration file'
+        '$0 production -c /etc/sql-api/config.js',
+        'start server in production environment with /etc/sql-api/config.js as config file'
     )
     .alias('h', 'help')
     .alias('c', 'config')
