@@ -482,12 +482,11 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 
 For best practices, follow these recommended usage notes when using Batch Queries:
 
-- Batch Queries are recommended for INSERT, UPDATE, and CREATE queries that manipulate and create new data, such as creating expensive indexes, applying updates over large tables, and creating tables from complex queries. Batch queries have no effect for SELECT queries that retrieve data but do not store the results in a table. For example, running a batch query using `SELECT * from my_dataset` will not produce any results
+- Batch Queries are recommended for INSERT, UPDATE, and CREATE queries that manipulate and create new data, such as creating expensive indexes, applying updates over large tables, and creating tables from complex queries. Batch queries have no effect for SELECT queries that retrieve data but do not store the results in a table. For example, running a batch query using `SELECT * from my_dataset` will not produce any results.
 
-- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](https://carto.com/docs/carto-engine/import-api/) for this type of data management
+- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](https://carto.com/docs/carto-engine/import-api/) for this type of data management.
 
 - There is a limit of 8kb per job. The following error message appears if your job exceeds this size:
 
   `Your payload is too large. Max size allowed is 8192 (8kb)`
 
-- Only the `query` element of the job scheme can be modified. All other elements of the job schema are defined by the Batch Query and are read-only
