@@ -26,7 +26,7 @@ describe('regressions', function() {
         };
 
         assert.response(server, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
-            function(err, res) {
+            function(err) {
                 if (err) {
                     return done(err);
                 }
