@@ -9,7 +9,7 @@ var assert = module.exports = exports = require('assert');
  * @param {Server} server
  * @param {Object} req
  * @param {Object|Function} res
- * @param {String|Function} msg
+ * @param {String|Function|Object} msg
  */
 assert.response = function(server, req, res, msg){
     var port = 5555;
@@ -106,7 +106,7 @@ assert.response = function(server, req, res, msg){
 
         request.on('error', function(err){
           check();
-          callback(null, err);
+          callback(err);
         });
 
         request.on('response', function(response){
@@ -163,7 +163,7 @@ assert.response = function(server, req, res, msg){
                     }
                 }
 
-                callback(response);
+                callback(null, response);
             });
         });
 

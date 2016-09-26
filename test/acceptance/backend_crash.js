@@ -30,14 +30,11 @@ it('does not hang server', function(done){
   var server = require('../../app/server')();
   step(
     function sendQuery() {
-      var next = this;
       assert.response(server, {
           url: '/api/v1/sql?q=SELECT+1',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err, res) {
       assert.ifError(err);
@@ -49,14 +46,11 @@ it('does not hang server', function(done){
       return null;
     },
     function sendAnotherQuery() {
-      var next = this;
       assert.response(server, {
           url: '/api/v1/sql?q=SELECT+2',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err, res) {
       assert.ifError(err);

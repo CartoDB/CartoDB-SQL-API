@@ -15,7 +15,7 @@ describe('geopackage query', function(){
             url: base_url,
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{ }, function(res) {
+        },{ }, function(err, res) {
             assert.equal(res.statusCode, 200, res.body);
             assert.equal(res.headers["content-type"], "application/x-sqlite3; charset=utf-8");
             assert.notEqual(res.headers["content-disposition"].indexOf(table_name + ".gpkg"), -1);
@@ -35,7 +35,7 @@ describe('geopackage query', function(){
             headers: {host: 'vizzuality.cartodb.com'},
             encoding: 'binary',
             method: 'GET'
-        },{ }, function(res) {
+        },{ }, function(err, res) {
             var tmpfile = '/tmp/a_geopackage_file.gpkg';
             try {
               fs.writeFileSync(tmpfile, res.body, 'binary');

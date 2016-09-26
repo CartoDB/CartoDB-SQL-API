@@ -57,7 +57,7 @@ describe('Use case 10: cancel and modify a done multiquery job', function () {
             })
         }, {
             status: 201
-        }, function (res) {
+        }, function (err, res) {
             doneJob = JSON.parse(res.body);
             done();
         });
@@ -71,7 +71,7 @@ describe('Use case 10: cancel and modify a done multiquery job', function () {
                 method: 'GET'
             }, {
                 status: 200
-            }, function (res) {
+            }, function (err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "done") {
                     clearInterval(interval);
@@ -93,7 +93,7 @@ describe('Use case 10: cancel and modify a done multiquery job', function () {
             method: 'DELETE'
         }, {
             status: 400
-        }, function(res) {
+        }, function(err, res) {
             var errors = JSON.parse(res.body);
             assert.equal(errors.error[0], "Cannot set status from done to cancelled");
             done();

@@ -16,7 +16,7 @@ it('GET /api/v1/sql as arraybuffer ', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         assert.equal(res.headers['content-type'], "application/octet-stream");
         done();
@@ -31,7 +31,7 @@ it('GET /api/v1/sql as arraybuffer does not support geometry types ', function(d
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.body);
         var result = JSON.parse(res.body);
         assert.equal(result.error[0], "geometry types are not supported");

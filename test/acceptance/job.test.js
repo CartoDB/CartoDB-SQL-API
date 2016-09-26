@@ -36,7 +36,7 @@ describe('job module', function() {
             })
         }, {
             status: 201
-        }, function(res) {
+        }, function(err, res) {
             job = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.ok(job.job_id);
@@ -55,7 +55,7 @@ describe('job module', function() {
             data: querystring.stringify({})
         }, {
             status: 400
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'You must indicate a valid SQL' ] });
             done();
@@ -72,7 +72,7 @@ describe('job module', function() {
             })
         }, {
             status: 400
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'You must indicate a valid SQL' ] });
             done();
@@ -89,7 +89,7 @@ describe('job module', function() {
             })
         }, {
             status: 401
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
             done();
@@ -106,7 +106,7 @@ describe('job module', function() {
             })
         }, {
             status: 404
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, {
                 error: [
@@ -125,7 +125,7 @@ describe('job module', function() {
             method: 'GET'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             var jobGot = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.equal(jobGot.query, "SELECT * FROM untitle_table_4");
@@ -141,7 +141,7 @@ describe('job module', function() {
             method: 'GET'
         }, {
             status: 401
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
             done();
@@ -155,7 +155,7 @@ describe('job module', function() {
             method: 'GET'
         }, {
             status: 400
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             console.log(error);
             assert.deepEqual(error , {
@@ -172,7 +172,7 @@ describe('job module', function() {
             method: 'DELETE'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             var jobCancelled = JSON.parse(res.body);
             assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.equal(jobCancelled.job_id, job.job_id);
@@ -190,7 +190,7 @@ describe('job module', function() {
             method: 'DELETE'
         }, {
             status: 401
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
             done();
@@ -204,7 +204,7 @@ describe('job module', function() {
             method: 'DELETE'
         }, {
             status: 404
-        }, function(res) {
+        }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error , {
                 error: [

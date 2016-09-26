@@ -49,7 +49,7 @@ describe('app.auth', function() {
                     method: 'GET'
                 },
                 {},
-                function(res) {
+                function(err, res) {
                     assert.equal(res.statusCode, scenario.statusCode, res.statusCode + ': ' + res.body);
                     done();
                 }

@@ -110,7 +110,7 @@ it('KML format, unauthenticated', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
@@ -134,7 +134,7 @@ it('KML format, unauthenticated, POST', function(done){
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml',
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
@@ -152,7 +152,7 @@ it('KML format, bigger than 81920 bytes', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
@@ -167,7 +167,7 @@ it('KML format, skipfields', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&skipfields=address,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
@@ -190,7 +190,7 @@ it('KML format, unauthenticated, custom filename', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&filename=kmltest',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
@@ -206,7 +206,7 @@ it('KML format, authenticated', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=kml&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
@@ -275,7 +275,7 @@ it('GET /api/v1/sql as kml with no rows', function(done){
         url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=kml',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
         var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
@@ -298,7 +298,7 @@ it('GET /api/v1/sql as kml with ending semicolon', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
         var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
@@ -321,7 +321,7 @@ it('check point coordinates, unauthenticated', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var coords = extractCoordinates(res.body);
         assert(coords, 'No coordinates in ' + res.body);
@@ -340,7 +340,7 @@ it('check point coordinates, authenticated', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var coords = extractCoordinates(res.body);
         assert(coords, 'No coordinates in ' + res.body);
@@ -366,7 +366,7 @@ it('check point coordinates, authenticated', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 assert.equal(res.body.match(/<Placemark>/g).length, limit);
                 done();
             }
@@ -387,7 +387,7 @@ it('check point coordinates, authenticated', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 assert.equal(res.body.match(/<Placemark>/g).length, limit);
                 done();
             }
@@ -411,7 +411,7 @@ it('check point coordinates, authenticated', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 assert.equal(res.body.match(/<Placemark>/g), null);
                 done();
             }

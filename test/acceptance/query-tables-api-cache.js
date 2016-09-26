@@ -17,7 +17,7 @@ describe('query-tables-api', function() {
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 callback(null, JSON.parse(res.body));
             }
         );
@@ -38,7 +38,7 @@ describe('query-tables-api', function() {
     };
 
     it('should create a key in affected tables cache', function(done) {
-        assert.response(server, request, RESPONSE_OK, function(res, err) {
+        assert.response(server, request, RESPONSE_OK, function(err, res) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
@@ -52,7 +52,7 @@ describe('query-tables-api', function() {
     });
 
     it('should use cache to retrieve affected tables', function(done) {
-        assert.response(server, request, RESPONSE_OK, function(res, err) {
+        assert.response(server, request, RESPONSE_OK, function(err, res) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
@@ -76,7 +76,7 @@ describe('query-tables-api', function() {
             },
             method: 'GET'
         };
-        assert.response(server, authenticatedRequest, RESPONSE_OK, function(res, err) {
+        assert.response(server, authenticatedRequest, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {

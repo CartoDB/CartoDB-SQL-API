@@ -18,7 +18,7 @@ it('SHP format, unauthenticated', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
@@ -45,7 +45,7 @@ it('SHP format, unauthenticated, POST', function(done){
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
@@ -63,7 +63,7 @@ it('SHP format, big size, POST', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
@@ -79,7 +79,7 @@ it('SHP format, unauthenticated, with custom filename', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
@@ -105,7 +105,7 @@ it('SHP format, unauthenticated, with custom, dangerous filename', function(done
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var fname = "b_______a";
         var cd = res.header('Content-Disposition');
@@ -132,7 +132,7 @@ it('SHP format, authenticated', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
@@ -165,7 +165,7 @@ it('SHP format, unauthenticated, with utf8 data', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
         var err = fs.writeFileSync(tmpfile, res.body, 'binary');
@@ -192,7 +192,7 @@ it('mixed type geometry', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
@@ -217,7 +217,7 @@ it('errors are not confused with warnings', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
@@ -240,7 +240,7 @@ it('skipfields controls fields included in SHP output', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
         var err = fs.writeFileSync(tmpfile, res.body, 'binary');
@@ -259,7 +259,7 @@ it('skipfields controls fields included in SHP output', function(done){
 it('SHP format, concurrently', function(done){
     var concurrency = 1;
     var waiting = concurrency;
-    function validate(res){
+    function validate(err, res){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
@@ -307,7 +307,7 @@ it('point with null first', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
@@ -346,7 +346,7 @@ it('point with null first', function(done){
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 if (err) {
                     return done(err);
                 }

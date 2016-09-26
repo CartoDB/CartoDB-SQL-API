@@ -54,7 +54,7 @@ describe('Use case 2: cancel a running job', function() {
             })
         }, {
             status: 201
-        }, function(res) {
+        }, function(err, res) {
             runningJob = JSON.parse(res.body);
             done();
         });
@@ -68,7 +68,7 @@ describe('Use case 2: cancel a running job', function() {
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function(err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "running") {
                     clearInterval(interval);
@@ -88,7 +88,7 @@ describe('Use case 2: cancel a running job', function() {
             method: 'DELETE'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             cancelledJob = JSON.parse(res.body);
             assert.equal(cancelledJob.status, "cancelled");
             done();
@@ -102,7 +102,7 @@ describe('Use case 2: cancel a running job', function() {
             method: 'GET'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             var job = JSON.parse(res.body);
             if (job.status === "cancelled") {
                 done();
@@ -119,7 +119,7 @@ describe('Use case 2: cancel a running job', function() {
             method: 'DELETE'
         }, {
             status: 400
-        }, function(res) {
+        }, function(err, res) {
             var errors = JSON.parse(res.body);
             assert.equal(errors.error[0], "Cannot set status from cancelled to cancelled");
             done();

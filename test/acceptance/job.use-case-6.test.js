@@ -53,7 +53,7 @@ describe('Use case 6: modify a done job', function() {
             })
         }, {
             status: 201
-        }, function (res) {
+        }, function (err, res) {
             doneJob = JSON.parse(res.body);
             done();
         });
@@ -67,7 +67,7 @@ describe('Use case 6: modify a done job', function() {
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function(err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "done") {
                     clearInterval(interval);

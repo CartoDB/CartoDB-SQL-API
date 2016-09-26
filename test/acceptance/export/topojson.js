@@ -34,7 +34,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
         {
             status: 200
         },
-        function(res) {
+        function(err, res) {
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -139,7 +139,7 @@ it('null geometries', function(done){
         {
             status: 200
         },
-        function(res) {
+        function(err, res) {
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -199,7 +199,7 @@ it('null geometries', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.equal(parsedBody.objects[0].properties.gid, 1, 'gid was expected property');
                 assert.ok(!parsedBody.objects[0].properties.name);
@@ -220,7 +220,7 @@ it('null geometries', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
                 var didRunJsonCallback = false;
                 // jshint ignore:start
@@ -252,7 +252,7 @@ it('null geometries', function(done){
             {
                 status: 400
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.deepEqual(Object.keys(parsedBody), ['error']);
                 assert.deepEqual(parsedBody.error, ["division by zero"]);

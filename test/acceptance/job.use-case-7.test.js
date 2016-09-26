@@ -53,7 +53,7 @@ describe('Use case 7: cancel a job with quotes', function() {
             })
         }, {
             status: 201
-        }, function (res) {
+        }, function (err, res) {
             runningJob = JSON.parse(res.body);
             done();
         });
@@ -67,7 +67,7 @@ describe('Use case 7: cancel a job with quotes', function() {
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function(err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "running") {
                     clearInterval(interval);
@@ -87,7 +87,7 @@ describe('Use case 7: cancel a job with quotes', function() {
             method: 'DELETE'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             var cancelledJob = JSON.parse(res.body);
             assert.equal(cancelledJob.status, "cancelled");
             done();

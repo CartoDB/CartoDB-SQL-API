@@ -31,7 +31,7 @@ it('GET /api/v1/version', function(done){
     assert.response(server, {
         url: '/api/v1/version',
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200);
         var parsed = JSON.parse(res.body);
         var sqlapi_version = require(__dirname + '/../../package.json').version;
@@ -47,7 +47,7 @@ it('GET /api/v1/sql', function(done){
         method: 'GET'
     },{
         status: 400
-    }, function(res) {
+    }, function(err, res) {
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body), {"error":["You must indicate a sql query"]});
@@ -62,7 +62,7 @@ it('GET /api/whatever/sql', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-    }, function(res) {
+    }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         done();
     });
@@ -75,7 +75,7 @@ it('GET /api/whatever/sql', function(done){
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-    }, function(res) {
+    }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         assert.equal(
             res.headers['access-control-allow-headers'], 'X-Requested-With, X-Prototype-Version, X-CSRF-Token'
@@ -91,7 +91,7 @@ it('OPTIONS /api/x/sql', function(done){
         url: '/api/x/sql?q=syntax%20error',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'OPTIONS'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         assert.equal(res.body, '');
         assert.equal(
@@ -109,7 +109,7 @@ it('GET /api/v1/sql with SQL parameter on SELECT only. No oAuth included ', func
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
@@ -123,7 +123,7 @@ it('cache_policy=persist', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db&cache_policy=persist',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
         assert.ok(res.headers.hasOwnProperty('x-cache-channel'));
@@ -139,7 +139,7 @@ it('GET /api/v1/sql with SQL parameter on SELECT only. no database param, just i
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         done();
     });
@@ -149,7 +149,7 @@ it('GET /user/vizzuality/api/v1/sql with SQL parameter on SELECT only', function
     assert.response(server, {
         url: '/user/vizzuality/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         done();
     });
@@ -164,7 +164,7 @@ it('SELECT from user-specific database', function(done){
         url: '/api/v1/sql?q=SELECT+2+as+n',
         headers: {host: 'cartodb250user.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         global.settings.db_host = backupDBHost;
         var err = null;
         try {
@@ -187,7 +187,7 @@ it('SELECT with user-specific password', function(done){
         url: '/api/v1/sql?q=SELECT+2+as+n&api_key=1234',
         headers: {host: 'cartodb250user.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         global.settings.db_user_pass = backupDBUserPass;
         var err = null;
         try {
@@ -208,7 +208,7 @@ function(done){
         url: '/api/v1/sql?q=SELECT%20cartodb_id*2%20FROM%20untitle_table_4&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
@@ -230,7 +230,7 @@ function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
         var parsed = JSON.parse(res.body);
@@ -290,7 +290,7 @@ it("paging", function(done){
         req.headers['Content-Type'] = 'application/x-www-form-urlencoded';
         req.data = data;
       }
-      assert.response(server, req, {}, function(res) {
+      assert.response(server, req, {}, function(err, res) {
           assert.equal(res.statusCode, 200, res.body);
           var parsed = JSON.parse(res.body);
           assert.equal(parsed.rows.length, nrows);
@@ -319,7 +319,7 @@ it("paging starting with comment", function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-      }, {}, function(res) {
+      }, {}, function(err, res) {
           assert.equal(res.statusCode, 200, res.body);
           var parsed = JSON.parse(res.body);
           assert.equal(parsed.rows.length, 3);
@@ -338,7 +338,7 @@ it('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just 
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4"}),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         done();
     });
@@ -351,7 +351,7 @@ it('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', 
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-    }, function(res) {
+    }, function(err, res) {
         assert.equal(res.statusCode, 401, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -368,7 +368,7 @@ it('GET /api/v1/sql with DROP TABLE. oAuth not used, so public user - should fai
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
     },{
-    }, function(res) {
+    }, function(err, res) {
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -386,7 +386,7 @@ it('GET /api/v1/sql with INSERT. header based db - should fail', function (done)
         method: 'GET'
     }, {
         status: 400
-    }, function (res, err) {
+    }, function (err, res) {
         done(err);
     });
 });
@@ -402,7 +402,7 @@ it('INSERT returns affected rows', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -427,7 +427,7 @@ it('UPDATE returns affected rows', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -452,7 +452,7 @@ it('DELETE returns affected rows', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -477,7 +477,7 @@ it('INSERT with RETURNING returns all results', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -501,7 +501,7 @@ it('UPDATE with RETURNING returns all results', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -525,7 +525,7 @@ it('DELETE with RETURNING returns all results', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -542,7 +542,7 @@ it('GET /api/v1/sql with SQL parameter on DROP TABLE. should fail', function(don
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4",
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -564,7 +564,7 @@ it('Field name is not confused with UPDATE operation', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.private_table');
         done();
@@ -579,7 +579,7 @@ it('CREATE TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
@@ -603,7 +603,7 @@ it('SELECT INTO with paging ', function(done){
             }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{}, function(res) { next(null, res); });
+        },{}, function(err, res) { next(null, res); });
       },
       function check_res_test_fake_into_1(err, res) {
         assert.ifError(err);
@@ -617,7 +617,7 @@ it('SELECT INTO with paging ', function(done){
             }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{}, function(res) { next(null, res); });
+        },{}, function(err, res) { next(null, res); });
       },
       function check_res_drop_table(err, res) {
         assert.ifError(err);
@@ -632,7 +632,7 @@ it('SELECT INTO with paging ', function(done){
             }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{}, function(res) { next(null, res); });
+        },{}, function(err, res) { next(null, res); });
       },
       function check_drop(err, res) {
         assert.ifError(err);
@@ -655,7 +655,7 @@ it('COPY TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       // We expect a problem, actually
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
       assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
@@ -673,7 +673,7 @@ it('COPY TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       // We expect a problem, actually
       assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
       assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
@@ -694,7 +694,7 @@ it('ALTER TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
@@ -713,7 +713,7 @@ it('multistatement insert, alter, select, begin, commit', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       var parsedBody = JSON.parse(res.body);
       assert.equal(parsedBody.total_rows, 1);
@@ -730,7 +730,7 @@ it('TRUNCATE TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       assert.ok(!res.hasOwnProperty('x-cache-channel'));
       assert.equal(res.headers['cache-control'], expected_rw_cache_control);
@@ -743,7 +743,7 @@ it('TRUNCATE TABLE with GET and auth', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(res) {
+      },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         // table should not get a cache channel as it won't get invalidated
         assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
@@ -764,7 +764,7 @@ it('REINDEX TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       assert.ok(!res.hasOwnProperty('x-cache-channel'));
       assert.equal(res.headers['cache-control'], expected_rw_cache_control);
@@ -782,7 +782,7 @@ it('DROP TABLE with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
@@ -800,7 +800,7 @@ it('CREATE FUNCTION with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
@@ -818,7 +818,7 @@ it('DROP FUNCTION with GET and auth', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
       assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
       // Check cache headers
       // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
@@ -833,7 +833,7 @@ it('sends a 400 when an unsupported format is requested', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=unknown',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -847,7 +847,7 @@ it('GET /api/v1/sql with SQL parameter and no format, ensuring content-dispositi
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var ct = res.header('Content-Type');
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
@@ -864,7 +864,7 @@ it('POST /api/v1/sql with SQL parameter and no format, ensuring content-disposit
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4" }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var ct = res.header('Content-Type');
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
@@ -880,7 +880,7 @@ it('GET /api/v1/sql with SQL parameter and no format, but a filename', function(
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&filename=x',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var ct = res.header('Content-Type');
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
@@ -896,7 +896,7 @@ it('field named "the_geom_webmercator" is not skipped by default', function(done
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var row0 = JSON.parse(res.body).rows[0];
         var checkfields = {'name':1, 'cartodb_id':1, 'the_geom':1, 'the_geom_webmercator':1};
@@ -916,7 +916,7 @@ it('skipfields controls included fields', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&skipfields=the_geom_webmercator,cartodb_id,unexistant',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var row0 = JSON.parse(res.body).rows[0];
         var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':0};
@@ -937,7 +937,7 @@ it('multiple skipfields parameter do not kill the backend', function(done){
             '&skipfields=cartodb_id,unexistant',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var row0 = JSON.parse(res.body).rows[0];
         var checkfields = {'name':1, 'cartodb_id':0, 'the_geom':1, 'the_geom_webmercator':0};
@@ -959,7 +959,7 @@ it('GET /api/v1/sql ensure cross domain set on errors', function(done){
         method: 'GET'
     },{
         status: 400
-    }, function(res){
+    }, function(err, res){
         var cd = res.header('Access-Control-Allow-Origin');
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -1022,7 +1022,7 @@ function testSystemQueries(description, queries, statusErrorCode, apiKey) {
                 method: 'GET',
                 url: '/api/v1/sql?' + querystring.stringify(queryStringParams)
             };
-            assert.response(server, request, function(response) {
+            assert.response(server, request, function(err, response) {
                 assert.equal(response.statusCode, statusErrorCode);
                 done();
             });
@@ -1035,7 +1035,7 @@ it('GET decent error if domain is incorrect', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzualinot.cartodb.com'},
         method: 'GET'
-    }, {}, function(res){
+    }, {}, function(err, res){
         assert.equal(res.statusCode, 404, res.statusCode + ( res.statusCode !== 200 ? ( ': ' + res.body ) : ''));
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -1056,7 +1056,7 @@ it('GET decent error if SQL is broken', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res){
+    },{}, function(err, res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -1075,7 +1075,7 @@ it('numeric arrays are rendered as such', function(done){
         }),
         headers: {host: 'vizzuality.localhost.lan:8080' },
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var out = JSON.parse(res.body);
         assert.ok(out.hasOwnProperty('time'));
@@ -1105,7 +1105,7 @@ it('field names and types are exposed', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
         assert.equal(_.keys(parsedBody.fields).length, 10);
@@ -1132,7 +1132,7 @@ it('schema response takes skipfields into account', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
         assert.equal(_.keys(parsedBody.fields).length, 2);
@@ -1161,7 +1161,7 @@ it('numeric fields are rendered as numbers in JSON', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         var parsedBody = JSON.parse(res.body);
         var row = parsedBody.rows[0];
@@ -1202,7 +1202,7 @@ it('timezone info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
@@ -1222,7 +1222,7 @@ it('timezone info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
@@ -1242,7 +1242,7 @@ it('timezone info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
@@ -1262,7 +1262,7 @@ it('timezone info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
@@ -1294,7 +1294,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           var err = null;
           try {
             assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
@@ -1311,7 +1311,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(res) {
+      },{}, function(err, res) {
           var err = null;
           try {
             assert.equal(res.statusCode, 200, res.body);
@@ -1332,7 +1332,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(res) {
+      },{}, function(err, res) {
           var err = null;
           try {
             assert.equal(res.statusCode, 200, res.body);
@@ -1354,7 +1354,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(res) {
+      },{}, function(err, res) {
           var err = null;
           try {
             assert.equal(res.statusCode, 200, res.body);
@@ -1378,7 +1378,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(res) {
+      },{ }, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             JSON.parse(res.body);
@@ -1400,7 +1400,7 @@ it('GET /api/v1/sql with SQL parameter on SELECT only should return CORS headers
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&database=cartodb_test_user_1_db',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         // Check cache headers
         assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
@@ -1419,7 +1419,7 @@ it('GET with callback param returns wrapped result set with callback as jsonp', 
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&callback=foo_jsonp',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res) {
+    },{ }, function(err, res) {
         assert.equal(res.statusCode, 200, res.body);
         assert.ok(res.body.match(/foo\_jsonp\(.*\)/));
         done();
@@ -1431,7 +1431,7 @@ it('GET with callback must return 200 status error even if it is an error', func
         url: "/api/v1/sql?q=DROP%20TABLE%20untitle_table_4&callback=foo_jsonp",
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{}, function(res) {
+    },{}, function(err, res) {
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         var didRunJsonCallback = false;
         // jshint ignore:start
@@ -1455,7 +1455,7 @@ it('GET with callback must return 200 status error even if it is an error', func
             {
                 status: 400
             },
-            function(res) {
+            function(err, res) {
                 assert.ok(res.body.match(/was not able to finish.*try again/i));
                 done();
             });

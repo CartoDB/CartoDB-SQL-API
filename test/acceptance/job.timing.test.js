@@ -28,7 +28,7 @@ describe('Batch API query timing', function () {
             data: querystring.stringify(jobDefinition)
         }, {
             status: 201
-        }, function (res, err) {
+        }, function (err, res) {
             if (err) {
                 return callback(err);
             }
@@ -45,7 +45,7 @@ describe('Batch API query timing', function () {
             method: 'GET'
         }, {
             status: 200
-        }, function (res, err) {
+        }, function (err, res) {
             if (err) {
                 return callback(err);
             }
