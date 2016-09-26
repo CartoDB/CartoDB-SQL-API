@@ -386,9 +386,7 @@ it('GET /api/v1/sql with INSERT. header based db - should fail', function (done)
         method: 'GET'
     }, {
         status: 400
-    }, function (err, res) {
-        done(err);
-    });
+    }, done);
 });
 
 // Check results from INSERT
