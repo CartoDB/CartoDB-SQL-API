@@ -38,7 +38,7 @@ describe('query-tables-api', function() {
     };
 
     it('should create a key in affected tables cache', function(done) {
-        assert.response(server, request, RESPONSE_OK, function(err, res) {
+        assert.response(server, request, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
@@ -52,7 +52,7 @@ describe('query-tables-api', function() {
     });
 
     it('should use cache to retrieve affected tables', function(done) {
-        assert.response(server, request, RESPONSE_OK, function(err, res) {
+        assert.response(server, request, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
