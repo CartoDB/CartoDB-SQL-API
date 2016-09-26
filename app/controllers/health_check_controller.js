@@ -24,11 +24,11 @@ HealthCheckController.prototype.handleHealthCheck = function (req, res) {
             if (err) {
                 response.err = err.message;
             }
-            res.send(response, ok ? 200 : 503);
+            res.status(ok ? 200 : 503).send(response);
 
         });
     } else {
-        res.send({enabled: false, ok: true}, 200);
+        res.status(200).send({enabled: false, ok: true});
     }
 };
 
