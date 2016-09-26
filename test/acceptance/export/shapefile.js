@@ -24,9 +24,9 @@ it('SHP format, unauthenticated', function(done){
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -85,9 +85,9 @@ it('SHP format, unauthenticated, with custom filename', function(done){
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=myshape.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -112,9 +112,9 @@ it('SHP format, unauthenticated, with custom, dangerous filename', function(done
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -137,9 +137,9 @@ it('SHP format, authenticated', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -168,9 +168,9 @@ it('SHP format, unauthenticated, with utf8 data', function(done){
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         var buffer = zf.readFileSync('myshape.dbf');
@@ -243,9 +243,9 @@ it('skipfields controls fields included in SHP output', function(done){
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         var buffer = zf.readFileSync('myshape.dbf');
@@ -264,9 +264,9 @@ it('SHP format, concurrently', function(done){
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -312,9 +312,9 @@ it('point with null first', function(done){
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
