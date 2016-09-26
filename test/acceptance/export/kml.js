@@ -4,8 +4,6 @@ var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var libxmljs = require('libxmljs');
-var http = require('http');
-var server_utils = require('../../support/server_utils');
 
 describe('export.kml', function() {
 
@@ -225,48 +223,30 @@ it('KML format, unauthenticated, concurrent requests', function(done){
     var concurrency = 4;
     var waiting = concurrency;
 
-    function onResponse(res) {
-        //console.log("Response started");
-        res.body = '';
-        //res.setEncoding('binary');
-        res.on('data', function(chunk){ res.body += chunk; });
-        res.on('end', function(){
-            //console.log("Response ended");
-            assert.equal(res.statusCode, 200, res.body);
-            assert.ok(res.body);
-            var snippet = res.body.substr(0, 5);
-            assert.equal(snippet, "<?xml");
-            var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
-            if ( ! --waiting ) {
-                server.close();
-                done();
-            }
-        });
+    function validate(err, res) {
+        //console.log("Response ended");
+        assert.equal(res.statusCode, 200, res.body);
+        assert.ok(res.body);
+        var snippet = res.body.substr(0, 5);
+        assert.equal(snippet, "<?xml");
+        var cd = res.headers['content-disposition'];
+        assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+        assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+        if ( ! --waiting ) {
+            done();
+        }
     }
 
-    function onError(err) {
-        console.log("Response error" + err);
-    }
+    var request = {
+        method: 'GET',
+        headers: { host: 'vizzuality.cartodb.com' },
+        url: '/api/v1/sql?' + query
+    };
 
-    server_utils.startOnNextPort(server, function() {
-      var port = server.address().port;
-      //console.log("Listening on port " + port);
-      for (var i=0; i<concurrency; ++i) {
+    for (var i=0; i<concurrency; ++i) {
         //console.log("Sending request");
-        http.request({
-            host: 'localhost',
-            port: port,
-            path: '/api/v1/sql?' + query,
-            headers: {host: 'vizzuality.cartodb.com'},
-            agent: false // or should this be true ?
-        })
-            .on('response', onResponse)
-            .on('error', onError)
-            .end();
-      }
-    });
+        assert.response(server, request, { status: 200 }, validate);
+    }
 });
 
 // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/60
