@@ -29,14 +29,11 @@ it('after configured milliseconds', function(done){
   var server = require('../../app/server')();
   step(
     function sendLongQuery() {
-      var next = this;
       assert.response(server, {
           url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err/*, res*/) {
       assert.ok(err);

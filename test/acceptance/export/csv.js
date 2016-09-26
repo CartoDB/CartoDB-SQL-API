@@ -16,7 +16,7 @@ it('CSV format', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -44,7 +44,7 @@ it('CSV format, bigger than 81920 bytes', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.ok(res.body.length > 81920, 'CSV smaller than expected: ' + res.body.length);
         done();
     });
@@ -57,7 +57,7 @@ it('CSV format from POST', function(done){
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4 LIMIT 1", format: 'csv'}),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -73,7 +73,7 @@ it('CSV format, custom filename', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=csv&filename=mycsv.csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -100,7 +100,7 @@ it('skipfields controls fields included in CSV output', function(done){
             '&skipfields=unexistant,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
         var checkFields = { name: true, cartodb_id: false, the_geom: true, the_geom_webmercator: true };
@@ -122,7 +122,7 @@ it('GET /api/v1/sql as csv', function(done){
             '&format=csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var expected = 'cartodb_id,geom\r\n1,"SRID=4326;POINT(-3.699732 40.423012)"\r\n';
         assert.equal(res.body, expected);
@@ -136,7 +136,7 @@ it('GET /api/v1/sql as csv with no rows', function(done){
         url: '/api/v1/sql?q=SELECT%20true%20WHERE%20false&format=csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var obtained_lines = res.body.split('\r\n');
         assert.ok(obtained_lines.length <= 2, // may or may not have an header
@@ -151,7 +151,7 @@ it('GET /api/v1/sql as csv, properly escaped', function(done){
         url: '/api/v1/sql?q=SELECT%20cartodb_id,%20address%20FROM%20untitle_table_4%20LIMIT%201&format=csv',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
         assert.equal(res.body, expected);
@@ -163,7 +163,7 @@ it('GET /api/v1/sql as csv, concurrently', function(done){
 
     var concurrency = 4;
     var waiting = concurrency;
-    function validate(res){
+    function validate(err, res){
         var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
         assert.equal(res.body, expected);
         if ( ! --waiting ) {
@@ -199,7 +199,7 @@ it('GET /api/v1/sql as csv, concurrently', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 var headersPlusExtraLine = 2;
                 assert.equal(res.body.split('\n').length, limit + headersPlusExtraLine);
                 done();

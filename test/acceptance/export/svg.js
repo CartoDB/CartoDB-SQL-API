@@ -15,7 +15,7 @@ it('GET /api/v1/sql with SVG format', function(done){
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -36,7 +36,7 @@ it('POST /api/v1/sql with SVG format', function(done){
         data: query,
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
@@ -58,7 +58,7 @@ it('GET /api/v1/sql with SVG format and custom filename', function(done){
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.ok(/filename=mysvg.svg/gi.test(cd), cd);
@@ -78,7 +78,7 @@ it('GET /api/v1/sql with SVG format and centered point', function(done){
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -100,7 +100,7 @@ it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
         url: '/api/v1/sql?' + querystring.stringify(queryobj),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -113,7 +113,7 @@ it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
           url: '/api/v1/sql?' + querystring.stringify(queryobj),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-        },{}, function(res) {
+        },{}, function(err, res) {
           assert.equal(res.statusCode, 200, res.body);
           var cd = res.header('Content-Disposition');
           assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
@@ -138,7 +138,7 @@ it('SVG format with "the_geom" in skipfields', function(done){
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -158,7 +158,7 @@ it('SVG format with missing "the_geom" field', function(done){
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(JSON.parse(res.body), {
           error:['column "the_geom" does not exist']
@@ -183,7 +183,7 @@ it('SVG format with missing "the_geom" field', function(done){
             {
                 status: 400
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.deepEqual(Object.keys(parsedBody), ['error']);
                 assert.deepEqual(parsedBody.error, ["division by zero"]);

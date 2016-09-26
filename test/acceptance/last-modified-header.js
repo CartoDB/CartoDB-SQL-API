@@ -48,7 +48,7 @@ describe('last modified header', function() {
                 {
                     statusCode: 200
                 },
-                function(res) {
+                function(err, res) {
                     assert.equal(res.headers['last-modified'], scenario.expectedLastModified);
                     done();
                 }
@@ -77,7 +77,7 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(res) {
+            function(err, res) {
                 Date.now = dateNowFn;
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
@@ -106,7 +106,7 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(res) {
+            function(err, res) {
                 Date.now = dateNowFn;
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();

@@ -35,7 +35,7 @@ describe('stream-responses', function() {
                 server,
                 createFailingQueryRequest(),
                 okResponse,
-                function(res) {
+                function(err, res) {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.rows.length, 2);
                     assert.deepEqual(parsedBody.fields, {
@@ -57,7 +57,7 @@ describe('stream-responses', function() {
                 server,
                 createFailingQueryRequest('geojson'),
                 okResponse,
-                function(res) {
+                function(err, res) {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.features.length, 2);
                     assert.deepEqual(parsedBody.error, ["division by zero"]);

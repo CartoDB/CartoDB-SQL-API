@@ -69,7 +69,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -98,7 +98,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -137,7 +137,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -165,7 +165,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -204,7 +204,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -233,7 +233,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -272,7 +272,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -302,7 +302,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -342,7 +342,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -370,7 +370,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -409,7 +409,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -438,7 +438,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -478,7 +478,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -507,7 +507,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -546,7 +546,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -574,7 +574,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -615,7 +615,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -645,7 +645,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -687,7 +687,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -721,7 +721,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -763,7 +763,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -798,7 +798,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -841,7 +841,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -876,7 +876,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -918,7 +918,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -952,7 +952,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -991,7 +991,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1021,7 +1021,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1061,7 +1061,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1090,7 +1090,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1132,7 +1132,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1167,7 +1167,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1209,7 +1209,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1244,7 +1244,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1287,7 +1287,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1322,7 +1322,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1366,7 +1366,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1402,7 +1402,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1443,7 +1443,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1473,7 +1473,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1512,7 +1512,7 @@ describe('Batch API fallback job', function () {
                 method: 'DELETE'
             }, {
                 status: 200
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1549,7 +1549,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1579,7 +1579,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1621,7 +1621,7 @@ describe('Batch API fallback job', function () {
                 method: 'DELETE'
             }, {
                 status: 200
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1661,7 +1661,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1697,7 +1697,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1740,7 +1740,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1779,7 +1779,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }

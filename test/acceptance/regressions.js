@@ -26,13 +26,13 @@ describe('regressions', function() {
         };
 
         assert.response(server, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
-            function(res, err) {
+            function(err) {
                 if (err) {
                     return done(err);
                 }
 
                 assert.response(server, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
-                    function(res, err) {
+                    function(err, res) {
                         if (err) {
                             return done(err);
                         }
@@ -40,7 +40,7 @@ describe('regressions', function() {
                         assert.equal(parsedBody.total_rows, 2);
 
                         assert.response(server, createRequest('SELECT * FROM "foo.bar"'), responseOk,
-                            function(res, err) {
+                            function(err, res) {
                                 if (err) {
                                     return done(err);
                                 }

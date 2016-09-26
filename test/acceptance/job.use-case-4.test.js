@@ -54,7 +54,7 @@ describe('Use case 4: modify a pending job', function() {
             })
         }, {
             status: 201
-        }, function(res) {
+        }, function(err, res) {
             runningJob = JSON.parse(res.body);
             done();
         });
@@ -70,7 +70,7 @@ describe('Use case 4: modify a pending job', function() {
             })
         }, {
             status: 201
-        }, function(res) {
+        }, function(err, res) {
             pendingJob = JSON.parse(res.body);
             done();
         });
@@ -84,7 +84,7 @@ describe('Use case 4: modify a pending job', function() {
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function(err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "pending") {
                     clearInterval(interval);
@@ -104,7 +104,7 @@ describe('Use case 4: modify a pending job', function() {
             method: 'DELETE'
         }, {
             status: 200
-        }, function(res) {
+        }, function(err, res) {
             var cancelledJob = JSON.parse(res.body);
             assert.equal(cancelledJob.status, "cancelled");
             done();

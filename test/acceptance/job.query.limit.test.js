@@ -51,7 +51,7 @@ describe('job query limit', function() {
             })
         }, {
             status: 400
-        }, function (res) {
+        }, function (err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [expectedErrorMessage(queryTooLong)] });
             done();
@@ -69,7 +69,7 @@ describe('job query limit', function() {
             })
         }, {
             status: 201
-        }, function (res) {
+        }, function (err, res) {
             var job = JSON.parse(res.body);
             assert.ok(job.job_id);
             done();
@@ -87,7 +87,7 @@ describe('job query limit', function() {
             })
         }, {
             status: 400
-        }, function (res) {
+        }, function (err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [expectedErrorMessage(queries)] });
             done();
@@ -113,7 +113,7 @@ describe('job query limit', function() {
             })
         }, {
             status: 400
-        }, function (res) {
+        }, function (err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [expectedErrorMessage(fallbackQueries)] });
             done();

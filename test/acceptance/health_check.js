@@ -31,7 +31,7 @@ describe('health checks', function() {
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 assert.ok(!err);
 
                 var parsed = JSON.parse(res.body);
@@ -50,7 +50,7 @@ describe('health checks', function() {
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 assert.ok(!err);
 
                 var parsed = JSON.parse(res.body);

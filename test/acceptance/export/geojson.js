@@ -23,7 +23,7 @@ it('GET /api/v1/sql with SQL parameter, ensuring content-disposition set to geoj
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -38,7 +38,7 @@ it('POST /api/v1/sql with SQL parameter, ensuring content-disposition set to geo
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4", format: 'geojson' }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -52,7 +52,7 @@ it('uses the last format parameter when multiple are used', function(done){
         url: '/api/v1/sql?format=csv&q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
@@ -65,7 +65,7 @@ it('uses custom filename', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&filename=x',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /filename=x.geojson/gi.test(cd), cd);
@@ -78,7 +78,7 @@ it('does not include the_geom and the_geom_webmercator properties by default', f
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var parsed_body = JSON.parse(res.body);
         var row0 = parsed_body.features[0].properties;
@@ -99,7 +99,7 @@ it('skipfields controls fields included in GeoJSON output', function(done){
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4&format=geojson&skipfields=unexistant,cartodb_id',
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var parsed_body = JSON.parse(res.body);
         var row0 = parsed_body.features[0].properties;
@@ -124,7 +124,7 @@ it('GET /api/v1/sql as geojson limiting decimal places', function(done){
           dp: '1'}),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var result = JSON.parse(res.body);
         assert.equal(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
@@ -139,7 +139,7 @@ it('GET /api/v1/sql as geojson with default dp as 6', function(done){
           format: 'geojson'}),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var result = JSON.parse(res.body);
         assert.equal(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
@@ -155,7 +155,7 @@ it('null geometries in geojson output', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var cd = res.header('Content-Disposition');
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -180,7 +180,7 @@ it('stream response handle errors', function(done) {
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.body);
         var geoJson = JSON.parse(res.body);
         assert.ok(geoJson.error);
@@ -198,7 +198,7 @@ it('stream response with empty result set has valid output', function(done) {
         }),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var geoJson = JSON.parse(res.body);
         var expectedGeoJson = {"type": "FeatureCollection", "features": []};

@@ -34,15 +34,12 @@ it('aborts request', function(done){
   var timeout;
   step(
     function sendQuery() {
-      var next = this;
       assert.response(server, {
           url: '/api/v1/sql?q=SELECT+1',
           method: 'GET',
           timeout: 1,
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err/*, res*/) {
       assert(err); // expect timeout
