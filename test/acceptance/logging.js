@@ -105,7 +105,7 @@ describe('Logging SQL query on POST requests', function() {
                 return result;
             };
 
-            assert.response(server, scenario.request, RESPONSE_OK, function(err, res) {
+            assert.response(server, scenario.request, RESPONSE_OK, function(err) {
                 assert.ok(!err);
                 assert.equal(called, 1);
 
