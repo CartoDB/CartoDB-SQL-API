@@ -50,7 +50,9 @@ describe('regressions', function() {
                                 var parsedBody = JSON.parse(res.body);
                                 assert.equal(parsedBody.total_rows, 2);
                                 assert.deepEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
-                                done();
+
+                                // delete table
+                                assert.response(server, createRequest('DROP TABLE "foo.bar"'), responseOk, done);
                             }
                         );
                     }
