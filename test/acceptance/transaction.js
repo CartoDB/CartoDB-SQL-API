@@ -11,11 +11,12 @@ describe('transaction', function() {
     var server;
     before(function(done) {
         server = require('../../app/server')();
-        server.listen(SERVER_PORT, '127.0.0.1', done);
+        this.listener = server.listen(SERVER_PORT, '127.0.0.1');
+        this.listener.on('listening', done);
     });
 
     after(function(done) {
-        server.close(done);
+        this.listener.close(done);
     });
 
     var sqlRequest = request.defaults({
