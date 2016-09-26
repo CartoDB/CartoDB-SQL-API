@@ -23,6 +23,10 @@ var step = require('step');
 
 describe('app.test', function() {
 
+    var RESPONSE_OK = {
+        statusCode: 200
+    };
+
 var expected_cache_control = 'no-cache,max-age=31536000,must-revalidate,public';
 var expected_rw_cache_control = 'no-cache,max-age=0,must-revalidate,public';
 var expected_cache_control_persist = 'public,max-age=31536000';
@@ -164,18 +168,16 @@ it('SELECT from user-specific database', function(done){
         url: '/api/v1/sql?q=SELECT+2+as+n',
         headers: {host: 'cartodb250user.cartodb.com'},
         method: 'GET'
-    },{}, function(err, res) {
+    }, RESPONSE_OK, function(err, res) {
         global.settings.db_host = backupDBHost;
-        var err = null;
         try {
-          assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
-          var parsed = JSON.parse(res.body);
-          assert.equal(parsed.rows.length, 1);
-          assert.equal(parsed.rows[0].n, 2);
+            var parsed = JSON.parse(res.body);
+            assert.equal(parsed.rows.length, 1);
+            assert.equal(parsed.rows[0].n, 2);
         } catch (e) {
-          err = e;
+            return done(e);
         }
-        done(err);
+        done();
     });
 });
 
@@ -187,18 +189,17 @@ it('SELECT with user-specific password', function(done){
         url: '/api/v1/sql?q=SELECT+2+as+n&api_key=1234',
         headers: {host: 'cartodb250user.cartodb.com'},
         method: 'GET'
-    },{}, function(err, res) {
+    }, RESPONSE_OK, function(err, res) {
         global.settings.db_user_pass = backupDBUserPass;
-        var err = null;
         try {
           assert.equal(res.statusCode, 200, res.statusCode + ": " + res.body);
           var parsed = JSON.parse(res.body);
           assert.equal(parsed.rows.length, 1);
           assert.equal(parsed.rows[0].n, 2);
         } catch (e) {
-          err = e;
+          return done(e);
         }
-        done(err);
+        return done();
     });
 });
 
@@ -1282,7 +1283,6 @@ it('timezone info in JSON output', function(done){
 it('notice and warning info in JSON output', function(done){
   step(
     function addRaiseFunction() {
-      var next = this;
       assert.response(server, {
           url: '/api/v1/sql?' + querystring.stringify({
             q: "create or replace function raise(lvl text, msg text) returns void as $$ begin if lvl = 'notice' " +
@@ -1292,13 +1292,7 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(err, res) {
-          var err = null;
-          try {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
-          } catch (e) { err = e; }
-          next(err);
-      });
+      }, RESPONSE_OK, this);
     },
     function raiseNotice(err) {
       assert.ifError(err);
@@ -1309,15 +1303,15 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(err, res) {
-          var err = null;
+      }, RESPONSE_OK, function(err, res) {
           try {
-            assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
             assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
             assert.equal(parsedBody.notices.length, 1);
             assert.equal(parsedBody.notices[0], 'hello notice');
-          } catch (e) { err = e; }
+          } catch (e) {
+            return next(e);
+          }
           next(err);
       });
     },
@@ -1330,15 +1324,15 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(err, res) {
-          var err = null;
+      }, RESPONSE_OK, function(err, res) {
           try {
-            assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
             assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
             assert.equal(parsedBody.warnings.length, 1);
             assert.equal(parsedBody.warnings[0], 'hello warning');
-          } catch (e) { err = e; }
+          } catch (e) {
+              return next(e);
+          }
           next(err);
       });
     },
@@ -1352,10 +1346,8 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{}, function(err, res) {
-          var err = null;
+      }, RESPONSE_OK, function(err, res) {
           try {
-            assert.equal(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
             assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
             assert.equal(parsedBody.warnings.length, 1);
@@ -1363,12 +1355,13 @@ it('notice and warning info in JSON output', function(done){
             assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
             assert.equal(parsedBody.notices.length, 1);
             assert.equal(parsedBody.notices[0], 'hello again notice');
-          } catch (e) { err = e; }
+          } catch (e) {
+              return next(e);
+          }
           next(err);
       });
     },
-    function delRaiseFunction(err) {
-      var next = this;
+    function delRaiseFunction() {
       assert.response(server, {
           url: '/api/v1/sql?' + querystring.stringify({
             q: "DROP function raise(text, text)",
@@ -1376,16 +1369,15 @@ it('notice and warning info in JSON output', function(done){
           }),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-      },{ }, function(err, res) {
+      }, RESPONSE_OK, function(err, res) {
           try {
             assert.equal(res.statusCode, 200, res.body);
             JSON.parse(res.body);
-          } catch (e) { err = new Error(err + ',' + e); }
-          next(err);
+          } catch (e) {
+              err = new Error(err + ',' + e);
+          }
+          done(err);
       });
-    },
-    function finish(err) {
-      done(err);
     }
   );
 });
