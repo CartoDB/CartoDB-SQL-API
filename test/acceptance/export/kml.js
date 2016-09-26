@@ -112,7 +112,7 @@ it('KML format, unauthenticated', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         var row0 = res.body;
@@ -136,7 +136,7 @@ it('KML format, unauthenticated, POST', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         done();
@@ -154,7 +154,7 @@ it('KML format, bigger than 81920 bytes', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         assert.ok(res.body.length > 81920, 'KML smaller than expected: ' + res.body.length);
@@ -169,7 +169,7 @@ it('KML format, skipfields', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         var row0 = res.body;
@@ -192,7 +192,7 @@ it('KML format, unauthenticated, custom filename', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         var name = extractFolderName(res.body);
@@ -208,7 +208,7 @@ it('KML format, authenticated', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
         done();
     });

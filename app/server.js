@@ -15,6 +15,7 @@
 //
 
 var express = require('express');
+var bodyParser = require('body-parser');
 var os = require('os');
 var Profiler = require('step-profiler');
 var StatsD = require('node-statsd').StatsD;
@@ -50,7 +51,7 @@ require('./utils/date_to_json');
 // jshint maxcomplexity:12
 function App() {
 
-    var app = express.createServer();
+    var app = express();
 
     var redisConfig = {
         host: global.settings.redis_host,
@@ -102,16 +103,6 @@ function App() {
             }
         };
         app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
-    } else {
-        // Express logger uses tokens as described here: http://www.senchalabs.org/connect/logger.html
-        express.logger.token('sql', function(req) {
-            return app.getSqlQueryFromRequestBody(req);
-        });
-        app.use(express.logger({
-            buffer: true,
-            format: global.settings.log_format ||
-                ':remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
-        }));
     }
 
     // Initialize statsD client if requested
@@ -172,9 +163,12 @@ function App() {
       });
     }
 
-    app.use(express.bodyParser());
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
     app.enable('jsonp callback');
     app.set("trust proxy", true);
+    app.disable('x-powered-by');
+    app.disable('etag');
 
     // basic routing
 

@@ -18,10 +18,10 @@ it('CSV format', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
 
         var rows = res.body.split(/\r\n/);
@@ -59,10 +59,10 @@ it('CSV format from POST', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
         done();
     });
@@ -75,10 +75,10 @@ it('CSV format, custom filename', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=mycsv.csv/gi.test(cd), cd);
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
         var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
         var checkFields = { name: true, cartodb_id: true, the_geom: true, the_geom_webmercator: true };

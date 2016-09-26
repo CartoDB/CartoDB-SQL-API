@@ -20,7 +20,7 @@ it('SHP format, unauthenticated', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
@@ -47,7 +47,7 @@ it('SHP format, unauthenticated, POST', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         done();
@@ -65,7 +65,7 @@ it('SHP format, big size, POST', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         assert.ok(res.body.length > 81920, 'SHP smaller than expected: ' + res.body.length);
@@ -81,7 +81,7 @@ it('SHP format, unauthenticated, with custom filename', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=myshape.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
@@ -108,7 +108,7 @@ it('SHP format, unauthenticated, with custom, dangerous filename', function(done
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var fname = "b_______a";
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         var tmpfile = '/tmp/myshape.zip';
@@ -134,7 +134,7 @@ it('SHP format, authenticated', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
         var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
@@ -260,7 +260,7 @@ it('SHP format, concurrently', function(done){
     var concurrency = 1;
     var waiting = concurrency;
     function validate(err, res){
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
@@ -309,7 +309,7 @@ it('point with null first', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
         var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');

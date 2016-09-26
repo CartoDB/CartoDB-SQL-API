@@ -17,9 +17,9 @@ it('GET /api/v1/sql with SVG format', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -38,10 +38,10 @@ it('POST /api/v1/sql with SVG format', function(done){
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -60,9 +60,9 @@ it('GET /api/v1/sql with SVG format and custom filename', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=mysvg.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -80,9 +80,9 @@ it('GET /api/v1/sql with SVG format and centered point', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('cx="0" cy="0"') > 0, res.body );
         // TODO: test viewBox
         // TODO: test radius
@@ -102,9 +102,9 @@ it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.12 167.01" />') > 0, res.body );
         // TODO: test viewBox
 
@@ -115,10 +115,10 @@ it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
           method: 'GET'
         },{}, function(err, res) {
           assert.equal(res.statusCode, 200, res.body);
-          var cd = res.header('Content-Disposition');
+          var cd = res.headers['content-disposition'];
           assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
           assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-          assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+          assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
           assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.123 167.012" />') > 0, res.body );
           // TODO: test viewBox
           done();

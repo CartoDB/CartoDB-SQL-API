@@ -25,7 +25,7 @@ it('GET /api/v1/sql with SQL parameter, ensuring content-disposition set to geoj
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         done();
@@ -40,7 +40,7 @@ it('POST /api/v1/sql with SQL parameter, ensuring content-disposition set to geo
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         done();
@@ -54,7 +54,7 @@ it('uses the last format parameter when multiple are used', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         done();
     });
@@ -67,7 +67,7 @@ it('uses custom filename', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=x.geojson/gi.test(cd), cd);
         done();
     });
@@ -157,7 +157,7 @@ it('null geometries in geojson output', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.geojson/gi.test(cd));
         var gjson = JSON.parse(res.body);
