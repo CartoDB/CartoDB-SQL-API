@@ -17,6 +17,7 @@
     "Sandro Santilli <strk@vizzuality.com>"
   ],
   "dependencies": {
+    "bunyan": "1.8.1",
     "cartodb-psql": "~0.6.0",
     "cartodb-query-tables": "0.2.0",
     "cartodb-redis": "0.13.1",
