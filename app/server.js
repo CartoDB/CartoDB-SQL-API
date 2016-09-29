@@ -209,7 +209,7 @@ function App() {
     var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
-        app.batch = batchFactory(metadataBackend, redisConfig, statsd_client);
+        app.batch = batchFactory(metadataBackend, redisConfig, statsd_client, global.settings.batch_log_filename);
         app.batch.start();
     }
 
