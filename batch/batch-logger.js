@@ -11,12 +11,11 @@ var JobFallback = require('./models/job_fallback');
 
 function BatchLogger (path) {
     this.path = path;
-    this.stream = this.path ? fs.createWriteStream(this.path, { flags: 'a', encoding: 'utf8' }) :  process.stdout;
     this.logger = bunyan.createLogger({
         name: 'batch-queries',
         streams: [{
             level: 'info',
-            stream: this.stream
+            stream: path ? fs.createWriteStream(path, { flags: 'a', encoding: 'utf8' }) :  process.stdout
         }]
     });
 }
