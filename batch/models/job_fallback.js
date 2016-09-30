@@ -7,6 +7,9 @@ var QueryFallback = require('./query/query_fallback');
 var MainFallback = require('./query/main_fallback');
 var QueryFactory = require('./query/query_factory');
 
+var JobUtils = require('./job_state_machine');
+var jobUtils = new JobUtils();
+
 function JobFallback(jobDefinition) {
     JobBase.call(this, jobDefinition);
 
@@ -206,3 +209,59 @@ JobFallback.prototype.getLastFinishedStatus = function () {
         return this.isFinalStatus(status) ? status : lastFinished;
     }.bind(this), jobStatus.DONE);
 };
+
+JobFallback.prototype.log = function(logger) {
+    if (!isFinished(this)) {
+        return;
+    }
+
+    var queries = this.data.query.query;
+
+    for (var i = 0; i < queries.length; i++) {
+        var query = queries[i];
+
+        if (!query.id) {
+            continue;
+        }
+
+        var node = parseQueryId(query.id);
+        var output = {
+            username: this.data.user,
+            job: this.data.job_id,
+            analysis: node.analysis,
+            node: node.id,
+            type: node.type,
+            elapsedTime: calculateElpasedTime(query.started_at, query.ended_at)
+        };
+
+        logger.info(output);
+    }
+
+};
+
+function isFinished (job) {
+    return jobUtils.isFinalStatus(job.data.status) &&
+        (!job.data.fallback_status || jobUtils.isFinalStatus(job.data.fallback_status));
+}
+
+function parseQueryId (queryId) {
+    var data = queryId.split(':');
+
+    return {
+        analysis: data[0],
+        id: data[1],
+        type: data[2]
+    };
+}
+
+function calculateElpasedTime (started_at, ended_at) {
+    if (!started_at || !ended_at) {
+        return;
+    }
+
+    var start = new Date(started_at);
+    var end = new Date(ended_at);
+    var elapsedTimeMilliseconds = end.getTime() - start.getTime();
+
+    return elapsedTimeMilliseconds;
+}
