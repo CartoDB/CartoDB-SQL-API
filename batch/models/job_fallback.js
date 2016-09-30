@@ -220,7 +220,7 @@ JobFallback.prototype.log = function(logger) {
     for (var i = 0; i < queries.length; i++) {
         var query = queries[i];
 
-        var output = {
+        var logEntry = {
             time: query.started_at,
             endtime: query.ended_at,
             username: this.data.user,
@@ -230,18 +230,20 @@ JobFallback.prototype.log = function(logger) {
 
         var queryId = query.id;
 
+        var tag = 'query';
         if (queryId) {
-            output.query_id = queryId;
+            logEntry.query_id = queryId;
 
             var node = parseQueryId(queryId);
             if (node) {
-                output.analysis = node.analysisId;
-                output.node = node.nodeId;
-                output.type = node.nodeType;
+                logEntry.analysis = node.analysisId;
+                logEntry.node = node.nodeId;
+                logEntry.type = node.nodeType;
+                tag = 'analysis';
             }
         }
 
-        logger.info(output);
+        logger.info(logEntry, tag);
     }
 
     return true;
