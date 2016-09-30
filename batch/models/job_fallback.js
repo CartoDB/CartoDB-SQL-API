@@ -7,6 +7,9 @@ var QueryFallback = require('./query/query_fallback');
 var MainFallback = require('./query/main_fallback');
 var QueryFactory = require('./query/query_factory');
 
+var JobUtils = require('./job_state_machine');
+var jobUtils = new JobUtils();
+
 function JobFallback(jobDefinition) {
     JobBase.call(this, jobDefinition);
 
@@ -206,3 +209,68 @@ JobFallback.prototype.getLastFinishedStatus = function () {
         return this.isFinalStatus(status) ? status : lastFinished;
     }.bind(this), jobStatus.DONE);
 };
+
+JobFallback.prototype.log = function(logger) {
+    if (!isFinished(this)) {
+        return false;
+    }
+
+    var queries = this.data.query.query;
+
+    for (var i = 0; i < queries.length; i++) {
+        var query = queries[i];
+
+        var output = {
+            time: query.started_at,
+            endtime: query.ended_at,
+            username: this.data.user,
+            job: this.data.job_id,
+            elapsed: elapsedTime(query.started_at, query.ended_at)
+        };
+
+        var queryId = query.id;
+
+        if (queryId) {
+            output.query_id = queryId;
+
+            var node = parseQueryId(queryId);
+            if (node) {
+                output.analysis = node.analysisId;
+                output.node = node.nodeId;
+                output.type = node.nodeType;
+            }
+        }
+
+        logger.info(output);
+    }
+
+    return true;
+};
+
+function isFinished (job) {
+    return jobUtils.isFinalStatus(job.data.status) &&
+        (!job.data.fallback_status || jobUtils.isFinalStatus(job.data.fallback_status));
+}
+
+function parseQueryId (queryId) {
+    var data = queryId.split(':');
+
+    if (data.length === 3) {
+        return {
+            analysisId: data[0],
+            nodeId: data[1],
+            nodeType: data[2]
+        };
+    }
+    return null;
+}
+
+function elapsedTime (started_at, ended_at) {
+    if (!started_at || !ended_at) {
+        return;
+    }
+
+    var start = new Date(started_at);
+    var end = new Date(ended_at);
+    return end.getTime() - start.getTime();
+}

@@ -100,6 +100,10 @@ process.on('SIGHUP', function() {
         global.logger = global.log4js.getLogger();
         console.log('Log files reloaded');
     });
+
+    if (server.batch && server.batch.logger) {
+        server.batch.logger.reopenFileStreams();
+    }
 });
 
 process.on('SIGTERM', function () {

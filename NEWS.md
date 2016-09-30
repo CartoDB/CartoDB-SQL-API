@@ -1,5 +1,15 @@
-1.35.1 - 2016-mm-dd
+1.36.1 - 2016-mm-dd
 -------------------
+
+
+1.36.0 - 2016-09-30
+-------------------
+
+New features:
+ * Log queries from batch fallback jobs.
+
+Enhancements:
+ * assert.response following callback(err, obj) pattern.
 
 
 1.35.0 - 2016-09-15
