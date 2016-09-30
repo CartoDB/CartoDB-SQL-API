@@ -220,19 +220,26 @@ JobFallback.prototype.log = function(logger) {
     for (var i = 0; i < queries.length; i++) {
         var query = queries[i];
 
-        if (!query.id) {
-            continue;
-        }
-
-        var node = parseQueryId(query.id);
         var output = {
+            time: query.started_at,
+            endtime: query.ended_at,
             username: this.data.user,
             job: this.data.job_id,
-            analysis: node.analysis,
-            node: node.id,
-            type: node.type,
             elapsedTime: calculateElpasedTime(query.started_at, query.ended_at)
         };
+
+        var queryId = query.id;
+
+        if (queryId) {
+            output.query_id = queryId;
+
+            var node = parseQueryId(queryId);
+            if (node) {
+                output.analysis = node.analysisId;
+                output.node = node.nodeId;
+                output.type = node.nodeType;
+            }
+        }
 
         logger.info(output);
     }
@@ -248,11 +255,14 @@ function isFinished (job) {
 function parseQueryId (queryId) {
     var data = queryId.split(':');
 
-    return {
-        analysis: data[0],
-        id: data[1],
-        type: data[2]
-    };
+    if (data.length === 3) {
+        return {
+            analysisId: data[0],
+            nodeId: data[1],
+            nodeType: data[2]
+        };
+    }
+    return null;
 }
 
 function calculateElpasedTime (started_at, ended_at) {
