@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.36.0",
+  "version": "1.36.1",
   "dependencies": {
     "bunyan": {
       "version": "1.8.1",
