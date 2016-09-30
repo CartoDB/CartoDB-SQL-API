@@ -225,7 +225,7 @@ JobFallback.prototype.log = function(logger) {
             endtime: query.ended_at,
             username: this.data.user,
             job: this.data.job_id,
-            elapsedTime: calculateElpasedTime(query.started_at, query.ended_at)
+            elapsed: elapsedTime(query.started_at, query.ended_at)
         };
 
         var queryId = query.id;
@@ -265,14 +265,12 @@ function parseQueryId (queryId) {
     return null;
 }
 
-function calculateElpasedTime (started_at, ended_at) {
+function elapsedTime (started_at, ended_at) {
     if (!started_at || !ended_at) {
         return;
     }
 
     var start = new Date(started_at);
     var end = new Date(ended_at);
-    var elapsedTimeMilliseconds = end.getTime() - start.getTime();
-
-    return elapsedTimeMilliseconds;
+    return end.getTime() - start.getTime();
 }
