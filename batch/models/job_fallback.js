@@ -230,6 +230,7 @@ JobFallback.prototype.log = function(logger) {
 
         var queryId = query.id;
 
+        var tag = 'query';
         if (queryId) {
             output.query_id = queryId;
 
@@ -238,10 +239,11 @@ JobFallback.prototype.log = function(logger) {
                 output.analysis = node.analysisId;
                 output.node = node.nodeId;
                 output.type = node.nodeType;
+                tag = 'analysis';
             }
         }
 
-        logger.info(output);
+        logger.info(output, tag);
     }
 
     return true;
