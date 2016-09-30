@@ -212,7 +212,7 @@ JobFallback.prototype.getLastFinishedStatus = function () {
 
 JobFallback.prototype.log = function(logger) {
     if (!isFinished(this)) {
-        return;
+        return false;
     }
 
     var queries = this.data.query.query;
@@ -237,6 +237,7 @@ JobFallback.prototype.log = function(logger) {
         logger.info(output);
     }
 
+    return true;
 };
 
 function isFinished (job) {
