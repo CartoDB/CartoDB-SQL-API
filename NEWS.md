@@ -1,6 +1,9 @@
 1.36.2 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ - Batch Queries logs: use path instead of stream to be able to reopen FD.
+
 
 1.36.1 - 2016-09-30
 -------------------
