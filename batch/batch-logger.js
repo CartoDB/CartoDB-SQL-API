@@ -1,16 +1,20 @@
 'use strict';
 
 var bunyan = require('bunyan');
-var fs = require('fs');
 
 function BatchLogger (path) {
+    var stream = {
+        level: 'info'
+    };
+    if (path) {
+        stream.path = path;
+    } else {
+        stream.stream = process.stdout;
+    }
     this.path = path;
     this.logger = bunyan.createLogger({
         name: 'batch-queries',
-        streams: [{
-            level: 'info',
-            stream: path ? fs.createWriteStream(path, { flags: 'a', encoding: 'utf8' }) :  process.stdout
-        }]
+        streams: [stream]
     });
 }
 
