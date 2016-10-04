@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('underscore');
-var step = require('step');
 var util = require('util');
 
 var userMiddleware = require('../middlewares/user');
@@ -62,103 +61,52 @@ JobController.prototype.route = function (app) {
 };
 
 JobController.prototype.cancelJob = function (req, res) {
-    var self = this;
-    var job_id = req.params.job_id;
-
-    step(
-        function cancelJob() {
-            self.jobService.cancel(job_id, this);
-        },
-        function handleResponse(err, job) {
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-                return handleException(err, res);
-            }
-
-            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
-
-            req.profiler.done('cancelJob');
-            req.profiler.end();
-            req.profiler.sendStats();
-
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-
-            self.statsdClient.increment('sqlapi.job.success');
-
-            res.send(job.serialize());
-        }
-    );
+    this.jobService.cancel(req.params.job_id, jobResponse(req, res, this.statsdClient, 'cancel'));
 };
 
 JobController.prototype.getJob = function (req, res) {
-    var self = this;
-    var job_id = req.params.job_id;
-
-    step(
-        function getJob() {
-            self.jobService.get(job_id, this);
-        },
-        function handleResponse(err, job) {
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-                return handleException(err, res);
-            }
-
-            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
-
-            req.profiler.done('getJob');
-            req.profiler.end();
-            req.profiler.sendStats();
-
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-
-            self.statsdClient.increment('sqlapi.job.success');
-
-            res.send(job.serialize());
-        }
-    );
+    this.jobService.get(req.params.job_id, jobResponse(req, res, this.statsdClient, 'retrieve'));
 };
 
 JobController.prototype.createJob = function (req, res) {
-    var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
 
-    step(
-        function persistJob() {
-            var data = {
-                user: req.context.user,
-                query: sql,
-                host: req.context.userDatabase.host
-            };
+    var data = {
+        user: req.context.user,
+        query: sql,
+        host: req.context.userDatabase.host
+    };
 
-            self.jobService.create(data, this);
-        },
-        function handleResponse(err, job) {
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-                return handleException(err, res);
-            }
-
-            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
-
-            req.profiler.done('persistJob');
-            req.profiler.end();
-            req.profiler.sendStats();
-
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-
-            self.statsdClient.increment('sqlapi.job.success');
-
-            console.info(JSON.stringify({
-                type: 'sql_api_batch_job',
-                username: req.context.user,
-                action: 'create',
-                job_id: job.job_id
-            }));
-
-            res.status(201).send(job.serialize());
-        }
-    );
+    this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
 };
+
+function jobResponse(req, res, statsdClient, action, status) {
+    return function handler(err, job) {
+        status = status || 200;
+
+        if (err) {
+            statsdClient.increment('sqlapi.job.error');
+            return handleException(err, res);
+        }
+
+        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
+
+        req.profiler.done(action);
+        req.profiler.end();
+        req.profiler.sendStats();
+
+        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        statsdClient.increment('sqlapi.job.success');
+
+        console.info(JSON.stringify({
+            type: 'sql_api_batch_job',
+            username: req.context.user,
+            action: action,
+            job_id: job.job_id
+        }));
+
+        res.status(status).send(job.serialize());
+    };
+}
