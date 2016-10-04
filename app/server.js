@@ -150,6 +150,10 @@ function App() {
     app.use(function bootstrap$prepareRequestResponse(req, res, next) {
         req.context = req.context || {};
 
+        if (global.settings.api_hostname) {
+            res.header('X-Served-By-Host', global.settings.api_hostname);
+        }
+
         var profile = global.settings.useProfiler;
         req.profiler = new Profiler({
             profile: profile,

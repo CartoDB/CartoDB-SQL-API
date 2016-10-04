@@ -85,10 +85,6 @@ JobController.prototype.cancelJob = function (req, res) {
                 return handleException(err, res);
             }
 
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
             if (result.host) {
                 res.header('X-Served-By-DB-Host', result.host);
             }
@@ -128,10 +124,6 @@ JobController.prototype.getJob = function (req, res) {
             if ( err ) {
                 self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
             }
 
             if (result.host) {
@@ -182,10 +174,6 @@ JobController.prototype.createJob = function (req, res) {
             if ( err ) {
                 self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
             }
 
             if (result.host) {
