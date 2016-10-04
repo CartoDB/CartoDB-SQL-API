@@ -17,7 +17,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var os = require('os');
-var Profiler = require('step-profiler');
+var Profiler = require('./stats/profiler-proxy');
 var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
@@ -147,12 +147,20 @@ function App() {
     app.use(cors());
 
     // Use step-profiler
-    if ( global.settings.useProfiler ) {
-      app.use(function(req, res, next) {
-        req.profiler = new Profiler({statsd_client:statsd_client});
+    app.use(function bootstrap$prepareRequestResponse(req, res, next) {
+        req.context = req.context || {};
+
+        if (global.settings.api_hostname) {
+            res.header('X-Served-By-Host', global.settings.api_hostname);
+        }
+
+        var profile = global.settings.useProfiler;
+        req.profiler = new Profiler({
+            profile: profile,
+            statsd_client: statsd_client
+        });
         next();
-      });
-    }
+    });
 
     // Set connection timeout
     if ( global.settings.hasOwnProperty('node_socket_timeout') ) {

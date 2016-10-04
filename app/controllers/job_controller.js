@@ -1,14 +1,11 @@
 'use strict';
 
 var _ = require('underscore');
-var step = require('step');
-var assert = require('assert');
 var util = require('util');
 
-var AuthApi = require('../auth/auth_api');
-var CdbRequest = require('../models/cartodb_request');
+var userMiddleware = require('../middlewares/user');
+var authenticatedMiddleware = require('../middlewares/authenticated-request');
 var handleException = require('../utils/error_handler');
-var cdbReq = new CdbRequest();
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
 var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
@@ -46,245 +43,70 @@ module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, this.createJob.bind(this));
-    app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
-    app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
+    app.post(
+        global.settings.base_url + '/sql/job',
+        bodyPayloadSizeMiddleware, userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.createJob.bind(this)
+    );
+    app.get(
+        global.settings.base_url + '/sql/job/:job_id',
+        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.getJob.bind(this)
+    );
+    app.delete(
+        global.settings.base_url + '/sql/job/:job_id',
+        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.cancelJob.bind(this)
+    );
 };
 
 JobController.prototype.cancelJob = function (req, res) {
-    var self = this;
-    var job_id = req.params.job_id;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var cdbUsername = cdbReq.userByReq(req);
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
-
-    step(
-        function getUserDBInfo() {
-            var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
-        },
-        function cancelJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
-
-            self.jobService.cancel(job_id, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize(),
-                    host: userDatabase.host
-                });
-            });
-        },
-        function handleResponse(err, result) {
-            if ( err ) {
-                return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('cancelJob');
-                req.profiler.end();
-                req.profiler.sendStats();
-
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
-
-            res.send(result.job);
-        }
-    );
+    this.jobService.cancel(req.params.job_id, jobResponse(req, res, this.statsdClient, 'cancel'));
 };
 
 JobController.prototype.getJob = function (req, res) {
-    var self = this;
-    var job_id = req.params.job_id;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var cdbUsername = cdbReq.userByReq(req);
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
-
-    step(
-        function getUserDBInfo() {
-            var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
-        },
-        function getJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
-
-            self.jobService.get(job_id, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize(),
-                    host: userDatabase.host
-                });
-            });
-        },
-        function handleResponse(err, result) {
-            if ( err ) {
-                return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('getJob');
-                req.profiler.end();
-                req.profiler.sendStats();
-
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
-
-            res.send(result.job);
-        }
-    );
+    this.jobService.get(req.params.job_id, jobResponse(req, res, this.statsdClient, 'retrieve'));
 };
 
 JobController.prototype.createJob = function (req, res) {
-    var self = this;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
-    var cdbUsername = cdbReq.userByReq(req);
 
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
+    var data = {
+        user: req.context.user,
+        query: sql,
+        host: req.context.userDatabase.host
+    };
 
-    step(
-        function getUserDBInfo() {
-            var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
-        },
-        function persistJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
-
-            var data = {
-                user: cdbUsername,
-                query: sql,
-                host: userDatabase.host
-            };
-
-            self.jobService.create(data, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize(),
-                    host: userDatabase.host
-                });
-            });
-        },
-        function handleResponse(err, result) {
-            if ( err ) {
-                return handleException(err, res);
-            }
-
-            if (global.settings.api_hostname) {
-                res.header('X-Served-By-Host', global.settings.api_hostname);
-            }
-
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
-
-            if ( req.profiler ) {
-                req.profiler.done('persistJob');
-                req.profiler.end();
-                req.profiler.sendStats();
-
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
-
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
-
-            console.info(JSON.stringify({
-                type: 'sql_api_batch_job',
-                username: cdbUsername,
-                action: 'create',
-                job_id: result.job.job_id
-            }));
-
-            res.status(201).send(result.job);
-        }
-    );
+    this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
 };
+
+function jobResponse(req, res, statsdClient, action, status) {
+    return function handler(err, job) {
+        status = status || 200;
+
+        if (err) {
+            statsdClient.increment('sqlapi.job.error');
+            return handleException(err, res);
+        }
+
+        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
+
+        req.profiler.done(action);
+        req.profiler.end();
+        req.profiler.sendStats();
+
+        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        statsdClient.increment('sqlapi.job.success');
+
+        console.info(JSON.stringify({
+            type: 'sql_api_batch_job',
+            username: req.context.user,
+            action: action,
+            job_id: job.job_id
+        }));
+
+        res.status(status).send(job.serialize());
+    };
+}
