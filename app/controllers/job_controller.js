@@ -96,6 +96,7 @@ JobController.prototype.cancelJob = function (req, res) {
         },
         function handleResponse(err, result) {
             if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
             }
 
@@ -115,11 +116,7 @@ JobController.prototype.cancelJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
+            self.statsdClient.increment('sqlapi.job.success');
 
             res.send(result.job);
         }
@@ -171,6 +168,7 @@ JobController.prototype.getJob = function (req, res) {
         },
         function handleResponse(err, result) {
             if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
             }
 
@@ -190,11 +188,7 @@ JobController.prototype.getJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
+            self.statsdClient.increment('sqlapi.job.success');
 
             res.send(result.job);
         }
@@ -252,6 +246,7 @@ JobController.prototype.createJob = function (req, res) {
         },
         function handleResponse(err, result) {
             if ( err ) {
+                self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
             }
 
@@ -271,11 +266,7 @@ JobController.prototype.createJob = function (req, res) {
                 res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
             }
 
-            if ( err ) {
-                self.statsdClient.increment('sqlapi.job.error');
-            } else {
-                self.statsdClient.increment('sqlapi.job.success');
-            }
+            self.statsdClient.increment('sqlapi.job.success');
 
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
