@@ -2,11 +2,10 @@
 
 var _ = require('underscore');
 var step = require('step');
-var assert = require('assert');
 var util = require('util');
 
 var userMiddleware = require('../middlewares/user');
-var AuthApi = require('../auth/auth_api');
+var authenticatedMiddleware = require('../middlewares/authenticated-request');
 var handleException = require('../utils/error_handler');
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
@@ -45,38 +44,30 @@ module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, userMiddleware, this.createJob.bind(this));
-    app.get(global.settings.base_url + '/sql/job/:job_id', userMiddleware, this.getJob.bind(this));
-    app.delete(global.settings.base_url + '/sql/job/:job_id', userMiddleware, this.cancelJob.bind(this));
+    app.post(
+        global.settings.base_url + '/sql/job',
+        bodyPayloadSizeMiddleware, userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.createJob.bind(this)
+    );
+    app.get(
+        global.settings.base_url + '/sql/job/:job_id',
+        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.getJob.bind(this)
+    );
+    app.delete(
+        global.settings.base_url + '/sql/job/:job_id',
+        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.cancelJob.bind(this)
+    );
 };
 
 JobController.prototype.cancelJob = function (req, res) {
     var self = this;
     var job_id = req.params.job_id;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-
-    req.profiler.start('sqlapi.job');
-    req.profiler.done('init');
 
     step(
-        function getUserDBInfo() {
+        function cancelJob() {
             var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
-        },
-        function cancelJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            req.profiler.done('setDBAuth');
-
             self.jobService.cancel(job_id, function (err, job) {
                 if (err) {
                     return next(err);
@@ -84,7 +75,7 @@ JobController.prototype.cancelJob = function (req, res) {
 
                 next(null, {
                     job: job.serialize(),
-                    host: userDatabase.host
+                    host: req.context.userDatabase.host
                 });
             });
         },
@@ -118,30 +109,10 @@ JobController.prototype.cancelJob = function (req, res) {
 JobController.prototype.getJob = function (req, res) {
     var self = this;
     var job_id = req.params.job_id;
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-
-    req.profiler.start('sqlapi.job');
-    req.profiler.done('init');
 
     step(
-        function getUserDBInfo() {
+        function getJob() {
             var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
-        },
-        function getJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            req.profiler.done('setDBAuth');
-
             self.jobService.get(job_id, function (err, job) {
                 if (err) {
                     return next(err);
@@ -149,7 +120,7 @@ JobController.prototype.getJob = function (req, res) {
 
                 next(null, {
                     job: job.serialize(),
-                    host: userDatabase.host
+                    host: req.context.userDatabase.host
                 });
             });
         },
@@ -186,31 +157,14 @@ JobController.prototype.createJob = function (req, res) {
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
 
-    req.profiler.start('sqlapi.job');
-    req.profiler.done('init');
-
     step(
-        function getUserDBInfo() {
+        function persistJob() {
             var next = this;
-            var authApi = new AuthApi(req, params);
-
-            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
-        },
-        function persistJob(err, userDatabase) {
-            assert.ifError(err);
-
-            if (!userDatabase.authenticated) {
-                throw new Error('permission denied');
-            }
-
-            var next = this;
-
-            req.profiler.done('setDBAuth');
 
             var data = {
                 user: req.context.user,
                 query: sql,
-                host: userDatabase.host
+                host: req.context.userDatabase.host
             };
 
             self.jobService.create(data, function (err, job) {
@@ -220,7 +174,7 @@ JobController.prototype.createJob = function (req, res) {
 
                 next(null, {
                     job: job.serialize(),
-                    host: userDatabase.host
+                    host: req.context.userDatabase.host
                 });
             });
         },
