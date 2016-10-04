@@ -147,7 +147,9 @@ function App() {
     app.use(cors());
 
     // Use step-profiler
-    app.use(function(req, res, next) {
+    app.use(function bootstrap$prepareRequestResponse(req, res, next) {
+        req.context = req.context || {};
+
         var profile = global.settings.useProfiler;
         req.profiler = new Profiler({
             profile: profile,
