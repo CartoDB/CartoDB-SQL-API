@@ -58,10 +58,8 @@ JobController.prototype.cancelJob = function (req, res) {
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var cdbUsername = cdbReq.userByReq(req);
 
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
+    req.profiler.start('sqlapi.job');
+    req.profiler.done('init');
 
     step(
         function getUserDBInfo() {
@@ -79,9 +77,7 @@ JobController.prototype.cancelJob = function (req, res) {
 
             var next = this;
 
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
+            req.profiler.done('setDBAuth');
 
             self.jobService.cancel(job_id, function (err, job) {
                 if (err) {
@@ -108,13 +104,11 @@ JobController.prototype.cancelJob = function (req, res) {
                 res.header('X-Served-By-DB-Host', result.host);
             }
 
-            if ( req.profiler ) {
-                req.profiler.done('cancelJob');
-                req.profiler.end();
-                req.profiler.sendStats();
+            req.profiler.done('cancelJob');
+            req.profiler.end();
+            req.profiler.sendStats();
 
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
 
             self.statsdClient.increment('sqlapi.job.success');
 
@@ -130,10 +124,8 @@ JobController.prototype.getJob = function (req, res) {
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var cdbUsername = cdbReq.userByReq(req);
 
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
+    req.profiler.start('sqlapi.job');
+    req.profiler.done('init');
 
     step(
         function getUserDBInfo() {
@@ -151,9 +143,7 @@ JobController.prototype.getJob = function (req, res) {
 
             var next = this;
 
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
+            req.profiler.done('setDBAuth');
 
             self.jobService.get(job_id, function (err, job) {
                 if (err) {
@@ -180,13 +170,11 @@ JobController.prototype.getJob = function (req, res) {
                 res.header('X-Served-By-DB-Host', result.host);
             }
 
-            if ( req.profiler ) {
-                req.profiler.done('getJob');
-                req.profiler.end();
-                req.profiler.sendStats();
+            req.profiler.done('getJob');
+            req.profiler.end();
+            req.profiler.sendStats();
 
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
 
             self.statsdClient.increment('sqlapi.job.success');
 
@@ -202,10 +190,8 @@ JobController.prototype.createJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
     var cdbUsername = cdbReq.userByReq(req);
 
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-    }
+    req.profiler.start('sqlapi.job');
+    req.profiler.done('init');
 
     step(
         function getUserDBInfo() {
@@ -223,9 +209,7 @@ JobController.prototype.createJob = function (req, res) {
 
             var next = this;
 
-            if ( req.profiler ) {
-                req.profiler.done('setDBAuth');
-            }
+            req.profiler.done('setDBAuth');
 
             var data = {
                 user: cdbUsername,
@@ -258,13 +242,11 @@ JobController.prototype.createJob = function (req, res) {
                 res.header('X-Served-By-DB-Host', result.host);
             }
 
-            if ( req.profiler ) {
-                req.profiler.done('persistJob');
-                req.profiler.end();
-                req.profiler.sendStats();
+            req.profiler.done('persistJob');
+            req.profiler.end();
+            req.profiler.sendStats();
 
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-            }
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
 
             self.statsdClient.increment('sqlapi.job.success');
 
