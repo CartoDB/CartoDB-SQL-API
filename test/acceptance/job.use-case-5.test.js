@@ -18,18 +18,11 @@ var server = require('../../app/server')();
 var assert = require('../support/assert');
 var redisUtils = require('../support/redis_utils');
 var querystring = require('querystring');
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
-var metadataBackend = require('cartodb-redis')(redisConfig);
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
 var batchFactory = require('../../batch');
 
 describe('Use case 5: modify a running job', function() {
-    var batch = batchFactory(metadataBackend, redisConfig);
+    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
         batch.start();

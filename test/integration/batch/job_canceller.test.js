@@ -17,16 +17,8 @@ var UserDatabaseMetadataService = require(BATCH_SOURCE + 'user_database_metadata
 var JobCanceller = require(BATCH_SOURCE + 'job_canceller');
 var PSQL = require('cartodb-psql');
 
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
-
-var metadataBackend = require('cartodb-redis')(redisConfig);
-var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'batch-publisher'}));
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
 var jobPublisher = new JobPublisher(redisPoolPublisher);
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
