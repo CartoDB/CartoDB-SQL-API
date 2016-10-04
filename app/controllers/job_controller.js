@@ -5,10 +5,9 @@ var step = require('step');
 var assert = require('assert');
 var util = require('util');
 
+var userMiddleware = require('../middlewares/user');
 var AuthApi = require('../auth/auth_api');
-var CdbRequest = require('../models/cartodb_request');
 var handleException = require('../utils/error_handler');
-var cdbReq = new CdbRequest();
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
 var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
@@ -46,9 +45,9 @@ module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 JobController.prototype.route = function (app) {
-    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, this.createJob.bind(this));
-    app.get(global.settings.base_url + '/sql/job/:job_id',  this.getJob.bind(this));
-    app.delete(global.settings.base_url + '/sql/job/:job_id',  this.cancelJob.bind(this));
+    app.post(global.settings.base_url + '/sql/job', bodyPayloadSizeMiddleware, userMiddleware, this.createJob.bind(this));
+    app.get(global.settings.base_url + '/sql/job/:job_id', userMiddleware, this.getJob.bind(this));
+    app.delete(global.settings.base_url + '/sql/job/:job_id', userMiddleware, this.cancelJob.bind(this));
 };
 
 JobController.prototype.cancelJob = function (req, res) {
@@ -56,7 +55,6 @@ JobController.prototype.cancelJob = function (req, res) {
     var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var cdbUsername = cdbReq.userByReq(req);
 
     req.profiler.start('sqlapi.job');
     req.profiler.done('init');
@@ -66,7 +64,7 @@ JobController.prototype.cancelJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
         },
         function cancelJob(err, userDatabase) {
             assert.ifError(err);
@@ -122,7 +120,6 @@ JobController.prototype.getJob = function (req, res) {
     var job_id = req.params.job_id;
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var cdbUsername = cdbReq.userByReq(req);
 
     req.profiler.start('sqlapi.job');
     req.profiler.done('init');
@@ -132,7 +129,7 @@ JobController.prototype.getJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
         },
         function getJob(err, userDatabase) {
             assert.ifError(err);
@@ -188,7 +185,6 @@ JobController.prototype.createJob = function (req, res) {
     var body = (req.body) ? req.body : {};
     var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
-    var cdbUsername = cdbReq.userByReq(req);
 
     req.profiler.start('sqlapi.job');
     req.profiler.done('init');
@@ -198,7 +194,7 @@ JobController.prototype.createJob = function (req, res) {
             var next = this;
             var authApi = new AuthApi(req, params);
 
-            self.userDatabaseService.getConnectionParams(authApi, cdbUsername, next);
+            self.userDatabaseService.getConnectionParams(authApi, req.context.user, next);
         },
         function persistJob(err, userDatabase) {
             assert.ifError(err);
@@ -212,7 +208,7 @@ JobController.prototype.createJob = function (req, res) {
             req.profiler.done('setDBAuth');
 
             var data = {
-                user: cdbUsername,
+                user: req.context.user,
                 query: sql,
                 host: userDatabase.host
             };
@@ -252,7 +248,7 @@ JobController.prototype.createJob = function (req, res) {
 
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
-                username: cdbUsername,
+                username: req.context.user,
                 action: 'create',
                 job_id: result.job.job_id
             }));
