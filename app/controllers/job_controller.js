@@ -67,18 +67,9 @@ JobController.prototype.cancelJob = function (req, res) {
 
     step(
         function cancelJob() {
-            var next = this;
-            self.jobService.cancel(job_id, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize()
-                });
-            });
+            self.jobService.cancel(job_id, this);
         },
-        function handleResponse(err, result) {
+        function handleResponse(err, job) {
             if ( err ) {
                 self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
@@ -94,7 +85,7 @@ JobController.prototype.cancelJob = function (req, res) {
 
             self.statsdClient.increment('sqlapi.job.success');
 
-            res.send(result.job);
+            res.send(job.serialize());
         }
     );
 };
@@ -105,18 +96,9 @@ JobController.prototype.getJob = function (req, res) {
 
     step(
         function getJob() {
-            var next = this;
-            self.jobService.get(job_id, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize()
-                });
-            });
+            self.jobService.get(job_id, this);
         },
-        function handleResponse(err, result) {
+        function handleResponse(err, job) {
             if ( err ) {
                 self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
@@ -132,7 +114,7 @@ JobController.prototype.getJob = function (req, res) {
 
             self.statsdClient.increment('sqlapi.job.success');
 
-            res.send(result.job);
+            res.send(job.serialize());
         }
     );
 };
@@ -145,25 +127,15 @@ JobController.prototype.createJob = function (req, res) {
 
     step(
         function persistJob() {
-            var next = this;
-
             var data = {
                 user: req.context.user,
                 query: sql,
                 host: req.context.userDatabase.host
             };
 
-            self.jobService.create(data, function (err, job) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, {
-                    job: job.serialize()
-                });
-            });
+            self.jobService.create(data, this);
         },
-        function handleResponse(err, result) {
+        function handleResponse(err, job) {
             if ( err ) {
                 self.statsdClient.increment('sqlapi.job.error');
                 return handleException(err, res);
@@ -183,10 +155,10 @@ JobController.prototype.createJob = function (req, res) {
                 type: 'sql_api_batch_job',
                 username: req.context.user,
                 action: 'create',
-                job_id: result.job.job_id
+                job_id: job.job_id
             }));
 
-            res.status(201).send(result.job);
+            res.status(201).send(job.serialize());
         }
     );
 };
