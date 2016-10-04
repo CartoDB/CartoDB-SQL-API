@@ -74,8 +74,7 @@ JobController.prototype.cancelJob = function (req, res) {
                 }
 
                 next(null, {
-                    job: job.serialize(),
-                    host: req.context.userDatabase.host
+                    job: job.serialize()
                 });
             });
         },
@@ -85,9 +84,7 @@ JobController.prototype.cancelJob = function (req, res) {
                 return handleException(err, res);
             }
 
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
+            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
 
             req.profiler.done('cancelJob');
             req.profiler.end();
@@ -115,8 +112,7 @@ JobController.prototype.getJob = function (req, res) {
                 }
 
                 next(null, {
-                    job: job.serialize(),
-                    host: req.context.userDatabase.host
+                    job: job.serialize()
                 });
             });
         },
@@ -126,9 +122,7 @@ JobController.prototype.getJob = function (req, res) {
                 return handleException(err, res);
             }
 
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
+            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
 
             req.profiler.done('getJob');
             req.profiler.end();
@@ -165,8 +159,7 @@ JobController.prototype.createJob = function (req, res) {
                 }
 
                 next(null, {
-                    job: job.serialize(),
-                    host: req.context.userDatabase.host
+                    job: job.serialize()
                 });
             });
         },
@@ -176,9 +169,7 @@ JobController.prototype.createJob = function (req, res) {
                 return handleException(err, res);
             }
 
-            if (result.host) {
-                res.header('X-Served-By-DB-Host', result.host);
-            }
+            res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
 
             req.profiler.done('persistJob');
             req.profiler.end();
