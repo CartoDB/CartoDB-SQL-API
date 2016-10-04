@@ -848,9 +848,9 @@ it('GET /api/v1/sql with SQL parameter and no format, ensuring content-dispositi
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
         done();
@@ -865,9 +865,9 @@ it('POST /api/v1/sql with SQL parameter and no format, ensuring content-disposit
         method: 'POST'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
         assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
         done();
@@ -881,9 +881,9 @@ it('GET /api/v1/sql with SQL parameter and no format, but a filename', function(
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var ct = res.header('Content-Type');
+        var ct = res.headers['content-type'];
         assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'Format with filename is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=x.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
         done();
@@ -959,7 +959,7 @@ it('GET /api/v1/sql ensure cross domain set on errors', function(done){
     },{
         status: 400
     }, function(err, res){
-        var cd = res.header('Access-Control-Allow-Origin');
+        var cd = res.headers['access-control-allow-origin'];
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(cd, '*');

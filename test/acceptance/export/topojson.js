@@ -35,7 +35,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
             status: 200
         },
         function(err, res) {
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
         var topojson = JSON.parse(res.body);
@@ -140,7 +140,7 @@ it('null geometries', function(done){
             status: 200
         },
         function(err, res) {
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
         var topojson = JSON.parse(res.body);
