@@ -1,5 +1,8 @@
-1.36.3 - 2016-mm-dd
+1.37.0 - 2016-mm-dd
 -------------------
+
+Enhancements:
+ * Migrate to Express.js 4.x series.
 
 
 1.36.2 - 2016-10-03
