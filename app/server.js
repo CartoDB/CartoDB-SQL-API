@@ -15,7 +15,7 @@
 //
 
 var express = require('express');
-var bodyParser = require('body-parser');
+var bodyParser = require('./middlewares/body-parser');
 var os = require('os');
 var Profiler = require('./stats/profiler-proxy');
 var StatsD = require('node-statsd').StatsD;
@@ -171,9 +171,7 @@ function App() {
       });
     }
 
-    app.use(bodyParser.json({ limit: '20mb' }));
-    app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
-    app.use(bodyParser.raw({ limit: '20mb' }));
+    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
