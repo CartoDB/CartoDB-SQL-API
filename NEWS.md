@@ -1,6 +1,9 @@
 1.37.1 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ * Body parser accepting multipart requests.
+
 
 1.37.0 - 2016-10-04
 -------------------
