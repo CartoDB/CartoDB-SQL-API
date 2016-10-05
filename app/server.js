@@ -171,8 +171,9 @@ function App() {
       });
     }
 
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(bodyParser.json({ limit: '20mb' }));
+    app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
+    app.use(bodyParser.raw({ limit: '20mb' }));
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
