@@ -31,6 +31,7 @@ module.exports.db_host      = 'localhost';
 module.exports.db_port      = '6432';
 module.exports.db_batch_port      = '5432';
 module.exports.finished_jobs_ttl_in_seconds = 2 * 3600; // 2 hours
+module.exports.batch_query_timeout || 12 * 3600 * 1000; // 12 hours in milliseconds
 module.exports.batch_log_filename = 'logs/batch-queries.log';
 // Max database connections in the pool
 // Subsequent connections will wait for a free slot.
