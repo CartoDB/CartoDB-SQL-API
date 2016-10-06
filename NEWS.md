@@ -3,6 +3,7 @@
 
 Announcements:
  * limited batch queries to 12 hours
+ * Multiple queries jobs pushed as first job between queries.
 
 
 1.37.1 - 2016-10-05
