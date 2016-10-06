@@ -26,7 +26,7 @@ QueryRunner.prototype.run = function (job_id, sql, user, callback) {
             // mark query to allow to users cancel their queries
             sql = '/* ' + job_id + ' */ ' + sql;
 
-            debug('Running query [timeout=%d] %s', timeout, sql);
+            debug('Running query %s', sql);
             pg.eventedQuery(sql, function (err, query) {
                 if (err) {
                     return callback(err);
