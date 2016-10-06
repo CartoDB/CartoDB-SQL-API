@@ -12,14 +12,14 @@
  * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
-require('../helper');
+require('../../helper');
 
-var server = require('../../app/server')();
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+var server = require('../../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var batchFactory = require('../../batch');
+var batchFactory = require('../../../batch');
 
 describe('Use case 6: modify a done job', function() {
     var batch = batchFactory(metadataBackend, redisUtils.getConfig());

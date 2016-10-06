@@ -1,16 +1,17 @@
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+require('../../helper');
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 var queue = require('queue-async');
-var batchFactory = require('../../batch');
+var batchFactory = require('../../../batch/index');
 
-var JobPublisher = require('../../batch/job_publisher');
-var JobQueue = require('../../batch/job_queue');
-var JobBackend = require('../../batch/job_backend');
-var JobService = require('../../batch/job_service');
-var UserDatabaseMetadataService = require('../../batch/user_database_metadata_service');
-var JobCanceller = require('../../batch/job_canceller');
+var JobPublisher = require('../../../batch/job_publisher');
+var JobQueue = require('../../../batch/job_queue');
+var JobBackend = require('../../../batch/job_backend');
+var JobService = require('../../../batch/job_service');
+var UserDatabaseMetadataService = require('../../../batch/user_database_metadata_service');
+var JobCanceller = require('../../../batch/job_canceller');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
 
 describe('batch module', function() {
