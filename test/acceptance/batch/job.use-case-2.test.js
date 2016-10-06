@@ -12,16 +12,16 @@
  * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
-require('../helper');
+require('../../helper');
 
-var server = require('../../app/server')();
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+var server = require('../../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var batchFactory = require('../../batch');
+var batchFactory = require('../../../batch/index');
 
-describe('Use case 8: cancel a running multiquery job', function() {
+describe('Use case 2: cancel a running job', function() {
     var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
@@ -37,17 +37,13 @@ describe('Use case 8: cancel a running multiquery job', function() {
     var runningJob = {};
     var cancelledJob = {};
 
-    it('Step 1, should create a new multiquery job', function (done) {
+    it('Step 1, should create a new job', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
-                query: [
-                    "select pg_sleep(1)",
-                    "select pg_sleep(1)",
-                    "select pg_sleep(1)"
-                ]
+                query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
             })
         }, {
             status: 201
@@ -57,7 +53,7 @@ describe('Use case 8: cancel a running multiquery job', function() {
         });
     });
 
-    it('Step 2, multiquery job should be running', function (done){
+    it('Step 2, job should be running', function (done){
         var interval = setInterval(function () {
             assert.response(server, {
                 url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
@@ -78,7 +74,7 @@ describe('Use case 8: cancel a running multiquery job', function() {
         }, 50);
     });
 
-    it('Step 3, cancel a multiquery job', function (done){
+    it('Step 3, cancel a job', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -92,7 +88,7 @@ describe('Use case 8: cancel a running multiquery job', function() {
         });
     });
 
-    it('Step 4, multiquery job should be cancelled', function (done){
+    it('Step 4, job should be cancelled', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -109,7 +105,7 @@ describe('Use case 8: cancel a running multiquery job', function() {
         });
     });
 
-    it('Step 5, cancel a cancelled multiquery job should give an error', function (done) {
+    it('Step 5, cancel a cancelled should give an error', function (done) {
         assert.response(server, {
             url: '/api/v2/sql/job/' + cancelledJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },

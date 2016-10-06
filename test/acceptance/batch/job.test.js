@@ -12,11 +12,11 @@
  * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
-require('../helper');
+require('../../helper');
 
-var server = require('../../app/server')();
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+var server = require('../../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var querystring = require('querystring');
 
 describe('job module', function() {

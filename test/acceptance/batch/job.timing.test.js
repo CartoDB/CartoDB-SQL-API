@@ -1,12 +1,12 @@
-require('../helper');
+require('../../helper');
 
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
-var server = require('../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
+var server = require('../../../app/server')();
 var querystring = require('qs');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var batchFactory = require('../../batch');
-var jobStatus = require('../../batch/job_status');
+var batchFactory = require('../../../batch');
+var jobStatus = require('../../../batch/job_status');
 
 describe('Batch API query timing', function () {
 

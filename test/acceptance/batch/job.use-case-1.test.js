@@ -12,16 +12,16 @@
  * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
-require('../helper');
+require('../../helper');
 
-var server = require('../../app/server')();
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+var server = require('../../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var batchFactory = require('../../batch');
+var batchFactory = require('../../../batch/index');
 
-describe('Use case 4: modify a pending job', function() {
+describe('Use case 1: cancel and modify a done job', function () {
     var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
@@ -34,26 +34,9 @@ describe('Use case 4: modify a pending job', function() {
         redisUtils.clean('batch:*', done);
     });
 
-    var runningJob = {};
-    var pendingJob = {};
+    var doneJob = {};
 
     it('Step 1, should create a job', function (done) {
-        assert.response(server, {
-            url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
-            method: 'POST',
-            data: querystring.stringify({
-                query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
-            })
-        }, {
-            status: 201
-        }, function(err, res) {
-            runningJob = JSON.parse(res.body);
-            done();
-        });
-    });
-
-    it('Step 2, should create another job', function (done) {
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -63,43 +46,45 @@ describe('Use case 4: modify a pending job', function() {
             })
         }, {
             status: 201
-        }, function(err, res) {
-            pendingJob = JSON.parse(res.body);
+        }, function (err, res) {
+            doneJob = JSON.parse(res.body);
             done();
         });
     });
 
-    it('Step 3, job should be pending', function (done){
+    it('Step 2, job should be done', function (done) {
         var interval = setInterval(function () {
             assert.response(server, {
-                url: '/api/v2/sql/job/' + pendingJob.job_id + '?api_key=1234',
+                url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
                 status: 200
-            }, function(err, res) {
+            }, function (err, res) {
                 var job = JSON.parse(res.body);
-                if (job.status === "pending") {
+                if (job.status === "done") {
                     clearInterval(interval);
                     done();
-                } else {
+                } else if (job.status === "failed" || job.status === "cancelled") {
                     clearInterval(interval);
-                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be pending'));
+                    done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be done'));
+                } else {
+                    console.log('Job ' + job.job_id + ' is ' + job.status + ', expecting to be done');
                 }
             });
         }, 50);
     });
 
-    it('Step 5, running job should be cancelled', function (done){
+    it('Step 3, cancel a done job should give an error', function (done){
         assert.response(server, {
-            url: '/api/v2/sql/job/' + runningJob.job_id + '?api_key=1234',
+            url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {
-            status: 200
+            status: 400
         }, function(err, res) {
-            var cancelledJob = JSON.parse(res.body);
-            assert.equal(cancelledJob.status, "cancelled");
+            var errors = JSON.parse(res.body);
+            assert.equal(errors.error[0], "Cannot set status from done to cancelled");
             done();
         });
     });
