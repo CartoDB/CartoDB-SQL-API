@@ -12,24 +12,17 @@
  * HSET rails:users:vizzuality database_name cartodb_test_user_1_db
  *
  */
-require('../helper');
+require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
+var server = require('../../../app/server')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
 var querystring = require('querystring');
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
-var metadataBackend = require('cartodb-redis')(redisConfig);
-var batchFactory = require('../../batch');
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var batchFactory = require('../../../batch');
 
 describe('Use case 6: modify a done job', function() {
-    var batch = batchFactory(metadataBackend, redisConfig);
+    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
         batch.start();
@@ -44,7 +37,7 @@ describe('Use case 6: modify a done job', function() {
     var doneJob = {};
 
     it('Step 1, should create job', function (done) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
@@ -53,7 +46,7 @@ describe('Use case 6: modify a done job', function() {
             })
         }, {
             status: 201
-        }, function (res) {
+        }, function (err, res) {
             doneJob = JSON.parse(res.body);
             done();
         });
@@ -61,13 +54,13 @@ describe('Use case 6: modify a done job', function() {
 
     it('Step 2, job should be done', function (done) {
         var interval = setInterval(function () {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job/' + doneJob.job_id + '?api_key=1234',
                 headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
                 method: 'GET'
             }, {
                 status: 200
-            }, function(res) {
+            }, function(err, res) {
                 var job = JSON.parse(res.body);
                 if (job.status === "done") {
                     clearInterval(interval);

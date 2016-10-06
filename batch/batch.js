@@ -7,12 +7,13 @@ var forever = require('./util/forever');
 var queue = require('queue-async');
 var jobStatus = require('./job_status');
 
-function Batch(jobSubscriber, jobQueuePool, jobRunner, jobService) {
+function Batch(jobSubscriber, jobQueuePool, jobRunner, jobService, logger) {
     EventEmitter.call(this);
     this.jobSubscriber = jobSubscriber;
     this.jobQueuePool = jobQueuePool;
     this.jobRunner = jobRunner;
     this.jobService = jobService;
+    this.logger = logger;
 }
 util.inherits(Batch, EventEmitter);
 
@@ -89,6 +90,8 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
             } else {
                 debug('Job %s %s in %s', job_id, job.data.status, host);
             }
+
+            self.logger.log(job);
 
             self.emit('job:' + job.data.status, job_id);
 

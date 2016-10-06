@@ -1,8 +1,60 @@
-1.34.3 - 2016-mm-dd
+1.37.2 - 2016-mm-dd
 -------------------
 
 Announcements:
  * limited batch queries to 12 hours
+
+
+1.37.1 - 2016-10-05
+-------------------
+
+Bug fixes:
+ * Body parser accepting multipart requests.
+
+
+1.37.0 - 2016-10-04
+-------------------
+
+Enhancements:
+ * Migrate to Express.js 4.x series.
+
+
+1.36.2 - 2016-10-03
+-------------------
+
+Bug fixes:
+ - Batch Queries logs: use path instead of stream to be able to reopen FD.
+
+
+1.36.1 - 2016-09-30
+-------------------
+
+Enhancements:
+ * Tag fallback jobs logs.
+
+
+1.36.0 - 2016-09-30
+-------------------
+
+New features:
+ * Log queries from batch fallback jobs.
+
+Enhancements:
+ * assert.response following callback(err, obj) pattern.
+
+
+1.35.0 - 2016-09-15
+-------------------
+
+New features:
+ * Allow to use `--config /path/to/config.js` to specify configuration file.
+   - Environment will be loaded from config file if `environment` key is present, otherwise it keeps current behaviour.
+
+Bug fixes:
+ * Allow to use absolute paths for log files.
+
+Announcements:
+ * Removes support for optional rollbar logging.
 
 
 1.34.2 - 2016-08-30

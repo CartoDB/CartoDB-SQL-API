@@ -25,14 +25,22 @@ module.exports = function handleException(err, res) {
     // Force inline content disposition
     res.header("Content-Disposition", 'inline');
 
-    if ( res.req && res.req.profiler ) {
-      res.req.profiler.done('finish');
-      res.header('X-SQLAPI-Profiler', res.req.profiler.toJSONString());
+    var req = res.req;
+
+    if (req && req.profiler ) {
+      req.profiler.done('finish');
+      res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
     }
 
-    res.send(msg, getStatusError(pgErrorHandler, res.req));
+    res.header('Content-Type', 'application/json; charset=utf-8');
+    res.status(getStatusError(pgErrorHandler, req));
+    if (req.query && req.query.callback) {
+        res.jsonp(msg);
+    } else {
+        res.json(msg);
+    }
 
-    if ( res.req && res.req.profiler ) {
+    if (req && req.profiler) {
       res.req.profiler.sendStats();
     }
 };

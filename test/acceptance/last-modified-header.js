@@ -1,6 +1,6 @@
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
 
@@ -37,7 +37,7 @@ describe('last modified header', function() {
                 }).join(' UNION ALL '),
                 api_key: 1234
             });
-            assert.response(app,
+            assert.response(server,
                 {
                     url: '/api/v1/sql?' + query,
                     headers: {
@@ -48,7 +48,7 @@ describe('last modified header', function() {
                 {
                     statusCode: 200
                 },
-                function(res) {
+                function(err, res) {
                     assert.equal(res.headers['last-modified'], scenario.expectedLastModified);
                     done();
                 }
@@ -66,7 +66,7 @@ describe('last modified header', function() {
         Date.now = function() {
             return fixedDateNow;
         };
-        assert.response(app,
+        assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
                 headers: {
@@ -77,7 +77,7 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(res) {
+            function(err, res) {
                 Date.now = dateNowFn;
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
@@ -95,7 +95,7 @@ describe('last modified header', function() {
         Date.now = function() {
             return fixedDateNow;
         };
-        assert.response(app,
+        assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
                 headers: {
@@ -106,7 +106,7 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(res) {
+            function(err, res) {
                 Date.now = dateNowFn;
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();

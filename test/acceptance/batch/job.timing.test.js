@@ -1,24 +1,17 @@
-require('../helper');
+require('../../helper');
 
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
-var app = require(global.settings.app_root + '/app/app')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
+var server = require('../../../app/server')();
 var querystring = require('qs');
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
-var metadataBackend = require('cartodb-redis')(redisConfig);
-var batchFactory = require('../../batch');
-var jobStatus = require('../../batch/job_status');
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var batchFactory = require('../../../batch');
+var jobStatus = require('../../../batch/job_status');
 
 describe('Batch API query timing', function () {
 
     function createJob(jobDefinition, callback) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -28,7 +21,7 @@ describe('Batch API query timing', function () {
             data: querystring.stringify(jobDefinition)
         }, {
             status: 201
-        }, function (res, err) {
+        }, function (err, res) {
             if (err) {
                 return callback(err);
             }
@@ -37,7 +30,7 @@ describe('Batch API query timing', function () {
     }
 
     function getJobStatus(jobId, callback) {
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v2/sql/job/' + jobId + '?api_key=1234&',
             headers: {
                 host: 'vizzuality.cartodb.com'
@@ -45,7 +38,7 @@ describe('Batch API query timing', function () {
             method: 'GET'
         }, {
             status: 200
-        }, function (res, err) {
+        }, function (err, res) {
             if (err) {
                 return callback(err);
             }
@@ -72,7 +65,7 @@ describe('Batch API query timing', function () {
         assert.equal(actual.onerror, expected.onerror);
     }
 
-    var batch = batchFactory(metadataBackend, redisConfig);
+    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
         batch.start();

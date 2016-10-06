@@ -1,4 +1,4 @@
-before_script:
+before_install:
   - lsb_release -a
   - sudo mv /etc/apt/sources.list.d/pgdg.list* /tmp
   - sudo apt-get -qq purge postgis* postgresql*

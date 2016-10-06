@@ -1,19 +1,12 @@
-require('../helper');
+require('../../helper');
 
-var assert = require('../support/assert');
-var redisUtils = require('../support/redis_utils');
-var app = require(global.settings.app_root + '/app/app')();
+var assert = require('../../support/assert');
+var redisUtils = require('../../support/redis_utils');
+var server = require('../../../app/server')();
 var querystring = require('qs');
-var redisConfig = {
-    host: global.settings.redis_host,
-    port: global.settings.redis_port,
-    max: global.settings.redisPool,
-    idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
-    reapIntervalMillis: global.settings.redisReapIntervalMillis
-};
-var metadataBackend = require('cartodb-redis')(redisConfig);
-var batchFactory = require('../../batch');
-var jobStatus = require('../../batch/job_status');
+var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var batchFactory = require('../../../batch/index');
+var jobStatus = require('../../../batch/job_status');
 
 describe('Batch API fallback job', function () {
 
@@ -36,7 +29,7 @@ describe('Batch API fallback job', function () {
         assert.equal(actual.onerror, expected.onerror);
     }
 
-    var batch = batchFactory(metadataBackend, redisConfig);
+    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
 
     before(function (done) {
         batch.start();
@@ -52,7 +45,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -69,7 +62,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -89,7 +82,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -98,7 +91,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -120,7 +113,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -137,7 +130,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -156,7 +149,7 @@ describe('Batch API fallback job', function () {
                 }]
             };
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -165,7 +158,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -187,7 +180,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -204,7 +197,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -224,7 +217,7 @@ describe('Batch API fallback job', function () {
                 }]
             };
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -233,7 +226,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -255,7 +248,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -272,7 +265,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -293,7 +286,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -302,7 +295,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -325,7 +318,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -342,7 +335,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -361,7 +354,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -370,7 +363,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -392,7 +385,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -409,7 +402,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -429,7 +422,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -438,7 +431,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -461,7 +454,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -478,7 +471,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -498,7 +491,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -507,7 +500,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -529,7 +522,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -546,7 +539,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -565,7 +558,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -574,7 +567,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -597,7 +590,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -615,7 +608,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -636,7 +629,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -645,7 +638,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -667,7 +660,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -687,7 +680,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -712,7 +705,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -721,7 +714,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -743,7 +736,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -763,7 +756,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -789,7 +782,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -798,7 +791,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -821,7 +814,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -841,7 +834,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -867,7 +860,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -876,7 +869,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -898,7 +891,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -918,7 +911,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -943,7 +936,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -952,7 +945,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -974,7 +967,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -991,7 +984,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1012,7 +1005,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1021,7 +1014,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1044,7 +1037,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1061,7 +1054,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1081,7 +1074,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1090,7 +1083,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1112,7 +1105,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1132,7 +1125,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1158,7 +1151,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1167,7 +1160,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1189,7 +1182,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1209,7 +1202,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1235,7 +1228,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1244,7 +1237,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1266,7 +1259,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1287,7 +1280,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1313,7 +1306,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1322,7 +1315,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1345,7 +1338,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1366,7 +1359,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1393,7 +1386,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1402,7 +1395,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1425,7 +1418,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1443,7 +1436,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1464,7 +1457,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1473,7 +1466,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1503,7 +1496,7 @@ describe('Batch API fallback job', function () {
                 "onsuccess": "SELECT pg_sleep(0)"
             };
 
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1512,7 +1505,7 @@ describe('Batch API fallback job', function () {
                 method: 'DELETE'
             }, {
                 status: 200
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1531,7 +1524,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1549,7 +1542,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1570,7 +1563,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1579,7 +1572,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1612,7 +1605,7 @@ describe('Batch API fallback job', function () {
                 "onsuccess": "SELECT pg_sleep(0)"
             };
 
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1621,7 +1614,7 @@ describe('Batch API fallback job', function () {
                 method: 'DELETE'
             }, {
                 status: 200
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1640,7 +1633,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1661,7 +1654,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1688,7 +1681,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1697,7 +1690,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }
@@ -1719,7 +1712,7 @@ describe('Batch API fallback job', function () {
         var fallbackJob = {};
 
         it('should create a job', function (done) {
-            assert.response(app, {
+            assert.response(server, {
                 url: '/api/v2/sql/job?api_key=1234',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1740,7 +1733,7 @@ describe('Batch API fallback job', function () {
                 })
             }, {
                 status: 201
-            }, function (res, err) {
+            }, function (err, res) {
                 if (err) {
                     return done(err);
                 }
@@ -1770,7 +1763,7 @@ describe('Batch API fallback job', function () {
             };
 
             var interval = setInterval(function () {
-                assert.response(app, {
+                assert.response(server, {
                     url: '/api/v2/sql/job/' + fallbackJob.job_id + '?api_key=1234&',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1779,7 +1772,7 @@ describe('Batch API fallback job', function () {
                     method: 'GET'
                 }, {
                     status: 200
-                }, function (res, err) {
+                }, function (err, res) {
                     if (err) {
                         return done(err);
                     }

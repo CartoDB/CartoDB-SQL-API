@@ -15,8 +15,9 @@
 //
 
 var express = require('express');
+var bodyParser = require('./middlewares/body-parser');
 var os = require('os');
-var Profiler = require('step-profiler');
+var Profiler = require('./stats/profiler-proxy');
 var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
 var LRU = require('lru-cache');
@@ -50,7 +51,7 @@ require('./utils/date_to_json');
 // jshint maxcomplexity:12
 function App() {
 
-    var app = express.createServer();
+    var app = express();
 
     var redisConfig = {
         host: global.settings.redis_host,
@@ -102,16 +103,6 @@ function App() {
             }
         };
         app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
-    } else {
-        // Express logger uses tokens as described here: http://www.senchalabs.org/connect/logger.html
-        express.logger.token('sql', function(req) {
-            return app.getSqlQueryFromRequestBody(req);
-        });
-        app.use(express.logger({
-            buffer: true,
-            format: global.settings.log_format ||
-                ':remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type]'
-        }));
     }
 
     // Initialize statsD client if requested
@@ -156,12 +147,20 @@ function App() {
     app.use(cors());
 
     // Use step-profiler
-    if ( global.settings.useProfiler ) {
-      app.use(function(req, res, next) {
-        req.profiler = new Profiler({statsd_client:statsd_client});
+    app.use(function bootstrap$prepareRequestResponse(req, res, next) {
+        req.context = req.context || {};
+
+        if (global.settings.api_hostname) {
+            res.header('X-Served-By-Host', global.settings.api_hostname);
+        }
+
+        var profile = global.settings.useProfiler;
+        req.profiler = new Profiler({
+            profile: profile,
+            statsd_client: statsd_client
+        });
         next();
-      });
-    }
+    });
 
     // Set connection timeout
     if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
@@ -172,9 +171,11 @@ function App() {
       });
     }
 
-    app.use(express.bodyParser());
+    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
+    app.disable('x-powered-by');
+    app.disable('etag');
 
     // basic routing
 
@@ -209,7 +210,7 @@ function App() {
     var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
-        app.batch = batchFactory(metadataBackend, redisConfig, statsd_client);
+        app.batch = batchFactory(metadataBackend, redisConfig, statsd_client, global.settings.batch_log_filename);
         app.batch.start();
     }
 
