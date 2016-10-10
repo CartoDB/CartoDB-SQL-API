@@ -1,7 +1,7 @@
 require('../../helper');
 var assert = require('../../support/assert');
 
-var BatchTestClient = require('./batch-test-client');
+var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../batch/job_status');
 
 describe('job query order', function() {

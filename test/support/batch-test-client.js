@@ -1,14 +1,14 @@
 'use strict';
 
-require('../../helper');
-var assert = require('../../support/assert');
-var appServer = require('../../../app/server');
-var redisUtils = require('../../support/redis_utils');
+require('../helper');
+var assert = require('assert');
+var appServer = require('../../app/server');
+var redisUtils = require('./redis_utils');
 var debug = require('debug')('batch-test-client');
 
-var JobStatus = require('../../../batch/job_status');
+var JobStatus = require('../../batch/job_status');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var batchFactory = require('../../../batch/index');
+var batchFactory = require('../../batch/index');
 
 function response(code) {
     return {
