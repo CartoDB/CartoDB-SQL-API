@@ -192,7 +192,7 @@
           "dependencies": {
             "mime-types": {
               "version": "2.1.12",
-              "from": "mime-types@>=2.1.11 <2.2.0",
+              "from": "mime-types@>=2.1.6 <2.2.0",
               "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.12.tgz",
               "dependencies": {
                 "mime-db": {
@@ -422,7 +422,7 @@
             },
             "mime-types": {
               "version": "2.1.12",
-              "from": "mime-types@>=2.1.11 <2.2.0",
+              "from": "mime-types@>=2.1.6 <2.2.0",
               "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.12.tgz",
               "dependencies": {
                 "mime-db": {
@@ -646,7 +646,7 @@
             },
             "mime-types": {
               "version": "2.1.12",
-              "from": "mime-types@>=2.1.2 <2.2.0",
+              "from": "mime-types@>=2.1.11 <2.2.0",
               "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.12.tgz",
               "dependencies": {
                 "mime-db": {
@@ -728,6 +728,18 @@
               "resolved": "https://registry.npmjs.org/nan/-/nan-1.1.2.tgz"
             }
           }
+        }
+      }
+    },
+    "redlock": {
+      "version": "2.0.1",
+      "from": "redlock@2.0.1",
+      "resolved": "https://registry.npmjs.org/redlock/-/redlock-2.0.1.tgz",
+      "dependencies": {
+        "bluebird": {
+          "version": "3.4.6",
+          "from": "bluebird@>=3.3.3 <4.0.0",
+          "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.6.tgz"
         }
       }
     },
@@ -967,9 +979,9 @@
                           }
                         },
                         "spdx-expression-parse": {
-                          "version": "1.0.3",
+                          "version": "1.0.4",
                           "from": "spdx-expression-parse@>=1.0.0 <1.1.0",
-                          "resolved": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-1.0.3.tgz"
+                          "resolved": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-1.0.4.tgz"
                         }
                       }
                     }

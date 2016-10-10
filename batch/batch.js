@@ -5,15 +5,18 @@ var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
 var forever = require('./util/forever');
 var queue = require('queue-async');
-var jobStatus = require('./job_status');
+var Locker = require('./leader/locker');
 
-function Batch(jobSubscriber, jobQueuePool, jobRunner, jobService, logger) {
+function Batch(name, jobSubscriber, jobQueuePool, jobRunner, jobService, jobPublisher, redisConfig, logger) {
     EventEmitter.call(this);
+    this.name = name || 'batch';
     this.jobSubscriber = jobSubscriber;
     this.jobQueuePool = jobQueuePool;
     this.jobRunner = jobRunner;
     this.jobService = jobService;
+    this.jobPublisher = jobPublisher;
     this.logger = logger;
+    this.locker = Locker.create('redis-distlock', { redisConfig: redisConfig });
 }
 util.inherits(Batch, EventEmitter);
 
@@ -27,25 +30,33 @@ Batch.prototype._subscribe = function () {
     var self = this;
 
     this.jobSubscriber.subscribe(function onMessage(channel, host) {
-        var queue = self.jobQueuePool.getQueue(host);
-
-        // there is nothing to do. It is already running jobs
-        if (queue) {
-            return;
-        }
-        queue = self.jobQueuePool.createQueue(host);
-
-        // do forever, it does not throw a stack overflow
-        forever(function (next) {
-            self._consumeJobs(host, queue, next);
-        }, function (err) {
-            self.jobQueuePool.removeQueue(host);
-
-            if (err.name === 'EmptyQueue') {
-                return debug(err.message);
+        self.locker.lock(host, 5000, function(err) {
+            if (err) {
+                debug('On message could not lock host=%s from %s. Reason: %s', host, self.name, err.message);
+                return;
             }
 
-            debug(err);
+            debug('On message locked host=%s from %s', host, self.name);
+            var queue = self.jobQueuePool.getQueue(host);
+
+            // there is nothing to do. It is already running jobs
+            if (queue) {
+                return;
+            }
+            queue = self.jobQueuePool.createQueue(host);
+
+            // do forever, it does not throw a stack overflow
+            forever(function (next) {
+                self._consumeJobs(host, queue, next);
+            }, function (err) {
+                self.jobQueuePool.removeQueue(host);
+
+                if (err.name === 'EmptyQueue') {
+                    return debug(err.message);
+                }
+
+                debug(err);
+            });
         });
     }, function (err) {
         if (err) {
@@ -59,43 +70,69 @@ Batch.prototype._subscribe = function () {
 
 Batch.prototype._consumeJobs = function (host, queue, callback) {
     var self = this;
-
-    queue.dequeue(host, function (err, job_id) {
+    this.locker.lock(host, 5000, function(err) {
+        // we didn't get the lock for the host
         if (err) {
-            return callback(err);
+            debug('On de-queue could not lock host=%s from %s. Reason: %s', host, self.name, err.message);
+            // In case we have lost the lock but there are pending jobs we re-announce the host
+            self.jobPublisher.publish(host);
+            return callback(new Error('Could not acquire lock for host=' + host));
         }
 
-        if (!job_id) {
-            var emptyQueueError = new Error('Queue ' + host + ' is empty');
-            emptyQueueError.name = 'EmptyQueue';
-            return callback(emptyQueueError);
-        }
+        debug('On de-queue locked host=%s from %s', host, self.name);
 
-        self.jobQueuePool.setCurrentJobId(host, job_id);
+        var lockRenewalIntervalId = setInterval(function() {
+            debug('Trying to extend lock host=%s', host);
+            self.locker.lock(host, 5000, function(err, _lock) {
+                if (err) {
+                    clearInterval(lockRenewalIntervalId);
+                    return callback(err);
+                }
+                if (!err && _lock) {
+                    debug('Extended lock host=%s', host);
+                }
+            });
+        }, 1000);
 
-        self.jobRunner.run(job_id, function (err, job) {
-            self.jobQueuePool.removeCurrentJobId(host);
-
-            if (err && err.name === 'JobNotRunnable') {
-                debug(err.message);
-                return callback();
-            }
-
+        queue.dequeue(host, function (err, job_id) {
             if (err) {
                 return callback(err);
             }
 
-            if (job.data.status === jobStatus.FAILED) {
-                debug('Job %s %s in %s due to: %s', job_id, job.data.status, host, job.failed_reason);
-            } else {
-                debug('Job %s %s in %s', job_id, job.data.status, host);
+            if (!job_id) {
+                clearInterval(lockRenewalIntervalId);
+                return self.locker.unlock(host, function() {
+                    var emptyQueueError = new Error('Queue ' + host + ' is empty');
+                    emptyQueueError.name = 'EmptyQueue';
+                    return callback(emptyQueueError);
+                });
             }
 
-            self.logger.log(job);
+            self.jobQueuePool.setCurrentJobId(host, job_id);
 
-            self.emit('job:' + job.data.status, job_id);
+            self.jobRunner.run(job_id, function (err, job) {
+                self.jobQueuePool.removeCurrentJobId(host);
 
-            callback();
+                if (err && err.name === 'JobNotRunnable') {
+                    debug(err.message);
+                    clearInterval(lockRenewalIntervalId);
+                    return callback();
+                }
+
+                if (err) {
+                    clearInterval(lockRenewalIntervalId);
+                    return callback(err);
+                }
+
+                debug('Job[%s] status=%s in host=%s (error=%s)', job_id, job.data.status, host, job.failed_reason);
+
+                self.logger.log(job);
+
+                self.emit('job:' + job.data.status, job_id);
+
+                clearInterval(lockRenewalIntervalId);
+                callback();
+            });
         });
     });
 };
