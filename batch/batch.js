@@ -5,7 +5,6 @@ var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
 var forever = require('./util/forever');
 var queue = require('queue-async');
-var jobStatus = require('./job_status');
 
 function Batch(name, jobSubscriber, jobQueuePool, jobRunner, jobService, jobPublisher, redisConfig, logger) {
     EventEmitter.call(this);
@@ -87,11 +86,7 @@ Batch.prototype._consumeJobs = function (host, queue, callback) {
                 return callback(err);
             }
 
-            if (job.data.status === jobStatus.FAILED) {
-                debug('Job %s %s in %s due to: %s', job_id, job.data.status, host, job.failed_reason);
-            } else {
-                debug('Job %s %s in %s', job_id, job.data.status, host);
-            }
+            debug('Job[%s] status=%s in host=%s (error=%s)', job_id, job.data.status, host, job.failed_reason);
 
             self.logger.log(job);
 
