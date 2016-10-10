@@ -23,6 +23,10 @@ JobRunner.prototype.run = function (job_id, callback) {
         }
 
         var query = job.getNextQuery();
+        var timeout = 12 * 3600 * 1000;
+        if (Number.isFinite(global.settings.batch_query_timeout)) {
+            timeout = global.settings.batch_query_timeout;
+        }
 
         try {
             job.setStatus(jobStatus.RUNNING);
@@ -37,15 +41,15 @@ JobRunner.prototype.run = function (job_id, callback) {
 
             profiler.done('running');
 
-            self._run(job, query, profiler, callback);
+            self._run(job, query, timeout, profiler, callback);
         });
     });
 };
 
-JobRunner.prototype._run = function (job, query, profiler, callback) {
+JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
     var self = this;
 
-    self.queryRunner.run(job.data.job_id, query, job.data.user, function (err /*, result */) {
+    self.queryRunner.run(job.data.job_id, query, job.data.user, timeout, function (err /*, result */) {
         if (err) {
             if (!err.code) {
                 return callback(err);

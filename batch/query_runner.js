@@ -1,7 +1,6 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
-var BATCH_QUERY_TIMEOUT = global.settings.batch_query_timeout || 12 * 3600 * 1000; // 12 hours in millisecond
 var debug = require('./util/debug')('query-runner');
 
 function QueryRunner(userDatabaseMetadataService) {
@@ -10,7 +9,7 @@ function QueryRunner(userDatabaseMetadataService) {
 
 module.exports = QueryRunner;
 
-QueryRunner.prototype.run = function (job_id, sql, user, callback) {
+QueryRunner.prototype.run = function (job_id, sql, user, timeout, callback) {
     this.userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
         if (err) {
             return callback(err);
@@ -18,7 +17,7 @@ QueryRunner.prototype.run = function (job_id, sql, user, callback) {
 
         var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
 
-        pg.query('SET statement_timeout=' + BATCH_QUERY_TIMEOUT, function (err) {
+        pg.query('SET statement_timeout=' + timeout, function (err) {
             if(err) {
                 return callback(err);
             }
@@ -26,7 +25,7 @@ QueryRunner.prototype.run = function (job_id, sql, user, callback) {
             // mark query to allow to users cancel their queries
             sql = '/* ' + job_id + ' */ ' + sql;
 
-            debug('Running query %s', sql);
+            debug('Running query [timeout=%d] %s', timeout, sql);
             pg.eventedQuery(sql, function (err, query) {
                 if (err) {
                     return callback(err);
