@@ -20,7 +20,7 @@ describe('job query order', function() {
         };
     }
 
-    it('should run query with higher user timeout', function (done) {
+    it('should run job queries in order (single consumer)', function (done) {
         var jobRequest1 = createJob(["select 1", "select 2"]);
         var jobRequest2 = createJob(["select 3"]);
 
