@@ -3,13 +3,7 @@
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
-var jobStatus = require('./job_status');
-var finalStatus = [
-    jobStatus.CANCELLED,
-    jobStatus.DONE,
-    jobStatus.FAILED,
-    jobStatus.UNKNOWN
-];
+var JobStatus = require('./job_status');
 
 function JobBackend(metadataBackend, jobQueueProducer) {
     this.metadataBackend = metadataBackend;
@@ -156,15 +150,11 @@ JobBackend.prototype.save = function (job, callback) {
     });
 };
 
-function isFinalStatus(status) {
-    return finalStatus.indexOf(status) !== -1;
-}
-
 JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
     var redisKey = REDIS_PREFIX + job.job_id;
 
-    if (!isFinalStatus(job.status)) {
+    if (!JobStatus.isFinal(job.status)) {
         return callback();
     }
 
