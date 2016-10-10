@@ -2,7 +2,8 @@
 -------------------
 
 Announcements:
- * limited batch queries to 12 hours
+ * Allow to set statement timeout per query in multi query batch queries.
+ * Batch queries default statement timeout set to 12 hours.
  * Multiple queries jobs pushed as first job between queries.
 
 
