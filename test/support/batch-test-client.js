@@ -26,7 +26,7 @@ function BatchTestClient(config) {
     this.config = config || {};
     this.server = appServer();
 
-    this.batch = batchFactory(metadataBackend, redisUtils.getConfig());
+    this.batch = batchFactory(metadataBackend, redisUtils.getConfig(), this.config.name);
     this.batch.start();
 
     this.pendingJobs = [];

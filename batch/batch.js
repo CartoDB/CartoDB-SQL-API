@@ -7,8 +7,9 @@ var forever = require('./util/forever');
 var queue = require('queue-async');
 var jobStatus = require('./job_status');
 
-function Batch(jobSubscriber, jobQueuePool, jobRunner, jobService, logger) {
+function Batch(name, jobSubscriber, jobQueuePool, jobRunner, jobService, redisConfig, logger) {
     EventEmitter.call(this);
+    this.name = name || 'batch';
     this.jobSubscriber = jobSubscriber;
     this.jobQueuePool = jobQueuePool;
     this.jobRunner = jobRunner;
