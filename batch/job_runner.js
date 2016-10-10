@@ -3,6 +3,7 @@
 var errorCodes = require('../app/postgresql/error_codes').codeToCondition;
 var jobStatus = require('./job_status');
 var Profiler = require('step-profiler');
+var _ = require('underscore');
 
 function JobRunner(jobService, jobQueue, queryRunner, statsdClient) {
     this.jobService = jobService;
@@ -26,6 +27,12 @@ JobRunner.prototype.run = function (job_id, callback) {
         var timeout = 12 * 3600 * 1000;
         if (Number.isFinite(global.settings.batch_query_timeout)) {
             timeout = global.settings.batch_query_timeout;
+        }
+        if (_.isObject(query)) {
+            if (Number.isFinite(query.timeout) && query.timeout > 0) {
+                timeout = Math.min(timeout, query.timeout);
+            }
+            query = query.query;
         }
 
         try {
