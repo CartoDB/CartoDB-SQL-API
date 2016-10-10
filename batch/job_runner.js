@@ -52,7 +52,7 @@ JobRunner.prototype._run = function (job, query, profiler, callback) {
             }
             // if query has been cancelled then it's going to get the current
             // job status saved by query_canceller
-            if (errorCodes[err.code.toString()] === 'query_canceled') {
+            if (cancelledByUser(err)) {
                 return self.jobService.get(job.data.job_id, callback);
             }
         }
@@ -92,5 +92,9 @@ JobRunner.prototype._run = function (job, query, profiler, callback) {
         });
     });
 };
+
+function cancelledByUser(err) {
+    return errorCodes[err.code.toString()] === 'query_canceled' && err.message.match(/user.*request/);
+}
 
 module.exports = JobRunner;
