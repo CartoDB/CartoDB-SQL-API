@@ -38,6 +38,7 @@ module.exports = function batchFactory (metadataBackend, redisConfig, name, stat
         jobQueuePool,
         jobRunner,
         jobService,
+        jobPublisher,
         redisConfig,
         logger
     );
