@@ -8,8 +8,8 @@ var JobStatus = require('../../../batch/job_status');
 describe('multiple batch clients job query order', function() {
 
     before(function(done) {
-        this.batchTestClient1 = new BatchTestClient();
-        this.batchTestClient2 = new BatchTestClient();
+        this.batchTestClient1 = new BatchTestClient({ name: 'consumerA' });
+        this.batchTestClient2 = new BatchTestClient({ name: 'consumerB' });
 
         this.testClient = new TestClient();
         this.testClient.getResult('create table ordered_inserts (status numeric)', done);
