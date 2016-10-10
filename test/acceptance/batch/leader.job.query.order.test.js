@@ -12,7 +12,10 @@ describe('multiple batch clients job query order', function() {
         this.batchTestClient2 = new BatchTestClient({ name: 'consumerB' });
 
         this.testClient = new TestClient();
-        this.testClient.getResult('create table ordered_inserts (status numeric)', done);
+        this.testClient.getResult(
+            'drop table if exists ordered_inserts; create table ordered_inserts (status numeric)',
+            done
+        );
     });
 
     after(function (done) {
@@ -21,13 +24,7 @@ describe('multiple batch clients job query order', function() {
                 return done(err);
             }
 
-            this.batchTestClient2.drain(function(err) {
-                if (err) {
-                    return done(err);
-                }
-
-                this.testClient.getResult('drop table ordered_inserts', done);
-            }.bind(this));
+            this.batchTestClient2.drain(done);
         }.bind(this));
     });
 
