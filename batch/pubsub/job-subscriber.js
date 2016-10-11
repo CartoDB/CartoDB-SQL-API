@@ -1,9 +1,9 @@
 'use strict';
 
+var Channel = require('./channel');
 var debug = require('./../util/debug')('pubsub:subscriber');
 var error = require('./../util/debug')('pubsub:subscriber:error');
 
-var DB = 0;
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
 
 function _subscribe(client, channel, queueSeeker, onMessage, callback) {
@@ -35,7 +35,6 @@ function _subscribe(client, channel, queueSeeker, onMessage, callback) {
 }
 
 function JobSubscriber(pool, queueSeeker) {
-    this.channel = 'batch:hosts';
     this.pool = pool;
     this.queueSeeker = queueSeeker;
 }
@@ -45,7 +44,7 @@ module.exports = JobSubscriber;
 JobSubscriber.prototype.subscribe = function (onMessage, callback) {
     var self = this;
 
-    this.pool.acquire(DB, function (err, client) {
+    this.pool.acquire(Channel.DB, function (err, client) {
         if (err) {
             return error('Error adquiring redis client: ' + err.message);
         }
@@ -56,12 +55,12 @@ JobSubscriber.prototype.subscribe = function (onMessage, callback) {
             _subscribe,
             SUBSCRIBE_INTERVAL_IN_MILLISECONDS,
             self.client,
-            self.channel,
+            Channel.NAME,
             self.queueSeeker,
             onMessage
         );
 
-        _subscribe(self.client, self.channel, self.queueSeeker, onMessage, callback);
+        _subscribe(self.client, Channel.NAME, self.queueSeeker, onMessage, callback);
     });
 
 };
@@ -69,6 +68,6 @@ JobSubscriber.prototype.subscribe = function (onMessage, callback) {
 JobSubscriber.prototype.unsubscribe = function () {
     clearInterval(this.seekerInterval);
     if (this.client && this.client.connected) {
-        this.client.unsubscribe(this.channel);
+        this.client.unsubscribe(Channel.NAME);
     }
 };

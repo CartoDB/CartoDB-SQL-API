@@ -1,31 +1,29 @@
 'use strict';
 
+var Channel = require('./channel');
 var debug = require('./../util/debug')('pubsub:publisher');
 var error = require('./../util/debug')('pubsub:publisher:error');
 
-var DB = 0;
-
 function JobPublisher(pool) {
     this.pool = pool;
-    this.channel = 'batch:hosts';
 }
 
 JobPublisher.prototype.publish = function (host) {
     var self = this;
 
-    this.pool.acquire(DB, function (err, client) {
+    this.pool.acquire(Channel.DB, function (err, client) {
         if (err) {
             return error('Error adquiring redis client: ' + err.message);
         }
 
-        client.publish(self.channel, host, function (err) {
-            self.pool.release(DB, client);
+        client.publish(Channel.NAME, host, function (err) {
+            self.pool.release(Channel.DB, client);
 
             if (err) {
-                return error('Error publishing to ' + self.channel + ':' + host + ', ' + err.message);
+                return error('Error publishing to ' + Channel.NAME + ':' + host + ', ' + err.message);
             }
 
-            debug('publish to ' + self.channel + ':' + host);
+            debug('publish to ' + Channel.NAME + ':' + host);
         });
     });
 };
