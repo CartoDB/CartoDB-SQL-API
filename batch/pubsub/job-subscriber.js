@@ -14,17 +14,24 @@ function JobSubscriber(pool) {
 
 module.exports = JobSubscriber;
 
-function seeker(queueSeeker, onJobHandler) {
+function seeker(queueSeeker, onJobHandler, callback) {
     queueSeeker.seek(function (err, hosts) {
         if (err) {
+            if (callback) {
+                callback(err);
+            }
             return error(err);
         }
         debug('queues found successfully');
         hosts.forEach(onJobHandler);
+
+        if (callback) {
+            return callback(null);
+        }
     });
 }
 
-JobSubscriber.prototype.subscribe = function (onJobHandler) {
+JobSubscriber.prototype.subscribe = function (onJobHandler, callback) {
     var self = this;
 
     this.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL_IN_MILLISECONDS, this.queueSeeker, onJobHandler);
@@ -51,7 +58,7 @@ JobSubscriber.prototype.subscribe = function (onJobHandler) {
         });
     });
 
-    seeker(this.queueSeeker, onJobHandler);
+    seeker(this.queueSeeker, onJobHandler, callback);
 };
 
 JobSubscriber.prototype.unsubscribe = function () {
