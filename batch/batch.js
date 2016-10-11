@@ -29,7 +29,7 @@ Batch.prototype.start = function () {
 Batch.prototype._subscribe = function () {
     var self = this;
 
-    this.jobSubscriber.subscribe(function onMessage(channel, host) {
+    this.jobSubscriber.subscribe(function onJobHandler(host) {
         self.locker.lock(host, 5000, function(err) {
             if (err) {
                 debug('On message could not lock host=%s from %s. Reason: %s', host, self.name, err.message);

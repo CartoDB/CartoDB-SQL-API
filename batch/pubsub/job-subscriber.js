@@ -7,34 +7,6 @@ var error = require('./../util/debug')('pubsub:subscriber:error');
 
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
 
-function _subscribe(client, channel, queueSeeker, onMessage, callback) {
-
-    client.removeAllListeners('message');
-    client.unsubscribe(channel);
-    client.subscribe(channel);
-
-    client.on('message', function (channel, host) {
-        debug('message received from: ' + channel + ':' + host);
-        onMessage(channel, host);
-    });
-
-    queueSeeker.seek(onMessage, function (err) {
-        if (err) {
-            error(err);
-
-            if (callback) {
-                callback(err);
-            }
-        } else {
-            debug('queues found successfully');
-
-            if (callback) {
-                callback();
-            }
-        }
-    });
-}
-
 function JobSubscriber(pool) {
     this.pool = pool;
     this.queueSeeker = new QueueSeeker(pool);
@@ -42,8 +14,21 @@ function JobSubscriber(pool) {
 
 module.exports = JobSubscriber;
 
-JobSubscriber.prototype.subscribe = function (onMessage, callback) {
+function seeker(queueSeeker, onJobHandler) {
+    queueSeeker.seek(function (err, hosts) {
+        if (err) {
+            return error(err);
+        }
+        console.log(hosts);
+        debug('queues found successfully');
+        hosts.forEach(onJobHandler);
+    });
+}
+
+JobSubscriber.prototype.subscribe = function (onJobHandler) {
     var self = this;
+
+    this.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL_IN_MILLISECONDS, this.queueSeeker, onJobHandler);
 
     this.pool.acquire(Channel.DB, function (err, client) {
         if (err) {
@@ -51,19 +36,17 @@ JobSubscriber.prototype.subscribe = function (onMessage, callback) {
         }
 
         self.client = client;
+        client.removeAllListeners('message');
+        client.unsubscribe(Channel.NAME);
+        client.subscribe(Channel.NAME);
 
-        self.seekerInterval = setInterval(
-            _subscribe,
-            SUBSCRIBE_INTERVAL_IN_MILLISECONDS,
-            self.client,
-            Channel.NAME,
-            self.queueSeeker,
-            onMessage
-        );
-
-        _subscribe(self.client, Channel.NAME, self.queueSeeker, onMessage, callback);
+        client.on('message', function (channel, host) {
+            debug('message received from: ' + channel + ':' + host);
+            onJobHandler(host);
+        });
     });
 
+    seeker(this.queueSeeker, onJobHandler);
 };
 
 JobSubscriber.prototype.unsubscribe = function () {

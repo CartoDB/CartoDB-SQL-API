@@ -10,14 +10,13 @@ function QueueSeeker(pool) {
 
 module.exports = QueueSeeker;
 
-QueueSeeker.prototype.seek = function (onMessage, callback) {
+QueueSeeker.prototype.seek = function (callback) {
     var initialCursor = ['0'];
-    this.onMessage = onMessage;
-
-    this._seek(initialCursor, callback);
+    var hosts = {};
+    this._seek(initialCursor, hosts, callback);
 };
 
-QueueSeeker.prototype._seek = function (cursor, callback) {
+QueueSeeker.prototype._seek = function (cursor, hosts, callback) {
     var self = this;
     var redisParams = [cursor[0], 'MATCH', self.pattern];
 
@@ -30,7 +29,7 @@ QueueSeeker.prototype._seek = function (cursor, callback) {
             // checks if iteration has ended
             if (currentCursor[0] === '0') {
                 self.pool.release(self.db, client);
-                return callback(null);
+                return callback(null, Object.keys(hosts));
             }
 
             var queues = currentCursor[1];
@@ -41,10 +40,10 @@ QueueSeeker.prototype._seek = function (cursor, callback) {
 
             queues.forEach(function (queue) {
                 var host = queue.substr(self.redisPrefix.length);
-                self.onMessage(self.channel, host);
+                hosts[host] = true;
             });
 
-            self._seek(currentCursor, callback);
+            self._seek(currentCursor, hosts, callback);
         });
     });
 };
