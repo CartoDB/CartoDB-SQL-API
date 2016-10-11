@@ -1,7 +1,7 @@
 'use strict';
 
-var debug = require('./util/debug')('pubsub:publisher');
-var error = require('./util/debug')('pubsub:publisher:error');
+var debug = require('./../util/debug')('pubsub:publisher');
+var error = require('./../util/debug')('pubsub:publisher:error');
 
 var DB = 0;
 

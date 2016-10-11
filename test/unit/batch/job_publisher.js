@@ -1,4 +1,4 @@
-var JobPublisher = require('../../../batch/job_publisher');
+var JobPublisher = require('../../../batch/pubsub/job-publisher');
 var assert = require('assert');
 
 describe('batch API job publisher', function () {

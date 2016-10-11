@@ -11,7 +11,7 @@ var RedisPool = require('redis-mpool');
 
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
-var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
+var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
 

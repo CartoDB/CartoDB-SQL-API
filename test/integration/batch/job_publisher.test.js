@@ -10,7 +10,7 @@ var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 var redisUtils = require('../../support/redis_utils');
 
-var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
+var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 
 var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
 var redisPoolSubscriber = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-subscriber'}));

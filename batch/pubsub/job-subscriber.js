@@ -1,7 +1,7 @@
 'use strict';
 
-var debug = require('./util/debug')('pubsub:subscriber');
-var error = require('./util/debug')('pubsub:subscriber:error');
+var debug = require('./../util/debug')('pubsub:subscriber');
+var error = require('./../util/debug')('pubsub:subscriber:error');
 
 var DB = 0;
 var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
