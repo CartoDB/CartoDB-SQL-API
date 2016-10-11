@@ -19,7 +19,6 @@ function seeker(queueSeeker, onJobHandler) {
         if (err) {
             return error(err);
         }
-        console.log(hosts);
         debug('queues found successfully');
         hosts.forEach(onJobHandler);
     });
