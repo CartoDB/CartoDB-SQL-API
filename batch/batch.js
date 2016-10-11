@@ -30,33 +30,25 @@ Batch.prototype._subscribe = function () {
     var self = this;
 
     this.jobSubscriber.subscribe(function onJobHandler(host) {
-        self.locker.lock(host, 5000, function(err) {
-            if (err) {
-                debug('On message could not lock host=%s from %s. Reason: %s', host, self.name, err.message);
-                return;
+        var queue = self.jobQueuePool.getQueue(host);
+
+        // there is nothing to do. It is already running jobs
+        if (queue) {
+            return;
+        }
+        queue = self.jobQueuePool.createQueue(host);
+
+        // do forever, it does not throw a stack overflow
+        forever(function (next) {
+            self._consumeJobs(host, queue, next);
+        }, function (err) {
+            self.jobQueuePool.removeQueue(host);
+
+            if (err.name === 'EmptyQueue') {
+                return debug(err.message);
             }
 
-            debug('On message locked host=%s from %s', host, self.name);
-            var queue = self.jobQueuePool.getQueue(host);
-
-            // there is nothing to do. It is already running jobs
-            if (queue) {
-                return;
-            }
-            queue = self.jobQueuePool.createQueue(host);
-
-            // do forever, it does not throw a stack overflow
-            forever(function (next) {
-                self._consumeJobs(host, queue, next);
-            }, function (err) {
-                self.jobQueuePool.removeQueue(host);
-
-                if (err.name === 'EmptyQueue') {
-                    return debug(err.message);
-                }
-
-                debug(err);
-            });
+            debug(err);
         });
     }, function (err) {
         if (err) {
