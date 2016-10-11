@@ -44,6 +44,12 @@ JobSubscriber.prototype.subscribe = function (onJobHandler) {
             debug('message received from: ' + channel + ':' + host);
             onJobHandler(host);
         });
+
+        client.on('error', function () {
+            self.unsubscribe();
+            self.pool.release(Channel.DB, client);
+            self.subscribe(onJobHandler);
+        });
     });
 
     seeker(this.queueSeeker, onJobHandler);
