@@ -12,7 +12,7 @@ module.exports = QueueSeeker;
 
 QueueSeeker.prototype.seek = function (onMessage, callback) {
     var initialCursor = ['0'];
-    this.onMessage = console.log.bind(console);
+    this.onMessage = onMessage;
 
     this._seek(initialCursor, callback);
 };
