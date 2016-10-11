@@ -19,12 +19,13 @@ JobPublisher.prototype.publish = function (host) {
         }
 
         client.publish(self.channel, host, function (err) {
+            self.pool.release(DB, client);
+
             if (err) {
                 return error('Error publishing to ' + self.channel + ':' + host + ', ' + err.message);
             }
 
             debug('publish to ' + self.channel + ':' + host);
-            self.pool.release(DB, client);
         });
     });
 };
