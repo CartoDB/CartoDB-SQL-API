@@ -23,6 +23,9 @@ describe('batch API job subscriber', function () {
                 var isValidFirstArg = arguments[0] === 'batch:hosts';
                 self.redis.unsubscribeIsCalledWithValidArgs = isValidFirstArg;
             },
+            scan: function(params, callback) {
+                return callback(null, ['0']);
+            },
             removeAllListeners: function () {
                 return this;
             },
@@ -31,6 +34,9 @@ describe('batch API job subscriber', function () {
         this.pool = {
             acquire: function (db, cb) {
                 cb(null, self.redis);
+            },
+            release: function(/*db, client*/) {
+
             }
         };
         this.queueSeeker = {

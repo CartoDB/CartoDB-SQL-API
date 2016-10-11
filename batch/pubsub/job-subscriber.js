@@ -1,6 +1,7 @@
 'use strict';
 
 var Channel = require('./channel');
+var QueueSeeker = require('./queue-seeker');
 var debug = require('./../util/debug')('pubsub:subscriber');
 var error = require('./../util/debug')('pubsub:subscriber:error');
 
@@ -34,9 +35,9 @@ function _subscribe(client, channel, queueSeeker, onMessage, callback) {
     });
 }
 
-function JobSubscriber(pool, queueSeeker) {
+function JobSubscriber(pool) {
     this.pool = pool;
-    this.queueSeeker = queueSeeker;
+    this.queueSeeker = new QueueSeeker(pool);
 }
 
 module.exports = JobSubscriber;
