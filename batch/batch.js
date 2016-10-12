@@ -145,6 +145,7 @@ Batch.prototype._drainJob = function (host, callback) {
 };
 
 Batch.prototype.stop = function (callback) {
+    this.removeAllListeners();
     this.jobSubscriber.unsubscribe(callback);
 };
 

@@ -115,9 +115,9 @@ BatchTestClient.prototype.cancelJob = function(jobId, callback) {
 };
 
 BatchTestClient.prototype.drain = function(callback) {
-    this.batch.removeAllListeners();
-    this.batch.stop();
-    return redisUtils.clean('batch:*', callback);
+    this.batch.stop(function() {
+        return redisUtils.clean('batch:*', callback);
+    });
 };
 
 BatchTestClient.prototype.getHost = function() {

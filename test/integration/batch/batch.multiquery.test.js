@@ -67,7 +67,6 @@ describe('batch multiquery', function() {
     });
 
     after(function (done) {
-        batch.removeAllListeners();
         batch.stop();
         redisUtils.clean('batch:*', done);
     });
