@@ -62,9 +62,11 @@ JobSubscriber.prototype.subscribe = function (onJobHandler, callback) {
     seeker(this.queueSeeker, onJobHandler, callback);
 };
 
-JobSubscriber.prototype.unsubscribe = function () {
+JobSubscriber.prototype.unsubscribe = function (callback) {
     clearInterval(this.seekerInterval);
     if (this.client && this.client.connected) {
-        this.client.unsubscribe(Channel.NAME);
+        this.client.unsubscribe(Channel.NAME, callback);
+    } else {
+        return callback(null);
     }
 };
