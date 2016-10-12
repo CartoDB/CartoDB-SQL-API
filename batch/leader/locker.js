@@ -22,7 +22,9 @@ Locker.prototype.lock = function(host, callback) {
     var self = this;
     debug('Locker.lock(%s, %d)', host, this.ttl);
     this.locker.lock(host, this.ttl, function (err, lock) {
-        self.startRenewal(host);
+        if (!err) {
+            self.startRenewal(host);
+        }
         return callback(err, lock);
     });
 };
