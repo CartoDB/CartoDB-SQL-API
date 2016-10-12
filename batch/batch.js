@@ -37,7 +37,7 @@ Batch.prototype.start = function () {
             // do forever, it does not throw a stack overflow
             forever(
                 function (next) {
-                    self.locker.lock(host, 5000, function(err) {
+                    self.locker.lock(host, function(err) {
                         // we didn't get the lock for the host
                         if (err) {
                             debug('Could not lock host=%s from %s. Reason: %s', host, self.name, err.message);

@@ -5,17 +5,23 @@ var RedisPool = require('redis-mpool');
 var RedisDistlockLocker = require('./provider/redis-distlock');
 var debug = require('../util/debug')('leader-locker');
 
-function Locker(locker) {
+var LOCK = {
+    TTL: 5000
+};
+
+function Locker(locker, ttl) {
     this.locker = locker;
+    this.ttl = (Number.isFinite(ttl) && ttl > 0) ? ttl : LOCK.TTL;
+    this.renewInterval = this.ttl / 5;
     this.intervalIds = {};
 }
 
 module.exports = Locker;
 
-Locker.prototype.lock = function(host, ttl, callback) {
+Locker.prototype.lock = function(host, callback) {
     var self = this;
-    debug('Locker.lock(%s, %d)', host, ttl);
-    this.locker.lock(host, ttl, function (err, lock) {
+    debug('Locker.lock(%s, %d)', host, this.ttl);
+    this.locker.lock(host, this.ttl, function (err, lock) {
         self.startRenewal(host);
         return callback(err, lock);
     });
@@ -35,7 +41,7 @@ Locker.prototype.startRenewal = function(host) {
     if (!this.intervalIds.hasOwnProperty(host)) {
         this.intervalIds[host] = setInterval(function() {
             debug('Trying to extend lock host=%s', host);
-            self.locker.lock(host, 5000, function(err, _lock) {
+            self.locker.lock(host, self.ttl, function(err, _lock) {
                 if (err) {
                     return self.stopRenewal(host);
                 }
@@ -43,7 +49,7 @@ Locker.prototype.startRenewal = function(host) {
                     debug('Extended lock host=%s', host);
                 }
             });
-        }, 1000);
+        }, this.renewInterval);
     }
 };
 
@@ -60,5 +66,5 @@ module.exports.create = function createLocker(type, config) {
     }
     var redisPool = new RedisPool(_.extend({ name: 'batch-distlock' }, config.redisConfig));
     var locker = new RedisDistlockLocker(redisPool);
-    return new Locker(locker);
+    return new Locker(locker, config.ttl);
 };
