@@ -101,7 +101,7 @@ JobBackend.prototype.create = function (job, callback) {
                 return callback(err);
             }
 
-            self.jobQueueProducer.enqueue(job.job_id, job.host, function (err) {
+            self.jobQueueProducer.enqueue(job.user, job.job_id, function (err) {
                 if (err) {
                     return callback(err);
                 }

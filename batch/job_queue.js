@@ -9,27 +9,27 @@ module.exports = JobQueue;
 
 var QUEUE = {
     DB: 5,
-    PREFIX: 'batch:queues:'
+    PREFIX: 'batch:queue:'
 };
 module.exports.QUEUE = QUEUE;
 
-JobQueue.prototype.enqueue = function (job_id, host, callback) {
+JobQueue.prototype.enqueue = function (user, jobId, callback) {
     var self = this;
 
-    this.metadataBackend.redisCmd(QUEUE.DB, 'LPUSH', [ QUEUE.PREFIX + host, job_id ], function (err) {
+    this.metadataBackend.redisCmd(QUEUE.DB, 'LPUSH', [ QUEUE.PREFIX + user, jobId ], function (err) {
         if (err) {
             return callback(err);
         }
 
-        self.jobPublisher.publish(host);
+        self.jobPublisher.publish(user);
         callback();
     });
 };
 
-JobQueue.prototype.dequeue = function (host, callback) {
-    this.metadataBackend.redisCmd(QUEUE.DB, 'RPOP', [ QUEUE.PREFIX + host ], callback);
+JobQueue.prototype.dequeue = function (user, callback) {
+    this.metadataBackend.redisCmd(QUEUE.DB, 'RPOP', [ QUEUE.PREFIX + user ], callback);
 };
 
-JobQueue.prototype.enqueueFirst = function (job_id, host, callback) {
-    this.metadataBackend.redisCmd(QUEUE.DB, 'RPUSH', [ QUEUE.PREFIX + host, job_id ], callback);
+JobQueue.prototype.enqueueFirst = function (user, jobId, callback) {
+    this.metadataBackend.redisCmd(QUEUE.DB, 'RPUSH', [ QUEUE.PREFIX + user, jobId ], callback);
 };

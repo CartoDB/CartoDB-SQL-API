@@ -93,7 +93,7 @@ JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
                 return callback(null, job);
             }
 
-            self.jobQueue.enqueueFirst(job.data.job_id, job.data.host, function (err) {
+            self.jobQueue.enqueueFirst(job.data.user, job.data.job_id, function (err) {
                 if (err) {
                     return callback(err);
                 }

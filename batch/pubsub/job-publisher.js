@@ -8,7 +8,7 @@ function JobPublisher(pool) {
     this.pool = pool;
 }
 
-JobPublisher.prototype.publish = function (host) {
+JobPublisher.prototype.publish = function (user) {
     var self = this;
 
     this.pool.acquire(Channel.DB, function (err, client) {
@@ -16,14 +16,14 @@ JobPublisher.prototype.publish = function (host) {
             return error('Error adquiring redis client: ' + err.message);
         }
 
-        client.publish(Channel.NAME, host, function (err) {
+        client.publish(Channel.NAME, user, function (err) {
             self.pool.release(Channel.DB, client);
 
             if (err) {
-                return error('Error publishing to ' + Channel.NAME + ':' + host + ', ' + err.message);
+                return error('Error publishing to ' + Channel.NAME + ':' + user + ', ' + err.message);
             }
 
-            debug('publish to ' + Channel.NAME + ':' + host);
+            debug('publish to ' + Channel.NAME + ':' + user);
         });
     });
 };

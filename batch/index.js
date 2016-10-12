@@ -15,13 +15,14 @@ var BatchLogger = require('./batch-logger');
 var Batch = require('./batch');
 
 module.exports = function batchFactory (metadataBackend, redisConfig, name, statsdClient, loggerPath) {
+    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
+
     var pubSubRedisPool = new RedisPool(_.extend({ name: 'batch-pubsub'}, redisConfig));
-    var jobSubscriber = new JobSubscriber(pubSubRedisPool);
+    var jobSubscriber = new JobSubscriber(pubSubRedisPool, userDatabaseMetadataService);
     var jobPublisher = new JobPublisher(pubSubRedisPool);
 
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var queryRunner = new QueryRunner(userDatabaseMetadataService);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
