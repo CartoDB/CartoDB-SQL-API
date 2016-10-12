@@ -5,7 +5,6 @@ var _ = require('underscore');
 var JobRunner = require('./job_runner');
 var QueryRunner = require('./query_runner');
 var JobCanceller = require('./job_canceller');
-var JobQueuePool = require('./job_queue_pool');
 var JobSubscriber = require('./pubsub/job-subscriber');
 var UserDatabaseMetadataService = require('./user_database_metadata_service');
 var JobPublisher = require('./pubsub/job-publisher');
@@ -20,7 +19,6 @@ module.exports = function batchFactory (metadataBackend, redisConfig, name, stat
     var jobSubscriber = new JobSubscriber(pubSubRedisPool);
     var jobPublisher = new JobPublisher(pubSubRedisPool);
 
-    var jobQueuePool = new JobQueuePool(metadataBackend, jobPublisher);
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
@@ -33,7 +31,7 @@ module.exports = function batchFactory (metadataBackend, redisConfig, name, stat
     return new Batch(
         name,
         jobSubscriber,
-        jobQueuePool,
+        jobQueue,
         jobRunner,
         jobService,
         jobPublisher,
