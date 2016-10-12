@@ -1,3 +1,4 @@
+var Channel = require('../../../batch/pubsub/channel');
 var JobPublisher = require('../../../batch/pubsub/job-publisher');
 var assert = require('assert');
 
@@ -10,7 +11,7 @@ describe('batch API job publisher', function () {
                 return this;
             },
             publish: function () {
-                var isValidFirstArg = arguments[0] === 'batch:hosts';
+                var isValidFirstArg = arguments[0] === Channel.NAME;
                 var isValidSecondArg = arguments[1] === self.host;
                 self.redis.publishIsCalledWithValidArgs = isValidFirstArg && isValidSecondArg;
             },

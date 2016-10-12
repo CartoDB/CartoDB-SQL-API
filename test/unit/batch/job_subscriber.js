@@ -1,3 +1,4 @@
+var Channel = require('../../../batch/pubsub/channel');
 var JobSubscriber = require('../../../batch/pubsub/job-subscriber');
 var assert = require('assert');
 
@@ -11,7 +12,7 @@ describe('batch API job subscriber', function () {
                 return this;
             },
             subscribe: function () {
-                var isValidFirstArg = arguments[0] === 'batch:hosts';
+                var isValidFirstArg = arguments[0] === Channel.NAME;
                 self.redis.subscribeIsCalledWithValidArgs = isValidFirstArg;
             },
             on: function () {
@@ -20,7 +21,7 @@ describe('batch API job subscriber', function () {
                 }
             },
             unsubscribe: function () {
-                var isValidFirstArg = arguments[0] === 'batch:hosts';
+                var isValidFirstArg = arguments[0] === Channel.NAME;
                 self.redis.unsubscribeIsCalledWithValidArgs = isValidFirstArg;
             },
             scan: function(params, callback) {
