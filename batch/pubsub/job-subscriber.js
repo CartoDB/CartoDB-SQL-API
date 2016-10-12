@@ -5,7 +5,8 @@ var QueueSeeker = require('./queue-seeker');
 var debug = require('./../util/debug')('pubsub:subscriber');
 var error = require('./../util/debug')('pubsub:subscriber:error');
 
-var SUBSCRIBE_INTERVAL_IN_MILLISECONDS = 10 * 60 * 1000; // 10 minutes
+var MINUTE = 60 * 1000;
+var SUBSCRIBE_INTERVAL = 5 * MINUTE;
 
 function JobSubscriber(pool) {
     this.pool = pool;
@@ -34,7 +35,7 @@ function seeker(queueSeeker, onJobHandler, callback) {
 JobSubscriber.prototype.subscribe = function (onJobHandler, callback) {
     var self = this;
 
-    this.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL_IN_MILLISECONDS, this.queueSeeker, onJobHandler);
+    this.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL, this.queueSeeker, onJobHandler);
 
     this.pool.acquire(Channel.DB, function (err, client) {
         if (err) {
