@@ -26,6 +26,10 @@ JobQueue.prototype.enqueue = function (user, jobId, callback) {
     });
 };
 
+JobQueue.prototype.size = function (user, callback) {
+    this.metadataBackend.redisCmd(QUEUE.DB, 'LLEN', [ QUEUE.PREFIX + user ], callback);
+};
+
 JobQueue.prototype.dequeue = function (user, callback) {
     this.metadataBackend.redisCmd(QUEUE.DB, 'RPOP', [ QUEUE.PREFIX + user ], callback);
 };
