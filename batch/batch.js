@@ -48,7 +48,10 @@ Batch.prototype.start = function () {
                     });
                 },
                 function (err) {
-                    debug(err);
+                    if (err) {
+                        debug(err.name === 'EmptyQueue' ? err.message : err);
+                    }
+
                     self.finishedProcessingHost(host);
                     self.locker.unlock(host, debug);
                 }
