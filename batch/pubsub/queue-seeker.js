@@ -1,10 +1,8 @@
 'use strict';
 
+var QUEUE = require('../job_queue').QUEUE;
+
 function QueueSeeker(pool) {
-    this.db = 5;
-    this.channel = 'batch:hosts';
-    this.redisPrefix = 'batch:queues:';
-    this.pattern = this.redisPrefix + '*';
     this.pool = pool;
 }
 
@@ -18,9 +16,9 @@ QueueSeeker.prototype.seek = function (callback) {
 
 QueueSeeker.prototype._seek = function (cursor, hosts, callback) {
     var self = this;
-    var redisParams = [cursor[0], 'MATCH', self.pattern];
+    var redisParams = [cursor[0], 'MATCH', QUEUE.PREFIX + '*'];
 
-    this.pool.acquire(this.db, function(err, client) {
+    this.pool.acquire(QUEUE.DB, function(err, client) {
         if (err) {
             return callback(err);
         }
@@ -28,7 +26,7 @@ QueueSeeker.prototype._seek = function (cursor, hosts, callback) {
         client.scan(redisParams, function(err, currentCursor) {
             // checks if iteration has ended
             if (currentCursor[0] === '0') {
-                self.pool.release(self.db, client);
+                self.pool.release(QUEUE.DB, client);
                 return callback(null, Object.keys(hosts));
             }
 
@@ -39,7 +37,7 @@ QueueSeeker.prototype._seek = function (cursor, hosts, callback) {
             }
 
             queues.forEach(function (queue) {
-                var host = queue.substr(self.redisPrefix.length);
+                var host = queue.substr(QUEUE.PREFIX.length);
                 hosts[host] = true;
             });
 
