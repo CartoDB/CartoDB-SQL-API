@@ -2,7 +2,7 @@
 
 var util = require('util');
 var JobBase = require('./job_base');
-var jobStatus = require('../job_status');
+var JobStatus = require('../job_status');
 var QueryFallback = require('./query/query_fallback');
 var MainFallback = require('./query/main_fallback');
 var QueryFactory = require('./query/query_factory');
@@ -70,19 +70,19 @@ JobFallback.is = function (query) {
 JobFallback.prototype.init = function () {
     for (var i = 0; i < this.data.query.query.length; i++) {
         if (shouldInitStatus(this.data.query.query[i])){
-            this.data.query.query[i].status = jobStatus.PENDING;
+            this.data.query.query[i].status = JobStatus.PENDING;
         }
         if (shouldInitQueryFallbackStatus(this.data.query.query[i])) {
-            this.data.query.query[i].fallback_status = jobStatus.PENDING;
+            this.data.query.query[i].fallback_status = JobStatus.PENDING;
         }
     }
 
     if (shouldInitStatus(this.data)) {
-        this.data.status = jobStatus.PENDING;
+        this.data.status = JobStatus.PENDING;
     }
 
     if (shouldInitFallbackStatus(this.data)) {
-        this.data.fallback_status = jobStatus.PENDING;
+        this.data.fallback_status = JobStatus.PENDING;
     }
 };
 
@@ -167,7 +167,7 @@ JobFallback.prototype.setJobStatus = function (status, job, hasChanged, errorMes
     result.isValid = this.isValidTransition(job.status, status);
     if (result.isValid) {
         job.status = status;
-        if (status === jobStatus.FAILED && errorMesssage && !hasChanged.appliedToFallback) {
+        if (status === JobStatus.FAILED && errorMesssage && !hasChanged.appliedToFallback) {
             job.failed_reason = errorMesssage;
         }
     }
@@ -188,13 +188,13 @@ JobFallback.prototype.setFallbackStatus = function (status, job, hasChanged) {
 JobFallback.prototype.shiftStatus = function (status, hasChanged) {
     // jshint maxcomplexity: 7
     if (hasChanged.appliedToFallback) {
-        if (!this.hasNextQueryFromQueries() && (status === jobStatus.DONE || status === jobStatus.FAILED)) {
+        if (!this.hasNextQueryFromQueries() && (status === JobStatus.DONE || status === JobStatus.FAILED)) {
             status = this.getLastFinishedStatus();
-        } else if (status === jobStatus.DONE || status === jobStatus.FAILED){
-            status = jobStatus.PENDING;
+        } else if (status === JobStatus.DONE || status === JobStatus.FAILED){
+            status = JobStatus.PENDING;
         }
-    } else if (this.hasNextQueryFromQueries() && status !== jobStatus.RUNNING) {
-        status = jobStatus.PENDING;
+    } else if (this.hasNextQueryFromQueries() && status !== JobStatus.RUNNING) {
+        status = JobStatus.PENDING;
     }
 
     return status;
@@ -204,5 +204,73 @@ JobFallback.prototype.getLastFinishedStatus = function () {
     return this.queries.reduce(function (lastFinished, query) {
         var status = query.getStatus(this.data);
         return this.isFinalStatus(status) ? status : lastFinished;
-    }.bind(this), jobStatus.DONE);
+    }.bind(this), JobStatus.DONE);
 };
+
+JobFallback.prototype.log = function(logger) {
+    if (!isFinished(this)) {
+        return false;
+    }
+
+    var queries = this.data.query.query;
+
+    for (var i = 0; i < queries.length; i++) {
+        var query = queries[i];
+
+        var logEntry = {
+            time: query.started_at,
+            endtime: query.ended_at,
+            username: this.data.user,
+            dbhost: this.data.host,
+            job: this.data.job_id,
+            elapsed: elapsedTime(query.started_at, query.ended_at)
+        };
+
+        var queryId = query.id;
+
+        var tag = 'query';
+        if (queryId) {
+            logEntry.query_id = queryId;
+
+            var node = parseQueryId(queryId);
+            if (node) {
+                logEntry.analysis = node.analysisId;
+                logEntry.node = node.nodeId;
+                logEntry.type = node.nodeType;
+                tag = 'analysis';
+            }
+        }
+
+        logger.info(logEntry, tag);
+    }
+
+    return true;
+};
+
+function isFinished (job) {
+    return JobStatus.isFinal(job.data.status) &&
+        (!job.data.fallback_status || JobStatus.isFinal(job.data.fallback_status));
+}
+
+function parseQueryId (queryId) {
+    var data = queryId.split(':');
+
+    if (data.length === 3) {
+        return {
+            analysisId: data[0],
+            nodeId: data[1],
+            nodeType: data[2]
+        };
+    }
+    return null;
+}
+
+function elapsedTime (started_at, ended_at) {
+    if (!started_at || !ended_at) {
+        return;
+    }
+
+    var start = new Date(started_at);
+    var end = new Date(ended_at);
+    return end.getTime() - start.getTime();
+}

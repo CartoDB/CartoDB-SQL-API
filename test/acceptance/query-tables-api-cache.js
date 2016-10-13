@@ -2,14 +2,14 @@ require('../helper');
 
 var qs = require('querystring');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 
 describe('query-tables-api', function() {
 
     function getCacheStatus(callback) {
         assert.response(
-            app,
+            server,
             {
                 method: 'GET',
                 url: '/api/v1/cachestatus'
@@ -17,7 +17,7 @@ describe('query-tables-api', function() {
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 callback(null, JSON.parse(res.body));
             }
         );
@@ -38,7 +38,7 @@ describe('query-tables-api', function() {
     };
 
     it('should create a key in affected tables cache', function(done) {
-        assert.response(app, request, RESPONSE_OK, function(res, err) {
+        assert.response(server, request, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
@@ -52,7 +52,7 @@ describe('query-tables-api', function() {
     });
 
     it('should use cache to retrieve affected tables', function(done) {
-        assert.response(app, request, RESPONSE_OK, function(res, err) {
+        assert.response(server, request, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {
@@ -76,7 +76,7 @@ describe('query-tables-api', function() {
             },
             method: 'GET'
         };
-        assert.response(app, authenticatedRequest, RESPONSE_OK, function(res, err) {
+        assert.response(server, authenticatedRequest, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {

@@ -1,6 +1,6 @@
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app');
+var appServer = require('../../app/server');
 var assert = require('../support/assert');
 var qs = require('querystring');
 var log4js = require('log4js');
@@ -32,7 +32,7 @@ describe('Logging SQL query on POST requests', function() {
                 }
             ]
         });
-        server = app();
+        server = appServer();
     });
 
     after(function() {
@@ -105,7 +105,7 @@ describe('Logging SQL query on POST requests', function() {
                 return result;
             };
 
-            assert.response(server, scenario.request, RESPONSE_OK, function(res, err) {
+            assert.response(server, scenario.request, RESPONSE_OK, function(err) {
                 assert.ok(!err);
                 assert.equal(called, 1);
 
@@ -137,7 +137,7 @@ describe('Logging SQL query on POST requests', function() {
                 }
             },
             RESPONSE_OK,
-            function(res, err) {
+            function(err) {
                 assert.ok(!err);
                 assert.equal(called, 1);
 

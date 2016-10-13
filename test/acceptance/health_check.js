@@ -2,7 +2,7 @@ require('../helper');
 require('../support/assert');
 
 var assert = require('assert');
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 
 describe('health checks', function() {
 
@@ -26,12 +26,12 @@ describe('health checks', function() {
     it('returns 200 and ok=true with disabled configuration', function(done) {
         global.settings.health.enabled = false;
 
-        assert.response(app,
+        assert.response(server,
             healthCheckRequest,
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 assert.ok(!err);
 
                 var parsed = JSON.parse(res.body);
@@ -45,12 +45,12 @@ describe('health checks', function() {
     });
 
     it('returns 200 and ok=true with enabled configuration', function(done) {
-        assert.response(app,
+        assert.response(server,
             healthCheckRequest,
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 assert.ok(!err);
 
                 var parsed = JSON.parse(res.body);

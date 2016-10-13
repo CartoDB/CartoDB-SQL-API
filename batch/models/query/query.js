@@ -21,7 +21,13 @@ Query.is = function (query) {
 
 Query.prototype.getNextQuery = function (job) {
     if (job.query.query[this.index].status === jobStatus.PENDING) {
-        return job.query.query[this.index].query;
+        var query = {
+            query: job.query.query[this.index].query
+        };
+        if (Number.isFinite(job.query.query[this.index].timeout)) {
+            query.timeout = job.query.query[this.index].timeout;
+        }
+        return query;
     }
 };
 

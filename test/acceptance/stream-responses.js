@@ -1,6 +1,6 @@
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 
@@ -32,10 +32,10 @@ describe('stream-responses', function() {
 
         it('should close on error and error message must be part of the response', function(done) {
             assert.response(
-                app,
+                server,
                 createFailingQueryRequest(),
                 okResponse,
-                function(res) {
+                function(err, res) {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.rows.length, 2);
                     assert.deepEqual(parsedBody.fields, {
@@ -54,10 +54,10 @@ describe('stream-responses', function() {
 
         it('should close on error and error message must be part of the response', function(done) {
             assert.response(
-                app,
+                server,
                 createFailingQueryRequest('geojson'),
                 okResponse,
-                function(res) {
+                function(err, res) {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.features.length, 2);
                     assert.deepEqual(parsedBody.error, ["division by zero"]);

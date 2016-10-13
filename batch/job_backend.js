@@ -1,23 +1,13 @@
 'use strict';
 
-
-var queue = require('queue-async');
-var debug = require('./util/debug')('job-backend');
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
-var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
-var jobStatus = require('./job_status');
-var finalStatus = [
-    jobStatus.CANCELLED,
-    jobStatus.DONE,
-    jobStatus.FAILED,
-    jobStatus.UNKNOWN
-];
+var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
+var JobStatus = require('./job_status');
 
-function JobBackend(metadataBackend, jobQueueProducer, userIndexer) {
+function JobBackend(metadataBackend, jobQueueProducer) {
     this.metadataBackend = metadataBackend;
     this.jobQueueProducer = jobQueueProducer;
-    this.userIndexer = userIndexer;
 }
 
 function toRedisParams(job) {
@@ -64,7 +54,7 @@ function toObject(job_id, redisParams, redisValues) {
 }
 
 function isJobFound(redisValues) {
-    return redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4];
+    return !!(redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4]);
 }
 
 JobBackend.prototype.get = function (job_id, callback) {
@@ -116,13 +106,7 @@ JobBackend.prototype.create = function (job, callback) {
                     return callback(err);
                 }
 
-                self.userIndexer.add(job.user, job.job_id, function (err) {
-                  if (err) {
-                      return callback(err);
-                  }
-
-                  callback(null, jobSaved);
-                });
+                return callback(null, jobSaved);
             });
         });
     });
@@ -132,6 +116,7 @@ JobBackend.prototype.update = function (job, callback) {
     var self = this;
 
     self.get(job.job_id, function (err) {
+
         if (err) {
             return callback(err);
         }
@@ -165,84 +150,15 @@ JobBackend.prototype.save = function (job, callback) {
     });
 };
 
-function isFinalStatus(status) {
-    return finalStatus.indexOf(status) !== -1;
-}
-
 JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
     var redisKey = REDIS_PREFIX + job.job_id;
 
-    if (!isFinalStatus(job.status)) {
+    if (!JobStatus.isFinal(job.status)) {
         return callback();
     }
 
-    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], callback);
-};
-
-JobBackend.prototype.list = function (user, callback) {
-    var self = this;
-
-    this.userIndexer.list(user, function (err, job_ids) {
-        if (err) {
-            return callback(err);
-        }
-
-        var initialLength = job_ids.length;
-
-        self._getCleanedList(user, job_ids, function (err, jobs) {
-            if (err) {
-                return callback(err);
-            }
-
-            if (jobs.length < initialLength) {
-                return self.list(user, callback);
-            }
-
-            callback(null, jobs);
-        });
-    });
-};
-
-JobBackend.prototype._getCleanedList = function (user, job_ids, callback) {
-    var self = this;
-
-    var jobsQueue = queue(job_ids.length);
-
-    job_ids.forEach(function(job_id) {
-        jobsQueue.defer(self._getIndexedJob.bind(self), job_id, user);
-    });
-
-    jobsQueue.awaitAll(function (err, jobs) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, jobs.filter(function (job) {
-            return job ? true : false;
-        }));
-    });
-};
-
-JobBackend.prototype._getIndexedJob = function (job_id, user, callback) {
-    var self = this;
-
-    this.get(job_id, function (err, job) {
-        if (err && err.name === 'NotFoundError') {
-            return self.userIndexer.remove(user, job_id, function (err) {
-                if (err) {
-                    debug('Error removing key %s in user set', job_id, err);
-                }
-                callback();
-            });
-        }
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, job);
-    });
+    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, FINISHED_JOBS_TTL_IN_SECONDS ], callback);
 };
 
 module.exports = JobBackend;

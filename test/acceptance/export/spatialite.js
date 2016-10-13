@@ -1,17 +1,17 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var sqlite = require('sqlite3');
 
 describe('spatialite query', function(){
 
     it('returns a valid sqlite database', function(done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=spatialite',
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{ }, function(res) {
+        },{ }, function(err, res) {
             assert.equal(res.statusCode, 200, res.body);
             assert.equal(res.headers["content-type"], "application/x-sqlite3; charset=utf-8");
             var db = new sqlite.Database(':memory:', res.body);
@@ -25,11 +25,11 @@ describe('spatialite query', function(){
     });
 
     it('different file name', function(done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=spatialite&filename=manolo',
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{ }, function(res) {
+        },{ }, function(err, res) {
             assert.equal(res.headers["content-type"], "application/x-sqlite3; charset=utf-8");
             assert.notEqual(res.headers["content-disposition"].indexOf("manolo.sqlite"), -1);
             done();
@@ -37,11 +37,11 @@ describe('spatialite query', function(){
     });
 
     it('gets database schema', function(done){
-        assert.response(app, {
+        assert.response(server, {
             url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=spatialite',
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        },{ }, function(res) {
+        },{ }, function(err, res) {
             var db = new sqlite.Database(':memory:', res.body);
             var schemaQuery = "SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name";
             var qr = db.get(schemaQuery, function(err){

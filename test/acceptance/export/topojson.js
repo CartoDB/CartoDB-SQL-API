@@ -1,13 +1,9 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');
-
-// allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
-
 
 describe('export.topojson', function() {
 
@@ -29,7 +25,7 @@ describe('export.topojson', function() {
     }
 
 it('GET two polygons sharing an edge as topojson', function(done){
-    assert.response(app,
+    assert.response(server,
         getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
             " UNION ALL " +
@@ -38,8 +34,8 @@ it('GET two polygons sharing an edge as topojson', function(done){
         {
             status: 200
         },
-        function(res) {
-        var cd = res.header('Content-Disposition');
+        function(err, res) {
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
         var topojson = JSON.parse(res.body);
@@ -135,7 +131,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
 });
 
 it('null geometries', function(done){
-    assert.response(app, getRequest(
+    assert.response(server, getRequest(
             "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom " +
             " UNION ALL " +
             "SELECT 2, 'D', null::geometry as the_geom "
@@ -143,8 +139,8 @@ it('null geometries', function(done){
         {
             status: 200
         },
-        function(res) {
-        var cd = res.header('Content-Disposition');
+        function(err, res) {
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.topojson/gi.test(cd));
         var topojson = JSON.parse(res.body);
@@ -193,7 +189,7 @@ it('null geometries', function(done){
 });
 
     it('skipped fields are not returned', function(done) {
-        assert.response(app,
+        assert.response(server,
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
                 {
@@ -203,7 +199,7 @@ it('null geometries', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.equal(parsedBody.objects[0].properties.gid, 1, 'gid was expected property');
                 assert.ok(!parsedBody.objects[0].properties.name);
@@ -214,7 +210,7 @@ it('null geometries', function(done){
 
     it('jsonp callback is invoked', function(done){
         assert.response(
-            app,
+            server,
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
                 {
@@ -224,7 +220,7 @@ it('null geometries', function(done){
             {
                 status: 200
             },
-            function(res) {
+            function(err, res) {
                 assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
                 var didRunJsonCallback = false;
                 // jshint ignore:start
@@ -242,7 +238,7 @@ it('null geometries', function(done){
 
     it('should close on error and error must be the only key in the body', function(done) {
         assert.response(
-            app,
+            server,
             {
                 url: "/api/v1/sql?" + querystring.stringify({
                     q: "SELECT the_geom, 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4",
@@ -256,7 +252,7 @@ it('null geometries', function(done){
             {
                 status: 400
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.deepEqual(Object.keys(parsedBody), ['error']);
                 assert.deepEqual(parsedBody.error, ["division by zero"]);

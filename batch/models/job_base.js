@@ -111,3 +111,7 @@ JobBase.prototype.serialize = function () {
 
     return data;
 };
+
+JobBase.prototype.log = function(/*logger*/) {
+    return false;
+};
