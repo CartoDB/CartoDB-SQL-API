@@ -10,8 +10,14 @@ var debug = require('../../util/debug')('redis-distlock');
 
 function RedisDistlockLocker(redisPool) {
     this.pool = redisPool;
-    this.redlock = null;
-    this.client = null;
+    this.redlock = new Redlock([{}], {
+        // see http://redis.io/topics/distlock
+        driftFactor: 0.01, // time in ms
+        // the max number of times Redlock will attempt to lock a resource before failing
+        retryCount: 3,
+        // the time in ms between attempts
+        retryDelay: 100
+    });
     this._locks = {};
 }
 
@@ -49,9 +55,19 @@ RedisDistlockLocker.prototype.lock = function(host, ttl, callback) {
 };
 
 RedisDistlockLocker.prototype.unlock = function(host, callback) {
+    var self = this;
     var lock = this._getLock(resourceId(host));
-    if (lock && this.redlock) {
-        return this.redlock.unlock(lock, callback);
+    if (lock) {
+        this.pool.acquire(REDIS_DISTLOCK.DB, function (err, client) {
+            if (err) {
+                return callback(err);
+            }
+            self.redlock.servers = [client];
+            return self.redlock.unlock(lock, function(err) {
+                self.pool.release(REDIS_DISTLOCK.DB, client);
+                return callback(err);
+            });
+        });
     }
 };
 
@@ -67,30 +83,29 @@ RedisDistlockLocker.prototype._setLock = function(resource, lock) {
 };
 
 RedisDistlockLocker.prototype._tryExtend = function(lock, ttl, callback) {
-    return lock.extend(ttl, function(err, _lock) {
-        return callback(err, _lock);
+    var self = this;
+    this.pool.acquire(REDIS_DISTLOCK.DB, function (err, client) {
+        if (err) {
+            return callback(err);
+        }
+        self.redlock.servers = [client];
+        return lock.extend(ttl, function(err, _lock) {
+            self.pool.release(REDIS_DISTLOCK.DB, client);
+            return callback(err, _lock);
+        });
     });
 };
 
 RedisDistlockLocker.prototype._tryAcquire = function(resource, ttl, callback) {
-    if (this.redlock & this.client && this.client.connected) {
-        return this.redlock.lock(resource, ttl, callback);
-    }
-    if (this.client && !this.client.connected) {
-        this.pool.release(REDIS_DISTLOCK.DB, this.client);
-    }
     var self = this;
     this.pool.acquire(REDIS_DISTLOCK.DB, function (err, client) {
-        self.client = client;
-        self.redlock = new Redlock([client], {
-            // see http://redis.io/topics/distlock
-            driftFactor: 0.01, // time in ms
-            // the max number of times Redlock will attempt to lock a resource before failing
-            retryCount: 3,
-            // the time in ms between attempts
-            retryDelay: 100
+        if (err) {
+            return callback(err);
+        }
+        self.redlock.servers = [client];
+        return self.redlock.lock(resource, ttl, function(err, _lock) {
+            self.pool.release(REDIS_DISTLOCK.DB, client);
+            return callback(err, _lock);
         });
-
-        self.redlock.lock(resource, ttl, callback);
     });
 };
