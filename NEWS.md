@@ -1,6 +1,9 @@
 1.38.2 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ * Batch queries: release redis clients to pool from locker and seeker.
+
 
 1.38.1 - 2016-10-13
 -------------------
