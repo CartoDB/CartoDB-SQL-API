@@ -1,6 +1,9 @@
 1.38.1 - 2016-mm-dd
 -------------------
 
+Enhancements:
+ * Batch queries: improvements over leader locking.
+
 
 1.38.0 - 2016-10-11
 -------------------
