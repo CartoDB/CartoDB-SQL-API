@@ -24,7 +24,7 @@ var LRU = require('lru-cache');
 
 var RedisPool = require('redis-mpool');
 var UserDatabaseService = require('./services/user_database_service');
-var JobPublisher = require('../batch/job_publisher');
+var JobPublisher = require('../batch/pubsub/job-publisher');
 var JobQueue = require('../batch/job_queue');
 var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');

@@ -16,7 +16,7 @@ var batchFactory = require(BATCH_SOURCE + 'index');
 var _ = require('underscore');
 var RedisPool = require('redis-mpool');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
-var JobPublisher = require(BATCH_SOURCE + 'job_publisher');
+var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
@@ -67,7 +67,6 @@ describe('batch multiquery', function() {
     });
 
     after(function (done) {
-        batch.removeAllListeners();
         batch.stop();
         redisUtils.clean('batch:*', done);
     });

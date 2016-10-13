@@ -100,12 +100,14 @@ function jobResponse(req, res, statsdClient, action, status) {
         res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         statsdClient.increment('sqlapi.job.success');
 
-        console.info(JSON.stringify({
-            type: 'sql_api_batch_job',
-            username: req.context.user,
-            action: action,
-            job_id: job.job_id
-        }));
+        if (process.env.NODE_ENV !== 'test') {
+            console.info(JSON.stringify({
+                type: 'sql_api_batch_job',
+                username: req.context.user,
+                action: action,
+                job_id: job.job_id
+            }));
+        }
 
         res.status(status).send(job.serialize());
     };

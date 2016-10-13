@@ -4,7 +4,7 @@ var bunyan = require('bunyan');
 
 function BatchLogger (path) {
     var stream = {
-        level: 'info'
+        level: process.env.NODE_ENV === 'test' ? 'fatal' : 'info'
     };
     if (path) {
         stream.path = path;

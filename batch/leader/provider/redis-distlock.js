@@ -11,6 +11,7 @@ var debug = require('../../util/debug')('redis-distlock');
 function RedisDistlockLocker(redisPool) {
     this.pool = redisPool;
     this.redlock = null;
+    this.client = null;
     this._locks = {};
 }
 
@@ -72,15 +73,22 @@ RedisDistlockLocker.prototype._tryExtend = function(lock, ttl, callback) {
 };
 
 RedisDistlockLocker.prototype._tryAcquire = function(resource, ttl, callback) {
+    if (this.redlock & this.client && this.client.connected) {
+        return this.redlock.lock(resource, ttl, callback);
+    }
+    if (this.client && !this.client.connected) {
+        this.pool.release(REDIS_DISTLOCK.DB, this.client);
+    }
     var self = this;
     this.pool.acquire(REDIS_DISTLOCK.DB, function (err, client) {
+        self.client = client;
         self.redlock = new Redlock([client], {
             // see http://redis.io/topics/distlock
             driftFactor: 0.01, // time in ms
             // the max number of times Redlock will attempt to lock a resource before failing
             retryCount: 3,
             // the time in ms between attempts
-            retryDelay: 200
+            retryDelay: 100
         });
 
         self.redlock.lock(resource, ttl, callback);
