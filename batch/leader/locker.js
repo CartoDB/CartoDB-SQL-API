@@ -18,47 +18,47 @@ function Locker(locker, ttl) {
 
 module.exports = Locker;
 
-Locker.prototype.lock = function(host, callback) {
+Locker.prototype.lock = function(resource, callback) {
     var self = this;
-    debug('Locker.lock(%s, %d)', host, this.ttl);
-    this.locker.lock(host, this.ttl, function (err, lock) {
+    debug('Locker.lock(%s, %d)', resource, this.ttl);
+    this.locker.lock(resource, this.ttl, function (err, lock) {
         if (!err) {
-            self.startRenewal(host);
+            self.startRenewal(resource);
         }
         return callback(err, lock);
     });
 };
 
-Locker.prototype.unlock = function(host, callback) {
+Locker.prototype.unlock = function(resource, callback) {
     var self = this;
-    debug('Locker.unlock(%s)', host);
-    this.locker.unlock(host, function(err) {
-        self.stopRenewal(host);
+    debug('Locker.unlock(%s)', resource);
+    this.locker.unlock(resource, function(err) {
+        self.stopRenewal(resource);
         return callback(err);
     });
 };
 
-Locker.prototype.startRenewal = function(host) {
+Locker.prototype.startRenewal = function(resource) {
     var self = this;
-    if (!this.intervalIds.hasOwnProperty(host)) {
-        this.intervalIds[host] = setInterval(function() {
-            debug('Trying to extend lock host=%s', host);
-            self.locker.lock(host, self.ttl, function(err, _lock) {
+    if (!this.intervalIds.hasOwnProperty(resource)) {
+        this.intervalIds[resource] = setInterval(function() {
+            debug('Trying to extend lock resource=%s', resource);
+            self.locker.lock(resource, self.ttl, function(err, _lock) {
                 if (err) {
-                    return self.stopRenewal(host);
+                    return self.stopRenewal(resource);
                 }
                 if (_lock) {
-                    debug('Extended lock host=%s', host);
+                    debug('Extended lock resource=%s', resource);
                 }
             });
         }, this.renewInterval);
     }
 };
 
-Locker.prototype.stopRenewal = function(host) {
-    if (this.intervalIds.hasOwnProperty(host)) {
-        clearInterval(this.intervalIds[host]);
-        delete this.intervalIds[host];
+Locker.prototype.stopRenewal = function(resource) {
+    if (this.intervalIds.hasOwnProperty(resource)) {
+        clearInterval(this.intervalIds[resource]);
+        delete this.intervalIds[resource];
     }
 };
 
