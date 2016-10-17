@@ -2,13 +2,13 @@
 
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
-var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 var JobStatus = require('./job_status');
 
 function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
     this.jobQueue = jobQueue;
     this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 100;
+    this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 }
 
 function toRedisParams(job) {
@@ -169,7 +169,7 @@ JobBackend.prototype.setTTL = function (job, callback) {
         return callback();
     }
 
-    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, FINISHED_JOBS_TTL_IN_SECONDS ], callback);
+    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, this.inSecondsJobTTLAfterFinished ], callback);
 };
 
 module.exports = JobBackend;
