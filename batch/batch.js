@@ -20,7 +20,8 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.locker = Locker.create('redis-distlock', { pool: redisPool });
     this.hostUserQueueMover = new HostUserQueueMover(jobQueue, jobService, this.locker, redisPool);
 
-    this.workingQueues = {};
+    // map: host => map{user}. Useful to determine pending queued users.
+    this.workingHosts = {};
 
     // map: user => jobId. Will be used for draining jobs.
     this.workInProgressJobs = {};
@@ -40,16 +41,17 @@ Batch.prototype.subscribe = function () {
 
     this.jobSubscriber.subscribe(
         function onJobHandler(user, host) {
-            var resource = host + ':' + user;
             debug('onJobHandler(%s, %s)', user, host);
-            if (self.isProcessingUser(user)) {
+            if (self.isProcessing(host, user)) {
                 return debug('%s is already processing user=%s', self.name, user);
             }
+
+            self.setProcessing(host, user);
 
             // do forever, it does not throw a stack overflow
             forever(
                 function (next) {
-                    self.locker.lock(resource, function(err) {
+                    self.locker.lock(host, function(err) {
                         // we didn't get the lock for the host
                         if (err) {
                             debug(
@@ -67,8 +69,10 @@ Batch.prototype.subscribe = function () {
                         debug(err.name === 'EmptyQueue' ? err.message : err);
                     }
 
-                    self.finishedProcessingUser(user);
-                    self.locker.unlock(resource, debug);
+                    self.clearProcessing(host, user);
+                    if (!self.hasPendingJobs(host)) {
+                        self.locker.unlock(host, debug);
+                    }
                 }
             );
         },
@@ -100,11 +104,8 @@ Batch.prototype.processNextJob = function (user, callback) {
         }
 
         self.setWorkInProgressJob(user, jobId);
-        self.setProcessingJobId(user, jobId);
-
         self.jobRunner.run(jobId, function (err, job) {
             self.clearWorkInProgressJob(user);
-            self.setProcessingJobId(user, null);
 
             if (err) {
                 debug(err);
@@ -173,16 +174,31 @@ Batch.prototype.stop = function (callback) {
     this.jobSubscriber.unsubscribe(callback);
 };
 
-Batch.prototype.isProcessingUser = function(user) {
-    return this.workingQueues.hasOwnProperty(user);
+
+/* Processing hosts => users */
+
+Batch.prototype.setProcessing = function(host, user) {
+    if (!this.workingHosts.hasOwnProperty(host)) {
+        this.workingHosts[host] = {};
+    }
+    this.workingHosts[host][user] = true;
 };
 
-Batch.prototype.setProcessingJobId = function(user, jobId) {
-    this.workingQueues[user] = jobId;
+Batch.prototype.clearProcessing = function(host, user) {
+    if (this.workingHosts.hasOwnProperty(host)) {
+        delete this.workingHosts[host][user];
+        if (!this.hasPendingJobs(host)) {
+            delete this.workingHosts[host];
+        }
+    }
 };
 
-Batch.prototype.finishedProcessingUser = function(user) {
-    delete this.workingQueues[user];
+Batch.prototype.isProcessing = function(host, user) {
+    return this.workingHosts.hasOwnProperty(host) && this.workingHosts[host].hasOwnProperty(user);
+};
+
+Batch.prototype.hasPendingJobs = function(host) {
+    return this.workingHosts.hasOwnProperty(host) && Object.keys(this.workingHosts[host]).length > 0;
 };
 
 
