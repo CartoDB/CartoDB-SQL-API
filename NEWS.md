@@ -7,6 +7,8 @@ Enhancements:
 New features:
  * Batch queries use per user-queues.
  * Batch queries queues can limit the number of queued jobs per user.
+   - Default is 64 jobs.
+   - Configuration key `batch_max_queued_jobs` allows to modify the limit.
 
 
 1.38.2 - 2016-10-13

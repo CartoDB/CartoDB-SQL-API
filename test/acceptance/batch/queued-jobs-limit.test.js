@@ -71,7 +71,8 @@ describe('max queued jobs', function() {
 
             createJob(self.server, 400, function(err, res) {
                 assert.ok(!err);
-                assert.equal(res.error[0], "Failed to create job, max number of jobs queued reached");
+                assert.equal(res.error[0], "Failed to create job. Max number of jobs (" +
+                    global.settings.batch_max_queued_jobs + ") queued reached");
                 done();
             });
         });

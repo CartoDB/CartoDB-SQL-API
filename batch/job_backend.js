@@ -7,7 +7,7 @@ var JobStatus = require('./job_status');
 function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
     this.jobQueue = jobQueue;
-    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 250;
+    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
     this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 }
 
@@ -98,7 +98,10 @@ JobBackend.prototype.create = function (job, callback) {
         }
 
         if (size >= self.maxNumberOfQueuedJobs) {
-            return callback(new Error('Failed to create job, max number of jobs queued reached'));
+            return callback(new Error(
+                'Failed to create job. ' +
+                'Max number of jobs (' + self.maxNumberOfQueuedJobs + ') queued reached'
+            ));
         }
 
         self.get(job.job_id, function (err) {
