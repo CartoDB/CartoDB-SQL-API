@@ -37,7 +37,7 @@ describe('multiple batch clients job query order', function() {
     it('should run job queries in order (multiple consumers)', function (done) {
         var jobRequest1 = createJob([
             "insert into ordered_inserts values(1)",
-            "select pg_sleep(1)",
+            "select pg_sleep(0.25)",
             "insert into ordered_inserts values(2)"
         ]);
         var jobRequest2 = createJob([
