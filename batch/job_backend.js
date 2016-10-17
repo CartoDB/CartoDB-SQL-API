@@ -7,7 +7,7 @@ var JobStatus = require('./job_status');
 function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
     this.jobQueue = jobQueue;
-    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 100;
+    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 250;
     this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 }
 
