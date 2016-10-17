@@ -1,8 +1,39 @@
 # Batch Queries
 
-This document describes the currently supported query types, and what they are missing in terms of features.
+This document describes features from Batch Queries, it also details some internals that might be useful for maintainers
+and developers.
+
+
+## Redis data structures
+
+### Jobs definition
+
+Redis Hash: `batch:jobs:{UUID}`.
+
+Redis DB: 5.
+
+It stores the job definition, the user, and some metadata like the final status, the failure reason, and so.
+
+### Job queues
+
+Redis List: `batch:queue:{username}`.
+
+Redis DB: 5.
+
+It stores a pending list of jobs per user. It points to a job definition with the `{UUID}`.
+
+### Job notifications
+
+Redis Pub/Sub channel: `batch:users`.
+
+Redis DB: 0.
+
+In order to notify new jobs, it uses a Pub/Sub channel were the username for the queued job is published.
+
 
 ## Job types
+
+Format for the currently supported query types, and what they are missing in terms of features.
 
 ### Simple
 
