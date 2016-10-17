@@ -6,7 +6,7 @@ var REDIS_DISTLOCK = {
 };
 
 var Redlock = require('redlock');
-var debug = require('../../util/debug')('redis-distlock');
+var debug = require('../../util/debug')('leader:redis-distlock');
 
 function RedisDistlockLocker(redisPool) {
     this.pool = redisPool;
