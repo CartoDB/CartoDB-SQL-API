@@ -4,22 +4,36 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 var batchFactory = require('../../../batch/index');
 var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var TestClient = require('../../support/test-client');
 
 describe('max queued jobs', function() {
 
-    before(function() {
+    before(function(done) {
         this.batch_max_queued_jobs = global.settings.batch_max_queued_jobs;
         global.settings.batch_max_queued_jobs = 1;
         this.server = require('../../../app/server')();
+        this.testClient = new TestClient();
+        this.testClient.getResult(
+            'drop table if exists max_queued_jobs_inserts; create table max_queued_jobs_inserts (status numeric)',
+            done
+        );
     });
 
     after(function (done) {
+        var self = this;
         global.settings.batch_max_queued_jobs = this.batch_max_queued_jobs;
         var batch = batchFactory(metadataBackend, redisUtils.getConfig());
         batch.start();
         batch.on('ready', function() {
-            batch.stop();
-            redisUtils.clean('batch:*', done);
+            batch.on('job:done', function() {
+                self.testClient.getResult('select count(*) from max_queued_jobs_inserts', function(err, rows) {
+                    assert.ok(!err);
+                    assert.equal(rows[0].count, 1);
+
+                    batch.stop();
+                    redisUtils.clean('batch:*', done);
+                });
+            });
         });
     });
 
@@ -34,7 +48,7 @@ describe('max queued jobs', function() {
                 },
                 method: 'POST',
                 data: JSON.stringify({
-                    query: "SELECT * FROM untitle_table_4"
+                    query: "insert into max_queued_jobs_inserts values (1)"
                 })
             },
             {
@@ -58,7 +72,6 @@ describe('max queued jobs', function() {
             createJob(self.server, 400, function(err, res) {
                 assert.ok(!err);
                 assert.equal(res.error[0], "Failed to create job, max number of jobs queued reached");
-                console.log(res.body);
                 done();
             });
         });
