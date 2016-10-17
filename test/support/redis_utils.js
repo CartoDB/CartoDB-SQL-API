@@ -1,5 +1,7 @@
 'use strict';
 
+var RedisPool = require('redis-mpool');
+
 var redisConfig = {
     host: global.settings.redis_host,
     port: global.settings.redis_port,
@@ -25,4 +27,9 @@ module.exports.clean = function clean(pattern, callback) {
 
 module.exports.getConfig = function getConfig() {
     return redisConfig;
+};
+
+var pool = new RedisPool(redisConfig);
+module.exports.getPool = function getPool() {
+    return pool;
 };

@@ -5,24 +5,20 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 var queue = require('queue-async');
 
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var StatsD = require('node-statsd').StatsD;
 var statsdClient = new StatsD(global.settings.statsd);
 
 var BATCH_SOURCE = '../../../batch/';
 var batchFactory = require(BATCH_SOURCE + 'index');
 
-
-var _ = require('underscore');
-var RedisPool = require('redis-mpool');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
 var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 
-var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
-var jobPublisher = new JobPublisher(redisPoolPublisher);
+var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
 
@@ -59,7 +55,7 @@ function assertJob(job, expectedStatus, done) {
 }
 
 describe('batch multiquery', function() {
-    var batch = batchFactory(metadataBackend, redisUtils.getConfig(), statsdClient);
+    var batch = batchFactory(metadataBackend, redisUtils.getPool(), statsdClient);
 
     before(function (done) {
         batch.start();

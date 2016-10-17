@@ -2,7 +2,6 @@ require('../../helper');
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 var _ = require('underscore');
-var RedisPool = require('redis-mpool');
 var queue = require('queue-async');
 var batchFactory = require('../../../batch/index');
 
@@ -12,20 +11,20 @@ var JobBackend = require('../../../batch/job_backend');
 var JobService = require('../../../batch/job_service');
 var UserDatabaseMetadataService = require('../../../batch/user_database_metadata_service');
 var JobCanceller = require('../../../batch/job_canceller');
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
 describe('batch module', function() {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
-    var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
-    var jobPublisher = new JobPublisher(redisPoolPublisher);
+    var pool = redisUtils.getPool();
+    var jobPublisher = new JobPublisher(pool);
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
 
-    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
+    var batch = batchFactory(metadataBackend, pool);
 
     before(function (done) {
         batch.start();

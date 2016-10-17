@@ -7,7 +7,7 @@ var redisUtils = require('./redis_utils');
 var debug = require('debug')('batch-test-client');
 
 var JobStatus = require('../../batch/job_status');
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../batch/index');
 
 function response(code) {
@@ -26,7 +26,7 @@ function BatchTestClient(config) {
     this.config = config || {};
     this.server = appServer();
 
-    this.batch = batchFactory(metadataBackend, redisUtils.getConfig(), this.config.name);
+    this.batch = batchFactory(metadataBackend, redisUtils.getPool(), this.config.name);
     this.batch.start();
 
     this.pendingJobs = [];

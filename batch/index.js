@@ -1,7 +1,5 @@
 'use strict';
 
-var RedisPool = require('redis-mpool');
-var _ = require('underscore');
 var JobRunner = require('./job_runner');
 var QueryRunner = require('./query_runner');
 var JobCanceller = require('./job_canceller');
@@ -14,12 +12,11 @@ var JobService = require('./job_service');
 var BatchLogger = require('./batch-logger');
 var Batch = require('./batch');
 
-module.exports = function batchFactory (metadataBackend, redisConfig, name, statsdClient, loggerPath) {
+module.exports = function batchFactory (metadataBackend, redisPool, name, statsdClient, loggerPath) {
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 
-    var pubSubRedisPool = new RedisPool(_.extend({ name: 'batch-pubsub'}, redisConfig));
-    var jobSubscriber = new JobSubscriber(pubSubRedisPool, userDatabaseMetadataService);
-    var jobPublisher = new JobPublisher(pubSubRedisPool);
+    var jobSubscriber = new JobSubscriber(redisPool, userDatabaseMetadataService);
+    var jobPublisher = new JobPublisher(redisPool);
 
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
@@ -36,7 +33,7 @@ module.exports = function batchFactory (metadataBackend, redisConfig, name, stat
         jobRunner,
         jobService,
         jobPublisher,
-        redisConfig,
+        redisPool,
         logger
     );
 };

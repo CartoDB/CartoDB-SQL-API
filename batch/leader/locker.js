@@ -1,7 +1,5 @@
 'use strict';
 
-var _ = require('underscore');
-var RedisPool = require('redis-mpool');
 var RedisDistlockLocker = require('./provider/redis-distlock');
 var debug = require('../util/debug')('leader-locker');
 
@@ -66,7 +64,6 @@ module.exports.create = function createLocker(type, config) {
     if (type !== 'redis-distlock') {
         throw new Error('Invalid type Locker type. Valid types are: "redis-distlock"');
     }
-    var redisPool = new RedisPool(_.extend({ name: 'batch-distlock' }, config.redisConfig));
-    var locker = new RedisDistlockLocker(redisPool);
+    var locker = new RedisDistlockLocker(config.pool);
     return new Locker(locker, config.ttl);
 };

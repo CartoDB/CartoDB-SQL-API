@@ -6,8 +6,6 @@ var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
-var _ = require('underscore');
-var RedisPool = require('redis-mpool');
 
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
@@ -15,9 +13,8 @@ var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
 
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
-var jobPublisher = new JobPublisher(redisPoolPublisher);
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
+var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 
 var USER = 'vizzuality';

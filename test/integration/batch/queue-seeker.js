@@ -4,15 +4,12 @@ require('../../helper');
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var _ = require('underscore');
-var RedisPool = require('redis-mpool');
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var JobPublisher = require('../../../batch/pubsub/job-publisher');
 var QueueSeeker = require('../../../batch/pubsub/queue-seeker');
 var JobQueue = require('../../../batch/job_queue');
 
-var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
-var jobPublisher = new JobPublisher(redisPoolPublisher);
+var jobPublisher = new JobPublisher(redisUtils.getPool());
 
 
 describe('queue seeker', function() {
@@ -28,7 +25,7 @@ describe('queue seeker', function() {
     });
 
     it('should find queues for one user', function (done) {
-        var seeker = new QueueSeeker(redisPoolPublisher);
+        var seeker = new QueueSeeker(redisUtils.getPool());
         this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
             if (err) {
                 return done(err);
@@ -45,7 +42,7 @@ describe('queue seeker', function() {
 
     it('should find queues for more than one user', function (done) {
         var self = this;
-        var seeker = new QueueSeeker(redisPoolPublisher);
+        var seeker = new QueueSeeker(redisUtils.getPool());
         this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
             if (err) {
                 return done(err);

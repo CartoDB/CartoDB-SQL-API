@@ -8,7 +8,7 @@ var queue = require('queue-async');
 var Locker = require('./leader/locker');
 var HostUserQueueMover = require('./maintenance/host-user-queue-mover');
 
-function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisConfig, logger) {
+function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisPool, logger) {
     EventEmitter.call(this);
     this.name = name || 'batch';
     this.jobSubscriber = jobSubscriber;
@@ -17,8 +17,8 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobService = jobService;
     this.jobPublisher = jobPublisher;
     this.logger = logger;
-    this.locker = Locker.create('redis-distlock', { redisConfig: redisConfig });
-    this.hostUserQueueMover = new HostUserQueueMover(jobQueue, jobService, this.locker, redisConfig);
+    this.locker = Locker.create('redis-distlock', { pool: redisPool });
+    this.hostUserQueueMover = new HostUserQueueMover(jobQueue, jobService, this.locker, redisPool);
 
     // map: host => jobId
     this.workingQueues = {};

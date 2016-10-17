@@ -1,7 +1,5 @@
 'use strict';
 
-var RedisPool = require('redis-mpool');
-var _ = require('underscore');
 var asyncQ = require('queue-async');
 var debug = require('../util/debug')('queue-mover');
 var forever = require('../util/forever');
@@ -17,11 +15,11 @@ var QUEUE = {
     }
 };
 
-function HostUserQueueMover(jobQueue, jobService, locker, redisConfig) {
+function HostUserQueueMover(jobQueue, jobService, locker, redisPool) {
     this.jobQueue = jobQueue;
     this.jobService = jobService;
     this.locker = locker;
-    this.pool = new RedisPool(_.extend({ name: 'host-user-mover' }, redisConfig));
+    this.pool = redisPool;
 }
 
 module.exports = HostUserQueueMover;
