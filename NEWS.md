@@ -1,5 +1,12 @@
-1.38.3 - 2016-mm-dd
+1.39.0 - 2016-mm-dd
 -------------------
+
+Enhancements:
+ * Use just one Redis pool across the whole application.
+
+New features:
+ * Batch queries use per user-queues.
+ * Batch queries queues can limit the number of queued jobs per user.
 
 
 1.38.2 - 2016-10-13
