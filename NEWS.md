@@ -1,6 +1,9 @@
 1.39.1 - 2016-mm-dd
 -------------------
 
+Enhancements:
+ * Log creation and waiting time for fallback jobs' queries.
+
 
 1.39.0 - 2016-10-17
 -------------------
