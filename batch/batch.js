@@ -38,6 +38,7 @@ Batch.prototype.subscribe = function () {
 
     this.jobSubscriber.subscribe(
         function onJobHandler(user, host) {
+            var resource = host + ':' + user;
             debug('onJobHandler(%s, %s)', user, host);
             if (self.isProcessingUser(user)) {
                 return debug('%s is already processing user=%s', self.name, user);
@@ -46,7 +47,7 @@ Batch.prototype.subscribe = function () {
             // do forever, it does not throw a stack overflow
             forever(
                 function (next) {
-                    self.locker.lock(host, function(err) {
+                    self.locker.lock(resource, function(err) {
                         // we didn't get the lock for the host
                         if (err) {
                             debug(
@@ -65,7 +66,7 @@ Batch.prototype.subscribe = function () {
                     }
 
                     self.finishedProcessingUser(user);
-                    self.locker.unlock(host, debug);
+                    self.locker.unlock(resource, debug);
                 }
             );
         },
