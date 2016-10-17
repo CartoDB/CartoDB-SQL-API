@@ -21,7 +21,7 @@ function HostUserQueueMover(jobQueue, jobService, locker, redisConfig) {
     this.jobQueue = jobQueue;
     this.jobService = jobService;
     this.locker = locker;
-    this.pool = new RedisPool(_.extend({ name: 'batch-distlock' }, redisConfig));
+    this.pool = new RedisPool(_.extend({ name: 'host-user-mover' }, redisConfig));
 }
 
 module.exports = HostUserQueueMover;
@@ -80,13 +80,13 @@ HostUserQueueMover.prototype.processNextJob = function (host, callback) {
         }
 
         client.lpop(QUEUE.OLD.PREFIX + host, function(err, jobId) {
+            self.pool.release(QUEUE.OLD.DB, client);
             debug('Found jobId=%s at queue=%s', jobId, host);
             if (!jobId) {
                 var emptyQueueError = new Error('Empty queue');
                 emptyQueueError.name = 'EmptyQueue';
                 return callback(emptyQueueError);
             }
-            self.pool.release(QUEUE.OLD.DB, client);
             self.jobService.get(jobId, function(err, job) {
                 if (err) {
                     debug(err);
@@ -106,37 +106,41 @@ HostUserQueueMover.prototype.processNextJob = function (host, callback) {
 HostUserQueueMover.prototype.getOldQueues = function(callback) {
     var initialCursor = ['0'];
     var hosts = {};
-    this._getOldQueues(initialCursor, hosts, callback);
-};
-
-HostUserQueueMover.prototype._getOldQueues = function (cursor, hosts, callback) {
     var self = this;
-    var redisParams = [cursor[0], 'MATCH', QUEUE.OLD.PREFIX + '*'];
 
     this.pool.acquire(QUEUE.OLD.DB, function(err, client) {
         if (err) {
             return callback(err);
         }
-
-        client.scan(redisParams, function(err, currentCursor) {
-            // checks if iteration has ended
-            if (currentCursor[0] === '0') {
-                self.pool.release(QUEUE.OLD.DB, client);
-                return callback(null, Object.keys(hosts));
-            }
-
-            var queues = currentCursor[1];
-
-            if (!queues) {
-                return callback(null);
-            }
-
-            queues.forEach(function (queue) {
-                var host = queue.substr(QUEUE.OLD.PREFIX.length);
-                hosts[host] = true;
-            });
-
-            self._getOldQueues(currentCursor, hosts, callback);
+        self._getOldQueues(client, initialCursor, hosts, function(err, hosts) {
+            self.pool.release(QUEUE.DB, client);
+            return callback(err, Object.keys(hosts));
         });
+    });
+};
+
+HostUserQueueMover.prototype._getOldQueues = function (client, cursor, hosts, callback) {
+    var self = this;
+    var redisParams = [cursor[0], 'MATCH', QUEUE.OLD.PREFIX + '*'];
+
+    client.scan(redisParams, function(err, currentCursor) {
+        if (err) {
+            return callback(null, hosts);
+        }
+
+        var queues = currentCursor[1];
+        if (queues) {
+            queues.forEach(function (queue) {
+                var user = queue.substr(QUEUE.OLD.PREFIX.length);
+                hosts[user] = true;
+            });
+        }
+
+        var hasMore = currentCursor[0] !== '0';
+        if (!hasMore) {
+            return callback(null, hosts);
+        }
+
+        self._getOldQueues(client, currentCursor, hosts, callback);
     });
 };
