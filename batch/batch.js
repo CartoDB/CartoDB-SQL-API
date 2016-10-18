@@ -43,7 +43,7 @@ Batch.prototype.subscribe = function () {
         function onJobHandler(user, host) {
             debug('onJobHandler(%s, %s)', user, host);
             if (self.isProcessing(host, user)) {
-                return debug('%s is already processing user=%s', self.name, user);
+                return debug('%s is already processing host=%s user=%s', self.name, host, user);
             }
 
             self.setProcessing(host, user);
@@ -54,13 +54,10 @@ Batch.prototype.subscribe = function () {
                     self.locker.lock(host, function(err) {
                         // we didn't get the lock for the host
                         if (err) {
-                            debug(
-                                'Could not lock host=%s for user=%s from %s. Reason: %s',
-                                host, self.name, user, err.message
-                            );
+                            debug('Could not lock host=%s from %s. Reason: %s', host, self.name, err.message);
                             return next(err);
                         }
-                        debug('Locked host=%s for user=%s from %s', host, user, self.name);
+                        debug('Locked host=%s from %s', host, user, self.name);
                         self.processNextJob(user, next);
                     });
                 },
