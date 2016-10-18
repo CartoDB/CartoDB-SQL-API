@@ -116,8 +116,6 @@ Batch.prototype.processNextJob = function (user, callback) {
 
             self.logger.log(job);
 
-            self.emit('job:' + job.data.status, jobId);
-
             callback();
         });
     });
