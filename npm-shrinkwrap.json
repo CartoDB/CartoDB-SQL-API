@@ -2,6 +2,11 @@
   "name": "cartodb_sql_api",
   "version": "1.39.2",
   "dependencies": {
+    "bintrees": {
+      "version": "1.0.1",
+      "from": "bintrees@>=1.0.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/bintrees/-/bintrees-1.0.1.tgz"
+    },
     "bunyan": {
       "version": "1.8.1",
       "from": "bunyan@1.8.1",
@@ -52,9 +57,9 @@
                   "resolved": "https://registry.npmjs.org/glob/-/glob-6.0.4.tgz",
                   "dependencies": {
                     "inflight": {
-                      "version": "1.0.5",
+                      "version": "1.0.6",
                       "from": "inflight@>=1.0.4 <2.0.0",
-                      "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.5.tgz",
+                      "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz",
                       "dependencies": {
                         "wrappy": {
                           "version": "1.0.2",

@@ -17,6 +17,7 @@
     "Sandro Santilli <strk@vizzuality.com>"
   ],
   "dependencies": {
+    "bintrees": "1.0.1",
     "bunyan": "1.8.1",
     "cartodb-psql": "~0.6.0",
     "cartodb-query-tables": "0.2.0",
