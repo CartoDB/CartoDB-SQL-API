@@ -7,12 +7,6 @@ var debug = require('../util/debug')('scheduler');
 
 var forever = require('../util/forever');
 
-var STATUS = {
-    PENDING: 'pending',
-    RUNNING: 'running',
-    DONE: 'done'
-};
-
 function Scheduler(capacity, taskRunner) {
     EventEmitter.call(this);
     this.taskRunner = taskRunner;
@@ -114,6 +108,15 @@ Scheduler.prototype.release = function(err, taskEntity) {
     debug('Released %j', taskEntity);
     // decide what to do based on status/jobs
     this.emit('release');
+};
+
+
+/* Task entities */
+
+var STATUS = {
+    PENDING: 'pending',
+    RUNNING: 'running',
+    DONE: 'done'
 };
 
 function TaskEntity(user) {
