@@ -7,13 +7,6 @@ var debug = require('../util/debug')('scheduler');
 
 var forever = require('../util/forever');
 
-//var STATUS = {
-//    PENDING: 100,
-//    WAITING: 50,
-//    RUNNING: 0,
-//    DONE: -10
-//};
-
 var STATUS = {
     PENDING: 'pending',
     WAITING: 'waiting',
