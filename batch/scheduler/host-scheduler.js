@@ -6,11 +6,12 @@ var Locker = require('../leader/locker');
 var InfinityCapacity = require('./capacity/infinity');
 //var OneCapacity = require('./capacity/one');
 
-function HostScheduler(taskRunner, redisPool) {
+function HostScheduler(name, taskRunner, redisPool) {
+    this.name = name || 'scheduler';
     this.taskRunner = taskRunner;
     this.locker = Locker.create('redis-distlock', { pool: redisPool });
     this.locker.on('error', function(err, host) {
-        debug('Locker.error %s', err.message);
+        debug('[%s] Locker.error %s', this.name, err.message);
         this.unlock(host);
     }.bind(this));
     // host => Scheduler
@@ -22,21 +23,22 @@ module.exports = HostScheduler;
 HostScheduler.prototype.add = function(host, user, callback) {
     this.lock(host, function(err, scheduler) {
         if (err) {
+            debug('[%s] Could not lock host=%s', this.name, host);
             return callback(err);
         }
         scheduler.add(user);
         var wasRunning = scheduler.schedule();
-        debug('Scheduler host=%s was running = %s', host, wasRunning);
+        debug('[%s] Scheduler host=%s was running=%s', this.name, host, wasRunning);
         return callback(err, wasRunning);
-    });
+    }.bind(this));
 };
 
 HostScheduler.prototype.lock = function(host, callback) {
-    debug('lock(%s)', host);
+    debug('[%s] lock(%s)', this.name, host);
     var self = this;
     this.locker.lock(host, function(err) {
         if (err) {
-            debug('Could not lock host=%s. Reason: %s', host, err.message);
+            debug('[%s] Could not lock host=%s. Reason: %s', self.name, host, err.message);
             return callback(err);
         }
 
@@ -46,13 +48,13 @@ HostScheduler.prototype.lock = function(host, callback) {
             self.schedulers[host] = scheduler;
         }
 
-        debug('Locked host=%s', host);
+        debug('[%s] Locked host=%s', self.name, host);
         return callback(null, self.schedulers[host]);
     });
 };
 
 HostScheduler.prototype.unlock = function(host) {
-    debug('unlock(%s)', host);
+    debug('[%s] unlock(%s)', this.name, host);
     if (this.schedulers.hasOwnProperty(host)) {
         // TODO stop scheduler?
         delete this.schedulers[host];

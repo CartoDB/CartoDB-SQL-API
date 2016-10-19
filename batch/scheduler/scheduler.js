@@ -15,6 +15,7 @@ var forever = require('../util/forever');
 
 function Scheduler(capacity, taskRunner) {
     EventEmitter.call(this);
+    debug('new Scheduler');
     this.taskRunner = taskRunner;
     this.capacity = capacity;
     this.tasks = [];

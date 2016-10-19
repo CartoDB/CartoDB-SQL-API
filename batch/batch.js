@@ -18,7 +18,7 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobService = jobService;
     this.jobPublisher = jobPublisher;
     this.logger = logger;
-    this.hostScheduler = new HostScheduler({ run: this.processJob.bind(this) }, redisPool);
+    this.hostScheduler = new HostScheduler(name, { run: this.processJob.bind(this) }, redisPool);
     this.hostUserQueueMover = new HostUserQueueMover(jobQueue, jobService, this.locker, redisPool);
 
     // map: user => jobId. Will be used for draining jobs.
@@ -39,7 +39,7 @@ Batch.prototype.subscribe = function () {
 
     this.jobSubscriber.subscribe(
         function onJobHandler(user, host) {
-            debug('onJobHandler(%s, %s)', user, host);
+            debug('[%s] onJobHandler(%s, %s)', self.name, user, host);
             self.hostScheduler.add(host, user, function(err) {
                 if (err) {
                     return debug(
@@ -83,7 +83,10 @@ Batch.prototype.processJob = function (user, callback) {
                 return callback(err);
             }
 
-            debug('Job=%s status=%s user=%s (failed_reason=%s)', jobId, job.data.status, user, job.failed_reason);
+            debug(
+                '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
+                self.name, jobId, job.data.status, user, job.failed_reason
+            );
 
             self.logger.log(job);
 
