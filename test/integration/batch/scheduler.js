@@ -3,8 +3,7 @@
 require('../../helper');
 var assert = require('../../support/assert');
 var Scheduler = require('../../../batch/scheduler/scheduler');
-var OneCapacity = require('../../../batch/scheduler/capacity/one');
-var InfinityCapacity = require('../../../batch/scheduler/capacity/infinity');
+var FixedCapacity = require('../../../batch/scheduler/capacity/fixed');
 
 describe('scheduler', function() {
 
@@ -20,7 +19,7 @@ describe('scheduler', function() {
     };
 
     // simulate one by one or infinity capacity
-    var capacities = [new OneCapacity(), new InfinityCapacity()];
+    var capacities = [new FixedCapacity(1), new FixedCapacity(Infinity)];
 
     capacities.forEach(function(capacity) {
         it('should run tasks', function (done) {
