@@ -77,7 +77,7 @@ describe('multiple batch clients and users, job query order', function() {
                             }
                             jobResultB1.getStatus(function(err, jobB1) {
                                 assert.equal(jobA1.status, JobStatus.DONE);
-                                assert.equal(jobA1.status, JobStatus.DONE);
+                                assert.equal(jobA2.status, JobStatus.DONE);
                                 assert.equal(jobB1.status, JobStatus.DONE);
 
                                 self.testClientA.getResult('select * from ordered_inserts', function(err, rows) {
