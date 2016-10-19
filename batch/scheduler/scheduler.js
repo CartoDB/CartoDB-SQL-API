@@ -47,7 +47,7 @@ Scheduler.prototype.schedule = function() {
         function (next) {
             debug('Trying to acquire user');
             self.acquire(function(err, taskEntity) {
-                debug('Acquired user=%s', taskEntity);
+                debug('Acquired user=%j', taskEntity);
 
                 if (!taskEntity) {
                     return next(new Error('all users finished'));
