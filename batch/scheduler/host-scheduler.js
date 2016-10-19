@@ -19,7 +19,7 @@ function HostScheduler(taskRunner, redisPool) {
 
 module.exports = HostScheduler;
 
-HostScheduler.prototype.schedule = function(host, user, callback) {
+HostScheduler.prototype.add = function(host, user, callback) {
     this.lock(host, function(err, scheduler) {
         if (err) {
             return callback(err);

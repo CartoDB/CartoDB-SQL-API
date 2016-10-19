@@ -40,7 +40,7 @@ Batch.prototype.subscribe = function () {
     this.jobSubscriber.subscribe(
         function onJobHandler(user, host) {
             debug('onJobHandler(%s, %s)', user, host);
-            self.hostScheduler.schedule(host, user, function(err) {
+            self.hostScheduler.add(host, user, function(err) {
                 if (err) {
                     return debug(
                         'Could not schedule host=%s user=%s from %s. Reason: %s',
