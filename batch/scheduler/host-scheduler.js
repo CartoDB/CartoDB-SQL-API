@@ -24,7 +24,9 @@ HostScheduler.prototype.add = function(host, user, callback) {
         if (err) {
             return callback(err);
         }
-        var wasRunning = scheduler.add(user);
+        scheduler.add(user);
+        var wasRunning = scheduler.schedule();
+        debug('Scheduler host=%s was running = %s', host, wasRunning);
         return callback(err, wasRunning);
     });
 };

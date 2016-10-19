@@ -25,12 +25,15 @@ Scheduler.prototype.add = function(user) {
         if (task.status === STATUS.DONE) {
             task.status = STATUS.PENDING;
         }
+
+        return true;
     } else {
         task = new TaskEntity(user);
         this.tasks.push(task);
         this.users[user] = task;
+
+        return false;
     }
-    return this.schedule();
 };
 
 Scheduler.prototype.schedule = function() {
