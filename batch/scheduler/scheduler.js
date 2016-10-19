@@ -7,15 +7,6 @@ var debug = require('../util/debug')('scheduler');
 
 var forever = require('../util/forever');
 
-/**
- * TODO
- *
- * - It requires to:
- *  - Take care of number of jobs running at the same time per host.
- *  - Execute user jobs in order.
- *
- */
-
 //var STATUS = {
 //    PENDING: 100,
 //    WAITING: 50,
