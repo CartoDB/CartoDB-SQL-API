@@ -9,7 +9,6 @@ var forever = require('../util/forever');
 
 var STATUS = {
     PENDING: 'pending',
-    WAITING: 'waiting',
     RUNNING: 'running',
     DONE: 'done'
 };
@@ -18,6 +17,7 @@ function Scheduler(capacity, taskRunner) {
     EventEmitter.call(this);
     this.taskRunner = taskRunner;
     this.capacity = capacity;
+    this.tasks = [];
     this.users = {};
 }
 util.inherits(Scheduler, EventEmitter);
@@ -26,16 +26,20 @@ module.exports = Scheduler;
 
 Scheduler.prototype.add = function(user) {
     debug('add(%s)', user);
-    if (!this.users.hasOwnProperty(user) || this.users[user].status === STATUS.DONE) {
-        this.users[user] = {
-            name: user,
-            status: STATUS.PENDING
-        };
+    var task = this.users[user];
+    if (task) {
+        if (task.status === STATUS.DONE) {
+            task.status = STATUS.PENDING;
+        }
+    } else {
+        task = new TaskEntity(user);
+        this.tasks.push(task);
+        this.users[user] = task;
     }
-    return this.run();
+    return this.schedule();
 };
 
-Scheduler.prototype.run = function() {
+Scheduler.prototype.schedule = function() {
     if (this.running) {
         return true;
     }
@@ -45,20 +49,23 @@ Scheduler.prototype.run = function() {
     forever(
         function (next) {
             debug('Trying to acquire user');
-            self.acquire(function(err, user) {
-                debug('Acquired user=%s', user);
+            self.acquire(function(err, taskEntity) {
+                debug('Acquired user=%s', taskEntity);
 
-                if (!user) {
+                if (!taskEntity) {
                     return next(new Error('all users finished'));
                 }
 
+                taskEntity.status = STATUS.RUNNING;
                 // try to acquire next user
                 // will block until capacity slow is available
                 next();
 
-                debug('Running task for user=%s', user);
-                self.taskRunner.run(user, function(err, userQueueIsEmpty, done) {
-                    self.release(user, userQueueIsEmpty, done);
+                debug('Running task for user=%s', taskEntity.user);
+                self.taskRunner.run(taskEntity.user, function(err, userQueueIsEmpty) {
+                    taskEntity.status = userQueueIsEmpty ? STATUS.DONE : STATUS.PENDING;
+
+                    self.release(err, taskEntity);
                 });
             });
         },
@@ -68,43 +75,12 @@ Scheduler.prototype.run = function() {
             self.emit('done');
         }
     );
+
+    return false;
 };
 
-function nextCandidate(users) {
-    var sortedCandidates = Object.keys(users)
-        .filter(function(user) {
-            return isCandidate(users[user]);
-        });
-//        .sort(function(candidateNameA, candidateNameB) {
-//            return users[candidateNameA].status - users[candidateNameB].status;
-//        });
-    return sortedCandidates[0];
-}
-
-function allRunning(users) {
-    return all(users, STATUS.RUNNING);
-}
-
-function allDone(users) {
-    return all(users, STATUS.DONE);
-}
-
-function all(users, status) {
-    return Object.keys(users).every(function(user) {
-        return users[user].status === status;
-    });
-}
-
-function isCandidate(candidate) {
-    return candidate.status === STATUS.PENDING || candidate.status === STATUS.WAITING;
-}
-
-function isRunning(candidate) {
-    return candidate.status === STATUS.RUNNING;
-}
-
 Scheduler.prototype.acquire = function(callback) {
-    if (allDone(this.users)) {
+    if (this.tasks.every(is(STATUS.DONE))) {
         return callback(null, null);
     }
     var self = this;
@@ -113,12 +89,10 @@ Scheduler.prototype.acquire = function(callback) {
             return callback(err);
         }
 
-        var running = Object.keys(self.users).filter(function(user) {
-            return isRunning(self.users[user]);
-        });
+        var running = self.tasks.filter(is(STATUS.RUNNING));
 
-        debug('Trying to acquire users=%j, running=%d, capacity=%d', self.users, running.length, capacity);
-        var allUsersRunning = allRunning(self.users);
+        debug('Trying to acquire users=%j, running=%d, capacity=%d', self.tasks, running.length, capacity);
+        var allUsersRunning = self.tasks.every(is(STATUS.RUNNING));
         if (running.length >= capacity || allUsersRunning) {
             debug(
                 'Waiting for slot. capacity=%s, running=%s, all_running=%s',
@@ -130,18 +104,30 @@ Scheduler.prototype.acquire = function(callback) {
             });
         }
 
-        var candidate = nextCandidate(self.users);
-        if (candidate) {
-            self.users[candidate].status = STATUS.RUNNING;
-        }
+        var candidate = self.tasks.filter(is(STATUS.PENDING))[0];
+
         return callback(null, candidate);
     });
 };
 
-Scheduler.prototype.release = function(user, isDone, done) {
-    debug('Released user=%s done=%s', user, isDone);
-    this.users[user].status = isDone ? STATUS.DONE : STATUS.WAITING;
+Scheduler.prototype.release = function(err, taskEntity) {
+    debug('Released %j', taskEntity);
+    // decide what to do based on status/jobs
     this.emit('release');
-
-    return done && done();
 };
+
+function TaskEntity(user) {
+    this.user = user;
+    this.status = STATUS.PENDING;
+    this.jobs = 0;
+}
+
+TaskEntity.prototype.is = function(status) {
+    return this.status === status;
+};
+
+function is(status) {
+    return function(taskEntity) {
+        return taskEntity.is(status);
+    };
+}
