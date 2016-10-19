@@ -63,7 +63,7 @@ Batch.prototype.processJob = function (user, callback) {
     var self = this;
     self.jobQueue.dequeue(user, function (err, jobId) {
         if (err) {
-            return callback(new Error('Could not dequeue job from user "' + user + '". Reason: ' + err.message));
+            return callback(new Error('Could not get job from "' + user + '". Reason: ' + err.message), !EMPTY_QUEUE);
         }
 
         if (!jobId) {
@@ -80,7 +80,7 @@ Batch.prototype.processJob = function (user, callback) {
                 if (err.name === 'JobNotRunnable') {
                     return callback(null, !EMPTY_QUEUE);
                 }
-                return callback(err);
+                return callback(err, !EMPTY_QUEUE);
             }
 
             debug(
