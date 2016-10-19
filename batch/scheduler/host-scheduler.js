@@ -1,10 +1,11 @@
 'use strict';
 
+var _ = require('underscore');
 var debug = require('../util/debug')('host-scheduler');
 var Scheduler = require('./scheduler');
 var Locker = require('../leader/locker');
-var InfinityCapacity = require('./capacity/infinity');
-//var OneCapacity = require('./capacity/one');
+var FixedCapacity = require('./capacity/fixed');
+var HttpSimpleCapacity = require('./capacity/http-simple');
 
 function HostScheduler(name, taskRunner, redisPool) {
     this.name = name || 'scheduler';
@@ -33,6 +34,21 @@ HostScheduler.prototype.add = function(host, user, callback) {
     }.bind(this));
 };
 
+HostScheduler.prototype.getCapacityProvider = function(host) {
+    var strategy = global.settings.batch_capacity_strategy || 'fixed';
+    if (strategy === 'http') {
+        if (global.settings.batch_capacity_http_url_template) {
+            var endpoint = _.template(global.settings.batch_capacity_http_url_template, { dbhost: host });
+            debug('Using strategy=%s capacity. Endpoint=%s', strategy, endpoint);
+            return new HttpSimpleCapacity(host, endpoint);
+        }
+    }
+
+    var fixedCapacity = global.settings.batch_capacity_fixed_amount || 1;
+    debug('Using strategy=fixed capacity=%d', fixedCapacity);
+    return new FixedCapacity(fixedCapacity);
+};
+
 HostScheduler.prototype.lock = function(host, callback) {
     debug('[%s] lock(%s)', this.name, host);
     var self = this;
@@ -43,7 +59,7 @@ HostScheduler.prototype.lock = function(host, callback) {
         }
 
         if (!self.schedulers.hasOwnProperty(host)) {
-            var scheduler = new Scheduler(new InfinityCapacity(host), self.taskRunner);
+            var scheduler = new Scheduler(self.getCapacityProvider(host), self.taskRunner);
             scheduler.on('done', self.unlock.bind(self, host));
             self.schedulers[host] = scheduler;
         }
