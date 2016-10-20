@@ -1,5 +1,11 @@
-1.39.2 - 2016-mm-dd
+1.40.0 - 2016-mm-dd
 -------------------
+
+New features:
+ * Batch queries are handled per db host.
+   - There is an scheduler controlling how many queries and in what order they are run.
+     - Priority is based on: # of queries already run, last execution time, and oldest user in queue.
+ * Batch queries capacity: allow to configure how many jobs to run per db host.
 
 
 1.39.1 - 2016-10-17
