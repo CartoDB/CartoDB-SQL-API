@@ -21,11 +21,11 @@ describe('scheduler', function() {
     };
 
     // simulate one by one or infinity capacity
-    var capacities = [new FixedCapacity(1), new FixedCapacity(Infinity)];
+    var capacities = [new FixedCapacity(1), new FixedCapacity(2), new FixedCapacity(Infinity)];
 
     capacities.forEach(function(capacity) {
 
-        it('regression', function (done) {
+        it('regression #1', function (done) {
             var taskRunner = new TaskRunner({
                 userA: 2,
                 userB: 2
@@ -46,6 +46,44 @@ describe('scheduler', function() {
 
                 return done();
             });
+
+            scheduler.schedule();
+        });
+
+        it('regression #2', function (done) {
+            var taskRunner = new TaskRunner({
+                userA: 2,
+                userB: 2,
+                userC: 2,
+                userD: 1
+            });
+            var scheduler = new Scheduler(capacity, taskRunner);
+            scheduler.add('userA');
+            scheduler.add('userB');
+
+            scheduler.on('done', function() {
+                var results = taskRunner.results;
+
+                assert.equal(results.length, 7);
+
+                assert.equal(results[0], 'userA');
+                assert.equal(results[1], 'userB');
+                assert.equal(results[2], 'userC');
+                assert.equal(results[3], 'userD');
+                assert.equal(results[4], 'userA');
+                assert.equal(results[5], 'userB');
+                assert.equal(results[6], 'userC');
+
+                return done();
+            });
+
+            setTimeout(function() {
+                scheduler.add('userC');
+            }, 10);
+
+            setTimeout(function() {
+                scheduler.add('userD');
+            }, 20);
 
             scheduler.schedule();
         });

@@ -109,6 +109,9 @@ Scheduler.prototype.schedule = function() {
 };
 
 Scheduler.prototype.acquire = function(callback) {
+    this.removeAllListeners('add');
+    this.removeAllListeners('release');
+
     if (this.tasks.every(is(STATUS.DONE))) {
         return callback(null, null);
     }
@@ -119,39 +122,29 @@ Scheduler.prototype.acquire = function(callback) {
             return callback(err);
         }
 
-        function addListener() {
-            self.removeListener('release', releaseListener);
+        debug('Trying to acquire task');
+        var running = self.tasks.filter(is(STATUS.RUNNING));
+        debug('[capacity=%d, running=%d] candidates=%j', capacity, running.length, self.tasks);
+
+        self.once('add', function() {
             debug('Got a new task');
             self.acquire(callback);
-        }
-
-        function releaseListener() {
-            self.removeListener('add', addListener);
+        });
+        self.once('release', function() {
             debug('Slot was released');
             self.acquire(callback);
-        }
-
-        debug('Trying to acquire task');
-
-        var allRunning = self.tasks.every(is(STATUS.RUNNING));
-        var running = self.tasks.filter(is(STATUS.RUNNING));
-        debug('[capacity=%d, running=%d, all=%s] candidates=%j', capacity, running.length, allRunning, self.tasks);
-
-        if (allRunning && running.length < capacity) {
-            debug('Waiting for tasks');
-            self.once('add', addListener);
-        }
+        });
 
         if (running.length >= capacity) {
-            debug('Waiting for slot');
-            return self.once('release', releaseListener);
+            debug('Not enough capacity');
+            return null;
         }
 
         var isRunningAny = self.tasks.some(is(STATUS.RUNNING));
         var candidate = self.tasksTree.min();
         if (isRunningAny && candidate === null) {
             debug('Waiting for last task to finish');
-            return self.once('release', releaseListener);
+            return null;
         }
 
         return callback(null, candidate);
