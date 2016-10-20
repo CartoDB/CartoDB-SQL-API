@@ -5,9 +5,7 @@ var debug = require('../../util/debug')('capacity-http-load');
 var HttpSimpleCapacity = require('./http-simple');
 
 function HttpLoadCapacity(host, capacityEndpoint) {
-    HttpSimpleCapacity.call(this);
-    this.host = host;
-    this.capacityEndpoint = capacityEndpoint;
+    HttpSimpleCapacity.call(this, host, capacityEndpoint);
 }
 util.inherits(HttpLoadCapacity, HttpSimpleCapacity);
 
