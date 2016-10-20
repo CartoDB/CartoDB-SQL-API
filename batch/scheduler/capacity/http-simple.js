@@ -32,6 +32,7 @@ HttpSimpleCapacity.prototype.getResponse = function(callback) {
     var requestParams = {
         method: 'POST',
         url: this.capacityEndpoint,
+        timeout: 2000,
         json: true
     };
     debug('getCapacity(%s)', this.host);
