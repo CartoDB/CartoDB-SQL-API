@@ -6,6 +6,9 @@ var debug = require('../../util/debug')('capacity-http-simple');
 function HttpSimpleCapacity(host, capacityEndpoint) {
     this.host = host;
     this.capacityEndpoint = capacityEndpoint;
+
+    this.lastResponse = null;
+    this.lastResponseTime = 0;
 }
 
 module.exports = HttpSimpleCapacity;
@@ -36,13 +39,24 @@ HttpSimpleCapacity.prototype.getResponse = function(callback) {
         json: true
     };
     debug('getCapacity(%s)', this.host);
+
+    // throttle requests for 500 ms
+    var now = Date.now();
+    if (this.lastResponse !== null && ((now - this.lastResponseTime) < 500)) {
+        return callback(null, this.lastResponse);
+    }
+
     request.post(requestParams, function(err, res, jsonRes) {
         if (err) {
             return callback(err);
         }
         if (jsonRes && jsonRes.retcode === 0) {
-            return callback(null, jsonRes.return_values || {});
+            this.lastResponse = jsonRes.return_values || {};
+            // We could go more aggressive by updating lastResponseTime on failures.
+            this.lastResponseTime = now;
+
+            return callback(null, this.lastResponse);
         }
         return callback(new Error('Could not retrieve information from endpoint'));
-    });
+    }.bind(this));
 };
