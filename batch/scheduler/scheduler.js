@@ -180,7 +180,6 @@ function TaskEntity(user, createdAt) {
     this.createdAt = createdAt;
     this.status = STATUS.PENDING;
     this.jobs = 0;
-    this.runAt = 0;
 }
 
 TaskEntity.prototype.is = function(status) {
@@ -189,7 +188,6 @@ TaskEntity.prototype.is = function(status) {
 
 TaskEntity.prototype.running = function() {
     this.status = STATUS.RUNNING;
-    this.runAt = Date.now();
 };
 
 TaskEntity.prototype.ran = function(userQueueIsEmpty) {
