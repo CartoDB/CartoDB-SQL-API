@@ -50,7 +50,7 @@ HostScheduler.prototype.getCapacityProvider = function(host) {
         }
     }
 
-    var fixedCapacity = global.settings.batch_capacity_fixed_amount || 1;
+    var fixedCapacity = global.settings.batch_capacity_fixed_amount || 2;
     debug('Using strategy=fixed capacity=%d', fixedCapacity);
     return new FixedCapacity(fixedCapacity);
 };
