@@ -4,7 +4,7 @@
 New features:
  * Batch queries are handled per db host.
    - There is an scheduler controlling how many queries and in what order they are run.
-     - Priority is based on: # of queries already run, last execution time, and oldest user in queue.
+     - Priority is based on: number of queries already ran, and oldest user in queue.
  * Batch queries capacity: allow to configure how many jobs to run per db host.
 
 

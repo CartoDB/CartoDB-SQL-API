@@ -31,11 +31,6 @@ function Scheduler(capacity, taskRunner) {
             return taskEntityA.jobs - taskEntityB.jobs;
         }
 
-        // priority for entity with oldest executed job
-        if (taskEntityA.runAt !== taskEntityB.runAt) {
-            return taskEntityA.runAt - taskEntityB.runAt;
-        }
-
         // priority for oldest job
         if (taskEntityA.createdAt !== taskEntityB.createdAt) {
             return taskEntityA.createdAt - taskEntityB.createdAt;
