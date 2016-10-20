@@ -15,13 +15,41 @@ describe('scheduler', function() {
     TaskRunner.prototype.run = function(user, callback) {
         this.results.push(user);
         this.userTasks[user]--;
-        return callback(null, this.userTasks[user] === 0);
+        setTimeout(function() {
+            return callback(null, this.userTasks[user] === 0);
+        }.bind(this), 50);
     };
 
     // simulate one by one or infinity capacity
     var capacities = [new FixedCapacity(1), new FixedCapacity(Infinity)];
 
     capacities.forEach(function(capacity) {
+
+        it('regression', function (done) {
+            var taskRunner = new TaskRunner({
+                userA: 2,
+                userB: 2
+            });
+            var scheduler = new Scheduler(capacity, taskRunner);
+            scheduler.add('userA');
+            scheduler.add('userB');
+
+            scheduler.on('done', function() {
+                var results = taskRunner.results;
+
+                assert.equal(results.length, 4);
+
+                assert.equal(results[0], 'userA');
+                assert.equal(results[1], 'userB');
+                assert.equal(results[2], 'userA');
+                assert.equal(results[3], 'userB');
+
+                return done();
+            });
+
+            scheduler.schedule();
+        });
+
         it('should run tasks', function (done) {
             var taskRunner = new TaskRunner({
                 userA: 1

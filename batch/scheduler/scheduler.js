@@ -142,13 +142,17 @@ Scheduler.prototype.acquire = function(callback) {
             self.once('add', addListener);
         }
 
-        var isRunningAny = self.tasks.some(is(STATUS.RUNNING));
-        if (isRunningAny || running.length >= capacity) {
+        if (running.length >= capacity) {
             debug('Waiting for slot');
             return self.once('release', releaseListener);
         }
 
+        var isRunningAny = self.tasks.some(is(STATUS.RUNNING));
         var candidate = self.tasksTree.min();
+        if (isRunningAny && candidate === null) {
+            debug('Waiting for last task to finish');
+            return self.once('release', releaseListener);
+        }
 
         return callback(null, candidate);
     });
