@@ -37,15 +37,17 @@ module.exports.batch_log_filename = 'logs/batch-queries.log';
 module.exports.batch_max_queued_jobs = 64;
 // Capacity strategy to use.
 // It allows to tune how many queries run at a db host at the same time.
-// Options: 'fixed', 'http'
+// Options: 'fixed', 'http-simple', 'http-load'
 module.exports.batch_capacity_strategy = 'fixed';
 // Applies when strategy='fixed'.
 // Number of simultaneous users running queries in the same host.
 // It will use 1 as min.
 module.exports.batch_capacity_fixed_amount = 2;
-// Applies when strategy='http'.
+// Applies when strategy='http-simple' or strategy='http-load'.
 // HTTP endpoint to check db host load.
 // Helps to decide the number of simultaneous users running queries in that host.
+// 'http-simple' will use 'available_cores' to decide the number.
+// 'http-load' will use 'cores' and 'relative_load' to decide the number.
 // It will use 1 as min.
 // If no template is provided it will default to 'fixed' strategy.
 module.exports.batch_capacity_http_url_template = 'http://<%= dbhost %>:9999/load';

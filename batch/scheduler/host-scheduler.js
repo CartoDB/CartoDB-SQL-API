@@ -6,6 +6,7 @@ var Scheduler = require('./scheduler');
 var Locker = require('../leader/locker');
 var FixedCapacity = require('./capacity/fixed');
 var HttpSimpleCapacity = require('./capacity/http-simple');
+var HttpLoadCapacity = require('./capacity/http-load');
 
 function HostScheduler(name, taskRunner, redisPool) {
     this.name = name || 'scheduler';
@@ -35,12 +36,17 @@ HostScheduler.prototype.add = function(host, user, callback) {
 };
 
 HostScheduler.prototype.getCapacityProvider = function(host) {
-    var strategy = global.settings.batch_capacity_strategy || 'fixed';
-    if (strategy === 'http') {
+    var strategy = global.settings.batch_capacity_strategy;
+
+    if (strategy === 'http-simple' || strategy === 'http-load') {
         if (global.settings.batch_capacity_http_url_template) {
             var endpoint = _.template(global.settings.batch_capacity_http_url_template, { dbhost: host });
             debug('Using strategy=%s capacity. Endpoint=%s', strategy, endpoint);
-            return new HttpSimpleCapacity(host, endpoint);
+
+            if (strategy === 'http-simple') {
+                return new HttpSimpleCapacity(host, endpoint);
+            }
+            return new HttpLoadCapacity(host, endpoint);
         }
     }
 

@@ -1,7 +1,7 @@
 'use strict';
 
 var request = require('request');
-var debug = require('../../util/debug')('capacity-http');
+var debug = require('../../util/debug')('capacity-http-simple');
 
 function HttpSimpleCapacity(host, capacityEndpoint) {
     this.host = host;
@@ -11,6 +11,24 @@ function HttpSimpleCapacity(host, capacityEndpoint) {
 module.exports = HttpSimpleCapacity;
 
 HttpSimpleCapacity.prototype.getCapacity = function(callback) {
+    this.getResponse(function(err, values) {
+        var capacity = 1;
+
+        if (err) {
+            return callback(null, capacity);
+        }
+
+        var availableCores = parseInt(values.available_cores, 10);
+
+        capacity = Math.max(availableCores, 1);
+        capacity = Number.isFinite(capacity) ? capacity : 1;
+
+        debug('host=%s, capacity=%s', this.host, capacity);
+        return callback(null, capacity);
+    }.bind(this));
+};
+
+HttpSimpleCapacity.prototype.getResponse = function(callback) {
     var requestParams = {
         method: 'POST',
         url: this.capacityEndpoint,
@@ -18,25 +36,12 @@ HttpSimpleCapacity.prototype.getCapacity = function(callback) {
     };
     debug('getCapacity(%s)', this.host);
     request.post(requestParams, function(err, res, jsonRes) {
-        var capacity = 1;
-
-        if (!err && jsonRes) {
-            if (jsonRes.retcode === 0) {
-                var values = jsonRes.return_values;
-
-                var cores = parseInt(values.cores, 10);
-                var relativeLoad = parseFloat(values.relative_load);
-
-                capacity = Math.max(
-                    Math.floor(((1 - relativeLoad) * cores) - 1),
-                    1
-                );
-
-                debug('host=%s, capacity=%s', this.host, capacity);
-            }
+        if (err) {
+            return callback(err);
         }
-
-        debug('host=%s, capacity=%s', this.host, capacity);
-        return callback(null, capacity);
-    }.bind(this));
+        if (jsonRes && jsonRes.retcode === 0) {
+            return callback(null, jsonRes.return_values || {});
+        }
+        return callback(new Error('Could not retrieve information from endpoint'));
+    });
 };
