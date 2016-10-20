@@ -2,17 +2,21 @@
 
 var RedisDistlockLocker = require('./provider/redis-distlock');
 var debug = require('../util/debug')('leader-locker');
+var EventEmitter = require('events').EventEmitter;
+var util = require('util');
 
 var LOCK = {
     TTL: 5000
 };
 
 function Locker(locker, ttl) {
+    EventEmitter.call(this);
     this.locker = locker;
     this.ttl = (Number.isFinite(ttl) && ttl > 0) ? ttl : LOCK.TTL;
     this.renewInterval = this.ttl / 5;
     this.intervalIds = {};
 }
+util.inherits(Locker, EventEmitter);
 
 module.exports = Locker;
 
@@ -43,6 +47,7 @@ Locker.prototype.startRenewal = function(resource) {
             debug('Trying to extend lock resource=%s', resource);
             self.locker.lock(resource, self.ttl, function(err, _lock) {
                 if (err) {
+                    self.emit('error', err, resource);
                     return self.stopRenewal(resource);
                 }
                 if (_lock) {

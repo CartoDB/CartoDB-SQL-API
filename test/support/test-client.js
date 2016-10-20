@@ -24,13 +24,17 @@ function TestClient(config) {
 module.exports = TestClient;
 
 
-TestClient.prototype.getResult = function(query, callback) {
+TestClient.prototype.getResult = function(query, override, callback) {
+    if (!callback) {
+        callback = override;
+        override = {};
+    }
     assert.response(
         this.server,
         {
-            url: this.getUrl(),
+            url: this.getUrl(override),
             headers: {
-                host: this.getHost(),
+                host: this.getHost(override),
                 'Content-Type': 'application/json'
             },
             method: 'POST',
@@ -50,10 +54,10 @@ TestClient.prototype.getResult = function(query, callback) {
     );
 };
 
-TestClient.prototype.getHost = function() {
-    return this.config.host || 'vizzuality.cartodb.com';
+TestClient.prototype.getHost = function(override) {
+    return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
-TestClient.prototype.getUrl = function() {
-    return '/api/v2/sql?api_key=' + (this.config.apiKey || '1234');
+TestClient.prototype.getUrl = function(override) {
+    return '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
 };

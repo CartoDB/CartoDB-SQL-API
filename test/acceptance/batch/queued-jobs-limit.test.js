@@ -25,15 +25,17 @@ describe('max queued jobs', function() {
         var batch = batchFactory(metadataBackend, redisUtils.getPool());
         batch.start();
         batch.on('ready', function() {
-            batch.on('job:done', function() {
-                self.testClient.getResult('select count(*) from max_queued_jobs_inserts', function(err, rows) {
-                    assert.ok(!err);
-                    assert.equal(rows[0].count, 1);
+            // this is not ideal as the first job might not be committed yet
+            setTimeout(function() {
+                batch.stop(function() {
+                    self.testClient.getResult('select count(*) from max_queued_jobs_inserts', function(err, rows) {
+                        assert.ok(!err);
+                        assert.equal(rows[0].count, 1);
 
-                    batch.stop();
-                    redisUtils.clean('batch:*', done);
+                        redisUtils.clean('batch:*', done);
+                    });
                 });
-            });
+            }, 100);
         });
     });
 
