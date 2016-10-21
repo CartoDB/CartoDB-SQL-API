@@ -4,7 +4,6 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
 var queue = require('queue-async');
-var HostUserQueueMover = require('./maintenance/host-user-queue-mover');
 var HostScheduler = require('./scheduler/host-scheduler');
 
 var EMPTY_QUEUE = true;
@@ -19,7 +18,6 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobPublisher = jobPublisher;
     this.logger = logger;
     this.hostScheduler = new HostScheduler(name, { run: this.processJob.bind(this) }, redisPool);
-    this.hostUserQueueMover = new HostUserQueueMover(jobQueue, jobService, this.locker, redisPool);
 
     // map: user => jobId. Will be used for draining jobs.
     this.workInProgressJobs = {};
@@ -29,12 +27,6 @@ util.inherits(Batch, EventEmitter);
 module.exports = Batch;
 
 Batch.prototype.start = function () {
-    this.hostUserQueueMover.moveOldJobs(function() {
-        this.subscribe();
-    }.bind(this));
-};
-
-Batch.prototype.subscribe = function () {
     var self = this;
 
     this.jobSubscriber.subscribe(

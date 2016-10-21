@@ -1,5 +1,8 @@
-1.40.1 - 2016-mm-dd
+1.41.0 - 2016-mm-dd
 -------------------
+
+Announcements:
+ * Stop migrating old queues by default.
 
 Bug fixes:
  * Fix some scenarios where batch queries got stuck waiting for available slots.
