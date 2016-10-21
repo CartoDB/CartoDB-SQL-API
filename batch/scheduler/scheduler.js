@@ -50,6 +50,8 @@ Scheduler.prototype.add = function(user) {
     if (taskEntity) {
         if (taskEntity.status === STATUS.DONE) {
             taskEntity.status = STATUS.PENDING;
+            this.tasksTree.insert(taskEntity);
+            this.emit('add');
         }
 
         return true;
@@ -145,6 +147,10 @@ Scheduler.prototype.acquire = function(callback) {
         if (isRunningAny && candidate === null) {
             debug('Waiting for last task to finish');
             return null;
+        }
+
+        if (candidate) {
+            self.emit('acquired', candidate.user);
         }
 
         return callback(null, candidate);
