@@ -1,6 +1,9 @@
 1.40.1 - 2016-mm-dd
 -------------------
 
+Bug fixes:
+ * Fix some scenarios where batch queries got stuck waiting for available slots.
+
 
 1.40.0 - 2016-10-20
 -------------------
