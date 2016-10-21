@@ -7,6 +7,10 @@ var FixedCapacity = require('../../../batch/scheduler/capacity/fixed');
 
 describe('scheduler', function() {
 
+    var USER_A = 'userA';
+    var USER_B = 'userB';
+    var USER_C = 'userC';
+
     function TaskRunner(userTasks) {
         this.results = [];
         this.userTasks = userTasks;
@@ -31,18 +35,18 @@ describe('scheduler', function() {
                 userB: 2
             });
             var scheduler = new Scheduler(capacity, taskRunner);
-            scheduler.add('userA');
-            scheduler.add('userB');
+            scheduler.add(USER_A);
+            scheduler.add(USER_B);
 
             scheduler.on('done', function() {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 4);
 
-                assert.equal(results[0], 'userA');
-                assert.equal(results[1], 'userB');
-                assert.equal(results[2], 'userA');
-                assert.equal(results[3], 'userB');
+                assert.equal(results[0], USER_A);
+                assert.equal(results[1], USER_B);
+                assert.equal(results[2], USER_A);
+                assert.equal(results[3], USER_B);
 
                 return done();
             });
@@ -58,27 +62,27 @@ describe('scheduler', function() {
                 userD: 1
             });
             var scheduler = new Scheduler(capacity, taskRunner);
-            scheduler.add('userA');
-            scheduler.add('userB');
+            scheduler.add(USER_A);
+            scheduler.add(USER_B);
 
             scheduler.on('done', function() {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 7);
 
-                assert.equal(results[0], 'userA');
-                assert.equal(results[1], 'userB');
-                assert.equal(results[2], 'userC');
+                assert.equal(results[0], USER_A);
+                assert.equal(results[1], USER_B);
+                assert.equal(results[2], USER_C);
                 assert.equal(results[3], 'userD');
-                assert.equal(results[4], 'userA');
-                assert.equal(results[5], 'userB');
-                assert.equal(results[6], 'userC');
+                assert.equal(results[4], USER_A);
+                assert.equal(results[5], USER_B);
+                assert.equal(results[6], USER_C);
 
                 return done();
             });
 
             setTimeout(function() {
-                scheduler.add('userC');
+                scheduler.add(USER_C);
             }, 10);
 
             setTimeout(function() {
@@ -93,14 +97,14 @@ describe('scheduler', function() {
                 userA: 1
             });
             var scheduler = new Scheduler(capacity, taskRunner);
-            scheduler.add('userA');
+            scheduler.add(USER_A);
 
             scheduler.on('done', function() {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 1);
 
-                assert.equal(results[0], 'userA');
+                assert.equal(results[0], USER_A);
 
                 return done();
             });
@@ -116,18 +120,18 @@ describe('scheduler', function() {
                 userC: 1
             });
             var scheduler = new Scheduler(capacity, taskRunner);
-            scheduler.add('userA');
-            scheduler.add('userB');
-            scheduler.add('userC');
+            scheduler.add(USER_A);
+            scheduler.add(USER_B);
+            scheduler.add(USER_C);
 
             scheduler.on('done', function() {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 3);
 
-                assert.equal(results[0], 'userA');
-                assert.equal(results[1], 'userB');
-                assert.equal(results[2], 'userC');
+                assert.equal(results[0], USER_A);
+                assert.equal(results[1], USER_B);
+                assert.equal(results[2], USER_C);
 
                 return done();
             });
@@ -143,24 +147,24 @@ describe('scheduler', function() {
             });
 
             var scheduler = new Scheduler(capacity, taskRunner);
-            scheduler.add('userA');
-            scheduler.add('userA');
-            scheduler.add('userA');
-            scheduler.add('userB');
-            scheduler.add('userB');
-            scheduler.add('userC');
+            scheduler.add(USER_A);
+            scheduler.add(USER_A);
+            scheduler.add(USER_A);
+            scheduler.add(USER_B);
+            scheduler.add(USER_B);
+            scheduler.add(USER_C);
 
             scheduler.on('done', function() {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 6);
 
-                assert.equal(results[0], 'userA');
-                assert.equal(results[1], 'userB');
-                assert.equal(results[2], 'userC');
-                assert.equal(results[3], 'userA');
-                assert.equal(results[4], 'userB');
-                assert.equal(results[5], 'userA');
+                assert.equal(results[0], USER_A);
+                assert.equal(results[1], USER_B);
+                assert.equal(results[2], USER_C);
+                assert.equal(results[3], USER_A);
+                assert.equal(results[4], USER_B);
+                assert.equal(results[5], USER_A);
 
                 return done();
             });
