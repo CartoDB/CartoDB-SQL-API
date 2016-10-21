@@ -5,10 +5,16 @@ var jobStatus = require('./job_status');
 var Profiler = require('step-profiler');
 var _ = require('underscore');
 
-function JobRunner(jobService, jobQueue, queryRunner, statsdClient) {
+var REDIS_LIMITS = {
+    DB: 5,
+    PREFIX: 'limits:batch:' // + username
+};
+
+function JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient) {
     this.jobService = jobService;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
+    this.metadataBackend = metadataBackend;
     this.statsdClient = statsdClient;
 }
 
@@ -23,33 +29,52 @@ JobRunner.prototype.run = function (job_id, callback) {
             return callback(err);
         }
 
-        var query = job.getNextQuery();
-        var timeout = 12 * 3600 * 1000;
-        if (Number.isFinite(global.settings.batch_query_timeout)) {
-            timeout = global.settings.batch_query_timeout;
-        }
-        if (_.isObject(query)) {
-            if (Number.isFinite(query.timeout) && query.timeout > 0) {
-                timeout = Math.min(timeout, query.timeout);
-            }
-            query = query.query;
-        }
-
-        try {
-            job.setStatus(jobStatus.RUNNING);
-        } catch (err) {
-            return callback(err);
-        }
-
-        self.jobService.save(job, function (err, job) {
+        self.getQueryStatementTimeout(job.data.user, function(err, timeout) {
             if (err) {
                 return callback(err);
             }
 
-            profiler.done('running');
+            var query = job.getNextQuery();
 
-            self._run(job, query, timeout, profiler, callback);
+            if (_.isObject(query)) {
+                if (Number.isFinite(query.timeout) && query.timeout > 0) {
+                    timeout = Math.min(timeout, query.timeout);
+                }
+                query = query.query;
+            }
+
+            try {
+                job.setStatus(jobStatus.RUNNING);
+            } catch (err) {
+                return callback(err);
+            }
+
+            self.jobService.save(job, function (err, job) {
+                if (err) {
+                    return callback(err);
+                }
+
+                profiler.done('running');
+
+                self._run(job, query, timeout, profiler, callback);
+            });
         });
+    });
+};
+
+JobRunner.prototype.getQueryStatementTimeout = function(username, callback) {
+    var timeout = 12 * 3600 * 1000;
+    if (Number.isFinite(global.settings.batch_query_timeout)) {
+        timeout = global.settings.batch_query_timeout;
+    }
+
+    var batchLimitsKey = REDIS_LIMITS.PREFIX + username;
+    this.metadataBackend.redisCmd(REDIS_LIMITS.DB, 'HGET', [batchLimitsKey, 'timeout'], function(err, timeoutLimit) {
+        if (timeoutLimit !== null && Number.isFinite(+timeoutLimit)) {
+            timeout = +timeoutLimit;
+        }
+
+        return callback(null, timeout);
     });
 };
 
@@ -93,7 +118,7 @@ JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
                 return callback(null, job);
             }
 
-            self.jobQueue.enqueueFirst(job.data.job_id, job.data.host, function (err) {
+            self.jobQueue.enqueueFirst(job.data.user, job.data.job_id, function (err) {
                 if (err) {
                     return callback(err);
                 }

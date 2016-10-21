@@ -11,7 +11,7 @@ describe('locker', function() {
 
     var TTL = 500;
 
-    var config = { ttl: TTL, redisConfig: redisUtils.getConfig() };
+    var config = { ttl: TTL, pool: redisUtils.getPool() };
 
     it('should lock and unlock', function (done) {
         var lockerA = Locker.create('redis-distlock', config);

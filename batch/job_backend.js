@@ -2,12 +2,13 @@
 
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
-var FINISHED_JOBS_TTL_IN_SECONDS = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 var JobStatus = require('./job_status');
 
-function JobBackend(metadataBackend, jobQueueProducer) {
+function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
-    this.jobQueueProducer = jobQueueProducer;
+    this.jobQueue = jobQueue;
+    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
+    this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
 }
 
 function toRedisParams(job) {
@@ -91,22 +92,35 @@ JobBackend.prototype.get = function (job_id, callback) {
 JobBackend.prototype.create = function (job, callback) {
     var self = this;
 
-    self.get(job.job_id, function (err) {
-        if (err && err.name !== 'NotFoundError') {
-            return callback(err);
+    this.jobQueue.size(job.user, function(err, size) {
+        if (err) {
+            return callback(new Error('Failed to create job, could not determine user queue size'));
         }
 
-        self.save(job, function (err, jobSaved) {
-            if (err) {
+        if (size >= self.maxNumberOfQueuedJobs) {
+            return callback(new Error(
+                'Failed to create job. ' +
+                'Max number of jobs (' + self.maxNumberOfQueuedJobs + ') queued reached'
+            ));
+        }
+
+        self.get(job.job_id, function (err) {
+            if (err && err.name !== 'NotFoundError') {
                 return callback(err);
             }
 
-            self.jobQueueProducer.enqueue(job.job_id, job.host, function (err) {
+            self.save(job, function (err, jobSaved) {
                 if (err) {
                     return callback(err);
                 }
 
-                return callback(null, jobSaved);
+                self.jobQueue.enqueue(job.user, job.job_id, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    return callback(null, jobSaved);
+                });
             });
         });
     });
@@ -158,7 +172,7 @@ JobBackend.prototype.setTTL = function (job, callback) {
         return callback();
     }
 
-    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, FINISHED_JOBS_TTL_IN_SECONDS ], callback);
+    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, this.inSecondsJobTTLAfterFinished ], callback);
 };
 
 module.exports = JobBackend;

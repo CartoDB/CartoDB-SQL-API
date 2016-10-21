@@ -6,8 +6,6 @@ var BATCH_SOURCE = '../../../batch/';
 
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
-var _ = require('underscore');
-var RedisPool = require('redis-mpool');
 
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
@@ -20,9 +18,8 @@ var JobRunner = require(BATCH_SOURCE + 'job_runner');
 var QueryRunner = require(BATCH_SOURCE + 'query_runner');
 
 
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
-var redisPoolPublisher = new RedisPool(_.extend(redisUtils.getConfig(), { name: 'batch-publisher'}));
-var jobPublisher = new JobPublisher(redisPoolPublisher);
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
+var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
@@ -42,10 +39,12 @@ var JOB = {
 };
 
 describe('job runner', function() {
-    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, statsdClient);
+    var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient);
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean('batch:*', function() {
+            redisUtils.clean('limits:batch:*', done);
+        });
     });
 
     it('.run() should run a job', function (done) {

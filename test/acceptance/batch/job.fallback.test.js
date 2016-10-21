@@ -4,7 +4,7 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 var server = require('../../../app/server')();
 var querystring = require('qs');
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../../batch/index');
 var jobStatus = require('../../../batch/job_status');
 
@@ -29,7 +29,7 @@ describe('Batch API fallback job', function () {
         assert.equal(actual.onerror, expected.onerror);
     }
 
-    var batch = batchFactory(metadataBackend, redisUtils.getConfig());
+    var batch = batchFactory(metadataBackend, redisUtils.getPool());
 
     before(function (done) {
         batch.start();

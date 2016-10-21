@@ -17,6 +17,7 @@ OPT_CREATE_REDIS=yes # create/prepare the redis test databases
 OPT_DROP_PGSQL=yes   # drop the postgreql test environment
 OPT_DROP_REDIS=yes   # drop the redis test environment
 OPT_COVERAGE=no      # run tests with coverage
+OPT_OFFLINE=no       # do not donwload scripts
 
 cd $(dirname $0)
 BASEDIR=$(pwd)
@@ -85,6 +86,10 @@ while [ -n "$1" ]; do
                 OPT_COVERAGE=yes
                 shift
                 continue
+        elif test "$1" = "--offline"; then
+                OPT_OFFLINE=yes
+                shift
+                continue
         else
                 break
         fi
@@ -118,6 +123,9 @@ if test x"$OPT_CREATE_PGSQL" != xyes; then
 fi
 if test x"$OPT_CREATE_REDIS" != xyes; then
   PREPARE_DB_OPTS="$PREPARE_DB_OPTS --skip-redis"
+fi
+if test x"$OPT_OFFLINE" == xyes; then
+  PREPARE_DB_OPTS="$PREPARE_DB_OPTS --offline"
 fi
 
 echo "Preparing the environment"

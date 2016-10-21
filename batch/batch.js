@@ -3,11 +3,12 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
-var forever = require('./util/forever');
 var queue = require('queue-async');
-var Locker = require('./leader/locker');
+var HostScheduler = require('./scheduler/host-scheduler');
 
-function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisConfig, logger) {
+var EMPTY_QUEUE = true;
+
+function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisPool, logger) {
     EventEmitter.call(this);
     this.name = name || 'batch';
     this.jobSubscriber = jobSubscriber;
@@ -16,10 +17,10 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobService = jobService;
     this.jobPublisher = jobPublisher;
     this.logger = logger;
-    this.locker = Locker.create('redis-distlock', { redisConfig: redisConfig });
+    this.hostScheduler = new HostScheduler(name, { run: this.processJob.bind(this) }, redisPool);
 
-    // map: host => jobId
-    this.workingQueues = {};
+    // map: user => jobId. Will be used for draining jobs.
+    this.workInProgressJobs = {};
 }
 util.inherits(Batch, EventEmitter);
 
@@ -29,33 +30,16 @@ Batch.prototype.start = function () {
     var self = this;
 
     this.jobSubscriber.subscribe(
-        function onJobHandler(host) {
-            if (self.isProcessingHost(host)) {
-                return debug('%s is already processing host=%s', self.name, host);
-            }
-
-            // do forever, it does not throw a stack overflow
-            forever(
-                function (next) {
-                    self.locker.lock(host, function(err) {
-                        // we didn't get the lock for the host
-                        if (err) {
-                            debug('Could not lock host=%s from %s. Reason: %s', host, self.name, err.message);
-                            return next(err);
-                        }
-                        debug('Locked host=%s from %s', host, self.name);
-                        self.processNextJob(host, next);
-                    });
-                },
-                function (err) {
-                    if (err) {
-                        debug(err.name === 'EmptyQueue' ? err.message : err);
-                    }
-
-                    self.finishedProcessingHost(host);
-                    self.locker.unlock(host, debug);
+        function onJobHandler(user, host) {
+            debug('[%s] onJobHandler(%s, %s)', self.name, user, host);
+            self.hostScheduler.add(host, user, function(err) {
+                if (err) {
+                    return debug(
+                        'Could not schedule host=%s user=%s from %s. Reason: %s',
+                        host, self.name, user, err.message
+                    );
                 }
-            );
+            });
         },
         function onJobSubscriberReady(err) {
             if (err) {
@@ -67,50 +51,49 @@ Batch.prototype.start = function () {
     );
 };
 
-Batch.prototype.processNextJob = function (host, callback) {
+Batch.prototype.processJob = function (user, callback) {
     var self = this;
-    self.jobQueue.dequeue(host, function (err, jobId) {
+    self.jobQueue.dequeue(user, function (err, jobId) {
         if (err) {
-            return callback(err);
+            return callback(new Error('Could not get job from "' + user + '". Reason: ' + err.message), !EMPTY_QUEUE);
         }
 
         if (!jobId) {
-            var emptyQueueError = new Error('Queue ' + host + ' is empty');
-            emptyQueueError.name = 'EmptyQueue';
-            return callback(emptyQueueError);
+            debug('Queue empty user=%s', user);
+            return callback(null, EMPTY_QUEUE);
         }
 
-        self.setProcessingJobId(host, jobId);
-
+        self.setWorkInProgressJob(user, jobId);
         self.jobRunner.run(jobId, function (err, job) {
-            self.setProcessingJobId(host, null);
+            self.clearWorkInProgressJob(user);
 
             if (err) {
                 debug(err);
                 if (err.name === 'JobNotRunnable') {
-                    return callback();
+                    return callback(null, !EMPTY_QUEUE);
                 }
-                return callback(err);
+                return callback(err, !EMPTY_QUEUE);
             }
 
-            debug('Job[%s] status=%s in host=%s (failed_reason=%s)', jobId, job.data.status, host, job.failed_reason);
+            debug(
+                '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
+                self.name, jobId, job.data.status, user, job.failed_reason
+            );
 
             self.logger.log(job);
 
-            self.emit('job:' + job.data.status, jobId);
-
-            callback();
+            return callback(null, !EMPTY_QUEUE);
         });
     });
 };
 
 Batch.prototype.drain = function (callback) {
     var self = this;
-    var workingHosts = this.getWorkingHosts();
-    var batchQueues = queue(workingHosts.length);
+    var workingUsers = this.getWorkInProgressUsers();
+    var batchQueues = queue(workingUsers.length);
 
-    workingHosts.forEach(function (host) {
-        batchQueues.defer(self._drainJob.bind(self), host);
+    workingUsers.forEach(function (user) {
+        batchQueues.defer(self._drainJob.bind(self), user);
     });
 
     batchQueues.awaitAll(function (err) {
@@ -124,9 +107,9 @@ Batch.prototype.drain = function (callback) {
     });
 };
 
-Batch.prototype._drainJob = function (host, callback) {
+Batch.prototype._drainJob = function (user, callback) {
     var self = this;
-    var job_id = this.getProcessingJobId(host);
+    var job_id = this.getWorkInProgressJob(user);
 
     if (!job_id) {
         return process.nextTick(function () {
@@ -143,7 +126,7 @@ Batch.prototype._drainJob = function (host, callback) {
             return callback(err);
         }
 
-        self.jobQueue.enqueueFirst(job_id, host, callback);
+        self.jobQueue.enqueueFirst(user, job_id, callback);
     });
 };
 
@@ -152,22 +135,21 @@ Batch.prototype.stop = function (callback) {
     this.jobSubscriber.unsubscribe(callback);
 };
 
-Batch.prototype.isProcessingHost = function(host) {
-    return this.workingQueues.hasOwnProperty(host);
+
+/* Work in progress jobs */
+
+Batch.prototype.setWorkInProgressJob = function(user, jobId) {
+    this.workInProgressJobs[user] = jobId;
 };
 
-Batch.prototype.getWorkingHosts = function() {
-    return Object.keys(this.workingQueues);
+Batch.prototype.getWorkInProgressJob = function(user) {
+    return this.workInProgressJobs[user];
 };
 
-Batch.prototype.setProcessingJobId = function(host, jobId) {
-    this.workingQueues[host] = jobId;
+Batch.prototype.clearWorkInProgressJob = function(user) {
+    delete this.workInProgressJobs[user];
 };
 
-Batch.prototype.getProcessingJobId = function(host) {
-    return this.workingQueues[host];
-};
-
-Batch.prototype.finishedProcessingHost = function(host) {
-    delete this.workingQueues[host];
+Batch.prototype.getWorkInProgressUsers = function() {
+    return Object.keys(this.workInProgressJobs);
 };

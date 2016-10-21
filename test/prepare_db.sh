@@ -7,6 +7,7 @@
 
 PREPARE_REDIS=yes
 PREPARE_PGSQL=yes
+OFFLINE=no
 
 while [ -n "$1" ]; do
   if test "$1" = "--skip-pg"; then
@@ -14,6 +15,9 @@ while [ -n "$1" ]; do
     shift; continue
   elif test "$1" = "--skip-redis"; then
     PREPARE_REDIS=no
+    shift; continue
+  elif test "$1" = "--offline"; then
+    OFFLINE=yes
     shift; continue
   fi
 done
@@ -74,13 +78,15 @@ if test x"$PREPARE_PGSQL" = xyes; then
   LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced'
   REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
 
-  CURL_ARGS=""
-  for i in ${REMOTE_SQL_SCRIPTS}
-  do
-    CURL_ARGS="${CURL_ARGS}\"https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql\" -o support/sql/$i.sql "
-  done
-  echo "Downloading and updating: ${REMOTE_SQL_SCRIPTS}"
-  echo ${CURL_ARGS} | xargs curl -L -s
+  if test x"$OFFLINE" = xno; then
+      CURL_ARGS=""
+      for i in ${REMOTE_SQL_SCRIPTS}
+      do
+        CURL_ARGS="${CURL_ARGS}\"https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql\" -o support/sql/$i.sql "
+      done
+      echo "Downloading and updating: ${REMOTE_SQL_SCRIPTS}"
+      echo ${CURL_ARGS} | xargs curl -L -s
+  fi
 
   psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
   ALL_SQL_SCRIPTS="${REMOTE_SQL_SCRIPTS} ${LOCAL_SQL_SCRIPTS}"

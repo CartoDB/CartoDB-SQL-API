@@ -1,4 +1,4 @@
 module.exports = {
     DB: 0,
-    NAME: 'batch:hosts'
+    NAME: 'batch:users'
 };

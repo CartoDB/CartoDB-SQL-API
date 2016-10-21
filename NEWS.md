@@ -1,3 +1,43 @@
+1.41.0 - 2016-10-21
+-------------------
+
+Announcements:
+ * Stop migrating old queues by default.
+
+Bug fixes:
+ * Fix some scenarios where batch queries got stuck waiting for available slots.
+
+
+1.40.0 - 2016-10-20
+-------------------
+
+New features:
+ * Batch queries are handled per db host.
+   - There is an scheduler controlling how many queries and in what order they are run.
+     - Priority is based on: number of queries already ran, and oldest user in queue.
+ * Batch queries capacity: allow to configure how many jobs to run per db host.
+
+
+1.39.1 - 2016-10-17
+-------------------
+
+Enhancements:
+ * Log creation and waiting time for fallback jobs' queries.
+
+
+1.39.0 - 2016-10-17
+-------------------
+
+Enhancements:
+ * Use just one Redis pool across the whole application.
+
+New features:
+ * Batch queries use per user-queues.
+ * Batch queries queues can limit the number of queued jobs per user.
+   - Default is 64 jobs.
+   - Configuration key `batch_max_queued_jobs` allows to modify the limit.
+
+
 1.38.2 - 2016-10-13
 -------------------
 

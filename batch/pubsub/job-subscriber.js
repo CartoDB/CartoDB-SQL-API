@@ -8,15 +8,16 @@ var error = require('./../util/debug')('pubsub:subscriber:error');
 var MINUTE = 60 * 1000;
 var SUBSCRIBE_INTERVAL = 5 * MINUTE;
 
-function JobSubscriber(pool) {
+function JobSubscriber(pool, userDatabaseMetadataService) {
     this.pool = pool;
+    this.userDatabaseMetadataService = userDatabaseMetadataService;
     this.queueSeeker = new QueueSeeker(pool);
 }
 
 module.exports = JobSubscriber;
 
 function seeker(queueSeeker, onJobHandler, callback) {
-    queueSeeker.seek(function (err, hosts) {
+    queueSeeker.seek(function (err, users) {
         if (err) {
             if (callback) {
                 callback(err);
@@ -24,7 +25,7 @@ function seeker(queueSeeker, onJobHandler, callback) {
             return error(err);
         }
         debug('queues found successfully');
-        hosts.forEach(onJobHandler);
+        users.forEach(onJobHandler);
 
         if (callback) {
             return callback(null);
@@ -35,31 +36,45 @@ function seeker(queueSeeker, onJobHandler, callback) {
 JobSubscriber.prototype.subscribe = function (onJobHandler, callback) {
     var self = this;
 
-    this.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL, this.queueSeeker, onJobHandler);
+    function wrappedJobHandlerListener(user) {
+        self.userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
+            if (err) {
+                return callback(err);
+            }
+            return onJobHandler(user, userDatabaseMetadata.host);
+        });
+    }
 
-    this.pool.acquire(Channel.DB, function (err, client) {
-        if (err) {
-            return error('Error adquiring redis client: ' + err.message);
+    seeker(this.queueSeeker, wrappedJobHandlerListener, function(err) {
+        if (callback) {
+            callback(err);
         }
 
-        self.client = client;
-        client.removeAllListeners('message');
-        client.unsubscribe(Channel.NAME);
-        client.subscribe(Channel.NAME);
+        // do not start any pooling until first seek has finished
+        self.seekerInterval = setInterval(seeker, SUBSCRIBE_INTERVAL, self.queueSeeker, wrappedJobHandlerListener);
 
-        client.on('message', function (channel, host) {
-            debug('message received from: ' + channel + ':' + host);
-            onJobHandler(host);
-        });
+        self.pool.acquire(Channel.DB, function (err, client) {
+            if (err) {
+                return error('Error adquiring redis client: ' + err.message);
+            }
 
-        client.on('error', function () {
-            self.unsubscribe();
-            self.pool.release(Channel.DB, client);
-            self.subscribe(onJobHandler);
+            self.client = client;
+            client.removeAllListeners('message');
+            client.unsubscribe(Channel.NAME);
+            client.subscribe(Channel.NAME);
+
+            client.on('message', function (channel, user) {
+                debug('message received in channel=%s from user=%s', channel, user);
+                wrappedJobHandlerListener(user);
+            });
+
+            client.on('error', function () {
+                self.unsubscribe();
+                self.pool.release(Channel.DB, client);
+                self.subscribe(onJobHandler);
+            });
         });
     });
-
-    seeker(this.queueSeeker, onJobHandler, callback);
 };
 
 JobSubscriber.prototype.unsubscribe = function (callback) {
@@ -67,6 +82,8 @@ JobSubscriber.prototype.unsubscribe = function (callback) {
     if (this.client && this.client.connected) {
         this.client.unsubscribe(Channel.NAME, callback);
     } else {
-        return callback(null);
+        if (callback) {
+            return callback(null);
+        }
     }
 };

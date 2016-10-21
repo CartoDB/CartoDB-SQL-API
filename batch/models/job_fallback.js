@@ -218,6 +218,8 @@ JobFallback.prototype.log = function(logger) {
         var query = queries[i];
 
         var logEntry = {
+            created: this.data.created_at,
+            waiting: elapsedTime(this.data.created_at, query.started_at),
             time: query.started_at,
             endtime: query.ended_at,
             username: this.data.user,

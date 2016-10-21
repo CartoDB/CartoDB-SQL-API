@@ -23,6 +23,7 @@ var _ = require('underscore');
 var LRU = require('lru-cache');
 
 var RedisPool = require('redis-mpool');
+var cartodbRedis = require('cartodb-redis');
 var UserDatabaseService = require('./services/user_database_service');
 var JobPublisher = require('../batch/pubsub/job-publisher');
 var JobQueue = require('../batch/job_queue');
@@ -53,14 +54,15 @@ function App() {
 
     var app = express();
 
-    var redisConfig = {
+    var redisPool = new RedisPool({
+        name: 'sql-api',
         host: global.settings.redis_host,
         port: global.settings.redis_port,
         max: global.settings.redisPool,
         idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
         reapIntervalMillis: global.settings.redisReapIntervalMillis
-    };
-    var metadataBackend = require('cartodb-redis')(redisConfig);
+    });
+    var metadataBackend = cartodbRedis({ pool: redisPool });
 
 
     // Set default configuration
@@ -181,8 +183,7 @@ function App() {
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
 
-    var redisPoolPublisher = new RedisPool(_.extend(redisConfig, { name: 'job-publisher'}));
-    var jobPublisher = new JobPublisher(redisPoolPublisher);
+    var jobPublisher = new JobPublisher(redisPool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
@@ -212,7 +213,7 @@ function App() {
     if (global.settings.environment !== 'test' && isBatchProcess) {
         var batchName = global.settings.api_hostname || 'batch';
         app.batch = batchFactory(
-            metadataBackend, redisConfig, batchName, statsd_client, global.settings.batch_log_filename
+            metadataBackend, redisPool, batchName, statsd_client, global.settings.batch_log_filename
         );
         app.batch.start();
     }

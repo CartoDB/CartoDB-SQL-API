@@ -7,7 +7,7 @@ var redisUtils = require('./redis_utils');
 var debug = require('debug')('batch-test-client');
 
 var JobStatus = require('../../batch/job_status');
-var metadataBackend = require('cartodb-redis')(redisUtils.getConfig());
+var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../batch/index');
 
 function response(code) {
@@ -26,7 +26,7 @@ function BatchTestClient(config) {
     this.config = config || {};
     this.server = appServer();
 
-    this.batch = batchFactory(metadataBackend, redisUtils.getConfig(), this.config.name);
+    this.batch = batchFactory(metadataBackend, redisUtils.getPool(), this.config.name);
     this.batch.start();
 
     this.pendingJobs = [];
@@ -45,7 +45,11 @@ BatchTestClient.prototype.isReady = function() {
     return this.ready;
 };
 
-BatchTestClient.prototype.createJob = function(job, callback) {
+BatchTestClient.prototype.createJob = function(job, override, callback) {
+    if (!callback) {
+        callback = override;
+        override = {};
+    }
     if (!this.isReady()) {
         this.pendingJobs.push({
             job: job,
@@ -56,9 +60,9 @@ BatchTestClient.prototype.createJob = function(job, callback) {
     assert.response(
         this.server,
         {
-            url: this.getUrl(),
+            url: this.getUrl(override),
             headers: {
-                host: this.getHost(),
+                host: this.getHost(override),
                 'Content-Type': 'application/json'
             },
             method: 'POST',
@@ -69,18 +73,18 @@ BatchTestClient.prototype.createJob = function(job, callback) {
             if (err) {
                 return callback(err);
             }
-            return callback(null, new JobResult(JSON.parse(res.body), this));
+            return callback(null, new JobResult(JSON.parse(res.body), this, override));
         }.bind(this)
     );
 };
 
-BatchTestClient.prototype.getJobStatus = function(jobId, callback) {
+BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
     assert.response(
         this.server,
         {
-            url: this.getUrl(jobId),
+            url: this.getUrl(override, jobId),
             headers: {
-                host: this.getHost()
+                host: this.getHost(override)
             },
             method: 'GET'
         },
@@ -94,13 +98,13 @@ BatchTestClient.prototype.getJobStatus = function(jobId, callback) {
     );
 };
 
-BatchTestClient.prototype.cancelJob = function(jobId, callback) {
+BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
     assert.response(
         this.server,
         {
             url: this.getUrl(jobId),
             headers: {
-                host: this.getHost()
+                host: this.getHost(override)
             },
             method: 'DELETE'
         },
@@ -120,31 +124,35 @@ BatchTestClient.prototype.drain = function(callback) {
     });
 };
 
-BatchTestClient.prototype.getHost = function() {
-    return this.config.host || 'vizzuality.cartodb.com';
+BatchTestClient.prototype.getHost = function(override) {
+    return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
-BatchTestClient.prototype.getUrl = function(jobId) {
+BatchTestClient.prototype.getUrl = function(override, jobId) {
     var urlParts = ['/api/v2/sql/job'];
     if (jobId) {
         urlParts.push(jobId);
     }
-    return urlParts.join('/') + '?api_key=' + (this.config.apiKey || '1234');
+    return urlParts.join('/') + '?api_key=' + this.getApiKey(override);
 };
 
+BatchTestClient.prototype.getApiKey = function(override) {
+    return override.apiKey || this.config.apiKey || '1234';
+};
 
 /****************** JobResult ******************/
 
 
-function JobResult(job, batchTestClient) {
+function JobResult(job, batchTestClient, override) {
     this.job = job;
     this.batchTestClient = batchTestClient;
+    this.override = override;
 }
 
 JobResult.prototype.getStatus = function(callback) {
     var self = this;
     var interval = setInterval(function () {
-        self.batchTestClient.getJobStatus(self.job.job_id, function (err, job) {
+        self.batchTestClient.getJobStatus(self.job.job_id, self.override, function (err, job) {
             if (err) {
                 clearInterval(interval);
                 return callback(err);
@@ -161,5 +169,5 @@ JobResult.prototype.getStatus = function(callback) {
 };
 
 JobResult.prototype.cancel = function(callback) {
-    this.batchTestClient.cancelJob(this.job.job_id, callback);
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
 };

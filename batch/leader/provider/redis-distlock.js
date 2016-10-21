@@ -6,7 +6,7 @@ var REDIS_DISTLOCK = {
 };
 
 var Redlock = require('redlock');
-var debug = require('../../util/debug')('redis-distlock');
+var debug = require('../../util/debug')('leader:redis-distlock');
 
 function RedisDistlockLocker(redisPool) {
     this.pool = redisPool;
@@ -24,39 +24,39 @@ function RedisDistlockLocker(redisPool) {
 module.exports = RedisDistlockLocker;
 module.exports.type = 'redis-distlock';
 
-function resourceId(host) {
-    return REDIS_DISTLOCK.PREFIX + host;
+function resourceId(resource) {
+    return REDIS_DISTLOCK.PREFIX + resource;
 }
 
-RedisDistlockLocker.prototype.lock = function(host, ttl, callback) {
+RedisDistlockLocker.prototype.lock = function(resource, ttl, callback) {
     var self = this;
-    debug('RedisDistlockLocker.lock(%s, %d)', host, ttl);
-    var resource = resourceId(host);
+    debug('RedisDistlockLocker.lock(%s, %d)', resource, ttl);
+    var lockId = resourceId(resource);
 
-    var lock = this._getLock(resource);
+    var lock = this._getLock(lockId);
     function acquireCallback(err, _lock) {
         if (err) {
             return callback(err);
         }
-        self._setLock(resource, _lock);
+        self._setLock(lockId, _lock);
         return callback(null, _lock);
     }
     if (lock) {
         return this._tryExtend(lock, ttl, function(err, _lock) {
             if (err) {
-                return self._tryAcquire(resource, ttl, acquireCallback);
+                return self._tryAcquire(lockId, ttl, acquireCallback);
             }
 
             return callback(null, _lock);
         });
     } else {
-        return this._tryAcquire(resource, ttl, acquireCallback);
+        return this._tryAcquire(lockId, ttl, acquireCallback);
     }
 };
 
-RedisDistlockLocker.prototype.unlock = function(host, callback) {
+RedisDistlockLocker.prototype.unlock = function(resource, callback) {
     var self = this;
-    var lock = this._getLock(resourceId(host));
+    var lock = this._getLock(resourceId(resource));
     if (lock) {
         this.pool.acquire(REDIS_DISTLOCK.DB, function (err, client) {
             if (err) {
