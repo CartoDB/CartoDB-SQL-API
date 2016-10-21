@@ -23,34 +23,46 @@ JobRunner.prototype.run = function (job_id, callback) {
             return callback(err);
         }
 
-        var query = job.getNextQuery();
-        var timeout = 12 * 3600 * 1000;
-        if (Number.isFinite(global.settings.batch_query_timeout)) {
-            timeout = global.settings.batch_query_timeout;
-        }
-        if (_.isObject(query)) {
-            if (Number.isFinite(query.timeout) && query.timeout > 0) {
-                timeout = Math.min(timeout, query.timeout);
-            }
-            query = query.query;
-        }
-
-        try {
-            job.setStatus(jobStatus.RUNNING);
-        } catch (err) {
-            return callback(err);
-        }
-
-        self.jobService.save(job, function (err, job) {
+        self.getQueryStatementTimeout(job.data.user, function(err, timeout) {
             if (err) {
                 return callback(err);
             }
 
-            profiler.done('running');
+            var query = job.getNextQuery();
 
-            self._run(job, query, timeout, profiler, callback);
+            if (_.isObject(query)) {
+                if (Number.isFinite(query.timeout) && query.timeout > 0) {
+                    timeout = Math.min(timeout, query.timeout);
+                }
+                query = query.query;
+            }
+
+            try {
+                job.setStatus(jobStatus.RUNNING);
+            } catch (err) {
+                return callback(err);
+            }
+
+            self.jobService.save(job, function (err, job) {
+                if (err) {
+                    return callback(err);
+                }
+
+                profiler.done('running');
+
+                self._run(job, query, timeout, profiler, callback);
+            });
         });
     });
+};
+
+JobRunner.prototype.getQueryStatementTimeout = function(username, callback) {
+    var timeout = 12 * 3600 * 1000;
+    if (Number.isFinite(global.settings.batch_query_timeout)) {
+        timeout = global.settings.batch_query_timeout;
+    }
+
+    return callback(null, timeout);
 };
 
 JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
