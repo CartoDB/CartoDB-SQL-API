@@ -5,10 +5,16 @@ var jobStatus = require('./job_status');
 var Profiler = require('step-profiler');
 var _ = require('underscore');
 
-function JobRunner(jobService, jobQueue, queryRunner, statsdClient) {
+var REDIS_LIMITS = {
+    DB: 5,
+    PREFIX: 'limits:batch:' // + username
+};
+
+function JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient) {
     this.jobService = jobService;
     this.jobQueue = jobQueue;
     this.queryRunner = queryRunner;
+    this.metadataBackend = metadataBackend;
     this.statsdClient = statsdClient;
 }
 
@@ -62,7 +68,14 @@ JobRunner.prototype.getQueryStatementTimeout = function(username, callback) {
         timeout = global.settings.batch_query_timeout;
     }
 
-    return callback(null, timeout);
+    var batchLimitsKey = REDIS_LIMITS.PREFIX + username;
+    this.metadataBackend.redisCmd(REDIS_LIMITS.DB, 'HGET', [batchLimitsKey, 'timeout'], function(err, timeoutLimit) {
+        if (timeoutLimit !== null && Number.isFinite(+timeoutLimit)) {
+            timeout = +timeoutLimit;
+        }
+
+        return callback(null, timeout);
+    });
 };
 
 JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
