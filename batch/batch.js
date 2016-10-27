@@ -17,7 +17,7 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobService = jobService;
     this.jobPublisher = jobPublisher;
     this.logger = logger;
-    this.hostScheduler = new HostScheduler(name, { run: this.processJob.bind(this) }, redisPool);
+    this.hostScheduler = new HostScheduler(this.name, { run: this.processJob.bind(this) }, redisPool);
 
     // map: user => jobId. Will be used for draining jobs.
     this.workInProgressJobs = {};
