@@ -33,9 +33,9 @@ function createWadusJob() {
 describe('job backend', function() {
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
 
-    after(function (done) {
-        redisUtils.clean('batch:*', done);
-    });
+    // after(function (done) {
+    //     redisUtils.clean('batch:*', done);
+    // });
 
     it('.create() should persist a job', function (done) {
         var job = createWadusJob();
@@ -97,4 +97,16 @@ describe('job backend', function() {
             done();
         });
     });
+
+    it('.addWorkInProgressJob() should add current job to user and host lists', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.addWorkInProgressJob(job.data.user, job.data.job_id, function (err) {
+            if (err) {
+                return done(err);
+            }
+            done();
+        });
+    });
+
 });
