@@ -9,6 +9,7 @@ function JobBackend(metadataBackend, jobQueue) {
     this.jobQueue = jobQueue;
     this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
     this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
+    this.hostname = global.settings.api_hostname || 'batch';
 }
 
 function toRedisParams(job) {
@@ -162,6 +163,21 @@ JobBackend.prototype.save = function (job, callback) {
             });
         });
     });
+};
+
+var WORK_IN_PROGRESS_JOB = {
+    DB: 5,
+    PREFIX: 'batch:wip:'
+};
+
+JobBackend.prototype.addWorkInProgressJob = function (job_id, user, callback) {
+    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + this.hostname; // Will be used for draining jobs.
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + user; // Will be used for listing users and running jobs
+
+    this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
+        ['RPUSH', hostWIPKey, job_id],
+        ['RPUSH', userWIPKey, job_id]
+    ], callback);
 };
 
 JobBackend.prototype.setTTL = function (job, callback) {
