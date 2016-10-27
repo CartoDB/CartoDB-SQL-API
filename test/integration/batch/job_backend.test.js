@@ -33,9 +33,9 @@ function createWadusJob() {
 describe('job backend', function() {
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
 
-    // after(function (done) {
-    //     redisUtils.clean('batch:*', done);
-    // });
+    after(function (done) {
+        redisUtils.clean('batch:*', done);
+    });
 
     it('.create() should persist a job', function (done) {
         var job = createWadusJob();
@@ -109,4 +109,13 @@ describe('job backend', function() {
         });
     });
 
+    it('.listWorkInProgressJobByUser() should retrieve WIP jobs of given user', function (done) {
+        jobBackend.listWorkInProgressJobByUser('vizzuality', function (err, jobs) {
+            if (err) {
+                return done(err);
+            }
+            assert.ok(jobs.length);
+            done();
+        });
+    });
 });

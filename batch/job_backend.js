@@ -180,6 +180,12 @@ JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     ], callback);
 };
 
+JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + user;
+
+    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', [userWIPKey, 0, -1], callback);
+};
+
 JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
     var redisKey = REDIS_PREFIX + job.job_id;
