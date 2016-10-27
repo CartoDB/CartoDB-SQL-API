@@ -3,6 +3,8 @@
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var JobStatus = require('./job_status');
+var queue = require('queue-async');
+var debug = require('./util/debug')('job-backend');
 
 function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
@@ -167,12 +169,13 @@ JobBackend.prototype.save = function (job, callback) {
 
 var WORK_IN_PROGRESS_JOB = {
     DB: 5,
-    PREFIX: 'batch:wip:'
+    PREFIX_USER: 'batch:wip:user:',
+    PREFIX_HOST: 'batch:wip:host:'
 };
 
 JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
-    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + this.hostname; // Will be used for draining jobs.
-    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + user; // Will be used for listing users and running jobs
+    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_HOST + this.hostname; // will be used for draining jobs.
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user; // will be used for listing users and their running jobs
 
     this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
         ['RPUSH', hostWIPKey, jobId],
@@ -181,9 +184,67 @@ JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
 };
 
 JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
-    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + user;
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
 
     this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', [userWIPKey, 0, -1], callback);
+};
+
+JobBackend.prototype.listWorkInProgressJob = function (callback) {
+    var initialCursor = ['0'];
+    var users = {};
+
+    this._getWIPByUserKeys(initialCursor, users, function (err, users) {
+        if (err) {
+            return callback(err);
+        }
+
+        var usersQueue = queue(Object.keys(users).length);
+        var usersName = Object.keys(users);
+
+        usersName.forEach(function (userKey) {
+            usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userKey);
+        }.bind(this));
+
+        usersQueue.awaitAll(function (err, results) {
+            if (err) {
+                return callback(err);
+            }
+
+            var usersRes = usersName.reduce(function (users, userName, index) {
+                users[userName] = results[index];
+                return users;
+            }, {});
+
+            callback(null, usersRes);
+        });
+
+    }.bind(this));
+};
+
+JobBackend.prototype._getWIPByUserKeys = function (cursor, users, callback) {
+    var userWIPKeyPattern = WORK_IN_PROGRESS_JOB.PREFIX_USER + '*';
+    var scanParams = [cursor[0], 'MATCH', userWIPKeyPattern];
+
+    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'SCAN', scanParams, function (err, currentCursor) {
+        if (err) {
+            return callback(err);
+        }
+
+        var usersKeys = currentCursor[1];
+        if (usersKeys) {
+            usersKeys.forEach(function (userKey) {
+                var user = userKey.substr(WORK_IN_PROGRESS_JOB.PREFIX_USER.length);
+                users[user] = userKey;
+            });
+        }
+
+        var hasMore = currentCursor[0] !== '0';
+        if (!hasMore) {
+            return callback(null, users);
+        }
+
+        this._getWIPByUserKeys(currentCursor, users, callback);
+    }.bind(this));
 };
 
 JobBackend.prototype.setTTL = function (job, callback) {

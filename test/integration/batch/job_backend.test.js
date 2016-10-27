@@ -17,6 +17,8 @@ var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 
+var queue = require('queue-async');
+
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
 var HOST = 'localhost';
@@ -118,4 +120,32 @@ describe('job backend', function() {
             done();
         });
     });
+
+    it('.listWorkInProgressJob() should retrieve WIP users', function (done) {
+        var jobs = [{ user: 'userA', id: 'jobId1' }, { user: 'userA', id: 'jobId2' }, { user: 'userB', id: 'jobId3' }];
+        var testQueue = queue();
+
+        testQueue.defer(redisUtils.clean, 'batch:*');
+
+        jobs.forEach(function (job) {
+            testQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), job.user, job.id);
+        });
+
+        testQueue.awaitAll(function (err) {
+            if (err) {
+                done(err);
+            }
+
+            jobBackend.listWorkInProgressJob(function (err, users) {
+                if (err) {
+                    return done(err);
+                }
+
+                assert.deepEqual(users, { userA: [ 'jobId1', 'jobId2' ], userB: [ 'jobId3' ] });
+                done();
+            });
+
+        });
+    });
+
 });
