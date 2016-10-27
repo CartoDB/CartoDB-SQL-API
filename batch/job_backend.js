@@ -170,13 +170,13 @@ var WORK_IN_PROGRESS_JOB = {
     PREFIX: 'batch:wip:'
 };
 
-JobBackend.prototype.addWorkInProgressJob = function (job_id, user, callback) {
+JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + this.hostname; // Will be used for draining jobs.
     var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX + user; // Will be used for listing users and running jobs
 
     this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
-        ['RPUSH', hostWIPKey, job_id],
-        ['RPUSH', userWIPKey, job_id]
+        ['RPUSH', hostWIPKey, jobId],
+        ['RPUSH', userWIPKey, jobId]
     ], callback);
 };
 

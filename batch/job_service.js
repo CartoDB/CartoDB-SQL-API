@@ -123,6 +123,6 @@ JobService.prototype.drain = function (job_id, callback) {
     });
 };
 
-JobService.prototype.addWorkInProgressJob = function (job, callback) {
-    this.jobBackend.addWorkInProgressJob(job.job_id, job.user, callback);
+JobService.prototype.addWorkInProgressJob = function (user, jobId, callback) {
+    this.jobBackend.addWorkInProgressJob(user, jobId, callback);
 };
