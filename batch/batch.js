@@ -63,26 +63,31 @@ Batch.prototype.processJob = function (user, callback) {
             return callback(null, EMPTY_QUEUE);
         }
 
-        self.setWorkInProgressJob(user, jobId);
-        self.jobRunner.run(jobId, function (err, job) {
-            self.clearWorkInProgressJob(user);
-
+        self.setWorkInProgressJob(user, jobId, function (err) {
             if (err) {
-                debug(err);
-                if (err.name === 'JobNotRunnable') {
-                    return callback(null, !EMPTY_QUEUE);
-                }
-                return callback(err, !EMPTY_QUEUE);
+                return callback(new Error('Could not add job to work-in-progress list. Reason: ' + err.message));
             }
 
-            debug(
-                '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
-                self.name, jobId, job.data.status, user, job.failed_reason
-            );
+            self.jobRunner.run(jobId, function (err, job) {
+                self.clearWorkInProgressJob(user);
 
-            self.logger.log(job);
+                if (err) {
+                    debug(err);
+                    if (err.name === 'JobNotRunnable') {
+                        return callback(null, !EMPTY_QUEUE);
+                    }
+                    return callback(err, !EMPTY_QUEUE);
+                }
 
-            return callback(null, !EMPTY_QUEUE);
+                debug(
+                    '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
+                    self.name, jobId, job.data.status, user, job.failed_reason
+                );
+
+                self.logger.log(job);
+
+                return callback(null, !EMPTY_QUEUE);
+            });
         });
     });
 };
@@ -138,8 +143,9 @@ Batch.prototype.stop = function (callback) {
 
 /* Work in progress jobs */
 
-Batch.prototype.setWorkInProgressJob = function(user, jobId) {
+Batch.prototype.setWorkInProgressJob = function(user, jobId, callback) {
     this.workInProgressJobs[user] = jobId;
+    this.jobService.addWorkInProgressJob(user, jobId, callback);
 };
 
 Batch.prototype.getWorkInProgressJob = function(user) {
