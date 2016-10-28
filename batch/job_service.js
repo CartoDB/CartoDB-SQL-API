@@ -127,6 +127,10 @@ JobService.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     this.jobBackend.addWorkInProgressJob(user, jobId, callback);
 };
 
+JobService.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
+    this.jobBackend.clearWorkInProgressJob(user, jobId, callback);
+};
+
 JobService.prototype.listWorkInProgressJobs = function (callback) {
     this.jobBackend.listWorkInProgressJobs(callback);
 };
