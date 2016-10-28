@@ -126,3 +126,7 @@ JobService.prototype.drain = function (job_id, callback) {
 JobService.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     this.jobBackend.addWorkInProgressJob(user, jobId, callback);
 };
+
+JobService.prototype.listWorkInProgressJob = function (callback) {
+    this.jobBackend.listWorkInProgressJob(callback);
+};
