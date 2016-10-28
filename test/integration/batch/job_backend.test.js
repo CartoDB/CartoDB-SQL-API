@@ -112,26 +112,33 @@ describe('job backend', function() {
     });
 
     it('.listWorkInProgressJobByUser() should retrieve WIP jobs of given user', function (done) {
-        jobBackend.listWorkInProgressJobByUser('vizzuality', function (err, jobs) {
+        var testStepsQueue = queue(1);
+
+        testStepsQueue.defer(redisUtils.clean, 'batch:wip:user:*');
+        testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), 'vizzuality', 'wadus');
+        testStepsQueue.defer(jobBackend.listWorkInProgressJobByUser.bind(jobBackend), 'vizzuality');
+
+        testStepsQueue.awaitAll(function (err, results) {
             if (err) {
                 return done(err);
             }
-            assert.ok(jobs.length);
+            assert.deepEqual(results[2], ['wadus']);
             done();
         });
     });
 
     it('.listWorkInProgressJob() should retrieve WIP users', function (done) {
         var jobs = [{ user: 'userA', id: 'jobId1' }, { user: 'userA', id: 'jobId2' }, { user: 'userB', id: 'jobId3' }];
-        var testQueue = queue();
 
-        testQueue.defer(redisUtils.clean, 'batch:*');
+        var testStepsQueue = queue(1);
+
+        testStepsQueue.defer(redisUtils.clean, 'batch:wip:user:*');
 
         jobs.forEach(function (job) {
-            testQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), job.user, job.id);
+            testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), job.user, job.id);
         });
 
-        testQueue.awaitAll(function (err) {
+        testStepsQueue.awaitAll(function (err) {
             if (err) {
                 done(err);
             }

@@ -203,8 +203,8 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
         var usersName = Object.keys(users);
         var usersQueue = queue(usersName.length);
 
-        usersName.forEach(function (userKey) {
-            usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userKey);
+        usersName.forEach(function (userName) {
+            usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userName);
         }.bind(this));
 
         usersQueue.awaitAll(function (err, results) {
