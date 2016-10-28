@@ -71,7 +71,9 @@ Batch.prototype.processJob = function (user, callback) {
             self.jobRunner.run(jobId, function (err, job) {
                 self.clearWorkInProgressJob(user, jobId, function (clearError) {
                     if (clearError) {
-                        return callback(new Error('Could not clear job from work-in-progress list. Reason: ' + err.message));
+                        return callback(
+                            new Error('Could not clear job from work-in-progress list. Reason: ' + err.message)
+                        );
                     }
 
                     if (err) {
