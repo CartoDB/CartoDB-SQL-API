@@ -190,10 +190,11 @@ JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
 };
 
 JobBackend.prototype.listWorkInProgressJob = function (callback) {
+    var self = this;
     var initialCursor = ['0'];
     var users = {};
 
-    this._getWIPByUserKeys(initialCursor, users, function (err, users) {
+    self._getWIPByUserKeys(initialCursor, users, function (err, users) {
         if (err) {
             return callback(err);
         }
@@ -206,8 +207,8 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
         debug('found %s users with work in progress jobs', userNames.length);
 
         userNames.forEach(function (userName) {
-            usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userName);
-        }.bind(this));
+            usersQueue.defer(self.listWorkInProgressJobByUser.bind(self), userName);
+        });
 
         usersQueue.awaitAll(function (err, userWorkInProgressJobs) {
             if (err) {
@@ -222,7 +223,7 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
             callback(null, workInProgressJobs);
         });
 
-    }.bind(this));
+    });
 };
 
 JobBackend.prototype._getWIPByUserKeys = function (cursor, users, callback) {
