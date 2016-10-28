@@ -199,8 +199,6 @@ JobBackend.prototype.listWorkInProgressJobs = function (callback) {
             return callback(err);
         }
 
-        debug('found %j', users);
-
         var userNames = Object.keys(users);
         var usersQueue = queue(userNames.length);
 
