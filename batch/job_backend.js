@@ -209,17 +209,17 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
             usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userName);
         }.bind(this));
 
-        usersQueue.awaitAll(function (err, results) {
+        usersQueue.awaitAll(function (err, userWorkInProgressJobs) {
             if (err) {
                 return callback(err);
             }
 
-            var usersRes = userNames.reduce(function (users, userName, index) {
-                users[userName] = results[index];
+            var workInProgressJobs = userNames.reduce(function (users, userName, index) {
+                users[userName] = userWorkInProgressJobs[index];
                 return users;
             }, {});
 
-            callback(null, usersRes);
+            callback(null, workInProgressJobs);
         });
 
     }.bind(this));
