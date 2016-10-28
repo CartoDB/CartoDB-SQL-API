@@ -200,10 +200,12 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
 
         debug('found %j', users);
 
-        var usersName = Object.keys(users);
-        var usersQueue = queue(usersName.length);
+        var userNames = Object.keys(users);
+        var usersQueue = queue(userNames.length);
 
-        usersName.forEach(function (userName) {
+        debug('found %s users with work in progress jobs', userNames.length);
+
+        userNames.forEach(function (userName) {
             usersQueue.defer(this.listWorkInProgressJobByUser.bind(this), userName);
         }.bind(this));
 
@@ -212,7 +214,7 @@ JobBackend.prototype.listWorkInProgressJob = function (callback) {
                 return callback(err);
             }
 
-            var usersRes = usersName.reduce(function (users, userName, index) {
+            var usersRes = userNames.reduce(function (users, userName, index) {
                 users[userName] = results[index];
                 return users;
             }, {});
