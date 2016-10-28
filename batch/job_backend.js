@@ -183,6 +183,16 @@ JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     ], callback);
 };
 
+JobBackend.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
+    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_HOST + this.hostname; // will be used for draining jobs.
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user; // will be used for listing users and their running jobs
+
+    this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
+        ['LREM', hostWIPKey, 0, jobId],
+        ['LREM', userWIPKey, 0, jobId]
+    ], callback);
+};
+
 JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
     var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
 
