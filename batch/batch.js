@@ -63,40 +63,48 @@ Batch.prototype.processJob = function (user, callback) {
             return callback(null, EMPTY_QUEUE);
         }
 
-        self.setWorkInProgressJob(user, jobId, function (err) {
+        self._processWorkInProgressJob(user, jobId, function (err, job) {
             if (err) {
-                return callback(new Error('Could not add job to work-in-progress list. Reason: ' + err.message));
+                debug(err);
+                if (err.name === 'JobNotRunnable') {
+                    return callback(null, !EMPTY_QUEUE);
+                }
+                return callback(err, !EMPTY_QUEUE);
             }
 
-            self.jobRunner.run(jobId, function (err, job) {
-                self.clearWorkInProgressJob(user, jobId, function (clearError) {
-                    if (clearError) {
-                        return callback(
-                            new Error('Could not clear job from work-in-progress list. Reason: ' + err.message)
-                        );
-                    }
+            debug(
+                '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
+                self.name, jobId, job.data.status, user, job.failed_reason
+            );
 
-                    if (err) {
-                        debug(err);
-                        if (err.name === 'JobNotRunnable') {
-                            return callback(null, !EMPTY_QUEUE);
-                        }
-                        return callback(err, !EMPTY_QUEUE);
-                    }
+            self.logger.log(job);
 
-                    debug(
-                        '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
-                        self.name, jobId, job.data.status, user, job.failed_reason
-                    );
-
-                    self.logger.log(job);
-
-                    return callback(null, !EMPTY_QUEUE);
-                });
-            });
+            return callback(null, !EMPTY_QUEUE);
         });
     });
 };
+
+Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
+    var self = this;
+
+    self.setWorkInProgressJob(user, jobId, function (errSet) {
+        if (errSet) {
+            return callback(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
+        }
+
+        self.jobRunner.run(jobId, function (err, job) {
+            self.clearWorkInProgressJob(user, jobId, function (errClear) {
+                if (errClear) {
+                    return callback(
+                        new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message)
+                    );
+                }
+
+                return callback(err, job);
+            });
+        });
+    });
+}
 
 Batch.prototype.drain = function (callback) {
     var self = this;
