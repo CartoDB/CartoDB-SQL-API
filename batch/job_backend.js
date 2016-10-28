@@ -189,7 +189,7 @@ JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
     this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', [userWIPKey, 0, -1], callback);
 };
 
-JobBackend.prototype.listWorkInProgressJob = function (callback) {
+JobBackend.prototype.listWorkInProgressJobs = function (callback) {
     var self = this;
     var initialCursor = ['0'];
     var users = {};

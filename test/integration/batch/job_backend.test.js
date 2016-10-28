@@ -127,7 +127,7 @@ describe('job backend', function() {
         });
     });
 
-    it('.listWorkInProgressJob() should retrieve WIP users', function (done) {
+    it('.listWorkInProgressJobs() should retrieve WIP users', function (done) {
         var jobs = [{ user: 'userA', id: 'jobId1' }, { user: 'userA', id: 'jobId2' }, { user: 'userB', id: 'jobId3' }];
 
         var testStepsQueue = queue(1);
@@ -143,7 +143,7 @@ describe('job backend', function() {
                 done(err);
             }
 
-            jobBackend.listWorkInProgressJob(function (err, users) {
+            jobBackend.listWorkInProgressJobs(function (err, users) {
                 if (err) {
                     return done(err);
                 }
