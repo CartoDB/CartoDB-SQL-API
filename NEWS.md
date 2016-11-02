@@ -1,5 +1,8 @@
-1.41.1 - 2016-mm-dd
+1.42.0 - 2016-mm-dd
 -------------------
+
+Announcements:
+ * Adds endpoint to check running batch queries
 
 
 1.41.0 - 2016-10-21
