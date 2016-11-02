@@ -5,7 +5,7 @@ var TestClient = require('../../support/test-client');
 var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../batch/job_status');
 
-describe('multiple batch clients job query order', function() {
+describe.only('multiple batch clients job query order', function() {
 
     before(function(done) {
         this.batchTestClient1 = new BatchTestClient({ name: 'consumerA' });
