@@ -104,7 +104,7 @@ Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
             });
         });
     });
-}
+};
 
 Batch.prototype.drain = function (callback) {
     var self = this;
