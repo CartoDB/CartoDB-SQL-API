@@ -19,7 +19,7 @@ before_install:
   - ./configure
 
 env:
-  - PGUSER=postgres DEBUG=batch:query-runner
+  - PGUSER=postgres
 
 language: node_js
 node_js:
