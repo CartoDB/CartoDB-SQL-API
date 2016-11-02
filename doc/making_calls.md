@@ -165,7 +165,7 @@ To help you debug your SQL queries, the CARTO SQL API returns the full error pro
 }
 ```
 
-You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through the CARTO Editor, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
+You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through CARTO Builder, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
 
 ## Write data to your CARTO account
 
