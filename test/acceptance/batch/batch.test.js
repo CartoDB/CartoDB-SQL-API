@@ -210,7 +210,7 @@ describe('batch happy cases', function() {
     it('should get a list of work in progress jobs group by user', function (done) {
         var self = this;
         var user = 'vizzuality';
-        var queries = ['select pg_sleep(2)'];
+        var queries = ['select pg_sleep(0.5)'];
         var payload = jobPayload(queries);
 
         self.batchTestClient.createJob(payload, function(err, jobResult) {
