@@ -132,8 +132,6 @@ describe('job backend', function() {
 
         var testStepsQueue = queue(1);
 
-        testStepsQueue.defer(redisUtils.clean, 'batch:wip:user:*');
-
         jobs.forEach(function (job) {
             testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), job.user, job.id);
         });
@@ -148,7 +146,10 @@ describe('job backend', function() {
                     return done(err);
                 }
 
-                assert.deepEqual(users, { userA: [ 'jobId1', 'jobId2' ], userB: [ 'jobId3' ] });
+                assert.ok(users.userA);
+                assert.deepEqual(users.userA, [ 'jobId1', 'jobId2' ]);
+                assert.ok(users.userB);
+                assert.deepEqual(users.userB, [ 'jobId3' ]);
                 done();
             });
 

@@ -170,52 +170,81 @@ JobBackend.prototype.save = function (job, callback) {
 var WORK_IN_PROGRESS_JOB = {
     DB: 5,
     PREFIX_USER: 'batch:wip:user:',
-    PREFIX_HOST: 'batch:wip:host:'
+    USER_INDEX_KEY: 'batch:wip:users'
 };
 
 JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
-    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_HOST + this.hostname; // will be used for draining jobs.
-    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user; // will be used for listing users and their running jobs
-
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    debug('add job %s to user %s (%s)', jobId, user, userWIPKey);
     this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
-        ['RPUSH', hostWIPKey, jobId],
+        ['SADD', WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user],
         ['RPUSH', userWIPKey, jobId]
     ], callback);
 };
 
 JobBackend.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
-    var hostWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_HOST + this.hostname; // will be used for draining jobs.
-    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user; // will be used for listing users and their running jobs
-
-    this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
-        ['LREM', hostWIPKey, 0, jobId],
-        ['LREM', userWIPKey, 0, jobId]
-    ], callback);
-};
-
-JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
     var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
 
-    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', [userWIPKey, 0, -1], callback);
-};
-
-JobBackend.prototype.listWorkInProgressJobs = function (callback) {
-    var self = this;
-    var initialCursor = ['0'];
-    var users = {};
-
-    self._getWIPByUserKeys(initialCursor, users, function (err, users) {
+    var params = [userWIPKey, 0, jobId];
+    self.metadataBackend.redisCmd(DB, 'LREM', params, function (err) {
         if (err) {
             return callback(err);
         }
 
-        var userNames = Object.keys(users);
-        var usersQueue = queue(userNames.length);
+        params = [userWIPKey, 0, -1];
+        self.metadataBackend.redisCmd(DB, 'LRANGE', params, function (err, workInProgressJobs) {
+            if (err) {
+                return callback(err);
+            }
 
-        debug('found %s users with work in progress jobs', userNames.length);
+            debug('user %s has work in progress jobs %j', user, workInProgressJobs);
 
-        userNames.forEach(function (userName) {
-            usersQueue.defer(self.listWorkInProgressJobByUser.bind(self), userName);
+            if (workInProgressJobs.length < 0) {
+                return callback();
+            }
+
+            debug('delete user %s from index', user);
+
+            params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user];
+            self.metadataBackend.redisCmd(DB, 'SREM', params, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                return callback();
+            });
+        });
+    });
+};
+
+JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    var params = [userWIPKey, 0, -1];
+    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', params, callback);
+};
+
+JobBackend.prototype.listWorkInProgressJobs = function (callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
+
+    var params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY];
+    this.metadataBackend.redisCmd(DB, 'SMEMBERS', params, function (err, workInProgressUsers) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (workInProgressUsers < 1) {
+            return callback(null, {});
+        }
+
+        debug('found %j work in progress users', workInProgressUsers);
+
+        var usersQueue = queue(4);
+
+        workInProgressUsers.forEach(function (user) {
+            usersQueue.defer(self.listWorkInProgressJobByUser.bind(self), user);
         });
 
         usersQueue.awaitAll(function (err, userWorkInProgressJobs) {
@@ -223,41 +252,15 @@ JobBackend.prototype.listWorkInProgressJobs = function (callback) {
                 return callback(err);
             }
 
-            var workInProgressJobs = userNames.reduce(function (users, userName, index) {
-                users[userName] = userWorkInProgressJobs[index];
+            var workInProgressJobs = workInProgressUsers.reduce(function (users, user, index) {
+                users[user] = userWorkInProgressJobs[index];
+                debug('found %j work in progress jobs for user %s', userWorkInProgressJobs[index], user);
                 return users;
             }, {});
 
             callback(null, workInProgressJobs);
         });
-
     });
-};
-
-JobBackend.prototype._getWIPByUserKeys = function (cursor, users, callback) {
-    var userWIPKeyPattern = WORK_IN_PROGRESS_JOB.PREFIX_USER + '*';
-    var scanParams = [cursor[0], 'MATCH', userWIPKeyPattern];
-
-    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'SCAN', scanParams, function (err, currentCursor) {
-        if (err) {
-            return callback(err);
-        }
-
-        var usersKeys = currentCursor[1];
-        if (usersKeys) {
-            usersKeys.forEach(function (userKey) {
-                var user = userKey.substr(WORK_IN_PROGRESS_JOB.PREFIX_USER.length);
-                users[user] = userKey;
-            });
-        }
-
-        var hasMore = currentCursor[0] !== '0';
-        if (!hasMore) {
-            return callback(null, users);
-        }
-
-        this._getWIPByUserKeys(currentCursor, users, callback);
-    }.bind(this));
 };
 
 JobBackend.prototype.setTTL = function (job, callback) {
