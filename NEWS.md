@@ -1,5 +1,8 @@
-1.42.1 - 2016-mm-dd
+1.42.1 - 2016-11-03
 -------------------
+
+Bug fixes:
+ * Avoid to use SCAN command to find work-in-progress queues.
 
 
 1.42.0 - 2016-11-02
