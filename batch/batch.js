@@ -89,15 +89,13 @@ Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
 
     self.setWorkInProgressJob(user, jobId, function (errSet) {
         if (errSet) {
-            return callback(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
+            debug(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
         }
 
         self.jobRunner.run(jobId, function (err, job) {
             self.clearWorkInProgressJob(user, jobId, function (errClear) {
                 if (errClear) {
-                    return callback(
-                        new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message)
-                    );
+                    debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
                 }
 
                 return callback(err, job);
