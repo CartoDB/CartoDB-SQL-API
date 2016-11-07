@@ -23,4 +23,4 @@ env:
 
 language: node_js
 node_js:
-  - "0.10.26"
+  - "0.10"
