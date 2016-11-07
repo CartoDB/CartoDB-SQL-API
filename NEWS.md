@@ -1,5 +1,8 @@
-1.42.3 - 2016-mm-dd
+1.42.3 - 2016-11-07
 -------------------
+
+Announcements:
+ * Raise payload limit for batch-queries to 16kb.
 
 
 1.42.2 - 2016-11-07
