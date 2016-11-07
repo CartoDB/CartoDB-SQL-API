@@ -1,3 +1,10 @@
+1.42.2 - 2016-11-07
+-------------------
+
+Bug fixes:
+ * Improve error handling while registering jobs to be tracked.
+
+
 1.42.1 - 2016-11-03
 -------------------
 
