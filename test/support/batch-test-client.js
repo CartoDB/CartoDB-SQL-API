@@ -98,6 +98,31 @@ BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
     );
 };
 
+BatchTestClient.prototype.getWorkInProgressJobs = function(override, callback) {
+    if (!callback) {
+        callback = override;
+        override = {};
+    }
+
+    assert.response(
+        this.server,
+        {
+            url: this.getUrl(override, 'wip'),
+            headers: {
+                host: this.getHost(override)
+            },
+            method: 'GET'
+        },
+        RESPONSE.OK,
+        function (err, res) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, JSON.parse(res.body));
+        }
+    );
+};
+
 BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
     assert.response(
         this.server,

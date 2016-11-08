@@ -8,7 +8,7 @@ var authenticatedMiddleware = require('../middlewares/authenticated-request');
 var handleException = require('../utils/error_handler');
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
-var MAX_LIMIT_QUERY_SIZE_IN_KB = 8;
+var MAX_LIMIT_QUERY_SIZE_IN_KB = 16;
 var MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
 function getMaxSizeErrorMessage(sql) {
@@ -49,6 +49,11 @@ JobController.prototype.route = function (app) {
         this.createJob.bind(this)
     );
     app.get(
+        global.settings.base_url + '/sql/job/wip',
+        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        this.listWorkInProgressJobs.bind(this)
+    );
+    app.get(
         global.settings.base_url + '/sql/job/:job_id',
         userMiddleware, authenticatedMiddleware(this.userDatabaseService),
         this.getJob.bind(this)
@@ -80,6 +85,36 @@ JobController.prototype.createJob = function (req, res) {
     };
 
     this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
+};
+
+JobController.prototype.listWorkInProgressJobs = function (req, res) {
+    var self = this;
+
+    this.jobService.listWorkInProgressJobs(function (err, list) {
+        if (err) {
+            self.statsdClient.increment('sqlapi.job.error');
+            return handleException(err, res);
+        }
+
+        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
+
+        req.profiler.done('list');
+        req.profiler.end();
+        req.profiler.sendStats();
+
+        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        self.statsdClient.increment('sqlapi.job.success');
+
+        if (process.env.NODE_ENV !== 'test') {
+            console.info(JSON.stringify({
+                type: 'sql_api_batch_job',
+                username: req.context.user,
+                action: 'list'
+            }));
+        }
+
+        res.status(200).send(list);
+    });
 };
 
 function jobResponse(req, res, statsdClient, action, status) {

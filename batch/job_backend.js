@@ -3,12 +3,15 @@
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var JobStatus = require('./job_status');
+var queue = require('queue-async');
+var debug = require('./util/debug')('job-backend');
 
 function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
     this.jobQueue = jobQueue;
     this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
     this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
+    this.hostname = global.settings.api_hostname || 'batch';
 }
 
 function toRedisParams(job) {
@@ -160,6 +163,102 @@ JobBackend.prototype.save = function (job, callback) {
 
                 callback(null, job);
             });
+        });
+    });
+};
+
+var WORK_IN_PROGRESS_JOB = {
+    DB: 5,
+    PREFIX_USER: 'batch:wip:user:',
+    USER_INDEX_KEY: 'batch:wip:users'
+};
+
+JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    debug('add job %s to user %s (%s)', jobId, user, userWIPKey);
+    this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
+        ['SADD', WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user],
+        ['RPUSH', userWIPKey, jobId]
+    ], callback);
+};
+
+JobBackend.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+
+    var params = [userWIPKey, 0, jobId];
+    self.metadataBackend.redisCmd(DB, 'LREM', params, function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        params = [userWIPKey, 0, -1];
+        self.metadataBackend.redisCmd(DB, 'LRANGE', params, function (err, workInProgressJobs) {
+            if (err) {
+                return callback(err);
+            }
+
+            debug('user %s has work in progress jobs %j', user, workInProgressJobs);
+
+            if (workInProgressJobs.length < 0) {
+                return callback();
+            }
+
+            debug('delete user %s from index', user);
+
+            params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user];
+            self.metadataBackend.redisCmd(DB, 'SREM', params, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                return callback();
+            });
+        });
+    });
+};
+
+JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    var params = [userWIPKey, 0, -1];
+    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', params, callback);
+};
+
+JobBackend.prototype.listWorkInProgressJobs = function (callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
+
+    var params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY];
+    this.metadataBackend.redisCmd(DB, 'SMEMBERS', params, function (err, workInProgressUsers) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (workInProgressUsers < 1) {
+            return callback(null, {});
+        }
+
+        debug('found %j work in progress users', workInProgressUsers);
+
+        var usersQueue = queue(4);
+
+        workInProgressUsers.forEach(function (user) {
+            usersQueue.defer(self.listWorkInProgressJobByUser.bind(self), user);
+        });
+
+        usersQueue.awaitAll(function (err, userWorkInProgressJobs) {
+            if (err) {
+                return callback(err);
+            }
+
+            var workInProgressJobs = workInProgressUsers.reduce(function (users, user, index) {
+                users[user] = userWorkInProgressJobs[index];
+                debug('found %j work in progress jobs for user %s', userWorkInProgressJobs[index], user);
+                return users;
+            }, {});
+
+            callback(null, workInProgressJobs);
         });
     });
 };

@@ -1,3 +1,31 @@
+1.42.3 - 2016-11-07
+-------------------
+
+Announcements:
+ * Raise payload limit for batch-queries to 16kb.
+
+
+1.42.2 - 2016-11-07
+-------------------
+
+Bug fixes:
+ * Improve error handling while registering jobs to be tracked.
+
+
+1.42.1 - 2016-11-03
+-------------------
+
+Bug fixes:
+ * Avoid to use SCAN command to find work-in-progress queues.
+
+
+1.42.0 - 2016-11-02
+-------------------
+
+Announcements:
+ * Adds endpoint to check running batch queries
+
+
 1.41.0 - 2016-10-21
 -------------------
 

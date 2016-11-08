@@ -206,5 +206,4 @@ describe('batch happy cases', function() {
             });
         });
     });
-
 });

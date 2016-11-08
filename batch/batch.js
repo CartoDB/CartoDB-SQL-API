@@ -17,7 +17,7 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobService = jobService;
     this.jobPublisher = jobPublisher;
     this.logger = logger;
-    this.hostScheduler = new HostScheduler(name, { run: this.processJob.bind(this) }, redisPool);
+    this.hostScheduler = new HostScheduler(this.name, { run: this.processJob.bind(this) }, redisPool);
 
     // map: user => jobId. Will be used for draining jobs.
     this.workInProgressJobs = {};
@@ -63,10 +63,7 @@ Batch.prototype.processJob = function (user, callback) {
             return callback(null, EMPTY_QUEUE);
         }
 
-        self.setWorkInProgressJob(user, jobId);
-        self.jobRunner.run(jobId, function (err, job) {
-            self.clearWorkInProgressJob(user);
-
+        self._processWorkInProgressJob(user, jobId, function (err, job) {
             if (err) {
                 debug(err);
                 if (err.name === 'JobNotRunnable') {
@@ -83,6 +80,26 @@ Batch.prototype.processJob = function (user, callback) {
             self.logger.log(job);
 
             return callback(null, !EMPTY_QUEUE);
+        });
+    });
+};
+
+Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
+    var self = this;
+
+    self.setWorkInProgressJob(user, jobId, function (errSet) {
+        if (errSet) {
+            debug(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
+        }
+
+        self.jobRunner.run(jobId, function (err, job) {
+            self.clearWorkInProgressJob(user, jobId, function (errClear) {
+                if (errClear) {
+                    debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
+                }
+
+                return callback(err, job);
+            });
         });
     });
 };
@@ -138,16 +155,18 @@ Batch.prototype.stop = function (callback) {
 
 /* Work in progress jobs */
 
-Batch.prototype.setWorkInProgressJob = function(user, jobId) {
+Batch.prototype.setWorkInProgressJob = function(user, jobId, callback) {
     this.workInProgressJobs[user] = jobId;
+    this.jobService.addWorkInProgressJob(user, jobId, callback);
 };
 
 Batch.prototype.getWorkInProgressJob = function(user) {
     return this.workInProgressJobs[user];
 };
 
-Batch.prototype.clearWorkInProgressJob = function(user) {
+Batch.prototype.clearWorkInProgressJob = function(user, jobId, callback) {
     delete this.workInProgressJobs[user];
+    this.jobService.clearWorkInProgressJob(user, jobId, callback);
 };
 
 Batch.prototype.getWorkInProgressUsers = function() {

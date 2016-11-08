@@ -17,6 +17,8 @@ var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 
+var queue = require('queue-async');
+
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
 var HOST = 'localhost';
@@ -97,4 +99,61 @@ describe('job backend', function() {
             done();
         });
     });
+
+    it('.addWorkInProgressJob() should add current job to user and host lists', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.addWorkInProgressJob(job.data.user, job.data.job_id, function (err) {
+            if (err) {
+                return done(err);
+            }
+            done();
+        });
+    });
+
+    it('.listWorkInProgressJobByUser() should retrieve WIP jobs of given user', function (done) {
+        var testStepsQueue = queue(1);
+
+        testStepsQueue.defer(redisUtils.clean, 'batch:wip:user:*');
+        testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), 'vizzuality', 'wadus');
+        testStepsQueue.defer(jobBackend.listWorkInProgressJobByUser.bind(jobBackend), 'vizzuality');
+
+        testStepsQueue.awaitAll(function (err, results) {
+            if (err) {
+                return done(err);
+            }
+            assert.deepEqual(results[2], ['wadus']);
+            done();
+        });
+    });
+
+    it('.listWorkInProgressJobs() should retrieve WIP users', function (done) {
+        var jobs = [{ user: 'userA', id: 'jobId1' }, { user: 'userA', id: 'jobId2' }, { user: 'userB', id: 'jobId3' }];
+
+        var testStepsQueue = queue(1);
+
+        jobs.forEach(function (job) {
+            testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), job.user, job.id);
+        });
+
+        testStepsQueue.awaitAll(function (err) {
+            if (err) {
+                done(err);
+            }
+
+            jobBackend.listWorkInProgressJobs(function (err, users) {
+                if (err) {
+                    return done(err);
+                }
+
+                assert.ok(users.userA);
+                assert.deepEqual(users.userA, [ 'jobId1', 'jobId2' ]);
+                assert.ok(users.userB);
+                assert.deepEqual(users.userB, [ 'jobId3' ]);
+                done();
+            });
+
+        });
+    });
+
 });
