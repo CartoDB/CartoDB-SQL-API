@@ -107,7 +107,7 @@ BatchTestClient.prototype.getWorkInProgressJobs = function(override, callback) {
     assert.response(
         this.server,
         {
-            url: this.getUrl(override, 'wip'),
+            url: '/api/v1/jobs-work-in-progress',
             headers: {
                 host: this.getHost(override)
             },
