@@ -6,7 +6,7 @@ var JobStatus = require('../../../batch/job_status');
 var redisUtils = require('../../support/redis_utils');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
-describe('batch query statement_timeout limit', function() {
+describe.skip('batch query statement_timeout limit', function() {
 
     before(function(done) {
         this.batchTestClient = new BatchTestClient();
