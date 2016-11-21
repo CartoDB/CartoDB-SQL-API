@@ -21,7 +21,7 @@ var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../../batch');
 
-describe('Use case 5: modify a running job', function() {
+describe.skip('Use case 5: modify a running job', function() {
     var batch = batchFactory(metadataBackend, redisUtils.getPool());
 
     before(function (done) {

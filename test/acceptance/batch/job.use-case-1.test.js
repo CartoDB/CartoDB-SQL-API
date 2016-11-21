@@ -21,7 +21,7 @@ var querystring = require('querystring');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../../batch/index');
 
-describe('Use case 1: cancel and modify a done job', function () {
+describe.skip('Use case 1: cancel and modify a done job', function () {
     var batch = batchFactory(metadataBackend, redisUtils.getPool());
 
     before(function (done) {
