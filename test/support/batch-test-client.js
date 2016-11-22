@@ -187,7 +187,7 @@ JobResult.prototype.getStatus = function(callback) {
 
             if (attempts > 10) {
                 clearInterval(interval);
-                return callback(new Error('Reached maximun number of request (10) to check job status'));
+                return callback(new Error('Reached maximum number of request (10) to check job status'));
             }
 
             if (JobStatus.isFinal(job.status)) {
