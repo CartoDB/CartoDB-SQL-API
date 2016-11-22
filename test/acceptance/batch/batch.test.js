@@ -69,7 +69,7 @@ describe('batch happy cases', function() {
         });
     });
 
-    it('should perform all enqueued jobs', function (done) {
+    it.skip('should perform all enqueued jobs', function (done) {
         var self = this;
 
         var jobs = [
@@ -111,7 +111,7 @@ describe('batch happy cases', function() {
         });
     });
 
-    it('should set all job as failed', function (done) {
+    it.skip('should set all job as failed', function (done) {
         var self = this;
 
         var jobs = [

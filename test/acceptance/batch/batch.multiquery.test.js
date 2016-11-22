@@ -110,7 +110,7 @@ describe('batch multiquery', function() {
         });
     });
 
-    it('should perform two multiquery job with two queries for each one', function (done) {
+    it.skip('should perform two multiquery job with two queries for each one', function (done) {
         var self = this;
 
         var jobs = [
@@ -150,7 +150,7 @@ describe('batch multiquery', function() {
         });
     });
 
-    it('should perform two multiquery job with two queries for each one and fail the first one', function (done) {
+    it.skip('should perform two multiquery job with two queries for each one and fail the first one', function (done) {
         var self = this;
 
         var jobs = [
@@ -192,7 +192,7 @@ describe('batch multiquery', function() {
         });
     });
 
-    it('should perform two multiquery job with two queries for each one and fail the second one', function (done) {
+    it.skip('should perform two multiquery job with two queries for each one and fail the second one', function (done) {
         var self = this;
 
         var jobs = [
