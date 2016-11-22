@@ -34,7 +34,7 @@ assert.response = function(server, req, res, callback) {
             url: 'http://' + host + ':' + port + req.url,
             method: req.method || 'GET',
             headers: req.headers || {},
-            timeout: req.timeout || 4000,
+            timeout: req.timeout || 5000,
             encoding: req.encoding || 'utf8'
         };
 
