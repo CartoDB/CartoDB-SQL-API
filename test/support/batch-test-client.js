@@ -176,11 +176,18 @@ function JobResult(job, batchTestClient, override) {
 
 JobResult.prototype.getStatus = function(callback) {
     var self = this;
+    var attempts = 1;
     var interval = setInterval(function () {
         self.batchTestClient.getJobStatus(self.job.job_id, self.override, function (err, job) {
             if (err) {
                 clearInterval(interval);
                 return callback(err);
+            }
+            attempts += 1;
+
+            if (attempts > 10) {
+                clearInterval(interval);
+                return callback(new Error('Reached maximun number of request (10) to check job status'));
             }
 
             if (JobStatus.isFinal(job.status)) {
