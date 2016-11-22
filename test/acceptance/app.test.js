@@ -589,7 +589,7 @@ it('CREATE TABLE with GET and auth', function(done){
 });
 
 // See http://github.com/CartoDB/CartoDB-SQL-API/issues/127
-it.skip('SELECT INTO with paging ', function(done){
+it('SELECT INTO with paging ', function(done){
     var esc_tabname = 'test ""select into""'; // escaped ident
     step(
       function select_into() {

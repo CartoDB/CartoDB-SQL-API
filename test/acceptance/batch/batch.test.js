@@ -111,7 +111,7 @@ describe('batch happy cases', function() {
         });
     });
 
-    it.skip('should set all job as failed', function (done) {
+    it('should set all job as failed', function (done) {
         var self = this;
 
         var jobs = [

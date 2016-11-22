@@ -100,7 +100,7 @@ describe('Batch API callback templates', function () {
         redisUtils.clean('batch:*', done);
     });
 
-    describe.skip('should use templates for error_message and job_id onerror callback', function () {
+    describe('should use templates for error_message and job_id onerror callback', function () {
         var jobResponse;
         before(function(done) {
             getQueryResult('create table test_batch_errors (job_id text, error_message text)', function(err) {
