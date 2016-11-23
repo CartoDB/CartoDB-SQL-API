@@ -18,7 +18,8 @@ function response(code) {
 
 var RESPONSE = {
     OK: response(200),
-    CREATED: response(201)
+    CREATED: response(201),
+    BAD_REQUEST: response(400)
 };
 
 
@@ -134,7 +135,7 @@ BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
             },
             method: 'DELETE'
         },
-        RESPONSE.OK,
+        override.statusCode,
         function (err, res) {
             if (err) {
                 return callback(err);
@@ -226,6 +227,12 @@ function hasRequiredStatus(job, requiredStatus) {
     return false;
 }
 
-JobResult.prototype.cancel = function(callback) {
+JobResult.prototype.cancel = function (callback) {
+    this.override.statusCode = response(RESPONSE.OK);
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
+};
+
+JobResult.prototype.tryCancel = function (callback) {
+    this.override.statusCode = response();
     this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
 };
