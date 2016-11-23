@@ -1,7 +1,6 @@
 require('../../helper');
 
 var assert = require('../../support/assert');
-var redisUtils = require('../../support/redis_utils');
 var JobStatus = require('../../../batch/job_status');
 var BatchTestClient = require('../../support/batch-test-client');
 
