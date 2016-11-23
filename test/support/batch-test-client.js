@@ -128,7 +128,7 @@ BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
     assert.response(
         this.server,
         {
-            url: this.getUrl(jobId),
+            url: this.getUrl(override, jobId),
             headers: {
                 host: this.getHost(override)
             },
@@ -175,7 +175,12 @@ function JobResult(job, batchTestClient, override) {
     this.override = override;
 }
 
-JobResult.prototype.getStatus = function(callback) {
+JobResult.prototype.getStatus = function(requiredStatus, callback) {
+    if (!callback) {
+        callback = requiredStatus;
+        requiredStatus = undefined;
+    }
+
     var self = this;
     var attempts = 1;
     self.override.timeout = 1000;
@@ -188,20 +193,38 @@ JobResult.prototype.getStatus = function(callback) {
             }
             attempts += 1;
 
-            if (attempts > 10) {
+            if (attempts > 20) {
                 clearInterval(interval);
                 return callback(new Error('Reached maximum number of request (10) to check job status'));
             }
 
-            if (JobStatus.isFinal(job.status)) {
+            if (hasRequiredStatus(job, requiredStatus)) {
                 clearInterval(interval);
                 return callback(null, job);
             } else {
                 debug('Job %s [status=%s] waiting to be done', self.job.job_id, job.status);
             }
         });
-    }, 50);
+    }, 100);
 };
+
+function hasRequiredStatus(job, requiredStatus) {
+    if (requiredStatus) {
+        return job.status === requiredStatus;
+    }
+
+    if (JobStatus.isFinal(job.status)) {
+        if (job.fallback_status !== undefined) {
+            if (JobStatus.isFinal(job.fallback_status) || job.fallback_status === JobStatus.SKIPPED) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 JobResult.prototype.cancel = function(callback) {
     this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
