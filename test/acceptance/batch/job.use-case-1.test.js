@@ -4,7 +4,7 @@ var assert = require('../../support/assert');
 var JobStatus = require('../../../batch/job_status');
 var BatchTestClient = require('../../support/batch-test-client');
 
-describe('Use case 1: cancel and modify a done job', function () {
+describe('Use case 1', function () {
     before(function() {
         this.batchTestClient = new BatchTestClient();
     });
@@ -23,10 +23,12 @@ describe('Use case 1: cancel and modify a done job', function () {
                 return done(err);
             }
 
-            jobResult.getStatus(JobStatus.DONE, function (err) {
+            jobResult.getStatus(JobStatus.DONE, function (err, job) {
                 if (err) {
                     return done(err);
                 }
+
+                assert.equal(job.status, JobStatus.DONE);
 
                 jobResult.tryCancel(function (err, body) {
                     assert.equal(body.error[0], "Cannot set status from done to cancelled");
