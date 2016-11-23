@@ -86,7 +86,8 @@ BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
             headers: {
                 host: this.getHost(override)
             },
-            method: 'GET'
+            method: 'GET',
+            timeout: override.timeout
         },
         RESPONSE.OK,
         function (err, res) {
@@ -177,6 +178,8 @@ function JobResult(job, batchTestClient, override) {
 JobResult.prototype.getStatus = function(callback) {
     var self = this;
     var attempts = 1;
+    self.override.timeout = 1000;
+
     var interval = setInterval(function () {
         self.batchTestClient.getJobStatus(self.job.job_id, self.override, function (err, job) {
             if (err) {
