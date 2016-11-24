@@ -201,6 +201,7 @@ JobResult.prototype.getStatus = function(requiredStatus, callback) {
 
             if (hasRequiredStatus(job, requiredStatus)) {
                 clearInterval(interval);
+                self.job = job;
                 return callback(null, job);
             } else {
                 debug('Job %s [status=%s] waiting to be done', self.job.job_id, job.status);
@@ -235,4 +236,29 @@ JobResult.prototype.cancel = function (callback) {
 JobResult.prototype.tryCancel = function (callback) {
     this.override.statusCode = response();
     this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
+};
+
+JobResult.prototype.validateExpectedResponse = function (actual, expected) {
+    actual.query.forEach(function(actualQuery, index) {
+        var expectedQuery = expected.query[index];
+        assert.ok(expectedQuery);
+        Object.keys(expectedQuery).forEach(function(expectedKey) {
+            assert.equal(
+                actualQuery[expectedKey],
+                expectedQuery[expectedKey],
+                'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
+                expectedQuery[expectedKey] + ' at query index=' + index + '. Full response: ' +
+                JSON.stringify(actual, null, 4)
+            );
+        });
+        var propsToCheckDate = ['started_at', 'ended_at'];
+        propsToCheckDate.forEach(function(propToCheckDate) {
+            if (actualQuery.hasOwnProperty(propToCheckDate)) {
+                assert.ok(new Date(actualQuery[propToCheckDate]));
+            }
+        });
+    });
+
+    assert.equal(actual.onsuccess, expected.onsuccess);
+    assert.equal(actual.onerror, expected.onerror);
 };

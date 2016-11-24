@@ -15,31 +15,6 @@ describe('Batch API callback templates', function () {
         this.batchTestClient.drain(done);
     });
 
-    function validateExpectedResponse(actual, expected) {
-        actual.query.forEach(function(actualQuery, index) {
-            var expectedQuery = expected.query[index];
-            assert.ok(expectedQuery);
-            Object.keys(expectedQuery).forEach(function(expectedKey) {
-                assert.equal(
-                    actualQuery[expectedKey],
-                    expectedQuery[expectedKey],
-                    'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
-                    expectedQuery[expectedKey] + ' at query index=' + index + '. Full response: ' +
-                    JSON.stringify(actual, null, 4)
-                );
-            });
-            var propsToCheckDate = ['started_at', 'ended_at'];
-            propsToCheckDate.forEach(function(propToCheckDate) {
-                if (actualQuery.hasOwnProperty(propToCheckDate)) {
-                    assert.ok(new Date(actualQuery[propToCheckDate]));
-                }
-            });
-        });
-
-        assert.equal(actual.onsuccess, expected.onsuccess);
-        assert.equal(actual.onerror, expected.onerror);
-    }
-
     it('should use templates for error_message and job_id onerror callback' +
         ' and keep the original templated query but use the error message', function (done) {
         var self = this;
@@ -49,12 +24,11 @@ describe('Batch API callback templates', function () {
                     {
                         "query": "SELECT * FROM invalid_table",
                         "onerror": "INSERT INTO test_batch_errors " +
-                            "values ('<%= job_id %>', '<%= error_message %>')"
+                        "values ('<%= job_id %>', '<%= error_message %>')"
                     }
                 ]
             }
         };
-
         var expectedQuery = {
             query: [
                 {
@@ -81,9 +55,7 @@ describe('Batch API callback templates', function () {
                     if (err) {
                         return done(err);
                     }
-
-
-                    validateExpectedResponse(job.query, expectedQuery);
+                    jobResult.validateExpectedResponse(job.query, expectedQuery);
                     self.testClient.getResult('select * from test_batch_errors', function(err, rows) {
                         if (err) {
                             return done(err);
@@ -137,7 +109,7 @@ describe('Batch API callback templates', function () {
                     return done(err);
                 }
 
-                validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(job.query, expectedQuery);
                 self.testClient.getResult('select * from batch_jobs', function(err, rows) {
                     if (err) {
                         return done(err);
