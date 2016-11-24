@@ -2,8 +2,6 @@ require('../../helper');
 
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
-// var batchFactory = require('../../../batch/index');
-// var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var TestClient = require('../../support/test-client');
 
 describe('max queued jobs', function() {
