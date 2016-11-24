@@ -1,6 +1,5 @@
 require('../../helper');
 
-var assert = require('../../support/assert');
 var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../batch/job_status');
 
@@ -51,12 +50,12 @@ describe('Batch API query timing', function () {
                 return done(err);
             }
 
-            jobResult.getStatus(function (err, job) {
+            jobResult.getStatus(function (err) {
                 if (err) {
                     return done(err);
                 }
 
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 done();
             });
         });
@@ -101,12 +100,12 @@ describe('Batch API query timing', function () {
                 return done(err);
             }
 
-            jobResult.getStatus(jobResult.FAILED, function (err, job) {
+            jobResult.getStatus(JobStatus.FAILED, function (err) {
                 if (err) {
                     return done(err);
                 }
 
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 done();
             });
         });

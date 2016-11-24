@@ -55,7 +55,7 @@ describe('Batch API callback templates', function () {
                     if (err) {
                         return done(err);
                     }
-                    jobResult.validateExpectedResponse(job.query, expectedQuery);
+                    jobResult.validateExpectedResponse(expectedQuery);
                     self.testClient.getResult('select * from test_batch_errors', function(err, rows) {
                         if (err) {
                             return done(err);
@@ -109,7 +109,7 @@ describe('Batch API callback templates', function () {
                     return done(err);
                 }
 
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 self.testClient.getResult('select * from batch_jobs', function(err, rows) {
                     if (err) {
                         return done(err);

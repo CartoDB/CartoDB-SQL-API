@@ -41,7 +41,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -74,7 +74,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -109,7 +109,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -144,7 +144,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -178,7 +178,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.DONE);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -213,7 +213,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.FAILED);
                 assert.equal(job.fallback_status, JobStatus.SKIPPED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -248,7 +248,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.FAILED);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -282,7 +282,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.DONE);
                 assert.equal(job.fallback_status, JobStatus.SKIPPED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -319,7 +319,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.DONE);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -361,7 +361,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -404,7 +404,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -447,7 +447,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -489,7 +489,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -524,7 +524,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -558,7 +558,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -600,7 +600,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -643,7 +643,7 @@ describe('Batc API fallback job', function () {
                     return done(err);
                 }
                 assert.equal(job.status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -688,7 +688,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.DONE);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -735,7 +735,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.DONE);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -781,7 +781,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.FAILED);
                 assert.equal(job.fallback_status, JobStatus.FAILED);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -831,7 +831,7 @@ describe('Batc API fallback job', function () {
                 }
                 assert.equal(job.status, JobStatus.FAILED);
                 assert.equal(job.fallback_status, JobStatus.DONE);
-                jobResult.validateExpectedResponse(job.query, expectedQuery);
+                jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
         });
@@ -877,7 +877,7 @@ describe('Batc API fallback job', function () {
 
                     assert.equal(job.status, JobStatus.CANCELLED);
                     assert.equal(job.fallback_status, JobStatus.SKIPPED);
-                    jobResult.validateExpectedResponse(job.query, expectedQuery);
+                    jobResult.validateExpectedResponse(expectedQuery);
                     return done();
                 });
             });
@@ -923,7 +923,7 @@ describe('Batc API fallback job', function () {
 
                     assert.equal(job.status, JobStatus.CANCELLED);
                     assert.equal(job.fallback_status, JobStatus.SKIPPED);
-                    jobResult.validateExpectedResponse(job.query, expectedQuery);
+                    jobResult.validateExpectedResponse(expectedQuery);
                     return done();
                 });
             });

@@ -229,16 +229,32 @@ function hasRequiredStatus(job, requiredStatus) {
 }
 
 JobResult.prototype.cancel = function (callback) {
+    var self = this;
     this.override.statusCode = response(RESPONSE.OK);
-    this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+        self.job = job;
+        callback(null, job);
+    });
 };
 
 JobResult.prototype.tryCancel = function (callback) {
+    var self = this;
     this.override.statusCode = response();
-    this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+        self.job = job;
+        callback(null, job);
+    });
 };
 
-JobResult.prototype.validateExpectedResponse = function (actual, expected) {
+JobResult.prototype.validateExpectedResponse = function (expected) {
+    var actual = this.job.query;
+
     actual.query.forEach(function(actualQuery, index) {
         var expectedQuery = expected.query[index];
         assert.ok(expectedQuery);
