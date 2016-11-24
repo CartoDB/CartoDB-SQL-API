@@ -1,67 +1,19 @@
 require('../../helper');
 
 var assert = require('../../support/assert');
-var redisUtils = require('../../support/redis_utils');
-var server = require('../../../app/server')();
-var querystring = require('qs');
-var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
-var batchFactory = require('../../../batch/index');
-var jobStatus = require('../../../batch/job_status');
+var TestClient = require('../../support/test-client');
+var JobStatus = require('../../../batch/job_status');
+var BatchTestClient = require('../../support/batch-test-client');
 
 describe('Batch API callback templates', function () {
+    before(function () {
+        this.batchTestClient = new BatchTestClient();
+        this.testClient = new TestClient();
+    });
 
-    function createJob(jobDefinition, callback) {
-        assert.response(server, {
-            url: '/api/v2/sql/job?api_key=1234',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                host: 'vizzuality.cartodb.com'
-            },
-            method: 'POST',
-            data: querystring.stringify(jobDefinition)
-        }, {
-            status: 201
-        }, function (err, res) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, JSON.parse(res.body));
-        });
-    }
-
-    function getJobStatus(jobId, callback) {
-        assert.response(server, {
-            url: '/api/v2/sql/job/' + jobId + '?api_key=1234&',
-            headers: {
-                host: 'vizzuality.cartodb.com'
-            },
-            method: 'GET'
-        }, {
-            status: 200
-        }, function (err, res) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, JSON.parse(res.body));
-        });
-    }
-
-    function getQueryResult(query, callback) {
-        assert.response(server, {
-            url: '/api/v2/sql?' + querystring.stringify({q: query, api_key: 1234}),
-            headers: {
-                host: 'vizzuality.cartodb.com'
-            },
-            method: 'GET'
-        }, {
-            status: 200
-        }, function (err, res) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, JSON.parse(res.body));
-        });
-    }
+    after(function (done) {
+        this.batchTestClient.drain(done);
+    });
 
     function validateExpectedResponse(actual, expected) {
         actual.query.forEach(function(actualQuery, index) {
@@ -88,132 +40,113 @@ describe('Batch API callback templates', function () {
         assert.equal(actual.onerror, expected.onerror);
     }
 
-    var batch = batchFactory(metadataBackend, redisUtils.getPool());
+    it('should use templates for error_message and job_id onerror callback' +
+        ' and keep the original templated query but use the error message', function (done) {
+        var self = this;
+        var payload = {
+            "query": {
+                "query": [
+                    {
+                        "query": "SELECT * FROM invalid_table",
+                        "onerror": "INSERT INTO test_batch_errors " +
+                            "values ('<%= job_id %>', '<%= error_message %>')"
+                    }
+                ]
+            }
+        };
 
-    before(function (done) {
-        batch.start();
-        batch.on('ready', done);
-    });
+        var expectedQuery = {
+            query: [
+                {
+                    "query": "SELECT * FROM invalid_table",
+                    "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
+                    status: 'failed',
+                    fallback_status: 'done'
+                }
+            ]
+        };
 
-    after(function (done) {
-        batch.stop();
-        redisUtils.clean('batch:*', done);
-    });
+        self.testClient.getResult(
+            'create table test_batch_errors (job_id text, error_message text)', function (err) {
+            if (err) {
+                return done(err);
+            }
 
-    describe('should use templates for error_message and job_id onerror callback', function () {
-        var jobResponse;
-        before(function(done) {
-            getQueryResult('create table test_batch_errors (job_id text, error_message text)', function(err) {
+            self.batchTestClient.createJob(payload, function(err, jobResult) {
                 if (err) {
                     return done(err);
                 }
-                createJob({
-                    "query": {
-                        "query": [
-                            {
-                                "query": "SELECT * FROM invalid_table",
-                                "onerror": "INSERT INTO test_batch_errors " +
-                                    "values ('<%= job_id %>', '<%= error_message %>')"
-                            }
-                        ]
+
+                jobResult.getStatus(JobStatus.FAILED, function (err, job) {
+                    if (err) {
+                        return done(err);
                     }
-                }, function(err, job) {
-                    jobResponse = job;
-                    return done(err);
+
+
+                    validateExpectedResponse(job.query, expectedQuery);
+                    self.testClient.getResult('select * from test_batch_errors', function(err, rows) {
+                        if (err) {
+                            return done(err);
+                        }
+                        assert.equal(rows[0].job_id, job.job_id);
+                        assert.equal(rows[0].error_message, 'relation "invalid_table" does not exist');
+                        self.testClient.getResult('drop table test_batch_errors', done);
+                    });
                 });
             });
-        });
-
-        it('should keep the original templated query but use the error message', function (done) {
-            var expectedQuery = {
-                query: [
-                    {
-                        "query": "SELECT * FROM invalid_table",
-                        "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
-                        status: 'failed',
-                        fallback_status: 'done'
-                    }
-                ]
-            };
-
-            var interval = setInterval(function () {
-                getJobStatus(jobResponse.job_id, function(err, job) {
-                    if (job.status === jobStatus.FAILED) {
-                        clearInterval(interval);
-                        validateExpectedResponse(job.query, expectedQuery);
-                        getQueryResult('select * from test_batch_errors', function(err, result) {
-                            if (err) {
-                                return done(err);
-                            }
-                            assert.equal(result.rows[0].job_id, jobResponse.job_id);
-                            assert.equal(result.rows[0].error_message, 'relation "invalid_table" does not exist');
-                            getQueryResult('drop table test_batch_errors', done);
-                        });
-                    } else if (job.status === jobStatus.DONE || job.status === jobStatus.CANCELLED) {
-                        clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be "failed"'));
-                    }
-                });
-            }, 50);
         });
     });
 
-    describe('should use template for job_id onsuccess callback', function () {
-        var jobResponse;
-        before(function(done) {
-            createJob({
-                "query": {
-                    "query": [
-                        {
-                            query: "create table batch_jobs (job_id text)"
-                        },
-                        {
-                            "query": "SELECT 1",
-                            "onsuccess": "INSERT INTO batch_jobs values ('<%= job_id %>')"
-                        }
-                    ]
-                }
-            }, function(err, job) {
-                jobResponse = job;
-                return done(err);
-            });
-        });
-
-        it('should keep the original templated query but use the job_id', function (done) {
-            var expectedQuery = {
-                query: [
+    it('should use template for job_id onsuccess callback ' +
+        'and keep the original templated query but use the job_id', function (done) {
+        var self = this;
+        var payload = {
+            "query": {
+                "query": [
                     {
-                        query: "create table batch_jobs (job_id text)",
-                        status: 'done'
+                        query: "create table batch_jobs (job_id text)"
                     },
                     {
-                        query: "SELECT 1",
-                        onsuccess: "INSERT INTO batch_jobs values ('<%= job_id %>')",
-                        status: 'done',
-                        fallback_status: 'done'
+                        "query": "SELECT 1",
+                        "onsuccess": "INSERT INTO batch_jobs values ('<%= job_id %>')"
                     }
                 ]
-            };
+            }
+        };
+        var expectedQuery = {
+            query: [
+                {
+                    query: "create table batch_jobs (job_id text)",
+                    status: 'done'
+                },
+                {
+                    query: "SELECT 1",
+                    onsuccess: "INSERT INTO batch_jobs values ('<%= job_id %>')",
+                    status: 'done',
+                    fallback_status: 'done'
+                }
+            ]
+        };
 
-            var interval = setInterval(function () {
-                getJobStatus(jobResponse.job_id, function(err, job) {
-                    if (job.status === jobStatus.DONE) {
-                        clearInterval(interval);
-                        validateExpectedResponse(job.query, expectedQuery);
-                        getQueryResult('select * from batch_jobs', function(err, result) {
-                            if (err) {
-                                return done(err);
-                            }
-                            assert.equal(result.rows[0].job_id, jobResponse.job_id);
-                            getQueryResult('drop table batch_jobs', done);
-                        });
-                    } else if (job.status === jobStatus.FAILED || job.status === jobStatus.CANCELLED) {
-                        clearInterval(interval);
-                        done(new Error('Job ' + job.job_id + ' is ' + job.status + ', expected to be "done"'));
+        self.batchTestClient.createJob(payload, function(err, jobResult) {
+            if (err) {
+                return done(err);
+            }
+            jobResult.getStatus(function (err, job) {
+                if (err) {
+                    return done(err);
+                }
+
+                validateExpectedResponse(job.query, expectedQuery);
+                self.testClient.getResult('select * from batch_jobs', function(err, rows) {
+                    if (err) {
+                        return done(err);
                     }
+                    assert.equal(rows[0].job_id, job.job_id);
+
+                    self.testClient.getResult('drop table batch_jobs', done);
                 });
-            }, 50);
+            });
         });
     });
-
 });
