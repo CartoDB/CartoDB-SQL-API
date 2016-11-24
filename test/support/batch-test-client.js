@@ -196,7 +196,7 @@ JobResult.prototype.getStatus = function(requiredStatus, callback) {
 
             if (attempts > 20) {
                 clearInterval(interval);
-                return callback(new Error('Reached maximum number of request (10) to check job status'));
+                return callback(new Error('Reached maximum number of request (20) to check job status'));
             }
 
             if (hasRequiredStatus(job, requiredStatus)) {
