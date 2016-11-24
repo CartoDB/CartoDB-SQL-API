@@ -69,20 +69,13 @@ describe('batch happy cases', function() {
         });
     });
 
-    it.skip('should perform all enqueued jobs', function (done) {
+    it('should perform all enqueued jobs', function (done) {
         var self = this;
 
         var jobs = [
             'select * from private_table',
             'select * from private_table',
             'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table'
         ];
 
         var jobsQueue = queue(4);
@@ -111,17 +104,10 @@ describe('batch happy cases', function() {
         });
     });
 
-    it.skip('should set all job as failed', function (done) {
+    it('should set all job as failed', function (done) {
         var self = this;
 
         var jobs = [
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
             'select * from unexistent_table',
             'select * from unexistent_table',
             'select * from unexistent_table'
