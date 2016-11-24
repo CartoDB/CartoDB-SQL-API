@@ -124,7 +124,7 @@ describe('batch multiquery', function() {
             ]
         ];
 
-        var jobsQueue = queue(2);
+        var jobsQueue = queue(1);
 
         jobs.forEach(function(job) {
             jobsQueue.defer(function(payload, done) {
@@ -165,7 +165,7 @@ describe('batch multiquery', function() {
         ];
 
         var expectedStatus = [JobStatus.FAILED, JobStatus.DONE];
-        var jobsQueue = queue(2);
+        var jobsQueue = queue(1);
 
         jobs.forEach(function(job) {
             jobsQueue.defer(function(payload, done) {
@@ -207,7 +207,7 @@ describe('batch multiquery', function() {
         ];
 
         var expectedStatus = [JobStatus.DONE, JobStatus.FAILED];
-        var jobsQueue = queue(2);
+        var jobsQueue = queue(1);
 
         jobs.forEach(function(job) {
             jobsQueue.defer(function(payload, done) {
