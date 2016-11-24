@@ -631,7 +631,7 @@ it('SELECT INTO with paging ', function(done){
             }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
-        }, {}, next);
+        }, {}, function(err, res) { next(null, res); });
       },
       function check_drop(err, res) {
         assert.ifError(err);
