@@ -18,7 +18,8 @@ function response(code) {
 
 var RESPONSE = {
     OK: response(200),
-    CREATED: response(201)
+    CREATED: response(201),
+    BAD_REQUEST: response(400)
 };
 
 
@@ -86,7 +87,8 @@ BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
             headers: {
                 host: this.getHost(override)
             },
-            method: 'GET'
+            method: 'GET',
+            timeout: override.timeout
         },
         RESPONSE.OK,
         function (err, res) {
@@ -127,13 +129,13 @@ BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
     assert.response(
         this.server,
         {
-            url: this.getUrl(jobId),
+            url: this.getUrl(override, jobId),
             headers: {
                 host: this.getHost(override)
             },
             method: 'DELETE'
         },
-        RESPONSE.OK,
+        override.statusCode,
         function (err, res) {
             if (err) {
                 return callback(err);
@@ -174,25 +176,105 @@ function JobResult(job, batchTestClient, override) {
     this.override = override;
 }
 
-JobResult.prototype.getStatus = function(callback) {
+JobResult.prototype.getStatus = function(requiredStatus, callback) {
+    if (!callback) {
+        callback = requiredStatus;
+        requiredStatus = undefined;
+    }
+
     var self = this;
+    var attempts = 1;
+    self.override.timeout = 1000;
+
     var interval = setInterval(function () {
         self.batchTestClient.getJobStatus(self.job.job_id, self.override, function (err, job) {
             if (err) {
                 clearInterval(interval);
                 return callback(err);
             }
+            attempts += 1;
 
-            if (JobStatus.isFinal(job.status)) {
+            if (attempts > 20) {
                 clearInterval(interval);
+                return callback(new Error('Reached maximum number of request (20) to check job status'));
+            }
+
+            if (hasRequiredStatus(job, requiredStatus)) {
+                clearInterval(interval);
+                self.job = job;
                 return callback(null, job);
             } else {
                 debug('Job %s [status=%s] waiting to be done', self.job.job_id, job.status);
             }
         });
-    }, 50);
+    }, 100);
 };
 
-JobResult.prototype.cancel = function(callback) {
-    this.batchTestClient.cancelJob(this.job.job_id, this.override, callback);
+function hasRequiredStatus(job, requiredStatus) {
+    if (requiredStatus) {
+        return job.status === requiredStatus;
+    }
+
+    if (JobStatus.isFinal(job.status)) {
+        if (job.fallback_status !== undefined) {
+            if (JobStatus.isFinal(job.fallback_status) || job.fallback_status === JobStatus.SKIPPED) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+JobResult.prototype.cancel = function (callback) {
+    var self = this;
+    this.override.statusCode = response(RESPONSE.OK);
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+        self.job = job;
+        callback(null, job);
+    });
+};
+
+JobResult.prototype.tryCancel = function (callback) {
+    var self = this;
+    this.override.statusCode = response();
+    this.batchTestClient.cancelJob(this.job.job_id, this.override, function (err, job) {
+        if (err) {
+            return callback(err);
+        }
+        self.job = job;
+        callback(null, job);
+    });
+};
+
+JobResult.prototype.validateExpectedResponse = function (expected) {
+    var actual = this.job.query;
+
+    actual.query.forEach(function(actualQuery, index) {
+        var expectedQuery = expected.query[index];
+        assert.ok(expectedQuery);
+        Object.keys(expectedQuery).forEach(function(expectedKey) {
+            assert.equal(
+                actualQuery[expectedKey],
+                expectedQuery[expectedKey],
+                'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
+                expectedQuery[expectedKey] + ' at query index=' + index + '. Full response: ' +
+                JSON.stringify(actual, null, 4)
+            );
+        });
+        var propsToCheckDate = ['started_at', 'ended_at'];
+        propsToCheckDate.forEach(function(propToCheckDate) {
+            if (actualQuery.hasOwnProperty(propToCheckDate)) {
+                assert.ok(new Date(actualQuery[propToCheckDate]));
+            }
+        });
+    });
+
+    assert.equal(actual.onsuccess, expected.onsuccess);
+    assert.equal(actual.onerror, expected.onerror);
 };

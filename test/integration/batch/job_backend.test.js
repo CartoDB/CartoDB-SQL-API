@@ -66,6 +66,31 @@ describe('job backend', function() {
         });
     });
 
+    it('.get() should return a job with the given id', function (done) {
+        var jobData = createWadusJob();
+
+        jobBackend.create(jobData.data, function (err, jobCreated) {
+            if (err) {
+                return done(err);
+            }
+
+            assert.ok(jobCreated.job_id);
+
+            jobBackend.get(jobCreated.job_id, function (err, job) {
+                if (err) {
+                    return done(err);
+                }
+
+                assert.equal(job.job_id, jobCreated.job_id);
+                assert.equal(job.user, jobData.data.user);
+                assert.equal(job.query, jobData.data.query);
+                assert.equal(job.host, jobData.data.host);
+                assert.equal(job.status, jobStatus.PENDING);
+                done();
+            });
+        });
+    });
+
     it('.update() should update an existent job', function (done) {
         var job = createWadusJob();
 
@@ -96,6 +121,24 @@ describe('job backend', function() {
             assert.ok(err, err);
             assert.equal(err.name, 'NotFoundError');
             assert.equal(err.message, 'Job with id ' + job.data.job_id + ' not found');
+            done();
+        });
+    });
+
+    it('.save() should save a job', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.save(job.data, function (err, jobSaved) {
+            if (err) {
+                return done(err);
+            }
+
+            assert.ok(jobSaved.job_id);
+
+            assert.equal(jobSaved.user, job.data.user);
+            assert.equal(jobSaved.query, job.data.query);
+            assert.equal(jobSaved.host, job.data.host);
+            assert.equal(jobSaved.status, jobStatus.PENDING);
             done();
         });
     });
@@ -156,4 +199,21 @@ describe('job backend', function() {
         });
     });
 
+    it('.clearWorkInProgressJob() should remove job from work in progress list', function (done) {
+        var job = createWadusJob();
+
+        jobBackend.addWorkInProgressJob(job.data.user, job.data.job_id, function (err) {
+            if (err) {
+                return done(err);
+            }
+
+            jobBackend.clearWorkInProgressJob(job.data.user, job.data.job_id, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                done();
+            });
+        });
+    });
 });
