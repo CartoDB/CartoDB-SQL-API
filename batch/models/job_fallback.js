@@ -225,6 +225,7 @@ JobFallback.prototype.log = function(logger) {
             username: this.data.user,
             dbhost: this.data.host,
             job: this.data.job_id,
+            status: query.status,
             elapsed: elapsedTime(query.started_at, query.ended_at)
         };
 
