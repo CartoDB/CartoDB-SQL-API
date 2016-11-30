@@ -1,6 +1,9 @@
 1.42.4 - 2016-mm-dd
 -------------------
 
+Enhancements:
+ * Include query status in batch queries log entries.
+
 
 1.42.3 - 2016-11-07
 -------------------
