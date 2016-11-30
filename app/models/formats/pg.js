@@ -120,7 +120,7 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
   this.start_time = Date.now();
 
   this.client = new PSQL(opts.dbopts, {}, { destroyOnError: true });
-  this.client.eventedQuery(sql, function(err, query, queryCanceller) {
+  this.client.eventedQuery(sql, opts.params, function(err, query, queryCanceller) {
       that.queryCanceller = queryCanceller;
       if (err) {
         callback(err);

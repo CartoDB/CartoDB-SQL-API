@@ -80,6 +80,45 @@ function(done){
     });
 });
 
+it('should accept a basic parameterized query', function(done){
+    assert.response(server, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            api_key: '1234',
+            q: 'SELECT name FROM untitle_table_4 WHERE cartodb_id = $1',
+            params: [5]
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    }, {}, function(err, res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed = JSON.parse(res.body);
+        assert.equal(parsed.rows.length, 1);
+        assert.equal(parsed.rows[0].name, 'El Pico');
+        done();
+    });
+});
+
+it('should accept a parameterized query with multiple parameters', function(done){
+    assert.response(server, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            api_key: '1234',
+            q: 'SELECT name FROM untitle_table_4 WHERE name LIKE $1 AND ST_Intersects(the_geom, ST_GeomFromText($2))',
+            params: ['El %', 'SRID=4326;POLYGON((-4 41, -3 41, -3 30, -4 30, -4 41))']
+        }),
+        headers: {host: 'vizzuality.cartodb.com'},
+        method: 'GET'
+    }, {}, function(err, res) {
+        assert.equal(res.statusCode, 200, res.body);
+        var parsed = JSON.parse(res.body);
+        assert.equal(parsed.rows.length, 4);
+        assert.deepEqual(
+            ['El Estocolmo', 'El Rey del Tallarín', 'El Lacón', 'El Pico'],
+            _.pluck(parsed.rows, 'name')
+        );
+        done();
+    });
+});
+
 it('POST /api/v1/sql with SQL parameter on SELECT only. no database param, just id using headers', function(done){
     assert.response(server, {
         url: '/api/v1/sql',
