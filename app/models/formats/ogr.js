@@ -32,12 +32,12 @@ OgrFormat.prototype = {
   getFileExtension: function(){ return this._fileExtension; },
 
   getKey: function(options) {
-    return [this.id,
+    return this.generateMD5([this.id,
         options.dbopts.dbname,
         options.dbopts.user,
         options.gn,
         this.generateMD5(options.filename),
-        this.generateMD5(options.sql)].concat(options.skipfields).join(':');
+        this.generateMD5(options.sql)].concat(options.skipfields).join(':'));
   },
 
   generateMD5: function (data){
@@ -227,6 +227,7 @@ OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
       this.generateMD5(layername),
       this.generateMD5(sql)
   ].concat(skipfields).join(':');
+  reqKey = this.generateMD5(reqKey);
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
