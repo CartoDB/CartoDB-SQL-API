@@ -139,12 +139,13 @@ PostgresFormat.prototype.sendResponse = function(opts, callback) {
       query.on('error', function(err) {
           that.error = err;
           if (err.message && err.message.match(/row too large, was \d* bytes/i)) {
-              console.error(JSON.stringify({
+              return console.error(JSON.stringify({
                   username: opts.username,
                   type: 'row_size_limit_exceeded',
                   error: err.message
               }));
           }
+          that.handleQueryEnd();
       });
       query.on('notice', function(msg) {
           that.handleNotice(msg, query._result);
