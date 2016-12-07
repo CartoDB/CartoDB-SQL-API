@@ -11,29 +11,29 @@ describe('batch API job queue', function () {
                 });
             }
         };
-        this.jobQueue = new JobQueue(this.metadataBackend);
+        this.jobPublisher = {
+            publish: function () {}
+        };
+        this.jobQueue = new JobQueue(this.metadataBackend, this.jobPublisher);
     });
 
     it('.enqueue() should enqueue the provided job', function (done) {
-        this.jobQueue.enqueue('irrelevantJob', 'irrelevantHost', function (err, username) {
+        this.jobQueue.enqueue('irrelevantJob', 'irrelevantHost', function (err) {
             assert.ok(!err);
-            assert.equal(username, 'irrelevantJob');
             done();
         });
     });
 
     it('.dequeue() should dequeue the next job', function (done) {
-        this.jobQueue.dequeue('irrelevantHost', function (err, username) {
+        this.jobQueue.dequeue('irrelevantHost', function (err) {
             assert.ok(!err);
-            assert.equal(username, 'irrelevantJob');
             done();
         });
     });
 
     it('.enqueueFirst() should dequeue the next job', function (done) {
-        this.jobQueue.enqueueFirst('irrelevantJob', 'irrelevantHost', function (err, username) {
+        this.jobQueue.enqueueFirst('irrelevantJob', 'irrelevantHost', function (err) {
             assert.ok(!err);
-            assert.equal(username, 'irrelevantJob');
             done();
         });
     });

@@ -3,101 +3,114 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
-var forever = require('./util/forever');
 var queue = require('queue-async');
-var jobStatus = require('./job_status');
+var HostScheduler = require('./scheduler/host-scheduler');
 
-function Batch(jobSubscriber, jobQueuePool, jobRunner, jobService) {
+var EMPTY_QUEUE = true;
+
+function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisPool, logger) {
     EventEmitter.call(this);
+    this.name = name || 'batch';
     this.jobSubscriber = jobSubscriber;
-    this.jobQueuePool = jobQueuePool;
+    this.jobQueue = jobQueue;
     this.jobRunner = jobRunner;
     this.jobService = jobService;
+    this.jobPublisher = jobPublisher;
+    this.logger = logger;
+    this.hostScheduler = new HostScheduler(this.name, { run: this.processJob.bind(this) }, redisPool);
+
+    // map: user => jobId. Will be used for draining jobs.
+    this.workInProgressJobs = {};
 }
 util.inherits(Batch, EventEmitter);
 
 module.exports = Batch;
 
 Batch.prototype.start = function () {
-    this._subscribe();
-};
-
-Batch.prototype._subscribe = function () {
     var self = this;
 
-    this.jobSubscriber.subscribe(function (channel, host) {
-        var queue = self.jobQueuePool.getQueue(host);
-
-        // there is nothing to do. It is already running jobs
-        if (queue) {
-            return;
-        }
-        queue = self.jobQueuePool.createQueue(host);
-
-        // do forever, it does not throw a stack overflow
-        forever(function (next) {
-            self._consumeJobs(host, queue, next);
-        }, function (err) {
-            self.jobQueuePool.removeQueue(host);
-
-            if (err.name === 'EmptyQueue') {
-                return debug(err.message);
+    this.jobSubscriber.subscribe(
+        function onJobHandler(user, host) {
+            debug('[%s] onJobHandler(%s, %s)', self.name, user, host);
+            self.hostScheduler.add(host, user, function(err) {
+                if (err) {
+                    return debug(
+                        'Could not schedule host=%s user=%s from %s. Reason: %s',
+                        host, self.name, user, err.message
+                    );
+                }
+            });
+        },
+        function onJobSubscriberReady(err) {
+            if (err) {
+                return self.emit('error', err);
             }
 
-            debug(err);
+            self.emit('ready');
+        }
+    );
+};
+
+Batch.prototype.processJob = function (user, callback) {
+    var self = this;
+    self.jobQueue.dequeue(user, function (err, jobId) {
+        if (err) {
+            return callback(new Error('Could not get job from "' + user + '". Reason: ' + err.message), !EMPTY_QUEUE);
+        }
+
+        if (!jobId) {
+            debug('Queue empty user=%s', user);
+            return callback(null, EMPTY_QUEUE);
+        }
+
+        self._processWorkInProgressJob(user, jobId, function (err, job) {
+            if (err) {
+                debug(err);
+                if (err.name === 'JobNotRunnable') {
+                    return callback(null, !EMPTY_QUEUE);
+                }
+                return callback(err, !EMPTY_QUEUE);
+            }
+
+            debug(
+                '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
+                self.name, jobId, job.data.status, user, job.failed_reason
+            );
+
+            self.logger.log(job);
+
+            return callback(null, !EMPTY_QUEUE);
         });
     });
 };
 
-
-Batch.prototype._consumeJobs = function (host, queue, callback) {
+Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
     var self = this;
 
-    queue.dequeue(host, function (err, job_id) {
-        if (err) {
-            return callback(err);
+    self.setWorkInProgressJob(user, jobId, function (errSet) {
+        if (errSet) {
+            debug(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
         }
 
-        if (!job_id) {
-            var emptyQueueError = new Error('Queue ' + host + ' is empty');
-            emptyQueueError.name = 'EmptyQueue';
-            return callback(emptyQueueError);
-        }
+        self.jobRunner.run(jobId, function (err, job) {
+            self.clearWorkInProgressJob(user, jobId, function (errClear) {
+                if (errClear) {
+                    debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
+                }
 
-        self.jobQueuePool.setCurrentJobId(host, job_id);
-
-        self.jobRunner.run(job_id, function (err, job) {
-            self.jobQueuePool.removeCurrentJobId(host);
-
-            if (err && err.name === 'JobNotRunnable') {
-                debug(err.message);
-                return callback();
-            }
-
-            if (err) {
-                return callback(err);
-            }
-
-            if (job.data.status === jobStatus.FAILED) {
-                debug('Job %s %s in %s due to: %s', job_id, job.data.status, host, job.failed_reason);
-            } else {
-                debug('Job %s %s in %s', job_id, job.data.status, host);
-            }
-
-            self.emit('job:' + job.data.status, job_id);
-
-            callback();
+                return callback(err, job);
+            });
         });
     });
 };
 
 Batch.prototype.drain = function (callback) {
     var self = this;
-    var queues = this.jobQueuePool.list();
-    var batchQueues = queue(queues.length);
+    var workingUsers = this.getWorkInProgressUsers();
+    var batchQueues = queue(workingUsers.length);
 
-    queues.forEach(function (host) {
-        batchQueues.defer(self._drainJob.bind(self), host);
+    workingUsers.forEach(function (user) {
+        batchQueues.defer(self._drainJob.bind(self), user);
     });
 
     batchQueues.awaitAll(function (err) {
@@ -111,17 +124,15 @@ Batch.prototype.drain = function (callback) {
     });
 };
 
-Batch.prototype._drainJob = function (host, callback) {
+Batch.prototype._drainJob = function (user, callback) {
     var self = this;
-    var job_id = self.jobQueuePool.getCurrentJobId(host);
+    var job_id = this.getWorkInProgressJob(user);
 
     if (!job_id) {
         return process.nextTick(function () {
             return callback();
         });
     }
-
-    var queue = self.jobQueuePool.getQueue(host);
 
     this.jobService.drain(job_id, function (err) {
         if (err && err.name === 'CancelNotAllowedError') {
@@ -132,10 +143,32 @@ Batch.prototype._drainJob = function (host, callback) {
             return callback(err);
         }
 
-        queue.enqueueFirst(job_id, host, callback);
+        self.jobQueue.enqueueFirst(user, job_id, callback);
     });
 };
 
-Batch.prototype.stop = function () {
-    this.jobSubscriber.unsubscribe();
+Batch.prototype.stop = function (callback) {
+    this.removeAllListeners();
+    this.jobSubscriber.unsubscribe(callback);
+};
+
+
+/* Work in progress jobs */
+
+Batch.prototype.setWorkInProgressJob = function(user, jobId, callback) {
+    this.workInProgressJobs[user] = jobId;
+    this.jobService.addWorkInProgressJob(user, jobId, callback);
+};
+
+Batch.prototype.getWorkInProgressJob = function(user) {
+    return this.workInProgressJobs[user];
+};
+
+Batch.prototype.clearWorkInProgressJob = function(user, jobId, callback) {
+    delete this.workInProgressJobs[user];
+    this.jobService.clearWorkInProgressJob(user, jobId, callback);
+};
+
+Batch.prototype.getWorkInProgressUsers = function() {
+    return Object.keys(this.workInProgressJobs);
 };

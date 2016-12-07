@@ -29,31 +29,6 @@ JobService.prototype.get = function (job_id, callback) {
     });
 };
 
-JobService.prototype.list = function (user, callback) {
-    this.jobBackend.list(user, function (err, dataList) {
-        if (err) {
-            return callback(err);
-        }
-
-        var jobList = dataList.map(function (data) {
-                var job;
-
-                try {
-                    job = JobFactory.create(data);
-                } catch (err) {
-                    return debug(err);
-                }
-
-                return job;
-            })
-            .filter(function (job) {
-                return job !== undefined;
-            });
-
-        callback(null, jobList);
-    });
-};
-
 JobService.prototype.create = function (data, callback) {
     try {
         var job = JobFactory.create(data);
@@ -67,23 +42,6 @@ JobService.prototype.create = function (data, callback) {
     } catch (err) {
         return callback(err);
     }
-};
-
-JobService.prototype.update = function (data, callback) {
-    var self = this;
-
-    self.get(data.job_id, function (err, job) {
-        if (err) {
-            return callback(err);
-        }
-
-        try {
-            job.setQuery(data.query);
-            self.save(job, callback);
-        } catch (err) {
-            return callback(err);
-        }
-    });
 };
 
 JobService.prototype.save = function (job, callback) {
@@ -163,4 +121,16 @@ JobService.prototype.drain = function (job_id, callback) {
             self.jobBackend.update(job.data, callback);
         });
     });
+};
+
+JobService.prototype.addWorkInProgressJob = function (user, jobId, callback) {
+    this.jobBackend.addWorkInProgressJob(user, jobId, callback);
+};
+
+JobService.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
+    this.jobBackend.clearWorkInProgressJob(user, jobId, callback);
+};
+
+JobService.prototype.listWorkInProgressJobs = function (callback) {
+    this.jobBackend.listWorkInProgressJobs(callback);
 };

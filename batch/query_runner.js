@@ -1,38 +1,46 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
+var debug = require('./util/debug')('query-runner');
 
-function QueryRunner() {
+function QueryRunner(userDatabaseMetadataService) {
+    this.userDatabaseMetadataService = userDatabaseMetadataService;
 }
 
 module.exports = QueryRunner;
 
-QueryRunner.prototype.run = function (job_id, sql, userDatabaseMetadata, callback) {
-    var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
-
-    pg.query('SET statement_timeout=0', function (err) {
-        if(err) {
+QueryRunner.prototype.run = function (job_id, sql, user, timeout, callback) {
+    this.userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
+        if (err) {
             return callback(err);
         }
 
-        // mark query to allow to users cancel their queries
-        sql = '/* ' + job_id + ' */ ' + sql;
+        var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
 
-        pg.eventedQuery(sql, function (err, query) {
-            if (err) {
+        pg.query('SET statement_timeout=' + timeout, function (err) {
+            if(err) {
                 return callback(err);
             }
 
-            query.on('error', callback);
+            // mark query to allow to users cancel their queries
+            sql = '/* ' + job_id + ' */ ' + sql;
 
-            query.on('end', function (result) {
-                // only if result is present then query is done sucessfully otherwise an error has happened
-                // and it was handled by error listener
-                if (result) {
-                    callback(null, result);
+            debug('Running query [timeout=%d] %s', timeout, sql);
+            pg.eventedQuery(sql, function (err, query) {
+                if (err) {
+                    return callback(err);
                 }
+
+                query.on('error', callback);
+
+                query.on('end', function (result) {
+                    // only if result is present then query is done sucessfully otherwise an error has happened
+                    // and it was handled by error listener
+                    if (result) {
+                        callback(null, result);
+                    }
+                });
             });
         });
     });
-
 };

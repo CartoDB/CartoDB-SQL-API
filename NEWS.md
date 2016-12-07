@@ -1,3 +1,217 @@
+1.42.3 - 2016-11-07
+-------------------
+
+Announcements:
+ * Raise payload limit for batch-queries to 16kb.
+
+
+1.42.2 - 2016-11-07
+-------------------
+
+Bug fixes:
+ * Improve error handling while registering jobs to be tracked.
+
+
+1.42.1 - 2016-11-03
+-------------------
+
+Bug fixes:
+ * Avoid to use SCAN command to find work-in-progress queues.
+
+
+1.42.0 - 2016-11-02
+-------------------
+
+Announcements:
+ * Adds endpoint to check running batch queries
+
+
+1.41.0 - 2016-10-21
+-------------------
+
+Announcements:
+ * Stop migrating old queues by default.
+
+Bug fixes:
+ * Fix some scenarios where batch queries got stuck waiting for available slots.
+
+
+1.40.0 - 2016-10-20
+-------------------
+
+New features:
+ * Batch queries are handled per db host.
+   - There is an scheduler controlling how many queries and in what order they are run.
+     - Priority is based on: number of queries already ran, and oldest user in queue.
+ * Batch queries capacity: allow to configure how many jobs to run per db host.
+
+
+1.39.1 - 2016-10-17
+-------------------
+
+Enhancements:
+ * Log creation and waiting time for fallback jobs' queries.
+
+
+1.39.0 - 2016-10-17
+-------------------
+
+Enhancements:
+ * Use just one Redis pool across the whole application.
+
+New features:
+ * Batch queries use per user-queues.
+ * Batch queries queues can limit the number of queued jobs per user.
+   - Default is 64 jobs.
+   - Configuration key `batch_max_queued_jobs` allows to modify the limit.
+
+
+1.38.2 - 2016-10-13
+-------------------
+
+Bug fixes:
+ * Batch queries: release redis clients to pool from locker and seeker.
+
+
+1.38.1 - 2016-10-13
+-------------------
+
+Enhancements:
+ * Batch queries: improvements over leader locking.
+
+
+1.38.0 - 2016-10-11
+-------------------
+
+Announcements:
+ * Allow to set statement timeout per query in multi query batch queries.
+ * Batch queries default statement timeout set to 12 hours.
+ * Multiple queries jobs pushed as first job between queries.
+
+
+1.37.1 - 2016-10-05
+-------------------
+
+Bug fixes:
+ * Body parser accepting multipart requests.
+
+
+1.37.0 - 2016-10-04
+-------------------
+
+Enhancements:
+ * Migrate to Express.js 4.x series.
+
+
+1.36.2 - 2016-10-03
+-------------------
+
+Bug fixes:
+ - Batch Queries logs: use path instead of stream to be able to reopen FD.
+
+
+1.36.1 - 2016-09-30
+-------------------
+
+Enhancements:
+ * Tag fallback jobs logs.
+
+
+1.36.0 - 2016-09-30
+-------------------
+
+New features:
+ * Log queries from batch fallback jobs.
+
+Enhancements:
+ * assert.response following callback(err, obj) pattern.
+
+
+1.35.0 - 2016-09-15
+-------------------
+
+New features:
+ * Allow to use `--config /path/to/config.js` to specify configuration file.
+   - Environment will be loaded from config file if `environment` key is present, otherwise it keeps current behaviour.
+
+Bug fixes:
+ * Allow to use absolute paths for log files.
+
+Announcements:
+ * Removes support for optional rollbar logging.
+
+
+1.34.2 - 2016-08-30
+-------------------
+
+Announcements:
+ * Upgrades cartodb-redis to 0.13.1.
+ * Set TTL of finished job to 2h
+
+
+1.34.1 - 2016-07-11
+-------------------
+
+Bug fixes:
+ * Fixed issue with redis connections in Batch API #326
+
+
+1.34.0 - 2016-07-11
+-------------------
+
+New features:
+ * Skip tables with no updated_at registered in cdb_tablemetadata.
+ * Allow to setup more than one domain to validate oauth against.
+
+
+1.33.0 - 2016-07-01
+-------------------
+
+New features:
+ * Add `<%= job_id %>` template support for onerror and onsuccess fallback queries.
+
+
+1.32.0 - 2016-06-30
+-------------------
+
+New features:
+ * Broadcast after enqueueing jobs to improve query distribution load.
+ * Batch pub-sub channel handles its connections using `redis-mpool`.
+
+
+1.31.0 - 2016-06-29
+-------------------
+
+New features:
+ * Adds start and end time for batch queries with fallback.
+ * Add `<%= error_message %>` template support for onerror fallback queries.
+
+
+1.30.1 - 2016-06-23
+-------------------
+
+Bug fixes:
+ * Fixed issue with profiling in Batch API #318
+
+
+1.30.0 - 2016-06-14
+-------------------
+
+Announcements:
+ * Now Batch API sends stats metrics to statsd server #312
+ * Now Batch API sets "skipped" instead of "pending" to queries that won't be performed #311
+
+ Bug fixes:
+  * Fixed issue with error handling in Batch API #316
+
+
+1.29.2 - 2016-05-25
+-------------------
+
+Bug fixes:
+ * Fixed issue with status transition in fallback jobs #308
+
+
 1.29.1 - 2016-05-24
 -------------------
 

@@ -1,6 +1,6 @@
 require('../../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var shapefile = require('shapefile');
@@ -8,28 +8,25 @@ var _ = require('underscore');
 var zipfile = require('zipfile');
 var fs      = require('fs');
 
-// allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
-
 describe('export.shapefile', function() {
 
 // SHP tests
 
 it('SHP format, unauthenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -43,14 +40,14 @@ it('SHP format, unauthenticated', function(done){
 });
 
 it('SHP format, unauthenticated, POST', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: 'q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         done();
@@ -58,7 +55,7 @@ it('SHP format, unauthenticated, POST', function(done){
 });
 
 it('SHP format, big size, POST', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: querystring.stringify({
           q: 'SELECT 0 as fname, st_makepoint(i,i) FROM generate_series(0,81920) i',
@@ -66,9 +63,9 @@ it('SHP format, big size, POST', function(done){
         }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         assert.ok(res.body.length > 81920, 'SHP smaller than expected: ' + res.body.length);
@@ -77,20 +74,20 @@ it('SHP format, big size, POST', function(done){
 });
 
 it('SHP format, unauthenticated, with custom filename', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=myshape',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=myshape.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -103,21 +100,21 @@ it('SHP format, unauthenticated, with custom filename', function(done){
 });
 
 it('SHP format, unauthenticated, with custom, dangerous filename', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&filename=b;"%20()[]a',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var fname = "b_______a";
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -130,19 +127,19 @@ it('SHP format, unauthenticated, with custom, dangerous filename', function(done
 });
 
 it('SHP format, authenticated', function(done){
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp&api_key=1234',
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -163,17 +160,17 @@ it('SHP format, unauthenticated, with utf8 data', function(done){
         format: 'shp',
         filename: 'myshape'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         var buffer = zf.readFileSync('myshape.dbf');
@@ -190,12 +187,12 @@ it('mixed type geometry', function(done){
         q: "SELECT 'POINT(0 0)'::geometry as g UNION ALL SELECT 'LINESTRING(0 0, 1 0)'::geometry",
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
@@ -215,12 +212,12 @@ it('errors are not confused with warnings', function(done){
         ].join(" UNION ALL "),
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
@@ -238,17 +235,17 @@ it('skipfields controls fields included in SHP output', function(done){
         skipfields: 'skipme',
         filename: 'myshape'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         var buffer = zf.readFileSync('myshape.dbf');
@@ -262,14 +259,14 @@ it('skipfields controls fields included in SHP output', function(done){
 it('SHP format, concurrently', function(done){
     var concurrency = 1;
     var waiting = concurrency;
-    function validate(res){
-        var cd = res.header('Content-Disposition');
+    function validate(err, res){
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -284,7 +281,7 @@ it('SHP format, concurrently', function(done){
     }
     for (var i=0; i<concurrency; ++i) {
         assert.response(
-            app,
+            server,
             {
                 url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
                 headers: {host: 'vizzuality.cartodb.com'},
@@ -305,19 +302,19 @@ it('point with null first', function(done){
         q: "SELECT null::geometry as g UNION ALL SELECT 'SRID=4326;POINT(0 0)'::geometry",
         format: 'shp'
       });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         encoding: 'binary',
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
         var tmpfile = '/tmp/myshape.zip';
-        var err = fs.writeFileSync(tmpfile, res.body, 'binary');
-        if (err) {
-            return done(err);
+        var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
+        if (writeErr) {
+            return done(writeErr);
         }
         var zf = new zipfile.ZipFile(tmpfile);
         assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
@@ -336,7 +333,7 @@ it('point with null first', function(done){
 
         var filename = 'test_1200';
 
-        assert.response(app, {
+        assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
                     q: "SELECT * from populated_places_simple_reduced limit " + limit,
                     format: 'shp',
@@ -349,7 +346,7 @@ it('point with null first', function(done){
             {
                 status: 200
             },
-            function(res, err) {
+            function(err, res) {
                 if (err) {
                     return done(err);
                 }

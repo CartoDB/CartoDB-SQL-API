@@ -27,17 +27,14 @@ it('does not hang server', function(done){
   var db_port_backup = global.settings.db_port;
   global.settings.db_host = 'localhost';
   global.settings.db_port = sql_server_port;
-  var app = require(global.settings.app_root + '/app/app')();
+  var server = require('../../app/server')();
   step(
     function sendQuery() {
-      var next = this;
-      assert.response(app, {
+      assert.response(server, {
           url: '/api/v1/sql?q=SELECT+1',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err, res) {
       assert.ifError(err);
@@ -49,14 +46,11 @@ it('does not hang server', function(done){
       return null;
     },
     function sendAnotherQuery() {
-      var next = this;
-      assert.response(app, {
+      assert.response(server, {
           url: '/api/v1/sql?q=SELECT+2',
           method: 'GET',
           headers: {host: 'vizzuality.localhost' }
-      },{}, function(res, err) {
-          next(err, res);
-      });
+      },{}, this);
     },
     function checkResponse(err, res) {
       assert.ifError(err);

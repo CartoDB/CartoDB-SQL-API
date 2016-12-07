@@ -1,6 +1,6 @@
 require('../helper');
 
-var app = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 
 describe('app.auth', function() {
@@ -40,7 +40,7 @@ describe('app.auth', function() {
 
     scenarios.forEach(function(scenario) {
         it(scenario.desc, function(done) {
-            assert.response(app, {
+            assert.response(server, {
                     // view prepare_db.sh to find public table name and structure
                     url: scenario.url,
                     headers: {
@@ -49,7 +49,7 @@ describe('app.auth', function() {
                     method: 'GET'
                 },
                 {},
-                function(res) {
+                function(err, res) {
                     assert.equal(res.statusCode, scenario.statusCode, res.statusCode + ': ' + res.body);
                     done();
                 }

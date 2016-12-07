@@ -1,11 +1,8 @@
 require('../../helper');
 
-var app    = require(global.settings.app_root + '/app/app')();
+var server = require('../../../app/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
-
-// allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
 
 describe('export.svg', function() {
 
@@ -14,15 +11,15 @@ it('GET /api/v1/sql with SVG format', function(done){
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
       format: "svg"
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -34,17 +31,17 @@ it('POST /api/v1/sql with SVG format', function(done){
       q: "SELECT 1 as cartodb_id, ST_MakeLine(ST_MakePoint(10, 10), ST_MakePoint(1034, 778)) AS the_geom ",
       format: "svg"
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql',
         data: query,
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -57,15 +54,15 @@ it('GET /api/v1/sql with SVG format and custom filename', function(done){
       format: "svg",
       filename: 'mysvg'
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=mysvg.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0" />') > 0, res.body );
         // TODO: test viewBox
         done();
@@ -77,15 +74,15 @@ it('GET /api/v1/sql with SVG format and centered point', function(done){
       q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS the_geom ",
       format: "svg"
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('cx="0" cy="0"') > 0, res.body );
         // TODO: test viewBox
         // TODO: test radius
@@ -99,29 +96,29 @@ it('GET /api/v1/sql with SVG format and trimmed decimals', function(done){
       format: "svg",
       dp: 2
     };
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + querystring.stringify(queryobj),
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var cd = res.header('Content-Disposition');
+        var cd = res.headers['content-disposition'];
         assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-        assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+        assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
         assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.12 167.01" />') > 0, res.body );
         // TODO: test viewBox
 
         queryobj.dp = 3;
-        assert.response(app, {
+        assert.response(server, {
           url: '/api/v1/sql?' + querystring.stringify(queryobj),
           headers: {host: 'vizzuality.cartodb.com'},
           method: 'GET'
-        },{}, function(res) {
+        },{}, function(err, res) {
           assert.equal(res.statusCode, 200, res.body);
-          var cd = res.header('Content-Disposition');
+          var cd = res.headers['content-disposition'];
           assert.equal(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
           assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
-          assert.equal(res.header('Content-Type'), 'image/svg+xml; charset=utf-8');
+          assert.equal(res.headers['content-type'], 'image/svg+xml; charset=utf-8');
           assert.ok( res.body.indexOf('<path d="M 0 768 L 1024 0 500.123 167.012" />') > 0, res.body );
           // TODO: test viewBox
           done();
@@ -137,11 +134,11 @@ it('SVG format with "the_geom" in skipfields', function(done){
       format: "svg",
       skipfields: "the_geom"
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
@@ -157,11 +154,11 @@ it('SVG format with missing "the_geom" field', function(done){
       q: "SELECT 1 as cartodb_id, ST_MakePoint(5000, -54) AS something_else ",
       format: "svg"
     });
-    assert.response(app, {
+    assert.response(server, {
         url: '/api/v1/sql?' + query,
         headers: {host: 'vizzuality.cartodb.com'},
         method: 'GET'
-    },{ }, function(res){
+    },{ }, function(err, res){
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(JSON.parse(res.body), {
           error:['column "the_geom" does not exist']
@@ -172,7 +169,7 @@ it('SVG format with missing "the_geom" field', function(done){
 
     it('should close on error and error must be the only key in the body', function(done) {
         assert.response(
-            app,
+            server,
             {
                 url: "/api/v1/sql?" + querystring.stringify({
                     q: "SELECT the_geom, 100/(cartodb_id - 3) cdb_ratio FROM untitle_table_4",
@@ -186,7 +183,7 @@ it('SVG format with missing "the_geom" field', function(done){
             {
                 status: 400
             },
-            function(res) {
+            function(err, res) {
                 var parsedBody = JSON.parse(res.body);
                 assert.deepEqual(Object.keys(parsedBody), ['error']);
                 assert.deepEqual(parsedBody.error, ["division by zero"]);

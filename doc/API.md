@@ -1,6 +1,6 @@
 # SQL API
 
-CartoDB's SQL API allows you to interact with your tables and data inside CartoDB, as if you were running SQL statements against a normal database. The database behind CartoDB is PostgreSQL so if you need help with specific SQL statements or you want to learn more about it, visit the [official documentation](http://www.postgresql.org/docs/9.1/static/sql.html).
+CARTO's SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. The database behind CARTO is PostgreSQL so if you need help with specific SQL statements or you want to learn more about it, visit the [official documentation](http://www.postgresql.org/docs/9.1/static/sql.html).
 
 There are two main situations in which you would want to use the SQL API:
 
@@ -14,9 +14,9 @@ Remember that in order to access, read or modify data in private tables, you wil
 
 * [Authentication](authentication.md)
 * [Making calls to the SQL API](making_calls.md)
-* [Handling geospatial data](handling_geospatial_data.md)
-* [Query optimizations](query_optimizations.md)
-* [SQL Batch API](sql_batch_api.md)
-* [API version number](version.md)
-* [Libraries in different languages](libraries_support.md)
+* [Batch Queries](batch_queries.md)
+* [Handling Geospatial Data](handling_geospatial_data.md)
+* [Query Optimizations](query_optimizations.md)
+* [API Version Vumber](version.md)
+* [Libraries in Different Languages](libraries_support.md)
 * [Other Tips and Questions](tips_and_tricks.md)

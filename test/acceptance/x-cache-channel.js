@@ -1,12 +1,9 @@
 require('../helper');
 
-var app    = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');
-
-// allow lots of emitters to be set to silence warning
-app.setMaxListeners(0);
 
 describe('X-Cache-Channel header', function() {
 
@@ -42,7 +39,7 @@ describe('X-Cache-Channel header', function() {
     }
 
     function tableNamesInCacheChannelHeader(expectedTableNames, done) {
-        return function(res) {
+        return function(err, res) {
             xCacheChannelHeaderHasTables(res.headers['x-cache-channel'], expectedTableNames);
             done();
         };
@@ -52,7 +49,7 @@ describe('X-Cache-Channel header', function() {
         var sql = "SELECT a.name as an, b.name as bn FROM untitle_table_4 a " +
             "left join private_table b ON (a.cartodb_id = b.cartodb_id)";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
             'public.untitle_table_4'
         ], done));
@@ -61,7 +58,7 @@ describe('X-Cache-Channel header', function() {
     it('supports multistatements', function(done) {
         var sql = "SELECT * FROM untitle_table_4; SELECT * FROM private_table";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
             'public.untitle_table_4'
         ], done));
@@ -70,7 +67,7 @@ describe('X-Cache-Channel header', function() {
     it('supports explicit transactions', function(done) {
         var sql =  "BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
             'public.untitle_table_4'
         ], done));
@@ -79,14 +76,14 @@ describe('X-Cache-Channel header', function() {
     it('survives partial transactions', function(done) {
         var sql = "BEGIN; SELECT * FROM untitle_table_4";
 
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.untitle_table_4'
         ], done));
     });
 
     it('should not add header for functions', function(done) {
         var sql = "SELECT format('%s', 'wadus')";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
@@ -94,7 +91,7 @@ describe('X-Cache-Channel header', function() {
 
     it('should not add header for CDB_QueryTables', function(done) {
         var sql = "SELECT CDB_QueryTablesText('select * from untitle_table_4')";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
@@ -102,7 +99,7 @@ describe('X-Cache-Channel header', function() {
 
     it('should not add header for non table results', function(done) {
         var sql = "SELECT 'wadus'::text";
-        assert.response(app, createGetRequest(sql), RESPONSE_OK, function(res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });

@@ -1,6 +1,6 @@
 require('../helper');
 
-var app    = require(global.settings.app_root + '/app/app')();
+var server = require('../../app/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
 
@@ -25,31 +25,34 @@ describe('regressions', function() {
             statusCode: 200
         };
 
-        assert.response(app, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
-            function(res, err) {
+        assert.response(server, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
+            function(err) {
                 if (err) {
                     return done(err);
                 }
 
-                assert.response(app, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
-                    function(res, err) {
+                assert.response(server, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
+                    function(err, res) {
                         if (err) {
                             return done(err);
                         }
                         var parsedBody = JSON.parse(res.body);
                         assert.equal(parsedBody.total_rows, 2);
 
-                        assert.response(app, createRequest('SELECT * FROM "foo.bar"'), responseOk,
-                            function(res, err) {
+                        assert.response(server, createRequest('SELECT * FROM "foo.bar"'), responseOk,
+                            function(err, res) {
                                 if (err) {
                                     return done(err);
                                 }
 
-                                assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public."foo.bar"');
+                                // table should not get a cache channel as it won't get invalidated
+                                assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
                                 var parsedBody = JSON.parse(res.body);
                                 assert.equal(parsedBody.total_rows, 2);
                                 assert.deepEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
-                                done();
+
+                                // delete table
+                                assert.response(server, createRequest('DROP TABLE "foo.bar"'), responseOk, done);
                             }
                         );
                     }

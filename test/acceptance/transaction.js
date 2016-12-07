@@ -10,12 +10,13 @@ describe('transaction', function() {
 
     var server;
     before(function(done) {
-        server = require(global.settings.app_root + '/app/app')();
-        server.listen(SERVER_PORT, '127.0.0.1', done);
+        server = require('../../app/server')();
+        this.listener = server.listen(SERVER_PORT, '127.0.0.1');
+        this.listener.on('listening', done);
     });
 
     after(function(done) {
-        server.close(done);
+        this.listener.close(done);
     });
 
     var sqlRequest = request.defaults({

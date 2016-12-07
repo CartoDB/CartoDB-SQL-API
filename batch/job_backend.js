@@ -1,24 +1,17 @@
 'use strict';
 
-
-var queue = require('queue-async');
-var debug = require('./util/debug')('job-backend');
 var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
-var JOBS_TTL_IN_SECONDS = global.settings.jobs_ttl_in_seconds || 48 * 3600; // 48 hours
-var jobStatus = require('./job_status');
-var finalStatus = [
-    jobStatus.CANCELLED,
-    jobStatus.DONE,
-    jobStatus.FAILED,
-    jobStatus.UNKNOWN
-];
+var JobStatus = require('./job_status');
+var queue = require('queue-async');
+var debug = require('./util/debug')('job-backend');
 
-function JobBackend(metadataBackend, jobQueueProducer, jobPublisher, userIndexer) {
+function JobBackend(metadataBackend, jobQueue) {
     this.metadataBackend = metadataBackend;
-    this.jobQueueProducer = jobQueueProducer;
-    this.jobPublisher = jobPublisher;
-    this.userIndexer = userIndexer;
+    this.jobQueue = jobQueue;
+    this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
+    this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
+    this.hostname = global.settings.api_hostname || 'batch';
 }
 
 function toRedisParams(job) {
@@ -29,8 +22,7 @@ function toRedisParams(job) {
     for (var property in obj) {
         if (obj.hasOwnProperty(property)) {
             redisParams.push(property);
-            // TODO: this should be moved to job model ??
-            if ((property === 'query' || property === 'status') && typeof obj[property] !== 'string') {
+            if (property === 'query' && typeof obj[property] !== 'string') {
                 redisParams.push(JSON.stringify(obj[property]));
             } else {
                 redisParams.push(obj[property]);
@@ -65,9 +57,8 @@ function toObject(job_id, redisParams, redisValues) {
     return obj;
 }
 
-// TODO: is it really necessary??
 function isJobFound(redisValues) {
-    return redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4];
+    return !!(redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4]);
 }
 
 JobBackend.prototype.get = function (job_id, callback) {
@@ -104,30 +95,34 @@ JobBackend.prototype.get = function (job_id, callback) {
 JobBackend.prototype.create = function (job, callback) {
     var self = this;
 
-    self.get(job.job_id, function (err) {
-        if (err && err.name !== 'NotFoundError') {
-            return callback(err);
+    this.jobQueue.size(job.user, function(err, size) {
+        if (err) {
+            return callback(new Error('Failed to create job, could not determine user queue size'));
         }
 
-        self.save(job, function (err, jobSaved) {
-            if (err) {
+        if (size >= self.maxNumberOfQueuedJobs) {
+            return callback(new Error(
+                'Failed to create job. ' +
+                'Max number of jobs (' + self.maxNumberOfQueuedJobs + ') queued reached'
+            ));
+        }
+
+        self.get(job.job_id, function (err) {
+            if (err && err.name !== 'NotFoundError') {
                 return callback(err);
             }
 
-            self.jobQueueProducer.enqueue(job.job_id, job.host, function (err) {
+            self.save(job, function (err, jobSaved) {
                 if (err) {
                     return callback(err);
                 }
 
-                // broadcast to consumers
-                self.jobPublisher.publish(job.host);
+                self.jobQueue.enqueue(job.user, job.job_id, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
 
-                self.userIndexer.add(job.user, job.job_id, function (err) {
-                  if (err) {
-                      return callback(err);
-                  }
-
-                  callback(null, jobSaved);
+                    return callback(null, jobSaved);
                 });
             });
         });
@@ -138,6 +133,7 @@ JobBackend.prototype.update = function (job, callback) {
     var self = this;
 
     self.get(job.job_id, function (err) {
+
         if (err) {
             return callback(err);
         }
@@ -171,84 +167,111 @@ JobBackend.prototype.save = function (job, callback) {
     });
 };
 
-function isFinalStatus(status) {
-    return finalStatus.indexOf(status) !== -1;
-}
+var WORK_IN_PROGRESS_JOB = {
+    DB: 5,
+    PREFIX_USER: 'batch:wip:user:',
+    USER_INDEX_KEY: 'batch:wip:users'
+};
+
+JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    debug('add job %s to user %s (%s)', jobId, user, userWIPKey);
+    this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
+        ['SADD', WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user],
+        ['RPUSH', userWIPKey, jobId]
+    ], callback);
+};
+
+JobBackend.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+
+    var params = [userWIPKey, 0, jobId];
+    self.metadataBackend.redisCmd(DB, 'LREM', params, function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        params = [userWIPKey, 0, -1];
+        self.metadataBackend.redisCmd(DB, 'LRANGE', params, function (err, workInProgressJobs) {
+            if (err) {
+                return callback(err);
+            }
+
+            debug('user %s has work in progress jobs %j', user, workInProgressJobs);
+
+            if (workInProgressJobs.length < 0) {
+                return callback();
+            }
+
+            debug('delete user %s from index', user);
+
+            params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user];
+            self.metadataBackend.redisCmd(DB, 'SREM', params, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                return callback();
+            });
+        });
+    });
+};
+
+JobBackend.prototype.listWorkInProgressJobByUser = function (user, callback) {
+    var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
+    var params = [userWIPKey, 0, -1];
+    this.metadataBackend.redisCmd(WORK_IN_PROGRESS_JOB.DB, 'LRANGE', params, callback);
+};
+
+JobBackend.prototype.listWorkInProgressJobs = function (callback) {
+    var self = this;
+    var DB = WORK_IN_PROGRESS_JOB.DB;
+
+    var params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY];
+    this.metadataBackend.redisCmd(DB, 'SMEMBERS', params, function (err, workInProgressUsers) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (workInProgressUsers < 1) {
+            return callback(null, {});
+        }
+
+        debug('found %j work in progress users', workInProgressUsers);
+
+        var usersQueue = queue(4);
+
+        workInProgressUsers.forEach(function (user) {
+            usersQueue.defer(self.listWorkInProgressJobByUser.bind(self), user);
+        });
+
+        usersQueue.awaitAll(function (err, userWorkInProgressJobs) {
+            if (err) {
+                return callback(err);
+            }
+
+            var workInProgressJobs = workInProgressUsers.reduce(function (users, user, index) {
+                users[user] = userWorkInProgressJobs[index];
+                debug('found %j work in progress jobs for user %s', userWorkInProgressJobs[index], user);
+                return users;
+            }, {});
+
+            callback(null, workInProgressJobs);
+        });
+    });
+};
 
 JobBackend.prototype.setTTL = function (job, callback) {
     var self = this;
     var redisKey = REDIS_PREFIX + job.job_id;
 
-    if (!isFinalStatus(job.status)) {
+    if (!JobStatus.isFinal(job.status)) {
         return callback();
     }
 
-    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, JOBS_TTL_IN_SECONDS ], callback);
-};
-
-JobBackend.prototype.list = function (user, callback) {
-    var self = this;
-
-    this.userIndexer.list(user, function (err, job_ids) {
-        if (err) {
-            return callback(err);
-        }
-
-        var initialLength = job_ids.length;
-
-        self._getCleanedList(user, job_ids, function (err, jobs) {
-            if (err) {
-                return callback(err);
-            }
-
-            if (jobs.length < initialLength) {
-                return self.list(user, callback);
-            }
-
-            callback(null, jobs);
-        });
-    });
-};
-
-JobBackend.prototype._getCleanedList = function (user, job_ids, callback) {
-    var self = this;
-
-    var jobsQueue = queue(job_ids.length);
-
-    job_ids.forEach(function(job_id) {
-        jobsQueue.defer(self._getIndexedJob.bind(self), job_id, user);
-    });
-
-    jobsQueue.awaitAll(function (err, jobs) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, jobs.filter(function (job) {
-            return job ? true : false;
-        }));
-    });
-};
-
-JobBackend.prototype._getIndexedJob = function (job_id, user, callback) {
-    var self = this;
-
-    this.get(job_id, function (err, job) {
-        if (err && err.name === 'NotFoundError') {
-            return self.userIndexer.remove(user, job_id, function (err) {
-                if (err) {
-                    debug('Error removing key %s in user set', job_id, err);
-                }
-                callback();
-            });
-        }
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, job);
-    });
+    self.metadataBackend.redisCmd(REDIS_DB, 'EXPIRE', [ redisKey, this.inSecondsJobTTLAfterFinished ], callback);
 };
 
 module.exports = JobBackend;
