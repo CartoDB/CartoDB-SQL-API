@@ -25,3 +25,6 @@ To make things easier for developers, we provide client libraries for different 
 
 - **iOS**  
   Objective-C library for interacting with CARTO in native iOS applications. [Fork it on GitHub!](https://github.com/jmnavarro/cartodb-objectivec-client)
+
+- **Golang**  
+  A Go client for the CartoDB SQL API that supports authentication using an API key. [Fork it on GitHub!](https://github.com/agonzalezro/cartodb_go)
