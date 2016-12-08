@@ -36,8 +36,8 @@ OgrFormat.prototype = {
         options.dbopts.dbname,
         options.dbopts.user,
         options.gn,
-        this.generateMD5(options.filename),
-        this.generateMD5(options.sql)].concat(options.skipfields).join(':'));
+        options.filename,
+        options.sql].concat(options.skipfields).join(':'));
   },
 
   generateMD5: function (data){
@@ -219,15 +219,14 @@ OgrFormat.prototype.toOGR_SingleFile = function(options, fmt, callback) {
   var layername = options.filename;
 
   var tmpdir = global.settings.tmpDir || '/tmp';
-  var reqKey = [
+  var reqKey = this.generateMD5([
       fmt,
       dbname,
       user_id,
       gcol,
-      this.generateMD5(layername),
-      this.generateMD5(sql)
-  ].concat(skipfields).join(':');
-  reqKey = this.generateMD5(reqKey);
+      layername,
+      sql
+  ].concat(skipfields).join(':'));
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var dumpfile = outdirpath + ':cartodb-query.' + ext;
 
