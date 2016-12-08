@@ -2,6 +2,8 @@
 
 To make things easier for developers, we provide client libraries for different programming languages and caching functionalities.
 
+**Note:** These libraries are externally developed and maintained. Use caution when using libraries in different languages, as some of these resources may be out-of-date.
+
 - **R**  
   To help more researchers use CARTO to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-r)
 
