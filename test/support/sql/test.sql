@@ -40,18 +40,18 @@ CREATE TABLE untitle_table_4 (
     CONSTRAINT enforce_srid_the_geom_webmercator CHECK ((st_srid(the_geom_webmercator) = 3857))
 );
 
-CREATE SEQUENCE test_table_cartodb_id_seq
+CREATE SEQUENCE untitle_table_4_cartodb_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
 
-ALTER SEQUENCE test_table_cartodb_id_seq OWNED BY untitle_table_4.cartodb_id;
+ALTER SEQUENCE untitle_table_4_cartodb_id_seq OWNED BY untitle_table_4.cartodb_id;
 
-SELECT pg_catalog.setval('test_table_cartodb_id_seq', 60, true);
+SELECT pg_catalog.setval('untitle_table_4_cartodb_id_seq', 60, true);
 
-ALTER TABLE untitle_table_4 ALTER COLUMN cartodb_id SET DEFAULT nextval('test_table_cartodb_id_seq'::regclass);
+ALTER TABLE untitle_table_4 ALTER COLUMN cartodb_id SET DEFAULT nextval('untitle_table_4_cartodb_id_seq'::regclass);
 
 INSERT INTO untitle_table_4
 (updated_at, created_at, cartodb_id, name, address, the_geom, the_geom_webmercator)
@@ -63,10 +63,10 @@ VALUES
 ('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.334931', 5, 'El Pico', 'Calle Divino Pastor 12, Madrid, Spain', '0101000020E61000003B6D8D08C6A10DC0371B2B31CF364440', '0101000020110F00005F716E91992A19C17DAAA4D6DACC5241'),
 ('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21', -1, 'Test', 'Fake for testing', 'SRID=4326;POINT(33 16)', 'SRID=3857;POINT(3673543.19617803 1804722.76625729)');
 
-ALTER TABLE ONLY untitle_table_4 ADD CONSTRAINT test_table_pkey PRIMARY KEY (cartodb_id);
+ALTER TABLE ONLY untitle_table_4 ADD CONSTRAINT untitle_table_4_pkey PRIMARY KEY (cartodb_id);
 
-CREATE INDEX test_table_the_geom_idx ON untitle_table_4 USING gist (the_geom);
-CREATE INDEX test_table_the_geom_webmercator_idx ON untitle_table_4 USING gist (the_geom_webmercator);
+CREATE INDEX untitle_table_4_the_geom_idx ON untitle_table_4 USING gist (the_geom);
+CREATE INDEX untitle_table_4_the_geom_webmercator_idx ON untitle_table_4 USING gist (the_geom_webmercator);
 
 DROP TABLE IF EXISTS private_table;
 CREATE TABLE private_table (
@@ -85,18 +85,18 @@ CREATE TABLE private_table (
     CONSTRAINT enforce_srid_the_geom_webmercator CHECK ((st_srid(the_geom_webmercator) = 3857))
 );
 
-CREATE SEQUENCE test_table_cartodb_id_seq_p
+CREATE SEQUENCE untitle_table_4_cartodb_id_seq_p
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
 
-ALTER SEQUENCE test_table_cartodb_id_seq_p OWNED BY private_table.cartodb_id;
+ALTER SEQUENCE untitle_table_4_cartodb_id_seq_p OWNED BY private_table.cartodb_id;
 
-SELECT pg_catalog.setval('test_table_cartodb_id_seq_p', 60, true);
+SELECT pg_catalog.setval('untitle_table_4_cartodb_id_seq_p', 60, true);
 
-ALTER TABLE private_table ALTER COLUMN cartodb_id SET DEFAULT nextval('test_table_cartodb_id_seq_p'::regclass);
+ALTER TABLE private_table ALTER COLUMN cartodb_id SET DEFAULT nextval('untitle_table_4_cartodb_id_seq_p'::regclass);
 
 INSERT INTO private_table VALUES
 ('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.314252', 1, 'Hawai', 'Calle de Pérez Galdós 9, Madrid, Spain', '0101000020E6100000A6B73F170D990DC064E8D84125364440', '0101000020110F000076491621312319C122D4663F1DCC5241'),
@@ -105,10 +105,10 @@ INSERT INTO private_table VALUES
 ('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.329509', 4, 'El Lacón', 'Manuel Fernández y González 8, Madrid, Spain', '0101000020E6100000BC5983F755990DC07D923B6C22354440', '0101000020110F00005DACDB056F2319C1EC41A980FCCA5241'),
 ('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.334931', 5, 'El Pico', 'Calle Divino Pastor 12, Madrid, Spain', '0101000020E61000003B6D8D08C6A10DC0371B2B31CF364440', '0101000020110F00005F716E91992A19C17DAAA4D6DACC5241');
 
-ALTER TABLE ONLY private_table ADD CONSTRAINT test_table_pkey_p PRIMARY KEY (cartodb_id);
+ALTER TABLE ONLY private_table ADD CONSTRAINT untitle_table_4_pkey_p PRIMARY KEY (cartodb_id);
 
-CREATE INDEX test_table_the_geom_idx_p ON private_table USING gist (the_geom);
-CREATE INDEX test_table_the_geom_webmercator_idx_p ON private_table USING gist (the_geom_webmercator);
+CREATE INDEX untitle_table_4_the_geom_idx_p ON private_table USING gist (the_geom);
+CREATE INDEX untitle_table_4_the_geom_webmercator_idx_p ON private_table USING gist (the_geom_webmercator);
 
 -- public user role
 DROP USER IF EXISTS :PUBLICUSER;
@@ -122,7 +122,7 @@ CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
 GRANT ALL ON TABLE untitle_table_4 TO :TESTUSER;
 GRANT SELECT ON TABLE untitle_table_4 TO :PUBLICUSER;
 GRANT ALL ON TABLE private_table TO :TESTUSER;
-GRANT ALL ON SEQUENCE test_table_cartodb_id_seq_p TO :TESTUSER;
+GRANT ALL ON SEQUENCE untitle_table_4_cartodb_id_seq_p TO :TESTUSER;
 
 GRANT ALL ON TABLE spatial_ref_sys TO :TESTUSER, :PUBLICUSER;
 
