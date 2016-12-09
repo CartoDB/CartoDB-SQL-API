@@ -25,7 +25,7 @@ describe('copy-statements', function() {
     after(function(done) {
         assert.response(server, {
             url: "/api/v1/sql?" + querystring.stringify({
-                q: 'DROP TABLE copy_test_table',
+                q: 'DROP TABLE IF EXISTS copy_test_table',
                 api_key: 1234
             }),
             headers: {host: 'vizzuality.cartodb.com'},
