@@ -2,6 +2,8 @@
 
 To make things easier for developers, we provide client libraries for different programming languages and caching functionalities.
 
+**Note:** These libraries are externally developed and maintained. Use caution when using libraries in different languages, as some of these resources may be out-of-date.
+
 - **R**  
   To help more researchers use CARTO to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-r)
 
@@ -25,3 +27,6 @@ To make things easier for developers, we provide client libraries for different 
 
 - **iOS**  
   Objective-C library for interacting with CARTO in native iOS applications. [Fork it on GitHub!](https://github.com/jmnavarro/cartodb-objectivec-client)
+
+- **Golang**  
+  A Go client for the CARTO SQL API that supports authentication using an API key. [Fork it on GitHub!](https://github.com/agonzalezro/cartodb_go)

@@ -2,8 +2,6 @@ require('../../helper');
 
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
-var batchFactory = require('../../../batch/index');
-var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var TestClient = require('../../support/test-client');
 
 describe('max queued jobs', function() {
@@ -20,23 +18,8 @@ describe('max queued jobs', function() {
     });
 
     after(function (done) {
-        var self = this;
         global.settings.batch_max_queued_jobs = this.batch_max_queued_jobs;
-        var batch = batchFactory(metadataBackend, redisUtils.getPool());
-        batch.start();
-        batch.on('ready', function() {
-            // this is not ideal as the first job might not be committed yet
-            setTimeout(function() {
-                batch.stop(function() {
-                    self.testClient.getResult('select count(*) from max_queued_jobs_inserts', function(err, rows) {
-                        assert.ok(!err);
-                        assert.equal(rows[0].count, 1);
-
-                        redisUtils.clean('batch:*', done);
-                    });
-                });
-            }, 100);
-        });
+        redisUtils.clean('batch:*', done);
     });
 
     function createJob(server, status, callback) {

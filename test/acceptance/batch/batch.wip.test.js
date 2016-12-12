@@ -2,6 +2,7 @@ require('../../helper');
 
 var assert = require('../../support/assert');
 var BatchTestClient = require('../../support/batch-test-client');
+var JobStatus = require('../../../batch/job_status');
 
 describe('batch work in progress endpoint happy cases', function() {
 
@@ -22,7 +23,7 @@ describe('batch work in progress endpoint happy cases', function() {
     it('should get a list of work in progress jobs group by user', function (done) {
         var self = this;
         var user = 'vizzuality';
-        var queries = ['select pg_sleep(0.5)'];
+        var queries = ['select pg_sleep(3)'];
         var payload = jobPayload(queries);
 
         self.batchTestClient.createJob(payload, function(err, jobResult) {
@@ -30,48 +31,67 @@ describe('batch work in progress endpoint happy cases', function() {
                 return done(err);
             }
 
-            setTimeout(function () {
+            jobResult.getStatus(JobStatus.RUNNING, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
                 self.batchTestClient.getWorkInProgressJobs(function (err, workInProgressJobs) {
                     if (err) {
                         return done(err);
                     }
+
+                    if (!workInProgressJobs[user]) {
+                        return done(new Error('User should be in work-in-progress list'));
+                    }
+
                     assert.ok(Array.isArray(workInProgressJobs[user]));
                     assert.ok(workInProgressJobs[user].length >= 1);
                     for (var i = 0; i < workInProgressJobs[user].length; i++) {
                         if (workInProgressJobs[user][i] === jobResult.job.job_id) {
-                            return done();
+                            return jobResult.cancel(done);
                         }
                     }
+
+                    return done(new Error('Job should not be in work-in-progress list'));
                 });
-            }, 100);
+            });
         });
     });
 
     it('should get a list of work in progress jobs w/o the finished ones', function (done) {
         var self = this;
         var user = 'vizzuality';
-        var queries = ['select pg_sleep(0.1)'];
+        var queries = ['select pg_sleep(0)'];
         var payload = jobPayload(queries);
 
         self.batchTestClient.createJob(payload, function(err, jobResult) {
             if (err) {
                 return done(err);
             }
-            setTimeout(function () {
+
+            jobResult.getStatus(function (err) {
+                if (err) {
+                    return done(err);
+                }
+
                 self.batchTestClient.getWorkInProgressJobs(function (err, workInProgressJobs) {
                     if (err) {
                         return done(err);
                     }
-                    assert.ok(Array.isArray(workInProgressJobs[user]));
-                    assert.ok(workInProgressJobs[user].length >= 1);
-                    for (var i = 0; i < workInProgressJobs[user].length; i++) {
-                        if (workInProgressJobs[user][i] === jobResult.job.job_id) {
-                            return done(new Error('Job should not be in work-in-progress list'));
+
+                    if (workInProgressJobs[user]) {
+                        assert.ok(Array.isArray(workInProgressJobs[user]));
+                        assert.ok(workInProgressJobs[user].length >= 1);
+                        for (var i = 0; i < workInProgressJobs[user].length; i++) {
+                            if (workInProgressJobs[user][i] === jobResult.job.job_id) {
+                                return done(new Error('Job should not be in work-in-progress list'));
+                            }
                         }
                     }
-                    return done();
+                    done();
                 });
-            }, 200);
+            });
         });
     });
 });

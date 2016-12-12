@@ -157,7 +157,6 @@ describe('job module', function() {
             status: 400
         }, function(err, res) {
             var error = JSON.parse(res.body);
-            console.log(error);
             assert.deepEqual(error , {
                 error: ['Job with id irrelevantJob not found']
             });

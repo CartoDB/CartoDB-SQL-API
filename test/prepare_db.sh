@@ -105,36 +105,37 @@ fi
 
 if test x"$PREPARE_REDIS" = xyes; then
 
+  REDIS_HOST=`node -e "console.log(require('${TESTENV}').redis_host || '127.0.0.1')"`
   REDIS_PORT=`node -e "console.log(require('${TESTENV}').redis_port || '6336')"`
 
   echo "preparing redis..."
 
   # delete previous publicuser
-  cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 HDEL rails:users:vizzuality database_host
 HDEL rails:users:vizzuality database_publicuser
 EOF
 
-  cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 HMSET rails:users:vizzuality \
  id 1 \
  database_name ${TEST_DB} \
- database_host localhost \
+ database_host ${PGHOST} \
  map_key 1234
 SADD rails:users:vizzuality:map_key 1235
 EOF
 
   # A user configured as with cartodb-2.5.0+
-  cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 HMSET rails:users:cartodb250user \
  id ${TESTUSERID} \
  database_name ${TEST_DB} \
- database_host localhost \
+ database_host ${PGHOST} \
  database_password ${TESTPASS} \
  map_key 1234
 EOF
 
-  cat <<EOF | redis-cli -p ${REDIS_PORT} -n 3
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 3
 HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  consumer_key fZeNGv5iYayvItgDYHUbot1Ukb5rVyX6QAg8GaY2 \
  consumer_secret IBLCvPEefxbIiGZhGlakYV4eM8AbVSwsHxwEYpzx \
@@ -145,17 +146,17 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
 EOF
 
 # delete previous jobs
-cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 batch:jobs:*
 EOF
 
 # delete job queue
-cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 DEL batch:queues:localhost
 EOF
 
 # delete user index
-cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 DEL batch:users:vizzuality
 EOF
 

@@ -76,16 +76,9 @@ describe('batch happy cases', function() {
             'select * from private_table',
             'select * from private_table',
             'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table',
-            'select * from private_table'
         ];
 
-        var jobsQueue = queue(4);
+        var jobsQueue = queue(1);
 
         jobs.forEach(function(job) {
             jobsQueue.defer(function(payload, done) {
@@ -117,17 +110,10 @@ describe('batch happy cases', function() {
         var jobs = [
             'select * from unexistent_table',
             'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
-            'select * from unexistent_table',
             'select * from unexistent_table'
         ];
 
-        var jobsQueue = queue(4);
+        var jobsQueue = queue(1);
 
         jobs.forEach(function(job) {
             jobsQueue.defer(function(payload, done) {
