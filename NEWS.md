@@ -1,7 +1,7 @@
 #Changelog
 
 ## 1.42.5
-Released 2016-mm-dd
+Released 2016-12-12
 
 Enhancements:
  * Improvements in testing environment/tests.
