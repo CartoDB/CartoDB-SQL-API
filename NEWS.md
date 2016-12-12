@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.42.6
+Released 2016-12-12
+
+
 ## 1.42.5
 Released 2016-12-12
 
