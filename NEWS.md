@@ -3,6 +3,9 @@
 ## 1.42.5
 Released 2016-mm-dd
 
+Enhancements:
+ * Improvements in testing environment/tests.
+
 
 ## 1.42.4
 Released 2016-11-30
