@@ -7,6 +7,10 @@ var net = require('net');
 var sql_server_port = 5540;
 var sql_server = net.createServer(function (connection) {
     connection.destroy();
+    console.log('sql server socket destroyed.');
+    sql_server.close(function() {
+        console.log('sql server closed');
+    });
 });
 
 describe('backend crash', function() {
@@ -68,7 +72,12 @@ describe('backend crash', function() {
         );
     });
 
-    after(function(done) {
-        sql_server.close(done);
+    after(function (done) {
+        // be sure the sql_server is closed
+        if (sql_server.listening) {
+            return sql_server.close(done);
+        }
+
+        done();
     });
 });
