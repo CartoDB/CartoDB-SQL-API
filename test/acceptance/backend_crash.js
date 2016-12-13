@@ -70,12 +70,12 @@ it('does not hang server', function(done){
 });
 
 after(function(done) {
-  try {
-    sql_server.close(done);
-  } catch (er) {
-    console.log(er);
-    done(); // error expected as server is probably closed already
+  // be sure the sql_server is closed
+  if (sql_server.listening) {
+    return sql_server.close(done);
   }
+
+  done();
 });
 
 });
