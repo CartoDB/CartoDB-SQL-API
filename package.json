@@ -32,7 +32,7 @@
     "oauth-client": "0.3.0",
     "qs": "~6.2.1",
     "queue-async": "~1.0.7",
-    "redis-mpool": "cartodb/node-redis-mpool#node-v6",
+    "redis-mpool": "cartodb/node-redis-mpool#master",
     "redlock": "2.0.1",
     "request": "~2.75.0",
     "step": "~0.0.5",
