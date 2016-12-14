@@ -46,7 +46,7 @@
     "shapefile": "0.3.0",
     "mocha": "~1.21.4",
     "jshint": "~2.6.0",
-    "zipfile": "~0.5.0",
+    "zipfile": "0.5.9",
     "libxmljs": "~0.8.1",
     "sqlite3": "~3.0.8"
   },
