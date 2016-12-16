@@ -150,7 +150,7 @@
     "cartodb-psql": {
       "version": "0.6.2",
       "from": "cartodb/node-cartodb-psql#node-v6",
-      "resolved": "git://github.com/cartodb/node-cartodb-psql.git#298e2dfa1167628e4bfba108da71cbed460c7029"
+      "resolved": "git://github.com/cartodb/node-cartodb-psql.git#27ac5d271020c60487e5ba07a324b42ca6872ca7"
     },
     "cartodb-query-tables": {
       "version": "0.2.0",
@@ -796,9 +796,9 @@
       "resolved": "https://registry.npmjs.org/path-type/-/path-type-1.1.0.tgz"
     },
     "pg": {
-      "version": "6.1.0",
-      "from": "cartodb/node-postgres#cdb-6.1",
-      "resolved": "git://github.com/cartodb/node-postgres.git#27d981311478b9d9c1b4da18441dd67e88735772"
+      "version": "6.1.2",
+      "from": "cartodb/node-postgres#6.1.2-cdb1",
+      "resolved": "git://github.com/cartodb/node-postgres.git#3c81aea432ce58d20a795786c58bbb14f68f9689"
     },
     "pg-connection-string": {
       "version": "0.1.3",
