@@ -46,7 +46,7 @@
     "shapefile": "0.3.0",
     "mocha": "3.2.0",
     "jshint": "~2.6.0",
-    "zipfile": "mapbox/node-zipfile#v0.5.10",
+    "zipfile": "0.5.11",
     "libxmljs": "0.18.0",
     "sqlite3": "3.1.8"
   },
