@@ -52,14 +52,7 @@ describe('regressions', function() {
                                 assert.deepEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
 
                                 // delete table
-                                assert.response(server, createRequest('DROP TABLE "foo.bar"'), responseOk,
-                                    function(err) {
-                                        if (err) {
-                                            return done(err);
-                                        }
-                                        done();
-                                    }
-                                );
+                                assert.response(server, createRequest('DROP TABLE "foo.bar"'), responseOk, done);
                             }
                         );
                     }
