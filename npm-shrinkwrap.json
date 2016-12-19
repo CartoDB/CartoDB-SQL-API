@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.42.6",
+  "version": "1.42.7",
   "dependencies": {
     "accepts": {
       "version": "1.2.13",
@@ -159,7 +159,7 @@
     },
     "cartodb-redis": {
       "version": "0.13.2",
-      "from": "cartodb-redis@>=0.13.2 <0.14.0",
+      "from": "cartodb-redis@0.13.2",
       "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.13.2.tgz"
     },
     "caseless": {
@@ -422,7 +422,8 @@
     "glob": {
       "version": "6.0.4",
       "from": "glob@>=6.0.1 <7.0.0",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-6.0.4.tgz"
+      "resolved": "https://registry.npmjs.org/glob/-/glob-6.0.4.tgz",
+      "optional": true
     },
     "graceful-fs": {
       "version": "4.1.11",
@@ -907,7 +908,7 @@
     },
     "redis-mpool": {
       "version": "0.4.1",
-      "from": "redis-mpool@>=0.4.1 <0.5.0",
+      "from": "redis-mpool@0.4.1",
       "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.4.1.tgz",
       "dependencies": {
         "generic-pool": {
@@ -940,7 +941,8 @@
     "rimraf": {
       "version": "2.4.5",
       "from": "rimraf@>=2.4.0 <2.5.0",
-      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.4.5.tgz"
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.4.5.tgz",
+      "optional": true
     },
     "safe-json-stringify": {
       "version": "1.0.3",

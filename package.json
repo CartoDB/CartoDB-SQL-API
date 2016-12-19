@@ -5,7 +5,7 @@
   "keywords": [
     "cartodb"
   ],
-  "version": "1.42.6",
+  "version": "1.42.7",
   "repository": {
     "type": "git",
     "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
@@ -21,7 +21,7 @@
     "bunyan": "1.8.1",
     "cartodb-psql": "cartodb/node-cartodb-psql#node-v6",
     "cartodb-query-tables": "0.2.0",
-    "cartodb-redis": "~0.13.2",
+    "cartodb-redis": "0.13.2",
     "debug": "2.2.0",
     "express": "~4.13.3",
     "log4js": "cartodb/log4js-node#cdb",
@@ -32,7 +32,7 @@
     "oauth-client": "0.3.0",
     "qs": "~6.2.1",
     "queue-async": "~1.0.7",
-    "redis-mpool": "~0.4.1",
+    "redis-mpool": "0.4.1",
     "redlock": "2.0.1",
     "request": "~2.75.0",
     "step": "~0.0.5",

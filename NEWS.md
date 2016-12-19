@@ -1,12 +1,18 @@
 #Changelog
 
-## 1.42.6
-Released 2016-12-12
+## 1.42.7
+Released 2016-mm-dd
 
 Announcements:
  * Upgrade cartodb-psql to ?.
- * Upgrade redis-mpool to 0.4.1.
+
+
+## 1.42.6
+Released 2016-12-19
+
+Announcements:
  * Upgrade cartodb-redis to 0.13.2.
+ * Upgrade redis-mpool to 0.4.1.
 
 
 ## 1.42.5
