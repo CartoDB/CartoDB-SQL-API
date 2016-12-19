@@ -14,7 +14,7 @@ var sql_server = net.createServer(function(c) {
   });
 });
 
-describe.only('backend crash', function() {
+describe('backend crash', function() {
 
 before(function(done){
   sql_server.listen(sql_server_port, done);
