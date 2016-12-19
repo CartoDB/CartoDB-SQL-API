@@ -162,9 +162,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "0.13.1",
-      "from": "cartodb-redis@0.13.1",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.13.1.tgz",
+      "version": "0.13.2",
+      "from": "cartodb-redis@0.13.2",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.13.2.tgz",
       "dependencies": {
         "dot": {
           "version": "1.0.3",
@@ -651,7 +651,7 @@
             },
             "mime-types": {
               "version": "2.1.13",
-              "from": "mime-types@>=2.1.13 <2.2.0",
+              "from": "mime-types@>=2.1.7 <2.2.0",
               "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.13.tgz",
               "dependencies": {
                 "mime-db": {
@@ -1087,7 +1087,7 @@
         },
         "mime-types": {
           "version": "2.1.13",
-          "from": "mime-types@>=2.1.13 <2.2.0",
+          "from": "mime-types@>=2.1.7 <2.2.0",
           "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.13.tgz",
           "dependencies": {
             "mime-db": {
