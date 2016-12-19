@@ -14,7 +14,7 @@ var sql_server = net.createServer(function(c) {
   });
 });
 
-describe('backend crash', function() {
+describe.only('backend crash', function() {
 
 before(function(done){
   sql_server.listen(sql_server_port, done);
@@ -70,12 +70,12 @@ it('does not hang server', function(done){
 });
 
 after(function(done) {
-  // be sure the sql_server is closed
-  if (sql_server.listening) {
-    return sql_server.close(done);
+  try {
+    sql_server.close(done);
+  } catch (er) {
+    console.log(er);
+    done(); // error expected as server is probably closed already
   }
-
-  done();
 });
 
 });
