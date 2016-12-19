@@ -30,7 +30,7 @@ assert.response = function(server, req, res, callback) {
 
     listen();
 
-    debug('Request', req);
+    debug('Request definition', req);
 
     // jshint maxcomplexity:10
     function onServerListening() {
@@ -48,9 +48,11 @@ assert.response = function(server, req, res, callback) {
             requestParams.body = req.body || req.data;
         }
 
+        debug('Request params', requestParams);
         request(requestParams, function assert$response$requestHandler(error, response, body) {
+            debug('Request response', error, response, body);
             listener.close(function() {
-                debug('Server closed', error);
+                debug('Server closed');
                 if (error) {
                     return callback(error);
                 }
