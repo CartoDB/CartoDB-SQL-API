@@ -4,6 +4,7 @@
 Released 2016-mm-dd
 
 Announcements:
+ * Upgrade cartodb-redis to 0.13.2.
  * Upgrade redis-mpool to 0.4.1.
 
 
