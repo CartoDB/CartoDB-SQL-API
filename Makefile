@@ -39,7 +39,7 @@ test-batch:
 	@echo "***batch queries tests***"
 	@$(SHELL) test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_BATCH)
 
-test-all: jshint test
+test-all: test jshint
 
 coverage:
 	@RUNTESTFLAGS=--with-coverage make test
