@@ -1,7 +1,10 @@
 #Changelog
 
 ## 1.42.6
-Released 2016-12-12
+Released 2016-mm-dd
+
+Announcements:
+ * Upgrade redis-mpool to 0.4.1.
 
 
 ## 1.42.5
