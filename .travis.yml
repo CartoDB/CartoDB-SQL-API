@@ -1,3 +1,10 @@
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+
 before_install:
   - lsb_release -a
   - sudo mv /etc/apt/sources.list.d/pgdg.list* /tmp
@@ -19,19 +26,9 @@ before_install:
   - ./configure
 
 env:
-  - PGUSER=postgres
+  - PGUSER=postgres CXX=g++-4.8
 
 language: node_js
 node_js:
   - "0.10"
-
-matrix:
-  include:
-    - node_js: "6"
-      addons:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - g++-4.8
-      env:
-      - CXX=g++-4.8
+  - "6"
