@@ -50,7 +50,7 @@ assert.response = function(server, req, res, callback) {
 
         debug('Request params', requestParams);
         request(requestParams, function assert$response$requestHandler(error, response, body) {
-            debug('Request response', error, response, body);
+            debug('Request response', error);
             listener.close(function() {
                 debug('Server closed');
                 if (error) {
