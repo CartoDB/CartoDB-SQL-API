@@ -4,7 +4,7 @@ var server = require('../../app/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
 
-describe('regressions', function() {
+describe.only('regressions', function() {
 
     it('issue #224: tables with . (dot) in name works and can be queried', function(done) {
 
