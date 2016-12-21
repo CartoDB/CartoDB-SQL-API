@@ -115,6 +115,11 @@
       "from": "brace-expansion@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.6.tgz"
     },
+    "buffer-shims": {
+      "version": "1.0.0",
+      "from": "buffer-shims@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/buffer-shims/-/buffer-shims-1.0.0.tgz"
+    },
     "buffer-writer": {
       "version": "1.0.1",
       "from": "buffer-writer@1.0.1",
@@ -148,9 +153,9 @@
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-3.0.0.tgz"
     },
     "cartodb-psql": {
-      "version": "0.6.2",
-      "from": "cartodb/node-cartodb-psql#node-v6",
-      "resolved": "git://github.com/cartodb/node-cartodb-psql.git#27ac5d271020c60487e5ba07a324b42ca6872ca7"
+      "version": "0.7.0",
+      "from": "cartodb-psql@0.7.0",
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.7.0.tgz"
     },
     "cartodb-query-tables": {
       "version": "0.2.0",
@@ -198,9 +203,9 @@
       "resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz"
     },
     "concat-stream": {
-      "version": "1.5.2",
+      "version": "1.6.0",
       "from": "concat-stream@>=1.5.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.5.2.tgz",
+      "resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.6.0.tgz",
       "dependencies": {
         "isarray": {
           "version": "1.0.0",
@@ -208,9 +213,9 @@
           "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz"
         },
         "readable-stream": {
-          "version": "2.0.6",
-          "from": "readable-stream@>=2.0.0 <2.1.0",
-          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz"
+          "version": "2.2.2",
+          "from": "readable-stream@>=2.2.2 <3.0.0",
+          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.2.2.tgz"
         }
       }
     },
@@ -1097,7 +1102,7 @@
     },
     "typedarray": {
       "version": "0.0.6",
-      "from": "typedarray@>=0.0.5 <0.1.0",
+      "from": "typedarray@>=0.0.6 <0.0.7",
       "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
     },
     "underscore": {
