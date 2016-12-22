@@ -48,7 +48,7 @@
     "mocha": "3.2.0",
     "shapefile": "0.3.0",
     "sqlite3": "3.1.8",
-    "zipfile": "0.5.11"
+    "zipfile": "cartodb/node-zipfile#0.5.11-cdb1"
   },
   "scripts": {
     "test": "make test-all",
