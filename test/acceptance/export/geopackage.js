@@ -68,6 +68,7 @@ describe('geopackage query', function(){
                   assert.equal(err, null);
                   assert.equal(row.cartodb_id, 1);
                   assert.equal(row.name, 'Hawai');
+                  assert.equal(row.fid, undefined);
                   done();
                 });
                 assert.notEqual(dqr, undefined);
