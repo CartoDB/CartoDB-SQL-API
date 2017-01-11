@@ -60,10 +60,10 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
   var ogr2ogr = global.settings.ogr2ogrCommand || 'ogr2ogr';
   var dbhost = dbopts.host;
-  var dbport = dbopts.port; 
-  var dbuser = dbopts.user; 
+  var dbport = dbopts.port;
+  var dbuser = dbopts.user;
   var dbpass = dbopts.pass;
-  var dbname = dbopts.dbname; 
+  var dbname = dbopts.dbname;
 
   var that = this;
 
@@ -72,7 +72,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
   var pg;
 
   // Drop ending semicolon (ogr doens't like it)
-  sql = sql.replace(/;\s*$/, ''); 
+  sql = sql.replace(/;\s*$/, '');
 
   step (
 
@@ -162,7 +162,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       }
 
       if (options.cmd_params){
-        ogrargs.concat(options.cmd_params);
+        ogrargs = ogrargs.concat(options.cmd_params);
       }
 
       ogrargs.push('-nln', out_layername);
@@ -318,7 +318,7 @@ ExportRequest.prototype.sendFile = function (err, filename, callback) {
     })
     .on('error', function(e) {
       console.log("Can't send response: " + e);
-      that.ostream.end(); 
+      that.ostream.end();
       callback();
     });
   } else {
