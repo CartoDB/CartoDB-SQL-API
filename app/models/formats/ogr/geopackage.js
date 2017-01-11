@@ -16,6 +16,7 @@ GeoPackageFormat.prototype._fileExtension = "gpkg";
 GeoPackageFormat.prototype._needSRS = true;
 
 GeoPackageFormat.prototype.generate = function(options, callback) {
+    options.cmd_params = ['-lco', 'FID=cartodb_id'];
     this.toOGR_SingleFile(options, 'GPKG', callback);
 };
 
