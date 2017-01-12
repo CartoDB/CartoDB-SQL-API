@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.42.7",
+  "version": "1.42.8",
   "dependencies": {
     "accepts": {
       "version": "1.2.13",

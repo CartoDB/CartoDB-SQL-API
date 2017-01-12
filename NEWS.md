@@ -1,7 +1,14 @@
 #Changelog
 
+## 1.42.8
+Released 2017-mm-dd
+
+
 ## 1.42.7
-Released 2016-mm-dd
+Released 2017-01-12
+
+Enhancements:
+ * Avoid gpkg fid column #404.
 
 Announcements:
  * Upgrade cartodb-psql to 0.7.0.
