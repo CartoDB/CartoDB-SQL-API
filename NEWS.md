@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.42.8
+Released 2017-mm-dd
+
+
 ## 1.42.7
 Released 2017-01-12
 
