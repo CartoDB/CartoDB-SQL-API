@@ -3,6 +3,9 @@
 ## 1.42.7
 Released 2016-mm-dd
 
+Enhancements:
+ * Avoid gpkg fid column #404.
+
 
 ## 1.42.6
 Released 2016-12-19
