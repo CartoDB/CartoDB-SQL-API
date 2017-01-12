@@ -1,7 +1,7 @@
 #Changelog
 
 ## 1.42.7
-Released 2016-mm-dd
+Released 2017-01-12
 
 Enhancements:
  * Avoid gpkg fid column #404.
