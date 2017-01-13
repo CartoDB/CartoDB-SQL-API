@@ -18,9 +18,9 @@
           "resolved": "https://registry.npmjs.org/dtrace-provider/-/dtrace-provider-0.6.0.tgz",
           "dependencies": {
             "nan": {
-              "version": "2.4.0",
+              "version": "2.5.0",
               "from": "nan@>=2.0.8 <3.0.0",
-              "resolved": "https://registry.npmjs.org/nan/-/nan-2.4.0.tgz"
+              "resolved": "https://registry.npmjs.org/nan/-/nan-2.5.0.tgz"
             }
           }
         },
@@ -133,24 +133,108 @@
       }
     },
     "cartodb-psql": {
-      "version": "0.6.1",
-      "from": "cartodb-psql@>=0.6.0 <0.7.0",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.6.1.tgz",
+      "version": "0.7.0",
+      "from": "cartodb-psql@0.7.0",
       "dependencies": {
         "pg": {
-          "version": "2.6.2-cdb3",
-          "from": "git://github.com/CartoDB/node-postgres.git#2.6.2-cdb3",
-          "resolved": "git://github.com/CartoDB/node-postgres.git#069c5296d1a093077feff21719641bb9e71fc50e",
+          "version": "6.1.2",
+          "from": "cartodb/node-postgres#6.1.2-cdb1",
+          "resolved": "git://github.com/cartodb/node-postgres.git#3c81aea432ce58d20a795786c58bbb14f68f9689",
           "dependencies": {
-            "generic-pool": {
-              "version": "2.0.3",
-              "from": "generic-pool@2.0.3",
-              "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.0.3.tgz"
-            },
             "buffer-writer": {
-              "version": "1.0.0",
-              "from": "buffer-writer@1.0.0",
-              "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-1.0.0.tgz"
+              "version": "1.0.1",
+              "from": "buffer-writer@1.0.1",
+              "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-1.0.1.tgz"
+            },
+            "packet-reader": {
+              "version": "0.2.0",
+              "from": "packet-reader@0.2.0",
+              "resolved": "https://registry.npmjs.org/packet-reader/-/packet-reader-0.2.0.tgz"
+            },
+            "pg-connection-string": {
+              "version": "0.1.3",
+              "from": "pg-connection-string@0.1.3",
+              "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
+            },
+            "pg-pool": {
+              "version": "1.6.0",
+              "from": "pg-pool@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/pg-pool/-/pg-pool-1.6.0.tgz",
+              "dependencies": {
+                "generic-pool": {
+                  "version": "2.4.2",
+                  "from": "generic-pool@2.4.2",
+                  "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.4.2.tgz"
+                },
+                "object-assign": {
+                  "version": "4.1.0",
+                  "from": "object-assign@4.1.0",
+                  "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.0.tgz"
+                }
+              }
+            },
+            "pg-types": {
+              "version": "1.11.0",
+              "from": "pg-types@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/pg-types/-/pg-types-1.11.0.tgz",
+              "dependencies": {
+                "ap": {
+                  "version": "0.2.0",
+                  "from": "ap@>=0.2.0 <0.3.0",
+                  "resolved": "https://registry.npmjs.org/ap/-/ap-0.2.0.tgz"
+                },
+                "postgres-array": {
+                  "version": "1.0.2",
+                  "from": "postgres-array@>=1.0.0 <1.1.0",
+                  "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.2.tgz"
+                },
+                "postgres-bytea": {
+                  "version": "1.0.0",
+                  "from": "postgres-bytea@>=1.0.0 <1.1.0",
+                  "resolved": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.0.tgz"
+                },
+                "postgres-date": {
+                  "version": "1.0.3",
+                  "from": "postgres-date@>=1.0.0 <1.1.0",
+                  "resolved": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.3.tgz"
+                },
+                "postgres-interval": {
+                  "version": "1.0.2",
+                  "from": "postgres-interval@>=1.0.0 <1.1.0",
+                  "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.0.2.tgz",
+                  "dependencies": {
+                    "xtend": {
+                      "version": "4.0.1",
+                      "from": "xtend@>=4.0.0 <5.0.0",
+                      "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz"
+                    }
+                  }
+                }
+              }
+            },
+            "pgpass": {
+              "version": "1.0.1",
+              "from": "pgpass@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.1.tgz",
+              "dependencies": {
+                "split": {
+                  "version": "1.0.0",
+                  "from": "split@>=1.0.0 <2.0.0",
+                  "resolved": "https://registry.npmjs.org/split/-/split-1.0.0.tgz",
+                  "dependencies": {
+                    "through": {
+                      "version": "2.3.8",
+                      "from": "through@>=2.0.0 <3.0.0",
+                      "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
+                    }
+                  }
+                }
+              }
+            },
+            "semver": {
+              "version": "4.3.2",
+              "from": "semver@4.3.2",
+              "resolved": "https://registry.npmjs.org/semver/-/semver-4.3.2.tgz"
             }
           }
         }
@@ -417,7 +501,7 @@
         },
         "type-is": {
           "version": "1.6.14",
-          "from": "type-is@>=1.6.6 <1.7.0",
+          "from": "type-is@>=1.6.4 <2.0.0",
           "resolved": "https://registry.npmjs.org/type-is/-/type-is-1.6.14.tgz",
           "dependencies": {
             "media-typer": {
@@ -562,25 +646,30 @@
           }
         },
         "concat-stream": {
-          "version": "1.5.2",
+          "version": "1.6.0",
           "from": "concat-stream@>=1.5.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.5.2.tgz",
+          "resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.6.0.tgz",
           "dependencies": {
             "inherits": {
               "version": "2.0.3",
-              "from": "inherits@>=2.0.1 <2.1.0",
+              "from": "inherits@>=2.0.3 <3.0.0",
               "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz"
             },
             "typedarray": {
               "version": "0.0.6",
-              "from": "typedarray@>=0.0.5 <0.1.0",
+              "from": "typedarray@>=0.0.6 <0.0.7",
               "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
             },
             "readable-stream": {
-              "version": "2.0.6",
-              "from": "readable-stream@>=2.0.0 <2.1.0",
-              "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz",
+              "version": "2.2.2",
+              "from": "readable-stream@>=2.2.2 <3.0.0",
+              "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.2.2.tgz",
               "dependencies": {
+                "buffer-shims": {
+                  "version": "1.0.0",
+                  "from": "buffer-shims@>=1.0.0 <2.0.0",
+                  "resolved": "https://registry.npmjs.org/buffer-shims/-/buffer-shims-1.0.0.tgz"
+                },
                 "core-util-is": {
                   "version": "1.0.2",
                   "from": "core-util-is@>=1.0.0 <1.1.0",
@@ -629,7 +718,7 @@
         },
         "on-finished": {
           "version": "2.3.0",
-          "from": "on-finished@>=2.3.0 <3.0.0",
+          "from": "on-finished@>=2.3.0 <2.4.0",
           "resolved": "https://registry.npmjs.org/on-finished/-/on-finished-2.3.0.tgz",
           "dependencies": {
             "ee-first": {
@@ -651,7 +740,7 @@
             },
             "mime-types": {
               "version": "2.1.13",
-              "from": "mime-types@>=2.1.7 <2.2.0",
+              "from": "mime-types@>=2.1.13 <2.2.0",
               "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.13.tgz",
               "dependencies": {
                 "mime-db": {
@@ -728,9 +817,9 @@
               "resolved": "https://registry.npmjs.org/bindings/-/bindings-1.2.1.tgz"
             },
             "nan": {
-              "version": "2.4.0",
+              "version": "2.5.0",
               "from": "nan@>=2.3.4 <3.0.0",
-              "resolved": "https://registry.npmjs.org/nan/-/nan-2.4.0.tgz"
+              "resolved": "https://registry.npmjs.org/nan/-/nan-2.5.0.tgz"
             }
           }
         }
@@ -742,9 +831,9 @@
       "resolved": "https://registry.npmjs.org/redlock/-/redlock-2.0.1.tgz",
       "dependencies": {
         "bluebird": {
-          "version": "3.4.6",
+          "version": "3.4.7",
           "from": "bluebird@>=3.3.3 <4.0.0",
-          "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.6.tgz"
+          "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.7.tgz"
         }
       }
     },
@@ -932,9 +1021,9 @@
                   }
                 },
                 "jsonpointer": {
-                  "version": "4.0.0",
+                  "version": "4.0.1",
                   "from": "jsonpointer@>=4.0.0 <5.0.0",
-                  "resolved": "https://registry.npmjs.org/jsonpointer/-/jsonpointer-4.0.0.tgz"
+                  "resolved": "https://registry.npmjs.org/jsonpointer/-/jsonpointer-4.0.1.tgz"
                 },
                 "xtend": {
                   "version": "4.0.1",
@@ -1087,7 +1176,7 @@
         },
         "mime-types": {
           "version": "2.1.13",
-          "from": "mime-types@>=2.1.7 <2.2.0",
+          "from": "mime-types@>=2.1.13 <2.2.0",
           "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.13.tgz",
           "dependencies": {
             "mime-db": {
