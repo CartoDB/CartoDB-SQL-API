@@ -3,6 +3,9 @@
 ## 1.43.1
 Released 2017-mm-dd
 
+Announcements:
+ * Upgrade cartodb-psql to 0.7.1.
+
 
 ## 1.43.0
 Released 2017-01-16
