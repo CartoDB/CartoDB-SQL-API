@@ -61,7 +61,16 @@ By default, GET requests work from anywhere. In CARTO, POST requests work from a
 
 ## Response formats
 
-The standard response from the CARTO SQL API is JSON. If you are building a web-application, the lightweight JSON format allows you to quickly integrate data from the SQL API.
+The SQL API accepts many output formats that can be useful to export data, such as: 
+
+- CSV
+- SHP
+- SVG
+- KML
+- SpatiaLite
+- GeoJSON
+
+The most common response format used is JSON. For example, if you are building a web-application, the lightweight JSON format allows you to quickly integrate data from the SQL API. This section focuses on the call and response functions for generating the JSON output format.
 
 ### JSON
 
@@ -125,9 +134,6 @@ https://{username}.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_na
   ]
 }
 ```
-
-The SQL API accepts other output formats that can be useful to export data. You can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
-
 
 ## Output filename
 
