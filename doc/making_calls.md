@@ -2,7 +2,7 @@
 
 CARTO is based on the rock solid PostgreSQL database. All of your tables reside a single database, which means you can perform complex queries joining tables, or carrying out geospatial operations. The best place to learn about PostgreSQL's SQL language is the [official documentation](http://www.postgresql.org/docs/9.1/static/).
 
-CARTO is also based on PostGIS, so take a look at the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
+CARTO is also based on PostGIS, so you can view the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
 
 
 ## URL endpoints
@@ -61,7 +61,16 @@ By default, GET requests work from anywhere. In CARTO, POST requests work from a
 
 ## Response formats
 
-The standard response from the CARTO SQL API is JSON. If you are building a web-application, the lightweight JSON format allows you to quickly integrate data from the SQL API.
+The SQL API accepts many output formats that can be useful to export data, such as: 
+
+- CSV
+- SHP
+- SVG
+- KML
+- SpatiaLite
+- GeoJSON
+
+The most common response format used is JSON. For example, if you are building a web-application, the lightweight JSON format allows you to quickly integrate data from the SQL API. This section focuses on the call and response functions for generating the JSON output format.
 
 ### JSON
 
@@ -125,9 +134,6 @@ https://{username}.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_na
   ]
 }
 ```
-
-The SQL API accepts other output formats that can be useful to export data. You can use the following formats: CSV, SHP, SVG, KML, SpatiaLite and GeoJSON.
-
 
 ## Output filename
 
