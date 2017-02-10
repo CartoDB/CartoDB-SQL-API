@@ -83,6 +83,7 @@ var version = require("./package").version;
 var server = require('./app/server')();
 var listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
+    console.info("Using Node.js %s", process.version);
     console.info('Using configuration file "%s"', configurationFile);
     console.log(
         "CartoDB SQL API %s listening on %s:%s PID=%d (%s)",
