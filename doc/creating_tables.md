@@ -2,7 +2,7 @@
 
 [Writing data to your CARTO account](https://carto.com/docs/carto-engine/sql-api/making-calls#write-data-to-your-carto-account) enables you to manage data through SQL queries, it does not automatically connect tables as datasets to _Your datasets_ dashboard in CARTO.
 
-You must apply the `CDB_CartodbfyTable`function to a target table in order to create and display connected datasets in your account. This additional step of "CARTOfying" data is the process of converting an arbitrary PostgreQL table into a valid CARTO table, and registering it into the system so that it can be used in the graphical user interface, and the CARTO Engine, to generate maps and analysis.
+You must apply the `CDB_CartodbfyTable`function to a target table in order to create and display connected datasets in your account. This additional step of "CARTOfying" data is the process of converting an arbitrary PostgreSQL table into a valid CARTO table, and registering it into the system so that it can be used in the graphical user interface, and the CARTO Engine, to generate maps and analysis.
 
 ## Create Tables
 
