@@ -1,4 +1,4 @@
-SQL API for cartodb.com
+SQL API for carto.com
 ========================
 
 [![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.png?branch=master)](https://travis-ci.org/CartoDB/CartoDB-SQL-API)

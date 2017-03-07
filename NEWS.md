@@ -1,5 +1,34 @@
 #Changelog
 
+## 1.43.1
+Released 2017-01-16
+
+Announcements:
+ * Upgrade cartodb-psql to 0.7.1.
+
+
+## 1.43.0
+Released 2017-01-16
+
+Announcements:
+ * Upgrade cartodb-psql to 0.7.0.
+
+
+## 1.42.7
+Released 2017-01-12
+
+Enhancements:
+ * Avoid gpkg fid column #404.
+
+
+## 1.42.6
+Released 2016-12-19
+
+Announcements:
+ * Upgrade cartodb-redis to 0.13.2.
+ * Upgrade redis-mpool to 0.4.1.
+
+
 ## 1.42.5
 Released 2016-12-12
 

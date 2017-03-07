@@ -1,5 +1,6 @@
 var assert = module.exports = exports = require('assert');
 var request = require('request');
+var debug = require('debug')('assert-response');
 
 assert.response = function(server, req, res, callback) {
     if (!callback) {
@@ -14,7 +15,9 @@ assert.response = function(server, req, res, callback) {
     var listener;
     function listen() {
         if (listeningAttempts > 25) {
-            return callback(new Error('Tried too many ports'));
+            var message = 'Tried too many ports';
+            debug(message);
+            return callback(new Error(message));
         }
         listener = server.listen(port, host);
         listener.on('error', function() {
@@ -27,8 +30,11 @@ assert.response = function(server, req, res, callback) {
 
     listen();
 
+    debug('Request definition', req);
+
     // jshint maxcomplexity:10
     function onServerListening() {
+        debug('Server listening on port = %d', port);
         var status = res.status || res.statusCode;
         var requestParams = {
             url: 'http://' + host + ':' + port + req.url,
@@ -42,14 +48,18 @@ assert.response = function(server, req, res, callback) {
             requestParams.body = req.body || req.data;
         }
 
+        debug('Request params', requestParams);
         request(requestParams, function assert$response$requestHandler(error, response, body) {
+            debug('Request response', error);
             listener.close(function() {
+                debug('Server closed');
                 if (error) {
                     return callback(error);
                 }
 
                 response = response || {};
                 response.body = response.body || body;
+                debug('Response status', response.statusCode)
 
                 // Assert response body
                 if (res.body) {
@@ -89,7 +99,7 @@ assert.response = function(server, req, res, callback) {
                 }
 
                 // Callback
-                callback(null, response);
+                return callback(null, response);
             });
         });
 
