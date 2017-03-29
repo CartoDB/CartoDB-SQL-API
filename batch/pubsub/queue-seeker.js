@@ -37,10 +37,10 @@ QueueSeeker.prototype._seek = function (client, cursor, users, attemps, callback
 
         var queues = currentCursor[1];
         if (queues) {
-            queues.forEach(function (queue) {
-                var user = queue.substr(QUEUE.PREFIX.length);
+            for (var i = 0; i < queues.length; i++) {
+                var user = queues[i].substr(QUEUE.PREFIX.length);
                 users[user] = true;
-            });
+            }
         }
 
         var hasMore = (parseInt(currentCursor[0], 10) > 0) && (attemps < MAX_SCAN_ATTEMPTS);
