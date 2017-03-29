@@ -43,7 +43,8 @@ QueueSeeker.prototype._seek = function (client, cursor, users, attemps, callback
             });
         }
 
-        var hasMore = currentCursor[0] !== '0' && attemps < MAX_SCAN_ATTEMPTS;
+        var hasMore = (parseInt(currentCursor[0], 10) > 0) && (attemps < MAX_SCAN_ATTEMPTS);
+
         if (!hasMore) {
             return callback(null, users);
         }
