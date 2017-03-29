@@ -1,6 +1,7 @@
 'use strict';
 
 var QUEUE = require('../job_queue').QUEUE;
+var MAX_SCAN_ATTEMPTS = 50;
 
 function QueueSeeker(pool) {
     this.pool = pool;
@@ -10,6 +11,7 @@ module.exports = QueueSeeker;
 
 QueueSeeker.prototype.seek = function (callback) {
     var initialCursor = ['0'];
+    var attemps = 0;
     var users = {};
     var self = this;
 
@@ -17,14 +19,14 @@ QueueSeeker.prototype.seek = function (callback) {
         if (err) {
             return callback(err);
         }
-        self._seek(client, initialCursor, users, function(err, users) {
+        self._seek(client, initialCursor, users, attemps, function(err, users) {
             self.pool.release(QUEUE.DB, client);
             return callback(err, Object.keys(users));
         });
     });
 };
 
-QueueSeeker.prototype._seek = function (client, cursor, users, callback) {
+QueueSeeker.prototype._seek = function (client, cursor, users, attemps, callback) {
     var self = this;
     var redisParams = [cursor[0], 'MATCH', QUEUE.PREFIX + '*'];
 
@@ -41,11 +43,13 @@ QueueSeeker.prototype._seek = function (client, cursor, users, callback) {
             });
         }
 
-        var hasMore = currentCursor[0] !== '0';
+        var hasMore = currentCursor[0] !== '0' && attemps < MAX_SCAN_ATTEMPTS;
         if (!hasMore) {
             return callback(null, users);
         }
 
-        self._seek(client, currentCursor, users, callback);
+        attemps += 1;
+
+        self._seek(client, currentCursor, users, attemps, callback);
     });
 };
