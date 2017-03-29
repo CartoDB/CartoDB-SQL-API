@@ -2,6 +2,7 @@
 
 var QUEUE = require('../job_queue').QUEUE;
 var MAX_SCAN_ATTEMPTS = 50;
+var SCAN_COUNT_VALUE = 50;
 
 function QueueSeeker(pool) {
     this.pool = pool;
@@ -28,7 +29,7 @@ QueueSeeker.prototype.seek = function (callback) {
 
 QueueSeeker.prototype._seek = function (client, cursor, users, attemps, callback) {
     var self = this;
-    var redisParams = [cursor[0], 'MATCH', QUEUE.PREFIX + '*'];
+    var redisParams = [cursor[0], 'MATCH', QUEUE.PREFIX + '*', 'COUNT', SCAN_COUNT_VALUE];
 
     client.scan(redisParams, function(err, currentCursor) {
         if (err) {
