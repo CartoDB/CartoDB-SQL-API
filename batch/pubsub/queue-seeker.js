@@ -36,7 +36,7 @@ QueueSeeker.prototype._seek = function (client, cursor, users, attemps, callback
         }
 
         var queues = currentCursor[1];
-        if (queues) {
+        if (Array.isArray(queues)) {
             for (var i = 0; i < queues.length; i++) {
                 var user = queues[i].substr(QUEUE.PREFIX.length);
                 users[user] = true;
