@@ -89,9 +89,9 @@ if (global.settings.statsd) {
         global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, hostToken);
     }
 }
-global.statsClient = StatsClient.getInstance(global.settings.statsd);
+var statsClient = StatsClient.getInstance(global.settings.statsd);
 
-var server = require('./app/server')(global.statsClient);
+var server = require('./app/server')(statsClient);
 var listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
@@ -151,7 +151,7 @@ if (global.gc && isGteMinVersion(process.version, 6)) {
         setInterval(function gcForcedCycle() {
             var start = Date.now();
             global.gc();
-            global.statsClient.timing('sqlapi.gc', Date.now() - start);
+            statsClient.timing('sqlapi.gc', Date.now() - start);
         }, gcInterval);
     }
 }
