@@ -11,6 +11,7 @@
 */
 var fs = require('fs');
 var path = require('path');
+var os = require('os');
 
 var argv = require('yargs')
     .usage('Usage: $0 <environment> [options]')
@@ -80,7 +81,17 @@ if ( ! global.settings.base_url ) {
 
 var version = require("./package").version;
 
-var server = require('./app/server')();
+var StatsClient = require('./app/stats/client');
+if (global.settings.statsd) {
+    // Perform keyword substitution in statsd
+    if (global.settings.statsd.prefix) {
+        var hostToken = os.hostname().split('.').reverse().join('.');
+        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, hostToken);
+    }
+}
+global.statsClient = StatsClient.getInstance(global.settings.statsd);
+
+var server = require('./app/server')(global.statsClient);
 var listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
