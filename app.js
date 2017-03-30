@@ -130,3 +130,28 @@ process.on('SIGTERM', function () {
         process.exit(0);
     });
 });
+
+function isGteMinVersion(version, minVersion) {
+    var versionMatch = /[a-z]?([0-9]*)/.exec(version);
+    if (versionMatch) {
+        var majorVersion = parseInt(versionMatch[1], 10);
+        if (Number.isFinite(majorVersion)) {
+            return majorVersion >= minVersion;
+        }
+    }
+    return false;
+}
+
+if (global.gc && isGteMinVersion(process.version, 6)) {
+    var gcInterval = Number.isFinite(global.settings.gc_interval) ?
+        global.settings.gc_interval :
+        10000;
+
+    if (gcInterval > 0) {
+        setInterval(function gcForcedCycle() {
+            var start = Date.now();
+            global.gc();
+            global.statsClient.timing('sqlapi.gc', Date.now() - start);
+        }, gcInterval);
+    }
+}
