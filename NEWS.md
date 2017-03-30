@@ -1,7 +1,7 @@
 #Changelog
 
 ## 1.44.0
-Released 2017-mm-dd
+Released 2017-03-30
 
 Announcements:
  * Active GC interval for Node.js >=v6.
