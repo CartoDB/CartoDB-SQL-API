@@ -2,22 +2,29 @@
 
 var debug = require('./util/debug')('queue');
 
-function JobQueue(metadataBackend, jobPublisher) {
+function JobQueue(metadataBackend, jobPublisher, queueIndex) {
     this.metadataBackend = metadataBackend;
     this.jobPublisher = jobPublisher;
+    this.queueIndex = queueIndex;
 }
 
 module.exports = JobQueue;
 
 var QUEUE = {
     DB: 5,
-    PREFIX: 'batch:queue:'
+    PREFIX: 'batch:queue:',
+    INDEX: 'batch:indexes:queue'
 };
+
 module.exports.QUEUE = QUEUE;
 
 JobQueue.prototype.enqueue = function (user, jobId, callback) {
     debug('JobQueue.enqueue user=%s, jobId=%s', user, jobId);
-    this.metadataBackend.redisCmd(QUEUE.DB, 'LPUSH', [ QUEUE.PREFIX + user, jobId ], function (err) {
+
+    this.metadataBackend.redisMultiCmd(QUEUE.DB, [
+        [ 'LPUSH', QUEUE.PREFIX + user, jobId ],
+        [ 'SADD', QUEUE.INDEX, user ]
+    ], function (err) {
         if (err) {
             return callback(err);
         }
@@ -32,7 +39,23 @@ JobQueue.prototype.size = function (user, callback) {
 };
 
 JobQueue.prototype.dequeue = function (user, callback) {
-    this.metadataBackend.redisCmd(QUEUE.DB, 'RPOP', [ QUEUE.PREFIX + user ], function(err, jobId) {
+    var dequeueScript = [
+        'local job_id = redis.call("RPOP", KEYS[1])',
+        'if redis.call("LLEN", KEYS[1]) == 0 then',
+        '   redis.call("SREM", KEYS[2], ARGV[1])',
+        'end',
+        'return job_id'
+    ].join('\n');
+
+    var redisParams = [
+        dequeueScript, //lua source code
+        2, // Two "keys" to pass
+        QUEUE.PREFIX + user, //KEYS[1], the key of the queue
+        QUEUE.INDEX, //KEYS[2], the key of the index
+        user // ARGV[1] - value of the element to remove form the index
+    ];
+
+    this.metadataBackend.redisCmd(QUEUE.DB, 'EVAL', redisParams, function (err, jobId) {
         debug('JobQueue.dequeued user=%s, jobId=%s', user, jobId);
         return callback(err, jobId);
     });
