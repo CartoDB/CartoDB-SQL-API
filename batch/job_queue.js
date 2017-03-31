@@ -2,10 +2,9 @@
 
 var debug = require('./util/debug')('queue');
 
-function JobQueue(metadataBackend, jobPublisher, queueIndex) {
+function JobQueue(metadataBackend, jobPublisher) {
     this.metadataBackend = metadataBackend;
     this.jobPublisher = jobPublisher;
-    this.queueIndex = queueIndex;
 }
 
 module.exports = JobQueue;
