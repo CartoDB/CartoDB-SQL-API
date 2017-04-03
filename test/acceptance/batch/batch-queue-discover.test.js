@@ -23,13 +23,6 @@ describe('batch startup', function() {
     var jobCanceller = new JobCanceller(userDatabaseMetadataService);
     var jobService = new JobService(jobBackend, jobCanceller);
 
-    var batch = batchFactory(metadataBackend, pool);
-
-    after(function (done) {
-        batch.stop();
-        redisUtils.clean('batch:*', done);
-    });
-
     function createJob(sql, done) {
         var data = {
             user: username,
@@ -52,10 +45,15 @@ describe('batch startup', function() {
                 return done(err);
             }
 
+            var batch = batchFactory(metadataBackend, pool);
             batch.start();
-
             batch.on('ready', function () {
-                var onDiscoveredQueue = function () {};
+                var queuesDiscovered = 0;
+
+                var onDiscoveredQueue = function () {
+                    queuesDiscovered += 1;
+                };
+
                 queueDiscover(pool, onDiscoveredQueue, function (err, client, queues) {
                     if (err) {
                         done(err);
@@ -63,7 +61,11 @@ describe('batch startup', function() {
 
                     assert.equal(queues.length, 1);
                     assert.equal(queues[0], 'vizzuality');
-                    done();
+                    assert.equal(queuesDiscovered, 1);
+
+                    batch.stop(function () {
+                        redisUtils.clean('batch:*', done);
+                    });
                 });
             });
         });
