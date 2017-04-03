@@ -51,7 +51,7 @@ JobQueue.prototype.dequeue = function (user, callback) {
         2, // Two "keys" to pass
         QUEUE.PREFIX + user, //KEYS[1], the key of the queue
         QUEUE.INDEX, //KEYS[2], the key of the index
-        user // ARGV[1] - value of the element to remove form the index
+        user // ARGV[1] - value of the element to remove from the index
     ];
 
     this.metadataBackend.redisCmd(QUEUE.DB, 'EVAL', redisParams, function (err, jobId) {
