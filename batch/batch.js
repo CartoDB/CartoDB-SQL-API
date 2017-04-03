@@ -5,6 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var debug = require('./util/debug')('batch');
 var queue = require('queue-async');
 var HostScheduler = require('./scheduler/host-scheduler');
+var startupQueueDiscover = require('./pubsub/queue-discover').startupQueueDiscover;
 
 var EMPTY_QUEUE = true;
 
@@ -18,6 +19,7 @@ function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublishe
     this.jobPublisher = jobPublisher;
     this.logger = logger;
     this.hostScheduler = new HostScheduler(this.name, { run: this.processJob.bind(this) }, redisPool);
+    this.pool = redisPool;
 
     // map: user => jobId. Will be used for draining jobs.
     this.workInProgressJobs = {};
@@ -46,7 +48,13 @@ Batch.prototype.start = function () {
                 return self.emit('error', err);
             }
 
-            self.emit('ready');
+            startupQueueDiscover(self.pool, function (err) {
+                if (err) {
+                    return self.emit('error', err);
+                }
+
+                self.emit('ready');
+            });
         }
     );
 };
