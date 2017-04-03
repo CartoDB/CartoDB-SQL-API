@@ -40,7 +40,7 @@ describe('batch startup', function() {
     }
 
     it('should feed queue index at startup', function (done) {
-        createJob('select pg_sleep(3)', function (err) {
+        createJob('select 1', function (err) {
             if (err) {
                 return done(err);
             }
