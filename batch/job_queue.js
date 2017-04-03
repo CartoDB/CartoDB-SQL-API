@@ -1,6 +1,7 @@
 'use strict';
 
 var debug = require('./util/debug')('queue');
+var queueAsync = require('queue-async');
 
 function JobQueue(metadataBackend, jobPublisher) {
     this.metadataBackend = metadataBackend;
@@ -63,4 +64,92 @@ JobQueue.prototype.dequeue = function (user, callback) {
 JobQueue.prototype.enqueueFirst = function (user, jobId, callback) {
     debug('JobQueue.enqueueFirst user=%s, jobId=%s', user, jobId);
     this.metadataBackend.redisCmd(QUEUE.DB, 'RPUSH', [ QUEUE.PREFIX + user, jobId ], callback);
+};
+
+
+JobQueue.prototype.getQueues = function (callback) {
+    this.metadataBackend.redisCmd(QUEUE.DB, 'SMEMBERS', [ QUEUE.INDEX ], function (err, queues) {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, queues);
+    });
+};
+
+JobQueue.prototype.scanQueues = function (callback) {
+    var self = this;
+
+    self.scan(function (err, queues) {
+        if (err) {
+            return callback(err);
+        }
+
+        self.addToQueueIndex(queues, function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, queues);
+        });
+    });
+};
+
+JobQueue.prototype.scan = function (callback) {
+    var self = this;
+    var initialCursor = ['0'];
+    var users = {};
+
+    self._scan(initialCursor, users, function(err, users) {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, Object.keys(users));
+    });
+};
+
+JobQueue.prototype._scan = function (cursor, users, callback) {
+    var self = this;
+    var redisParams = [cursor[0], 'MATCH', QUEUE.PREFIX + '*'];
+
+    self.metadataBackend.redisCmd(QUEUE.DB, 'SCAN', redisParams, function (err, currentCursor) {
+        if (err) {
+            return callback(null, users);
+        }
+
+        var queues = currentCursor[1];
+        if (queues) {
+            queues.forEach(function (queue) {
+                var user = queue.substr(QUEUE.PREFIX.length);
+                users[user] = true;
+            });
+        }
+
+        var hasMore = currentCursor[0] !== '0';
+        if (!hasMore) {
+            return callback(null, users);
+        }
+
+        self._scan(currentCursor, users, callback);
+    });
+};
+
+JobQueue.prototype.addToQueueIndex = function (users, callback) {
+    var self = this;
+    var usersQueues = queueAsync(users.length);
+
+    users.forEach(function (user) {
+        usersQueues.defer(function (user, callback) {
+            self.metadataBackend.redisCmd(QUEUE.DB, 'SADD', [ QUEUE.INDEX, user], callback);
+        }, user);
+    });
+
+    usersQueues.awaitAll(function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null);
+    });
 };
