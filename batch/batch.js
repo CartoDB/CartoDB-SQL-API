@@ -9,7 +9,7 @@ var HostScheduler = require('./scheduler/host-scheduler');
 var EMPTY_QUEUE = true;
 
 var MINUTE = 60 * 1000;
-var CONSUME_QUEUE_INTERVAL = 1 * MINUTE;
+var SCHEDULE_INTERVAL = 1 * MINUTE;
 
 function Batch(name, userDatabaseMetadataService, jobSubscriber, jobQueue, jobRunner, jobService, redisPool, logger) {
     EventEmitter.call(this);
@@ -39,7 +39,7 @@ Batch.prototype.start = function () {
         }
 
         queues.forEach(onJobHandler);
-        self._startQueueConsumerInterval(onJobHandler);
+        self._startScheduleInterval(onJobHandler);
 
         self.jobSubscriber.subscribe(onJobHandler, function (err) {
             if (err) {
@@ -72,10 +72,10 @@ function createJobHandler (name, userDatabaseMetadataService, hostScheduler) {
     };
 }
 
-Batch.prototype._startQueueConsumerInterval = function (onJobHandler) {
+Batch.prototype._startScheduleInterval = function (onJobHandler) {
     var self = this;
 
-    self.consumeQueueInterval = setInterval(function () {
+    self.scheduleInterval = setInterval(function () {
         self.jobQueue.getQueues(function (err, queues) {
             if (err) {
                 return debug('Could not get queues from %s. Reason: %s', self.name, err.message);
@@ -83,12 +83,12 @@ Batch.prototype._startQueueConsumerInterval = function (onJobHandler) {
 
             queues.forEach(onJobHandler);
         });
-    }, CONSUME_QUEUE_INTERVAL);
+    }, SCHEDULE_INTERVAL);
 };
 
-Batch.prototype._stopQueueConsumerInterval = function () {
-    if (this.consumeQueueInterval) {
-        clearInterval(this.consumeQueueInterval);
+Batch.prototype._stopScheduleInterval = function () {
+    if (this.scheduleInterval) {
+        clearInterval(this.scheduleInterval);
     }
 };
 
@@ -191,7 +191,7 @@ Batch.prototype._drainJob = function (user, callback) {
 
 Batch.prototype.stop = function (callback) {
     this.removeAllListeners();
-    this._stopQueueConsumerInterval();
+    this._stopScheduleInterval();
     this.jobSubscriber.unsubscribe(callback);
 };
 
