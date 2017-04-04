@@ -95,7 +95,7 @@ describe('job queue', function () {
                 }
 
                 assert.equal(queuesFromScan.length, 1);
-                assert.equal(queuesFromScan[0], 'vizzuality');
+                assert.ok(queuesFromScan.indexOf(data.user) >= 0);
 
                 self.jobQueue.getQueues(function (err, queuesFromIndex) {
                     if (err) {
@@ -103,8 +103,7 @@ describe('job queue', function () {
                     }
 
                     assert.equal(queuesFromIndex.length, 1);
-                    assert.equal(queuesFromIndex[0], 'vizzuality');
-                    assert.deepEqual(queuesFromIndex, queuesFromScan);
+                    assert.ok(queuesFromIndex.indexOf(data.user) >= 0);
 
                     redisUtils.clean('batch:*', done);
                 });
@@ -113,7 +112,7 @@ describe('job queue', function () {
         });
     });
 
-    it('.scanQueues() should feed queue index', function (done) {
+    it('.scanQueues() should feed queue index with two users', function (done) {
         var self = this;
 
         var jobVizzuality = {
@@ -144,6 +143,8 @@ describe('job queue', function () {
                     }
 
                     assert.equal(queuesFromScan.length, 2);
+                    assert.ok(queuesFromScan.indexOf(jobVizzuality.user) >= 0);
+                    assert.ok(queuesFromScan.indexOf(jobWadus.user) >= 0);
 
                     self.jobQueue.getQueues(function (err, queuesFromIndex) {
                         if (err) {
@@ -151,7 +152,8 @@ describe('job queue', function () {
                         }
 
                         assert.equal(queuesFromIndex.length, 2);
-                        assert.deepEqual(queuesFromIndex, queuesFromScan);
+                        assert.ok(queuesFromIndex.indexOf(jobVizzuality.user) >= 0);
+                        assert.ok(queuesFromIndex.indexOf(jobWadus.user) >= 0);
 
                         redisUtils.clean('batch:*', done);
                     });
