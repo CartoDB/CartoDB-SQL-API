@@ -9,6 +9,12 @@ describe('batch API job queue', function () {
                 process.nextTick(function () {
                     callback(null, 'irrelevantJob');
                 });
+            },
+            redisMultiCmd: function () {
+                var callback = arguments[arguments.length -1];
+                process.nextTick(function () {
+                    callback(null, 'irrelevantJob');
+                });
             }
         };
         this.jobPublisher = {

@@ -30,7 +30,10 @@ describe('batch API job subscriber', function () {
             removeAllListeners: function () {
                 return this;
             },
-            connected: true
+            smembers: function (key, callback) {
+                callback(null, []);
+            },
+            connected: true,
         };
         this.pool = {
             acquire: function (db, cb) {
