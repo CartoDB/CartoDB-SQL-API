@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.43.1",
+  "version": "1.44.1",
   "dependencies": {
     "bintrees": {
       "version": "1.0.1",

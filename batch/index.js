@@ -15,7 +15,7 @@ var Batch = require('./batch');
 module.exports = function batchFactory (metadataBackend, redisPool, name, statsdClient, loggerPath) {
     var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 
-    var jobSubscriber = new JobSubscriber(redisPool, userDatabaseMetadataService);
+    var jobSubscriber = new JobSubscriber(redisPool);
     var jobPublisher = new JobPublisher(redisPool);
 
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
@@ -28,11 +28,11 @@ module.exports = function batchFactory (metadataBackend, redisPool, name, statsd
 
     return new Batch(
         name,
+        userDatabaseMetadataService,
         jobSubscriber,
         jobQueue,
         jobRunner,
         jobService,
-        jobPublisher,
         redisPool,
         logger
     );
