@@ -1,7 +1,10 @@
 #Changelog
 
 ## 1.44.1
-Released 2017-mm-dd
+Released 2017-04-04
+
+Bug fixes:
+ - Avoid to scan the whole meta-database to discover active job queues. Now Batch Queries uses a set as index to know what queues are being processed #415
 
 
 ## 1.44.0
