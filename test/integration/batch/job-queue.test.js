@@ -75,6 +75,22 @@ describe('job queue', function () {
         });
     });
 
+    it('should find queues from jobs not using new Redis SETs for users', function(done) {
+        var self = this;
+        var redisArgs = [JobQueue.QUEUE.PREFIX + userA, 'wadus-id'];
+        metadataBackend.redisCmd(JobQueue.QUEUE.DB, 'LPUSH', redisArgs, function (err) {
+            assert.ok(!err, err);
+            self.jobQueue.scanQueues(function (err, queues) {
+                assert.ok(!err, err);
+
+                assert.equal(queues.length, 1);
+                assert.equal(queues[0], userA);
+
+                return done();
+            });
+        });
+    });
+
     it('.scanQueues() should feed queue index', function (done) {
         var self = this;
 
