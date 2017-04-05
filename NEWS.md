@@ -1,5 +1,12 @@
 #Changelog
 
+## 1.44.2
+Released 2017-04-05
+
+Bug fixes:
+ - Update queue index while enqueueing jobs to the top of queue.
+
+
 ## 1.44.1
 Released 2017-04-04
 
