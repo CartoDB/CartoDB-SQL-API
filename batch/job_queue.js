@@ -1,7 +1,6 @@
 'use strict';
 
 var debug = require('./util/debug')('queue');
-var queueAsync = require('queue-async');
 
 function JobQueue(metadataBackend, jobPublisher) {
     this.metadataBackend = metadataBackend;
@@ -77,24 +76,6 @@ JobQueue.prototype.getQueues = function (callback) {
     });
 };
 
-JobQueue.prototype.scanQueues = function (callback) {
-    var self = this;
-
-    self.scan(function (err, queues) {
-        if (err) {
-            return callback(err);
-        }
-
-        self.addToQueueIndex(queues, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, queues);
-        });
-    });
-};
-
 JobQueue.prototype.scan = function (callback) {
     var self = this;
     var initialCursor = ['0'];
@@ -132,24 +113,5 @@ JobQueue.prototype._scan = function (cursor, users, callback) {
         }
 
         self._scan(currentCursor, users, callback);
-    });
-};
-
-JobQueue.prototype.addToQueueIndex = function (users, callback) {
-    var self = this;
-    var usersQueues = queueAsync(users.length);
-
-    users.forEach(function (user) {
-        usersQueues.defer(function (user, callback) {
-            self.metadataBackend.redisCmd(QUEUE.DB, 'SADD', [ QUEUE.INDEX, user], callback);
-        }, user);
-    });
-
-    usersQueues.awaitAll(function (err) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null);
     });
 };

@@ -33,21 +33,14 @@ Batch.prototype.start = function () {
     var self = this;
     var onJobHandler = createJobHandler(self.name, self.userDatabaseMetadataService, self.hostScheduler);
 
-    self.jobQueue.scanQueues(function (err, queues) {
+    self._startScheduleInterval(onJobHandler);
+
+    self.jobSubscriber.subscribe(onJobHandler, function (err) {
         if (err) {
             return self.emit('error', err);
         }
 
-        queues.forEach(onJobHandler);
-        self._startScheduleInterval(onJobHandler);
-
-        self.jobSubscriber.subscribe(onJobHandler, function (err) {
-            if (err) {
-                return self.emit('error', err);
-            }
-
-            self.emit('ready');
-        });
+        self.emit('ready');
     });
 };
 
