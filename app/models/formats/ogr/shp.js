@@ -33,10 +33,10 @@ ShpFormat.prototype.toSHP = function (options, callback) {
   var filename = options.filename;
 
   var fmtObj = this;
-  var zip = 'zip'; // FIXME: make configurable
+  var zip = global.settings.zipCommand || 'zip';
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ 'shp', dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey; 
+  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var zipfile = outdirpath + '.zip';
   var shapefile = outdirpath + '/' + filename + '.shp';
 
@@ -63,7 +63,7 @@ ShpFormat.prototype.toSHP = function (options, callback) {
         //console.log("Zip complete, zip return code was " + code);
         if (code) {
           next(new Error("Zip command return code " + code));
-          //res.statusCode = 500; 
+          //res.statusCode = 500;
         }
         next(null);
       });
@@ -116,4 +116,3 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
 
 module.exports = ShpFormat;
-
