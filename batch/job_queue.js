@@ -63,7 +63,17 @@ JobQueue.prototype.dequeue = function (user, callback) {
 
 JobQueue.prototype.enqueueFirst = function (user, jobId, callback) {
     debug('JobQueue.enqueueFirst user=%s, jobId=%s', user, jobId);
-    this.metadataBackend.redisCmd(QUEUE.DB, 'RPUSH', [ QUEUE.PREFIX + user, jobId ], callback);
+    this.metadataBackend.redisMultiCmd(QUEUE.DB, [
+        [ 'RPUSH', QUEUE.PREFIX + user, jobId ],
+        [ 'SADD', QUEUE.INDEX, user ]
+    ], function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        this.jobPublisher.publish(user);
+        callback();
+    }.bind(this));
 };
 
 
