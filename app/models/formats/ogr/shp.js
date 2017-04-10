@@ -59,15 +59,24 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
       var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
 
-      child.on('exit', function(code) {
-        //console.log("Zip complete, zip return code was " + code);
-        if (code) {
-          next(new Error("Zip command return code " + code));
-          //res.statusCode = 500;
-        }
-        next(null);
+      var stderrData = [];
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', function (data) {
+        stderrData.push(data);
       });
 
+      child.on('exit', function(code) {
+        if (code !== 0) {
+          var errMessage = 'Zip command return code ' + code;
+          if (stderrData.length) {
+            errMessage += ', Error: ' + stderrData.join('\n');
+          }
+
+          return next(new Error(errMessage));
+        }
+
+        return next();
+      });
     },
     function cleanupDir(topError) {
 
