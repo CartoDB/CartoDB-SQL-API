@@ -59,6 +59,10 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
       var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
 
+      child.on('error', function (err) {
+        next(err);
+      });
+
       var stderrData = [];
       child.stderr.setEncoding('utf8');
       child.stderr.on('data', function (data) {
