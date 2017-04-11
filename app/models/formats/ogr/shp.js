@@ -86,8 +86,6 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
       var next = this;
 
-      //console.log("Cleaning up " + outdirpath);
-
       // Unlink the dir content
       var unlinkall = function(dir, files, finish) {
         var f = files.shift();
