@@ -169,9 +169,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       var child = spawn(ogr2ogr, ogrargs);
 
-/*
-console.log('ogr2ogr ' + _.map(ogrargs, function(x) { return "'" + x + "'"; }).join(' '));
-*/
+      child.on('error', function (err) {
+        next(err);
+      });
 
       var stdout = '';
       child.stdout.on('data', function(data) {
