@@ -380,4 +380,24 @@ it('point with null first', function(done){
         );
     });
 
+    it('SHP zip, wrong path for zip command should return error', function(done){
+        global.settings.zipCommand = '/wrong/path';
+        var query = querystring.stringify({
+            q: "SELECT st_makepoint(0,0,4326) as the_geom",
+            format: 'shp',
+            filename: 'myshape'
+        });
+        assert.response(server, {
+            url: '/api/v1/sql?' + query,
+            headers: {host: 'vizzuality.cartodb.com'},
+            encoding: 'binary',
+            method: 'GET'
+        },{ }, function(err, res){
+            assert.equal(res.statusCode, 400, res.body);
+            var parsedBody = JSON.parse(res.body);
+            var expectedBody = {"error":["Error executing zip command:  Error: spawn ENOENT"]};
+            assert.deepEqual(parsedBody, expectedBody);
+            done();
+        });
+    });
 });
