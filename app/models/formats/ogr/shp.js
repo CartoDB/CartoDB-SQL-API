@@ -61,7 +61,7 @@ ShpFormat.prototype.toSHP = function (options, callback) {
       var child = spawn(zip, [zipOptions, zipfile, outdirpath ]);
 
       child.on('error', function (err) {
-        next(new Error('Error executing zip command:  ' + err));
+        next(new Error('Error executing zip command,  ' + err));
       });
 
       var stderrData = [];

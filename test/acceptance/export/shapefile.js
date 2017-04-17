@@ -395,8 +395,8 @@ it('point with null first', function(done){
         },{ }, function(err, res){
             assert.equal(res.statusCode, 400, res.body);
             var parsedBody = JSON.parse(res.body);
-            var expectedBody = {"error":["Error executing zip command:  Error: spawn ENOENT"]};
-            assert.deepEqual(parsedBody, expectedBody);
+            var respBodyPattern = new RegExp('Error executing zip command,  Error: spawn(.*)ENOENT', 'i');
+            assert.equal(respBodyPattern.test(parsedBody.error[0]), true);
             done();
         });
     });
