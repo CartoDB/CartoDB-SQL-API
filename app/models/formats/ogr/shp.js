@@ -34,6 +34,7 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
   var fmtObj = this;
   var zip = global.settings.zipCommand || 'zip';
+  var zipOptions = '-qrj';
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ 'shp', dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
   var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
@@ -57,10 +58,10 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
       var next = this;
 
-      var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
+      var child = spawn(zip, [zipOptions, zipfile, outdirpath ]);
 
       child.on('error', function (err) {
-        next(err);
+        next(new Error('Error executing zip command:  ' + err));
       });
 
       var stderrData = [];
