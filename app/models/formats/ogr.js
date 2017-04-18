@@ -173,34 +173,25 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         next(err);
       });
 
-      var stdout = '';
-      child.stdout.on('data', function(data) {
-        stdout += data;
-        //console.log('stdout: ' + data);
-      });
-
-      var stderr;
-      var logErrPat = new RegExp(/^ERROR/);
-      child.stderr.on('data', function(data) {
-        data = data.toString(); // know of a faster way ?
-        // Store only the first ERROR line
-        if ( ! stderr && data.match(logErrPat) ) {
-            stderr = data;
-        }
-        console.log('ogr2ogr stderr: ' + data);
+      var stderrData = [];
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', function (data) {
+        stderrData.push(data);
       });
 
       child.on('exit', function(code) {
-        if ( code ) {
-          console.log("ogr2ogr exited with code " + code);
-          var emsg = stderr ? stderr.split('\n')[0] : ( "unknown ogr2ogr error (code " + code + ")" );
-          // TODO: add more info about this error ?
-          //if ( RegExp(/attempt to write non-.*geometry.*to.*type shapefile/i).exec(emsg) )
-          next(new Error(emsg));
-        } else {
-          next(null);
+        if (code !== 0) {
+          var errMessage = 'ogr2ogr command return code ' + code;
+          if (stderrData.length > 0) {
+            errMessage += ', Error: ' + stderrData.join('\n');
+          }
+
+          return next(new Error(errMessage));
         }
+
+        return next();
       });
+
     },
     function finish(err) {
       callback(err, out_filename);
