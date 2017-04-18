@@ -197,8 +197,9 @@ it('mixed type geometry', function(done){
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
         var parsedBody = JSON.parse(res.body);
-        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]};
-        assert.deepEqual(parsedBody, expectedBody);
+        var error = parsedBody.error[0];
+        var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
+        assert.ok(expectedError.test(error), error);
         done();
     });
 });
@@ -222,8 +223,9 @@ it('errors are not confused with warnings', function(done){
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
         var parsedBody = JSON.parse(res.body);
-        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]};
-        assert.deepEqual(parsedBody, expectedBody);
+        var error = parsedBody.error[0];
+        var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
+        assert.ok(expectedError.test(error), error);
         done();
     });
 });
