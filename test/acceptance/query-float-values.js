@@ -3,7 +3,6 @@ require('../helper');
 var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
-var _ = require('underscore');
 var step = require('step');
 
 describe('special numeric (float) values', function() {
@@ -62,6 +61,6 @@ describe('special numeric (float) values', function() {
                 });
                 done();
             }
-        )
+        );
     });
 });
