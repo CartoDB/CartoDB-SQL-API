@@ -33,7 +33,10 @@ describe('special numeric (float) values', function() {
                 var next = this;
                 var opts = {
                     url: URL + querystring.stringify({
-                        q: 'insert into numbers_test values (\'NaN\'::float), (\'infinity\'::float), (1::float)'
+                        q: [
+                            'insert into numbers_test',
+                            ' values (\'NaN\'::float), (\'infinity\'::float), (\'-infinity\'::float), (1::float)'
+                        ].join('')
                     }),
                     headers: HEADERS,
                     method: METHOD
@@ -56,9 +59,10 @@ describe('special numeric (float) values', function() {
                 assert.ifError(err);
                 var result = JSON.parse(res.body);
                 assert.ok(Array.isArray(result.rows));
-                result.rows.forEach(function (row) {
-                    assert.ok(row.val !== null, 'special float value (Infinity or NaN) parsed to null');
-                });
+                assert.equal(result.rows[0].val, 'NaN');
+                assert.equal(result.rows[1].val, 'Infinity');
+                assert.equal(result.rows[2].val, '-Infinity');
+                assert.equal(result.rows[3].val, 1);
                 done();
             }
         );
