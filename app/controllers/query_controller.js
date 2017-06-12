@@ -14,6 +14,7 @@ var formats = require('../models/formats');
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
 var handleException = require('../utils/error_handler');
+var queries = require('../postgresql/queries');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -105,6 +106,17 @@ QueryController.prototype.handleQuery = function (req, res) {
         if (!_.isString(sql)) {
             throw new Error("You must indicate a sql query");
         }
+
+        sql = queries.replaceTokens(sql, {
+            bbox: 'ST_MakeEnvelope(-20037508.34,-20037508.34,20037508.34,20037508.34,3857)',
+            scale_denominator: '500000001',
+            pixel_width: '156412',
+            pixel_height: '156412',
+            var_zoom: '0',
+            var_bbox: '[-20037508.34,-20037508.34,20037508.34,20037508.34]',
+            var_x: '0',
+            var_y: '0'
+        });
 
         // Database options
         var dbopts = {};
