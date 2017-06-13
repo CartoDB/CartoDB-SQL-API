@@ -112,7 +112,7 @@ QueryController.prototype.handleQuery = function (req, res) {
             scale_denominator: '500000001',
             pixel_width: '156412',
             pixel_height: '156412',
-            var_zoom: '0',
+            var_zoom: '5',
             var_bbox: '[-20037508.34,-20037508.34,20037508.34,20037508.34]',
             var_x: '0',
             var_y: '0'
