@@ -1,17 +1,27 @@
 #Changelog
 
+## 1.45.0
+Released 2017-04-18
+
+Bug fixes:
+ * Add error callback to ogr command while spawning #419
+
+Announcements:
+ * Make the zip command configurable #418
+
+
 ## 1.44.2
 Released 2017-04-05
 
 Bug fixes:
- - Update queue index while enqueueing jobs to the top of queue.
+ * Update queue index while enqueueing jobs to the top of queue.
 
 
 ## 1.44.1
 Released 2017-04-04
 
 Bug fixes:
- - Avoid to scan the whole meta-database to discover active job queues. Now Batch Queries uses a set as index to know what queues are being processed #415
+ * Avoid to scan the whole meta-database to discover active job queues. Now Batch Queries uses a set as index to know what queues are being processed #415
 
 
 ## 1.44.0

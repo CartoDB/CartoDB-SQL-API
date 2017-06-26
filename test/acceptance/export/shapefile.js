@@ -197,8 +197,9 @@ it('mixed type geometry', function(done){
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
         var parsedBody = JSON.parse(res.body);
-        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]};
-        assert.deepEqual(parsedBody, expectedBody);
+        var error = parsedBody.error[0];
+        var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
+        assert.ok(expectedError.test(error), error);
         done();
     });
 });
@@ -222,8 +223,9 @@ it('errors are not confused with warnings', function(done){
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.equal(res.statusCode, 400, res.statusCode + ': ' +res.body);
         var parsedBody = JSON.parse(res.body);
-        var expectedBody = {"error":["ERROR 1: Attempt to write non-point (LINESTRING) geometry to point shapefile."]};
-        assert.deepEqual(parsedBody, expectedBody);
+        var error = parsedBody.error[0];
+        var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
+        assert.ok(expectedError.test(error), error);
         done();
     });
 });
@@ -378,4 +380,24 @@ it('point with null first', function(done){
         );
     });
 
+    it('SHP zip, wrong path for zip command should return error', function(done){
+        global.settings.zipCommand = '/wrong/path';
+        var query = querystring.stringify({
+            q: "SELECT st_makepoint(0,0,4326) as the_geom",
+            format: 'shp',
+            filename: 'myshape'
+        });
+        assert.response(server, {
+            url: '/api/v1/sql?' + query,
+            headers: {host: 'vizzuality.cartodb.com'},
+            encoding: 'binary',
+            method: 'GET'
+        },{ }, function(err, res){
+            assert.equal(res.statusCode, 400, res.body);
+            var parsedBody = JSON.parse(res.body);
+            var respBodyPattern = new RegExp('Error executing zip command,  Error: spawn(.*)ENOENT', 'i');
+            assert.equal(respBodyPattern.test(parsedBody.error[0]), true);
+            done();
+        });
+    });
 });

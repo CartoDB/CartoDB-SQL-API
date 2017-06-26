@@ -33,10 +33,11 @@ ShpFormat.prototype.toSHP = function (options, callback) {
   var filename = options.filename;
 
   var fmtObj = this;
-  var zip = 'zip'; // FIXME: make configurable
+  var zip = global.settings.zipCommand || 'zip';
+  var zipOptions = '-qrj';
   var tmpdir = global.settings.tmpDir || '/tmp';
   var reqKey = [ 'shp', dbname, user_id, gcol, this.generateMD5(sql) ].concat(skipfields).join(':');
-  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey; 
+  var outdirpath = tmpdir + '/sqlapi-' + process.pid + '-' + reqKey;
   var zipfile = outdirpath + '.zip';
   var shapefile = outdirpath + '/' + filename + '.shp';
 
@@ -57,23 +58,34 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
       var next = this;
 
-      var child = spawn(zip, ['-qrj', zipfile, outdirpath ]);
+      var child = spawn(zip, [zipOptions, zipfile, outdirpath ]);
 
-      child.on('exit', function(code) {
-        //console.log("Zip complete, zip return code was " + code);
-        if (code) {
-          next(new Error("Zip command return code " + code));
-          //res.statusCode = 500; 
-        }
-        next(null);
+      child.on('error', function (err) {
+        next(new Error('Error executing zip command,  ' + err));
       });
 
+      var stderrData = [];
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', function (data) {
+        stderrData.push(data);
+      });
+
+      child.on('exit', function(code) {
+        if (code !== 0) {
+          var errMessage = 'Zip command return code ' + code;
+          if (stderrData.length) {
+            errMessage += ', Error: ' + stderrData.join('\n');
+          }
+
+          return next(new Error(errMessage));
+        }
+
+        return next();
+      });
     },
     function cleanupDir(topError) {
 
       var next = this;
-
-      //console.log("Cleaning up " + outdirpath);
 
       // Unlink the dir content
       var unlinkall = function(dir, files, finish) {
@@ -116,4 +128,3 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
 
 module.exports = ShpFormat;
-
