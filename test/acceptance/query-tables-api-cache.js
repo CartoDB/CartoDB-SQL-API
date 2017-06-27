@@ -7,6 +7,14 @@ var assert = require('../support/assert');
 
 describe('query-tables-api', function() {
 
+    beforeEach(function(done) {
+        var tableCacheEnabled = global.settings.tableCacheEnabled || false;
+        if(!tableCacheEnabled) {
+            this.skip("tableCache is disabled");
+        }
+        done();
+    });
+
     function getCacheStatus(callback) {
         assert.response(
             server,
