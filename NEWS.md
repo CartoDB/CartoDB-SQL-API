@@ -1,7 +1,11 @@
 #Changelog
 
 ## 1.45.1
-Released 2017-mm-dd
+Released 2017-06-27
+
+Bug fixes:
+ * Support special float values (NaN and ±Infinity) in query responses
+
 
 ## 1.45.0
 Released 2017-04-18
