@@ -1,8 +1,10 @@
 #Changelog
 
-## 1.45.2
-Released 2017-mm-dd
+## 1.46.0
+Released 2017-06-27
 
+Announcements:
+ * Disable tableCache in-memory LRU by default [#422](https://github.com/CartoDB/CartoDB-SQL-API/issues/422)
 
 ## 1.45.1
 Released 2017-06-27
