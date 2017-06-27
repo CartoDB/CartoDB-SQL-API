@@ -78,7 +78,7 @@ function App(statsClient) {
             maxAge: global.settings.tableCacheMaxAge || 1000*60*10
         });
     } else {
-        tableCache = NoCache();
+        tableCache = new NoCache();
     }
 
     // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
