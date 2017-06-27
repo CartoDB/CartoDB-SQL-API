@@ -66,7 +66,21 @@ JsonFormat.prototype.handleQueryRow = function(row, result) {
 
     this.lastKnownResult = result;
 
-    this.buffer += (this.total_rows++ ? ',' : '') + JSON.stringify(row);
+    this.buffer += (this.total_rows++ ? ',' : '') + JSON.stringify(row, function (key, value) {
+        if (value !== value) {
+            return 'NaN';
+        }
+
+        if (value === Infinity) {
+            return 'Infinity';
+        }
+
+        if (value === -Infinity) {
+            return '-Infinity';
+        }
+
+        return value;
+    });
 
     if (this.total_rows % (this.opts.bufferedRows || 1000)) {
         this.opts.sink.write(this.buffer);
