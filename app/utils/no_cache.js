@@ -8,23 +8,23 @@
  */
 
 function NoCache() {
-};
+}
 
 module.exports = NoCache;
 
-NoCache.prototype.set = function (key, value) {
+NoCache.prototype.set = function (/* key, value */) {
     return true;
 };
 
-NoCache.prototype.get = function (key) {
+NoCache.prototype.get = function (/* key */) {
     return undefined;
 };
 
-NoCache.prototype.peek = function (key) {
+NoCache.prototype.peek = function (/* key */) {
     return undefined;
 };
 
-NoCache.prototype.del = function (key) {
+NoCache.prototype.del = function (/* key */) {
     return undefined;
 };
 
@@ -32,11 +32,11 @@ NoCache.prototype.reset = function () {
     return undefined;
 };
 
-NoCache.prototype.has = function (key) {
+NoCache.prototype.has = function (/* key */) {
     return false;
 };
 
-NoCache.prototype.forEach = function (fn, thisp) {
+NoCache.prototype.forEach = function (/* fn, thisp */) {
     return undefined;
 };
 
