@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.45.2
+Released 2017-mm-dd
+
+
 ## 1.45.1
 Released 2017-06-27
 
