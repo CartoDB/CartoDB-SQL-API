@@ -13,8 +13,20 @@ function TableCacheFactory() {
 
 module.exports = TableCacheFactory;
 
-TableCacheFactory.prototype.build = function (config) {
-    var enabled = config.enabled || false;
-    var tableCache = enabled ? LRU(config) : new NoCache();
+TableCacheFactory.prototype.build = function (settings) {
+    var enabled = settings.tableCacheEnabled || false;
+    var tableCache = null;
+
+    if(enabled) {
+        tableCache = LRU({
+            // store no more than these many items in the cache
+            max: settings.tableCacheMax || 8192,
+            // consider entries expired after these many milliseconds (10 minutes by default)
+            maxAge: settings.tableCacheMaxAge || 1000*60*10
+        });
+    } else {
+        tableCache = new NoCache();
+    }
+
     return tableCache;
 };

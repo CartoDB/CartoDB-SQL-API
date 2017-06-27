@@ -67,14 +67,7 @@ function App(statsClient) {
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
     global.settings.bufferedRows = global.settings.bufferedRows || 1000;
 
-    var tableCache = new TableCacheFactory().build({
-        // if disabled, it will use a dummy cache that caches nothing
-        enabled: global.settings.tableCacheEnabled || false,
-        // store no more than these many items in the cache
-        max: global.settings.tableCacheMax || 8192,
-        // consider entries expired after these many milliseconds (10 minutes by default)
-        maxAge: global.settings.tableCacheMaxAge || 1000*60*10
-    });
+    var tableCache = new TableCacheFactory().build(global.settings);
 
     // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
     var SQL_QUERY_BODY_LOG_MAX_LENGTH = 2000;
