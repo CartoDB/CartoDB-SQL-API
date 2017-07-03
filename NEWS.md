@@ -1,7 +1,10 @@
 #Changelog
 
 ## 1.46.1
-Released 2017-mm-dd
+Released 2017-07-01
+
+Announcements:
+ * Now tableCache evicts keys based on their set time #244
 
 
 ## 1.46.0
