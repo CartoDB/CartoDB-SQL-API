@@ -15,7 +15,7 @@ CachedQueryTables.prototype.getAffectedTablesFromQuery = function(pg, sql, skipC
 
     var cachedResult;
     if (!skipCache) {
-        cachedResult = this.tableCache.get(cacheKey);
+        cachedResult = this.tableCache.peek(cacheKey);
     }
 
     if (cachedResult) {

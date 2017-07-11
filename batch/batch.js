@@ -8,14 +8,17 @@ var HostScheduler = require('./scheduler/host-scheduler');
 
 var EMPTY_QUEUE = true;
 
-function Batch(name, jobSubscriber, jobQueue, jobRunner, jobService, jobPublisher, redisPool, logger) {
+var MINUTE = 60 * 1000;
+var SCHEDULE_INTERVAL = 1 * MINUTE;
+
+function Batch(name, userDatabaseMetadataService, jobSubscriber, jobQueue, jobRunner, jobService, redisPool, logger) {
     EventEmitter.call(this);
     this.name = name || 'batch';
+    this.userDatabaseMetadataService = userDatabaseMetadataService;
     this.jobSubscriber = jobSubscriber;
     this.jobQueue = jobQueue;
     this.jobRunner = jobRunner;
     this.jobService = jobService;
-    this.jobPublisher = jobPublisher;
     this.logger = logger;
     this.hostScheduler = new HostScheduler(this.name, { run: this.processJob.bind(this) }, redisPool);
 
@@ -28,31 +31,70 @@ module.exports = Batch;
 
 Batch.prototype.start = function () {
     var self = this;
+    var onJobHandler = createJobHandler(self.name, self.userDatabaseMetadataService, self.hostScheduler);
 
-    this.jobSubscriber.subscribe(
-        function onJobHandler(user, host) {
-            debug('[%s] onJobHandler(%s, %s)', self.name, user, host);
-            self.hostScheduler.add(host, user, function(err) {
-                if (err) {
-                    return debug(
-                        'Could not schedule host=%s user=%s from %s. Reason: %s',
-                        host, self.name, user, err.message
-                    );
-                }
-            });
-        },
-        function onJobSubscriberReady(err) {
+    self.jobQueue.scanQueues(function (err, queues) {
+        if (err) {
+            return self.emit('error', err);
+        }
+
+        queues.forEach(onJobHandler);
+        self._startScheduleInterval(onJobHandler);
+
+        self.jobSubscriber.subscribe(onJobHandler, function (err) {
             if (err) {
                 return self.emit('error', err);
             }
 
             self.emit('ready');
-        }
-    );
+        });
+    });
+};
+
+function createJobHandler (name, userDatabaseMetadataService, hostScheduler) {
+    return function onJobHandler(user) {
+        userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
+            if (err) {
+                return debug('Could not get host user=%s from %s. Reason: %s', user, name, err.message);
+            }
+
+            var host = userDatabaseMetadata.host;
+
+            debug('[%s] onJobHandler(%s, %s)', name, user, host);
+            hostScheduler.add(host, user, function(err) {
+                if (err) {
+                    return debug(
+                        'Could not schedule host=%s user=%s from %s. Reason: %s', host, user, name, err.message
+                    );
+                }
+            });
+        });
+    };
+}
+
+Batch.prototype._startScheduleInterval = function (onJobHandler) {
+    var self = this;
+
+    self.scheduleInterval = setInterval(function () {
+        self.jobQueue.getQueues(function (err, queues) {
+            if (err) {
+                return debug('Could not get queues from %s. Reason: %s', self.name, err.message);
+            }
+
+            queues.forEach(onJobHandler);
+        });
+    }, SCHEDULE_INTERVAL);
+};
+
+Batch.prototype._stopScheduleInterval = function () {
+    if (this.scheduleInterval) {
+        clearInterval(this.scheduleInterval);
+    }
 };
 
 Batch.prototype.processJob = function (user, callback) {
     var self = this;
+
     self.jobQueue.dequeue(user, function (err, jobId) {
         if (err) {
             return callback(new Error('Could not get job from "' + user + '". Reason: ' + err.message), !EMPTY_QUEUE);
@@ -149,6 +191,7 @@ Batch.prototype._drainJob = function (user, callback) {
 
 Batch.prototype.stop = function (callback) {
     this.removeAllListeners();
+    this._stopScheduleInterval();
     this.jobSubscriber.unsubscribe(callback);
 };
 

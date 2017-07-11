@@ -1,3 +1,6 @@
+// Time in milliseconds to force GC cycle.
+// Disable by using <=0 value.
+module.exports.gc_interval = 10000;
 // In case the base_url has a :user param the username will be the one specified in the URL,
 // otherwise it will fallback to extract the username from the host header.
 module.exports.base_url     = '(?:/api/:version|/user/:user/api/:version)';
@@ -74,14 +77,20 @@ module.exports.redisPool    = 50;
 module.exports.redisIdleTimeoutMillis   = 1;
 module.exports.redisReapIntervalMillis  = 1;
 module.exports.redisLog     = false;
+
+// tableCache settings
+module.exports.tableCacheEnabled = true; // false by default. We want to make sure some functionallity is there until we fully deprecate it.
 // Max number of entries in the query tables cache
 module.exports.tableCacheMax = 8192;
 // Max age of query table cache items, in milliseconds
 module.exports.tableCacheMaxAge = 1000*60*10;
+
 // Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
 // change ogr2ogr command or path
 module.exports.ogr2ogrCommand = 'ogr2ogr';
+// change zip command or path
+module.exports.zipCommand = 'zip';
 // Optional statsd support
 module.exports.statsd = {
   host: 'localhost',

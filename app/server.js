@@ -16,11 +16,9 @@
 
 var express = require('express');
 var bodyParser = require('./middlewares/body-parser');
-var os = require('os');
 var Profiler = require('./stats/profiler-proxy');
-var StatsD = require('node-statsd').StatsD;
 var _ = require('underscore');
-var LRU = require('lru-cache');
+var TableCacheFactory = require('./utils/table_cache_factory');
 
 var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
@@ -49,8 +47,8 @@ process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 // override Date.toJSON
 require('./utils/date_to_json');
 
-// jshint maxcomplexity:12
-function App() {
+// jshint maxcomplexity:9
+function App(statsClient) {
 
     var app = express();
 
@@ -69,12 +67,7 @@ function App() {
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
     global.settings.bufferedRows = global.settings.bufferedRows || 1000;
 
-    var tableCache = LRU({
-      // store no more than these many items in the cache
-      max: global.settings.tableCacheMax || 8192,
-      // consider entries expired after these many milliseconds (10 minutes by default)
-      maxAge: global.settings.tableCacheMaxAge || 1000*60*10
-    });
+    var tableCache = new TableCacheFactory().build(global.settings);
 
     // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
     var SQL_QUERY_BODY_LOG_MAX_LENGTH = 2000;
@@ -107,45 +100,6 @@ function App() {
         app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
     }
 
-    // Initialize statsD client if requested
-    var statsd_client;
-    if ( global.settings.statsd ) {
-
-      // Perform keyword substitution in statsd
-      if ( global.settings.statsd.prefix ) {
-        var host_token = os.hostname().split('.').reverse().join('.');
-        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, host_token);
-      }
-
-      statsd_client = new StatsD(global.settings.statsd);
-      statsd_client.last_error = { msg:'', count:0 };
-      statsd_client.socket.on('error', function(err) {
-        var last_err = statsd_client.last_error;
-        var last_msg = last_err.msg;
-        var this_msg = ''+err;
-        if ( this_msg !== last_msg ) {
-          console.error("statsd client socket error: " + err);
-          statsd_client.last_error.count = 1;
-          statsd_client.last_error.msg = this_msg;
-        } else {
-            ++last_err.count;
-            if ( ! last_err.interval ) {
-              //console.log("Installing interval");
-              statsd_client.last_error.interval = setInterval(function() {
-                var count = statsd_client.last_error.count;
-                if ( count > 1 ) {
-                  console.error("last statsd client socket error repeated " + count + " times");
-                  statsd_client.last_error.count = 1;
-                  //console.log("Clearing interval");
-                  clearInterval(statsd_client.last_error.interval);
-                  statsd_client.last_error.interval = null;
-                }
-              }, 1000);
-            }
-        }
-      });
-    }
-
     app.use(cors());
 
     // Use step-profiler
@@ -159,7 +113,7 @@ function App() {
         var profile = global.settings.useProfiler;
         req.profiler = new Profiler({
             profile: profile,
-            statsd_client: statsd_client
+            statsd_client: statsClient
         });
         next();
     });
@@ -193,10 +147,10 @@ function App() {
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(userDatabaseService, tableCache, statsd_client);
+    var queryController = new QueryController(userDatabaseService, tableCache, statsClient);
     queryController.route(app);
 
-    var jobController = new JobController(userDatabaseService, jobService, statsd_client);
+    var jobController = new JobController(userDatabaseService, jobService, statsClient);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);
@@ -213,7 +167,7 @@ function App() {
     if (global.settings.environment !== 'test' && isBatchProcess) {
         var batchName = global.settings.api_hostname || 'batch';
         app.batch = batchFactory(
-            metadataBackend, redisPool, batchName, statsd_client, global.settings.batch_log_filename
+            metadataBackend, redisPool, batchName, statsClient, global.settings.batch_log_filename
         );
         app.batch.start();
     }

@@ -1,7 +1,54 @@
 #Changelog
 
-## 1.43.2
-Released 2017-mm-dd
+## 1.46.1
+Released 2017-07-01
+
+Announcements:
+ * Now tableCache evicts keys based on their set time #244
+
+
+## 1.46.0
+Released 2017-06-27
+
+Announcements:
+ * Disable tableCache in-memory LRU by default [#422](https://github.com/CartoDB/CartoDB-SQL-API/issues/422)
+
+## 1.45.1
+Released 2017-06-27
+
+Bug fixes:
+ * Support special float values (NaN and ±Infinity) in query responses
+
+
+## 1.45.0
+Released 2017-04-18
+
+Bug fixes:
+ * Add error callback to ogr command while spawning #419
+
+Announcements:
+ * Make the zip command configurable #418
+
+
+## 1.44.2
+Released 2017-04-05
+
+Bug fixes:
+ * Update queue index while enqueueing jobs to the top of queue.
+
+
+## 1.44.1
+Released 2017-04-04
+
+Bug fixes:
+ * Avoid to scan the whole meta-database to discover active job queues. Now Batch Queries uses a set as index to know what queues are being processed #415
+
+
+## 1.44.0
+Released 2017-03-30
+
+Announcements:
+ * Active GC interval for Node.js >=v6.
 
 
 ## 1.43.1
