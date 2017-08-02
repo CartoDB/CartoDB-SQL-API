@@ -1,3 +1,3 @@
 # API Version Number
 
-All CARTO applications use **Version 2** of our APIs. All other APIs are deprecated and will not be maintained or supported. You can check that you are using **Version 2** of our APIs by looking at your request URLS. They should all begin containing **/v2/** in the URLs as follows, `https://{username}.carto.com/api/v2/`
+Ensure that you are using the [latest version](https://github.com/CartoDB/CartoDB-SQL-API) of our SQL API. For example, you can check that you are using **Version 2** by looking at your request URLS. They should all contain **/v2/** in the URLs as follows, `https://{username}.carto.com/api/v2/sql`
