@@ -1,5 +1,8 @@
 #Changelog
 
+## 02 August 2017
+Content edits to doc/version.md
+
 ## 1.46.2
 Released 2017-mm-dd
 
