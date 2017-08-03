@@ -39,15 +39,20 @@ TestClient.prototype.getResult = function(query, override, callback) {
             },
             method: 'POST',
             data: JSON.stringify({
-                q: query
+                q: query,
+                format: this.getFormat(override)
             })
         },
-        RESPONSE.OK,
+        this.getExpectedResponse(override),
         function (err, res) {
             if (err) {
                 return callback(err);
             }
             var result = JSON.parse(res.body);
+
+            if (res.status > 299) {
+                return callback(null, result);
+            }
 
             return callback(null, result.rows || []);
         }
@@ -60,4 +65,12 @@ TestClient.prototype.getHost = function(override) {
 
 TestClient.prototype.getUrl = function(override) {
     return '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
+};
+
+TestClient.prototype.getExpectedResponse = function (override) {
+    return override.response || this.config.response || RESPONSE.OK;
+};
+
+TestClient.prototype.getFormat = function (override) {
+    return override.format || this.config.format || undefined;
 };
