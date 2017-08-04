@@ -35,10 +35,10 @@ TestClient.prototype.getResult = function(query, override, callback) {
             url: this.getUrl(override),
             headers: {
                 host: this.getHost(override),
-                'Content-Type': 'application/json'
+                'Content-Type': this.getContentType(override)
             },
             method: 'POST',
-            data: JSON.stringify({
+            data: this.getParser(override)({
                 q: query,
                 format: this.getFormat(override)
             })
@@ -50,7 +50,7 @@ TestClient.prototype.getResult = function(query, override, callback) {
             }
             var result = JSON.parse(res.body);
 
-            if (res.status > 299) {
+            if (res.statusCode > 299) {
                 return callback(null, result);
             }
 
@@ -63,7 +63,19 @@ TestClient.prototype.getHost = function(override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
+TestClient.prototype.getContentType = function(override) {
+    return override['Content-Type'] || this.config['Content-Type'] || 'application/json';
+};
+
+TestClient.prototype.getParser = function (override) {
+    return override.parser || this.config.parser || JSON.stringify
+}
+
 TestClient.prototype.getUrl = function(override) {
+    if (override.anonymous) {
+        return '/api/v1/sql?';
+    }
+
     return '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
 };
 
@@ -74,3 +86,5 @@ TestClient.prototype.getExpectedResponse = function (override) {
 TestClient.prototype.getFormat = function (override) {
     return override.format || this.config.format || undefined;
 };
+
+
