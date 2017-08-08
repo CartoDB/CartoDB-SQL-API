@@ -55,7 +55,7 @@ function runQueryHelper(job, callback) {
                 return callback(err);
             }
 
-            var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
+            var pg = new PSQL(userDatabaseMetadata);
 
             sql = '/* ' + job_id + ' */ ' + sql;
 

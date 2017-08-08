@@ -135,7 +135,7 @@ QueryController.prototype.handleQuery = function (req, res) {
 
                 checkAborted('queryExplain');
 
-                var pg = new PSQL(authDbParams, {}, { destroyOnError: true });
+                var pg = new PSQL(authDbParams);
                 var skipCache = !!dbopts.authenticated;
 
                 self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
