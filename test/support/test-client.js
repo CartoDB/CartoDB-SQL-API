@@ -3,6 +3,11 @@
 require('../helper');
 var assert = require('assert');
 var appServer = require('../../app/server');
+var redisUtils = require('./redis_utils');
+const step = require('step');
+const PSQL = require('cartodb-psql');
+const _ = require('underscore');
+const pg = require('pg');
 
 function response(code) {
     return {
@@ -40,7 +45,8 @@ TestClient.prototype.getResult = function(query, override, callback) {
             method: 'POST',
             data: this.getParser(override)({
                 q: query,
-                format: this.getFormat(override)
+                format: this.getFormat(override),
+                filename: this.getFilename(override)
             })
         },
         this.getExpectedResponse(override),
@@ -87,4 +93,50 @@ TestClient.prototype.getFormat = function (override) {
     return override.format || this.config.format || undefined;
 };
 
+TestClient.prototype.getFilename = function (override) {
+    return override.filename || this.config.filename || undefined;
+};
+
+TestClient.prototype.setUserRenderTimeoutLimit = function (user, userTimeoutLimit, callback) {
+    const userTimeoutLimitsKey = `limits:timeout:${user}`;
+    const params = [
+        userTimeoutLimitsKey,
+        'render', userTimeoutLimit,
+        'render_public', userTimeoutLimit
+    ];
+
+    redisUtils.configureUserMetadata('hmset', params, callback);
+};
+
+TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit, callback) {
+    const dbname = _.template(global.settings.db_base_name, { user_id: 1 });
+    const dbuser = _.template(global.settings.db_user, { user_id: 1 })
+    const pass = _.template(global.settings.db_user_pass, { user_id: 1 })
+    const publicuser = global.settings.db_pubuser;
+
+    // we need to guarantee all new connections have the new settings
+    pg.end();
+
+    const psql = new PSQL({
+        user: 'postgres',
+        dbname: dbname,
+        host: global.settings.db_host,
+        port: global.settings.db_port
+    });
+
+    step(
+        function configureTimeouts () {
+            const timeoutSQLs = [
+                `ALTER ROLE "${publicuser}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`,
+                `ALTER ROLE "${dbuser}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`,
+                `ALTER DATABASE "${dbname}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`
+            ];
+
+            const group = this.group();
+
+            timeoutSQLs.forEach(sql => psql.query(sql, group()));
+        },
+        callback
+    );
+};
 
