@@ -169,14 +169,14 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       ogrargs.push('-nln', out_layername);
 
-      // TODO: research if exec
+      // TODO: research if `exec` could fit better than `spawn`
       var child = spawn(ogr2ogr, ogrargs);
 
-      var timeouted = false;
+      var timedOut = false;
       var ogrTimeout;
       if (timeout > 0) {
         ogrTimeout = setTimeout(function () {
-          timeouted = true;
+          timedOut = true;
           child.kill();
         }, timeout);
       }
@@ -195,7 +195,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       child.on('exit', function(code) {
         clearTimeout(ogrTimeout);
 
-        if (timeouted) {
+        if (timedOut) {
           return next(new Error('You are over platform\'s limits. Please contact us to know more details'));
         }
 
