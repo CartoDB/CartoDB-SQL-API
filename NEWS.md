@@ -1,10 +1,10 @@
 #Changelog
 
-## 02 August 2017
-Content edits to doc/version.md
+## 1.47.0
+Released 2017-08-10
 
-## 1.46.2
-Released 2017-mm-dd
+Announcements:
+ - Now export and query APIs respond with `429 You are over the limits` when a query or export command overcomes the pre-configured user's timeout.
 
 
 ## 1.46.1
