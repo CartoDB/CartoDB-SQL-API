@@ -171,9 +171,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "0.13.3",
-      "from": "cartodb/node-cartodb-redis#timeout-limits",
-      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#3e02e9fa38e2b98423f811705c1f7fb8c4f70c95"
+      "version": "0.14.0",
+      "from": "cartodb-redis@0.14.0",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.14.0.tgz"
     },
     "debug": {
       "version": "2.2.0",
