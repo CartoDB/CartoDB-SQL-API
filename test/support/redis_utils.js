@@ -33,3 +33,7 @@ var pool = new RedisPool(redisConfig);
 module.exports.getPool = function getPool() {
     return pool;
 };
+
+module.exports.configureUserMetadata = function configureUserMetadata(action, params, callback) {
+    metadataBackend.redisCmd(5, action, params, callback);
+}

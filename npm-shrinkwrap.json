@@ -1,11 +1,21 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.46.0",
+  "version": "1.46.2",
   "dependencies": {
+    "ap": {
+      "version": "0.2.0",
+      "from": "ap@>=0.2.0 <0.3.0",
+      "resolved": "https://registry.npmjs.org/ap/-/ap-0.2.0.tgz"
+    },
     "bintrees": {
       "version": "1.0.1",
       "from": "bintrees@1.0.1",
       "resolved": "https://registry.npmjs.org/bintrees/-/bintrees-1.0.1.tgz"
+    },
+    "buffer-writer": {
+      "version": "1.0.1",
+      "from": "buffer-writer@1.0.1",
+      "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-1.0.1.tgz"
     },
     "bunyan": {
       "version": "1.8.1",
@@ -153,111 +163,7 @@
     "cartodb-psql": {
       "version": "0.7.1",
       "from": "cartodb-psql@0.7.1",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.7.1.tgz",
-      "dependencies": {
-        "pg": {
-          "version": "6.1.2",
-          "from": "cartodb/node-postgres#6.1.2-cdb1",
-          "resolved": "git://github.com/cartodb/node-postgres.git#3c81aea432ce58d20a795786c58bbb14f68f9689",
-          "dependencies": {
-            "buffer-writer": {
-              "version": "1.0.1",
-              "from": "buffer-writer@1.0.1",
-              "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-1.0.1.tgz"
-            },
-            "packet-reader": {
-              "version": "0.2.0",
-              "from": "packet-reader@0.2.0",
-              "resolved": "https://registry.npmjs.org/packet-reader/-/packet-reader-0.2.0.tgz"
-            },
-            "pg-connection-string": {
-              "version": "0.1.3",
-              "from": "pg-connection-string@0.1.3",
-              "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
-            },
-            "pg-pool": {
-              "version": "1.7.1",
-              "from": "pg-pool@>=1.0.0 <2.0.0",
-              "resolved": "https://registry.npmjs.org/pg-pool/-/pg-pool-1.7.1.tgz",
-              "dependencies": {
-                "generic-pool": {
-                  "version": "2.4.3",
-                  "from": "generic-pool@2.4.3",
-                  "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.4.3.tgz"
-                },
-                "object-assign": {
-                  "version": "4.1.0",
-                  "from": "object-assign@4.1.0",
-                  "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.0.tgz"
-                }
-              }
-            },
-            "pg-types": {
-              "version": "1.11.0",
-              "from": "pg-types@>=1.0.0 <2.0.0",
-              "resolved": "https://registry.npmjs.org/pg-types/-/pg-types-1.11.0.tgz",
-              "dependencies": {
-                "ap": {
-                  "version": "0.2.0",
-                  "from": "ap@>=0.2.0 <0.3.0",
-                  "resolved": "https://registry.npmjs.org/ap/-/ap-0.2.0.tgz"
-                },
-                "postgres-array": {
-                  "version": "1.0.2",
-                  "from": "postgres-array@>=1.0.0 <1.1.0",
-                  "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.2.tgz"
-                },
-                "postgres-bytea": {
-                  "version": "1.0.0",
-                  "from": "postgres-bytea@>=1.0.0 <1.1.0",
-                  "resolved": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.0.tgz"
-                },
-                "postgres-date": {
-                  "version": "1.0.3",
-                  "from": "postgres-date@>=1.0.0 <1.1.0",
-                  "resolved": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.3.tgz"
-                },
-                "postgres-interval": {
-                  "version": "1.0.2",
-                  "from": "postgres-interval@>=1.0.0 <1.1.0",
-                  "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.0.2.tgz",
-                  "dependencies": {
-                    "xtend": {
-                      "version": "4.0.1",
-                      "from": "xtend@>=4.0.0 <5.0.0",
-                      "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz"
-                    }
-                  }
-                }
-              }
-            },
-            "pgpass": {
-              "version": "1.0.1",
-              "from": "pgpass@>=1.0.0 <2.0.0",
-              "resolved": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.1.tgz",
-              "dependencies": {
-                "split": {
-                  "version": "1.0.0",
-                  "from": "split@>=1.0.0 <2.0.0",
-                  "resolved": "https://registry.npmjs.org/split/-/split-1.0.0.tgz",
-                  "dependencies": {
-                    "through": {
-                      "version": "2.3.8",
-                      "from": "through@>=2.0.0 <3.0.0",
-                      "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
-                    }
-                  }
-                }
-              }
-            },
-            "semver": {
-              "version": "4.3.2",
-              "from": "semver@4.3.2",
-              "resolved": "https://registry.npmjs.org/semver/-/semver-4.3.2.tgz"
-            }
-          }
-        }
-      }
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.7.1.tgz"
     },
     "cartodb-query-tables": {
       "version": "0.2.0",
@@ -265,16 +171,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "0.13.2",
-      "from": "cartodb-redis@0.13.2",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.13.2.tgz",
-      "dependencies": {
-        "dot": {
-          "version": "1.0.3",
-          "from": "dot@>=1.0.2 <1.1.0",
-          "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
-        }
-      }
+      "version": "0.14.0",
+      "from": "cartodb-redis@0.14.0",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.14.0.tgz"
     },
     "debug": {
       "version": "2.2.0",
@@ -287,6 +186,11 @@
           "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.1.tgz"
         }
       }
+    },
+    "dot": {
+      "version": "1.0.3",
+      "from": "dot@>=1.0.2 <1.1.0",
+      "resolved": "https://registry.npmjs.org/dot/-/dot-1.0.3.tgz"
     },
     "express": {
       "version": "4.13.4",
@@ -554,6 +458,11 @@
         }
       }
     },
+    "generic-pool": {
+      "version": "2.4.3",
+      "from": "generic-pool@2.4.3",
+      "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.4.3.tgz"
+    },
     "log4js": {
       "version": "0.6.25",
       "from": "cartodb/log4js-node#cdb",
@@ -799,6 +708,61 @@
           "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.1.0.tgz"
         }
       }
+    },
+    "object-assign": {
+      "version": "4.1.0",
+      "from": "object-assign@4.1.0",
+      "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.0.tgz"
+    },
+    "packet-reader": {
+      "version": "0.2.0",
+      "from": "packet-reader@0.2.0",
+      "resolved": "https://registry.npmjs.org/packet-reader/-/packet-reader-0.2.0.tgz"
+    },
+    "pg": {
+      "version": "6.1.2",
+      "from": "cartodb/node-postgres#6.1.2-cdb1",
+      "resolved": "git://github.com/cartodb/node-postgres.git#3c81aea432ce58d20a795786c58bbb14f68f9689"
+    },
+    "pg-connection-string": {
+      "version": "0.1.3",
+      "from": "pg-connection-string@0.1.3",
+      "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
+    },
+    "pg-pool": {
+      "version": "1.8.0",
+      "from": "pg-pool@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/pg-pool/-/pg-pool-1.8.0.tgz"
+    },
+    "pg-types": {
+      "version": "1.12.0",
+      "from": "pg-types@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/pg-types/-/pg-types-1.12.0.tgz"
+    },
+    "pgpass": {
+      "version": "1.0.2",
+      "from": "pgpass@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.2.tgz"
+    },
+    "postgres-array": {
+      "version": "1.0.2",
+      "from": "postgres-array@>=1.0.0 <1.1.0",
+      "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.2.tgz"
+    },
+    "postgres-bytea": {
+      "version": "1.0.0",
+      "from": "postgres-bytea@>=1.0.0 <1.1.0",
+      "resolved": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.0.tgz"
+    },
+    "postgres-date": {
+      "version": "1.0.3",
+      "from": "postgres-date@>=1.0.0 <1.1.0",
+      "resolved": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.3.tgz"
+    },
+    "postgres-interval": {
+      "version": "1.1.1",
+      "from": "postgres-interval@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.1.1.tgz"
     },
     "qs": {
       "version": "6.2.3",
@@ -1244,6 +1208,16 @@
         }
       }
     },
+    "semver": {
+      "version": "4.3.2",
+      "from": "semver@4.3.2",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-4.3.2.tgz"
+    },
+    "split": {
+      "version": "1.0.1",
+      "from": "split@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/split/-/split-1.0.1.tgz"
+    },
     "step": {
       "version": "0.0.6",
       "from": "step@>=0.0.5 <0.1.0",
@@ -1253,6 +1227,11 @@
       "version": "0.3.0",
       "from": "step-profiler@>=0.3.0 <0.4.0",
       "resolved": "https://registry.npmjs.org/step-profiler/-/step-profiler-0.3.0.tgz"
+    },
+    "through": {
+      "version": "2.3.8",
+      "from": "through@>=2.0.0 <3.0.0",
+      "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
     },
     "topojson": {
       "version": "0.0.8",
@@ -1277,6 +1256,11 @@
       "version": "1.6.0",
       "from": "underscore@>=1.6.0 <1.7.0",
       "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.6.0.tgz"
+    },
+    "xtend": {
+      "version": "4.0.1",
+      "from": "xtend@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz"
     },
     "yargs": {
       "version": "5.0.0",

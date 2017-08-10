@@ -782,10 +782,19 @@ it('GET with callback must return 200 status error even if it is an error', func
                 method: 'GET'
             },
             {
-                status: 400
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                }
             },
             function(err, res) {
-                assert.ok(res.body.match(/was not able to finish.*try again/i));
+                var error = JSON.parse(res.body);
+                assert.deepEqual(error, {
+                    error: [
+                        'You are over platform\'s limits. Please contact us to know more details'
+                    ]
+                });
+
                 done();
             });
     });
