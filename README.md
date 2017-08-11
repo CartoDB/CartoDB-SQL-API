@@ -11,13 +11,14 @@ Provides a node.js based API for running SQL queries against CartoDB.
 
 core requirements
 -----------------
-* postgres 9.0+ (with plpythonu extension for ``CDB_QueryTables``)
-* postgis 2.0+
-* GDAL 1.9.2+ (bin utils)
-* zip commandline tool
-* redis
-* node >=0.8.18
-* npm >=1.2.1
+* Postgres `9.3+`.
+* Postgis `2.2`.
+* [CartoDB Postgres Extension](https://github.com/CartoDB/cartodb-postgresql/blob/0.19.2/README.md) `0.19+`.
+* GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
+* zip commandline tool.
+* Redis `3`, recommended reversion `3.0.2`.
+* Node.js `6`, recommended reversion `6.9.2`.
+* npm `3`, recommended version `3.10.9`.
 
 
 Install dependencies
