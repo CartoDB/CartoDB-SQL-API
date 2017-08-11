@@ -148,9 +148,9 @@
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-3.0.0.tgz"
     },
     "cartodb-psql": {
-      "version": "0.8.0",
-      "from": "cartodb-psql@0.8.0",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.8.0.tgz"
+      "version": "0.10.0",
+      "from": "cartodb-psql@0.10.0",
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.10.0.tgz"
     },
     "cartodb-query-tables": {
       "version": "0.2.0",
