@@ -7,8 +7,6 @@ var redisUtils = require('./redis_utils');
 const step = require('step');
 const PSQL = require('cartodb-psql');
 const _ = require('underscore');
-// TODO: remove after upgrading cartodb-psql to 0.9.0
-const pg = require('pg');
 
 function response(code) {
     return {
@@ -115,16 +113,15 @@ TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit,
     const pass = _.template(global.settings.db_user_pass, { user_id: 1 })
     const publicuser = global.settings.db_pubuser;
 
-    // TODO: We do need to upgrade cartodb-psql to 0.9.0 to use psql.end() instead.
-    // we need to guarantee all new connections have the new settings
-    pg.end();
-
     const psql = new PSQL({
         user: 'postgres',
         dbname: dbname,
         host: global.settings.db_host,
         port: global.settings.db_port
     });
+
+    // we need to guarantee all new connections have the new settings
+    psql.end();
 
     step(
         function configureTimeouts () {
