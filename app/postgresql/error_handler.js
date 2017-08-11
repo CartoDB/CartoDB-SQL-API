@@ -40,12 +40,14 @@ ErrorHandler.prototype.getStatus = function() {
         statusError = 401;
     }
 
+    if (message === conditionToMessage[pgErrorCodes.conditionToCode.query_canceled]) {
+        statusError = 429;
+    }
+
     return statusError;
 };
 
 var conditionToMessage = {};
 conditionToMessage[pgErrorCodes.conditionToCode.query_canceled] = [
-    "Your query was not able to finish.",
-    "Either you have too many queries running or the one you are trying to run is too expensive.",
-    "Try again."
+    'You are over platform\'s limits. Please contact us to know more details'
 ].join(' ');

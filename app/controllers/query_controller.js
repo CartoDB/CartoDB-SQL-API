@@ -50,6 +50,7 @@ QueryController.prototype.handleQuery = function (req, res) {
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration file
+    var userLimits;
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.query');
@@ -122,12 +123,13 @@ QueryController.prototype.handleQuery = function (req, res) {
             function getUserDBInfo() {
                 self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
             },
-            function queryExplain(err, dbParams, authDbParams) {
+            function queryExplain(err, dbParams, authDbParams, userTimeoutLimits) {
                 assert.ifError(err);
 
                 var next = this;
 
                 dbopts = dbParams;
+                userLimits = userTimeoutLimits;
 
                 if ( req.profiler ) {
                     req.profiler.done('setDBAuth');
@@ -217,7 +219,8 @@ QueryController.prototype.handleQuery = function (req, res) {
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
-                  abortChecker: checkAborted
+                  abortChecker: checkAborted,
+                  timeout: userLimits.timeout
                 };
 
                 if ( req.profiler ) {
