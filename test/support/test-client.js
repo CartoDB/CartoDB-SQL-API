@@ -3,6 +3,12 @@
 require('../helper');
 var assert = require('assert');
 var appServer = require('../../app/server');
+var redisUtils = require('./redis_utils');
+const step = require('step');
+const PSQL = require('cartodb-psql');
+const _ = require('underscore');
+// TODO: remove after upgrading cartodb-psql to 0.9.0
+const pg = require('pg');
 
 function response(code) {
     return {
@@ -35,19 +41,25 @@ TestClient.prototype.getResult = function(query, override, callback) {
             url: this.getUrl(override),
             headers: {
                 host: this.getHost(override),
-                'Content-Type': 'application/json'
+                'Content-Type': this.getContentType(override)
             },
             method: 'POST',
-            data: JSON.stringify({
-                q: query
+            data: this.getParser(override)({
+                q: query,
+                format: this.getFormat(override),
+                filename: this.getFilename(override)
             })
         },
-        RESPONSE.OK,
+        this.getExpectedResponse(override),
         function (err, res) {
             if (err) {
                 return callback(err);
             }
             var result = JSON.parse(res.body);
+
+            if (res.statusCode > 299) {
+                return callback(null, result);
+            }
 
             return callback(null, result.rows || []);
         }
@@ -58,6 +70,75 @@ TestClient.prototype.getHost = function(override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
+TestClient.prototype.getContentType = function(override) {
+    return override['Content-Type'] || this.config['Content-Type'] || 'application/json';
+};
+
+TestClient.prototype.getParser = function (override) {
+    return override.parser || this.config.parser || JSON.stringify
+}
+
 TestClient.prototype.getUrl = function(override) {
+    if (override.anonymous) {
+        return '/api/v1/sql?';
+    }
+
     return '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
 };
+
+TestClient.prototype.getExpectedResponse = function (override) {
+    return override.response || this.config.response || RESPONSE.OK;
+};
+
+TestClient.prototype.getFormat = function (override) {
+    return override.format || this.config.format || undefined;
+};
+
+TestClient.prototype.getFilename = function (override) {
+    return override.filename || this.config.filename || undefined;
+};
+
+TestClient.prototype.setUserRenderTimeoutLimit = function (user, userTimeoutLimit, callback) {
+    const userTimeoutLimitsKey = `limits:timeout:${user}`;
+    const params = [
+        userTimeoutLimitsKey,
+        'render', userTimeoutLimit,
+        'render_public', userTimeoutLimit
+    ];
+
+    redisUtils.configureUserMetadata('hmset', params, callback);
+};
+
+TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit, callback) {
+    const dbname = _.template(global.settings.db_base_name, { user_id: 1 });
+    const dbuser = _.template(global.settings.db_user, { user_id: 1 })
+    const pass = _.template(global.settings.db_user_pass, { user_id: 1 })
+    const publicuser = global.settings.db_pubuser;
+
+    // TODO: We do need to upgrade cartodb-psql to 0.9.0 to use psql.end() instead.
+    // we need to guarantee all new connections have the new settings
+    pg.end();
+
+    const psql = new PSQL({
+        user: 'postgres',
+        dbname: dbname,
+        host: global.settings.db_host,
+        port: global.settings.db_port
+    });
+
+    step(
+        function configureTimeouts () {
+            const timeoutSQLs = [
+                `ALTER ROLE "${publicuser}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`,
+                `ALTER ROLE "${dbuser}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`,
+                `ALTER DATABASE "${dbname}" SET STATEMENT_TIMEOUT TO ${timeoutLimit}`
+            ];
+
+            const group = this.group();
+
+            timeoutSQLs.forEach(sql => psql.query(sql, group()));
+        },
+        callback
+    );
+};
+

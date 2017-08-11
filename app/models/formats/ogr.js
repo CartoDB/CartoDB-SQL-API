@@ -65,6 +65,8 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
   var dbpass = dbopts.pass;
   var dbname = dbopts.dbname;
 
+  var timeout = options.timeout;
+
   var that = this;
 
   var columns = [];
@@ -167,9 +169,20 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       ogrargs.push('-nln', out_layername);
 
+      // TODO: research if `exec` could fit better than `spawn`
       var child = spawn(ogr2ogr, ogrargs);
 
+      var timedOut = false;
+      var ogrTimeout;
+      if (timeout > 0) {
+        ogrTimeout = setTimeout(function () {
+          timedOut = true;
+          child.kill();
+        }, timeout);
+      }
+
       child.on('error', function (err) {
+        clearTimeout(ogrTimeout);
         next(err);
       });
 
@@ -180,6 +193,12 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       });
 
       child.on('exit', function(code) {
+        clearTimeout(ogrTimeout);
+
+        if (timedOut) {
+          return next(new Error('You are over platform\'s limits. Please contact us to know more details'));
+        }
+
         if (code !== 0) {
           var errMessage = 'ogr2ogr command return code ' + code;
           if (stderrData.length > 0) {

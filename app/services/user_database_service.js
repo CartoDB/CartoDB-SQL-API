@@ -54,7 +54,26 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 apiKey: dbParams.apikey
             }, next);
         },
-        function setDBAuth(err, isAuthenticated) {
+        function getUserLimits (err, isAuthenticated) {
+            var next = this;
+
+            if (err) {
+                return next(err);
+            }
+
+            self.metadataBackend.getUserTimeoutRenderLimits(cdbUsername, function (err, timeoutRenderLimit) {
+                if (err) {
+                    return next(err);
+                }
+
+                var userLimits = {
+                    timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
+                };
+
+                next(null, isAuthenticated, userLimits);
+            });
+        },
+        function setDBAuth(err, isAuthenticated, userLimits) {
             if (err) {
                 throw err;
             }
@@ -76,14 +95,14 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
 
             var authDbOpts = _.defaults({user: user, pass: pass}, dbopts);
 
-            return this(null, dbopts, authDbOpts);
+            return this(null, dbopts, authDbOpts, userLimits);
         },
-        function errorHandle(err, dbopts, authDbOpts) {
+        function errorHandle(err, dbopts, authDbOpts, userLimits) {
             if (err) {
                 return callback(err);
             }
 
-            callback(null, dbopts, authDbOpts);
+            callback(null, dbopts, authDbOpts, userLimits);
         }
     );
 
