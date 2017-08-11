@@ -80,7 +80,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
     function fetchColumns() {
       var colsql = 'SELECT * FROM (' + sql + ') as _cartodbsqlapi LIMIT 0';
-      pg = new PSQL(dbopts, {}, { destroyOnError: true });
+      pg = new PSQL(dbopts);
       pg.query(colsql, this);
     },
     // jshint maxcomplexity:9

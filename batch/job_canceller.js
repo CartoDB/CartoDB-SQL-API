@@ -19,7 +19,7 @@ JobCanceller.prototype.cancel = function (job, callback) {
 };
 
 function doCancel(job_id, userDatabaseMetadata, callback) {
-    var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
+    var pg = new PSQL(userDatabaseMetadata);
 
     getQueryPID(pg, job_id, function (err, pid) {
         if (err) {

@@ -15,7 +15,7 @@ QueryRunner.prototype.run = function (job_id, sql, user, timeout, callback) {
             return callback(err);
         }
 
-        var pg = new PSQL(userDatabaseMetadata, {}, { destroyOnError: true });
+        var pg = new PSQL(userDatabaseMetadata);
 
         pg.query('SET statement_timeout=' + timeout, function (err) {
             if(err) {
