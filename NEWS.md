@@ -1,11 +1,12 @@
 #Changelog
 
 ## 1.47.1
-Released 2017-mm-dd
+Released 2017-08-13
 
 Announcements:
  * Upgrade cartodb-psql to 0.10.1.
- * Content edits to doc/version.md
+ * Content edits to doc/version.md.
+
 
 ## 1.47.0
 Released 2017-08-10
