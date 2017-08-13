@@ -148,9 +148,9 @@
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-3.0.0.tgz"
     },
     "cartodb-psql": {
-      "version": "0.10.0",
-      "from": "cartodb-psql@0.10.0",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.10.0.tgz"
+      "version": "0.10.1",
+      "from": "cartodb-psql@0.10.1",
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.10.1.tgz"
     },
     "cartodb-query-tables": {
       "version": "0.2.0",
@@ -540,6 +540,11 @@
       "from": "isstream@>=0.1.2 <0.2.0",
       "resolved": "https://registry.npmjs.org/isstream/-/isstream-0.1.2.tgz"
     },
+    "js-string-escape": {
+      "version": "1.0.1",
+      "from": "js-string-escape@1.0.1",
+      "resolved": "https://registry.npmjs.org/js-string-escape/-/js-string-escape-1.0.1.tgz"
+    },
     "jsbn": {
       "version": "0.1.1",
       "from": "jsbn@>=0.1.0 <0.2.0",
@@ -798,9 +803,9 @@
       "resolved": "https://registry.npmjs.org/path-type/-/path-type-1.1.0.tgz"
     },
     "pg": {
-      "version": "6.1.2",
-      "from": "cartodb/node-postgres#6.1.2-cdb1",
-      "resolved": "git://github.com/cartodb/node-postgres.git#3c81aea432ce58d20a795786c58bbb14f68f9689"
+      "version": "6.1.6",
+      "from": "cartodb/node-postgres#6.1.6-cdb1",
+      "resolved": "git://github.com/cartodb/node-postgres.git#3eef52dd1e655f658a4ee8ac5697688b3ecfed44"
     },
     "pg-connection-string": {
       "version": "0.1.3",

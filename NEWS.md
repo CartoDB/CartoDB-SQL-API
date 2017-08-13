@@ -4,7 +4,7 @@
 Released 2017-mm-dd
 
 Announcements:
- * Upgrade cartodb-psql to 0.10.0.
+ * Upgrade cartodb-psql to 0.10.1.
  * Content edits to doc/version.md
 
 ## 1.47.0
