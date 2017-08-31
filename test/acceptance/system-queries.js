@@ -29,15 +29,6 @@ describe('system-queries', function() {
             ],
             api_key_works: true,
             no_api_key_works: true
-        },
-        {
-            desc: 'Set queries will FAIL for both api_key and no_api_key queries',
-            queries: [
-                ' SET work_mem TO 80000',
-                ' set statement_timeout TO 400'
-            ],
-            api_key_works: false,
-            no_api_key_works: false
         }
     ];
 
