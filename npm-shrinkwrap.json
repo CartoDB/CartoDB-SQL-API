@@ -4,7 +4,7 @@
   "dependencies": {
     "cartodb-psql": {
       "version": "0.6.2",
-      "from": "cartodb-psql@0.6.2",
+      "from": "cartodb-psql@>=0.6.0 <0.7.0",
       "dependencies": {
         "pg": {
           "version": "2.6.2-cdb4",
@@ -164,7 +164,7 @@
             },
             "inherits": {
               "version": "2.0.3",
-              "from": "inherits@>=2.0.1 <2.1.0",
+              "from": "inherits@>=2.0.0 <3.0.0",
               "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz"
             }
           }
