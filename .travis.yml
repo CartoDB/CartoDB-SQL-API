@@ -28,6 +28,7 @@ before_install:
 env:
   - PGUSER=postgres CXX=g++-4.8
 
+dist: precise
 language: node_js
 node_js:
   - "0.10"
