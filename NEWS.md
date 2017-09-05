@@ -1,3 +1,10 @@
+1.29.3 - 2017-08-31
+-------------------
+
+Bug fixes:
+ *  Adding a new cartodb-psql fixing a pg vulnerability
+
+
 1.29.2 - 2016-05-25
 -------------------
 
