@@ -3,6 +3,11 @@
 ## 1.42.5
 Released 2016-mm-dd
 
+## 1.42.4-3
+Released 2017-08-31
+
+Enhancements:
+ *  Adding a new cartodb-psql fixing a pg vulnerability
 
 ## 1.42.4
 Released 2016-11-30
