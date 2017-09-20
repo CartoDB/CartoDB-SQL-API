@@ -3,6 +3,9 @@
 ## 1.47.2
 Released 2017-mm-dd
 
+Announcements:
+ * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
+
 
 ## 1.47.1
 Released 2017-08-13
