@@ -49,8 +49,7 @@ JobController.prototype.route = function (app) {
         this.createJob.bind(this)
     );
     app.get(
-        global.settings.base_url + '/sql/job/wip',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        global.settings.base_url + '/jobs-wip',
         this.listWorkInProgressJobs.bind(this)
     );
     app.get(
@@ -95,8 +94,6 @@ JobController.prototype.listWorkInProgressJobs = function (req, res) {
             self.statsdClient.increment('sqlapi.job.error');
             return handleException(err, res);
         }
-
-        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
 
         req.profiler.done('list');
         req.profiler.end();
