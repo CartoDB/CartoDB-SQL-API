@@ -49,7 +49,7 @@ JobController.prototype.route = function (app) {
         this.createJob.bind(this)
     );
     app.get(
-        global.settings.base_url + '/sql/job/wip',
+        global.settings.base_url + '/jobs-wip',
         userMiddleware, authenticatedMiddleware(this.userDatabaseService),
         this.listWorkInProgressJobs.bind(this)
     );
