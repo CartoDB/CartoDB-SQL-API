@@ -95,8 +95,6 @@ JobController.prototype.listWorkInProgressJobs = function (req, res) {
             return handleException(err, res);
         }
 
-        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
-
         req.profiler.done('list');
         req.profiler.end();
         req.profiler.sendStats();
