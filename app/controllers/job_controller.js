@@ -50,7 +50,6 @@ JobController.prototype.route = function (app) {
     );
     app.get(
         global.settings.base_url + '/jobs-wip',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
         this.listWorkInProgressJobs.bind(this)
     );
     app.get(
