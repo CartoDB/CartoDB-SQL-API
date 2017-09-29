@@ -6,7 +6,7 @@ Released 2017-mm-dd
 Announcements:
  * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
  * Upgrade debug to 3.1.0
- * Upgrade express to 4.15.5
+ * Upgrade express to 4.16.0
  * Upgrade request to 2.83.0
  * Upgrade oauth-client to 0.3.1
 
