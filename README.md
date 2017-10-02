@@ -25,7 +25,7 @@ Install dependencies
 --------------------
 
 ```sh
-npm install
+rm -rf node_modules/; yarn
 ```
 
 
