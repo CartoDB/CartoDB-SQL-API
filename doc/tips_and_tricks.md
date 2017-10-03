@@ -24,7 +24,7 @@ There are three levels of access with CARTO:
 
 Yes. Grant write access with caution and keep backups of your data elsewhere / as duplicate CARTO tables.
 
-## Is there an in between where a user can write but not `DROP` or `DELETE`?
+## Is there a permission available where a user can write but not `DROP` or `DELETE`?
 
 Yes. Create the table, and GRANT INSERT/UPDATE to the user.
 
@@ -37,3 +37,43 @@ You can also just do `select user` using the SQL API (without an API Key to get 
 ## Can I configure my CARTO database permissions exactly the same way I do on my own PostgreSQL instance?
 
 Yes, through using GRANT statements to the SQL API. There are a few caveats to be aware of, including the aforementioned naming differences. Also, you will be limited to permissions a user has with their own tables. Users do not have PostgreSQL superuser privileges. So they cannot be creating languages, or C functions, or anything that requires superuser or CREATEUSER privileges.
+
+## How can I export CARTO datasets with the SQL API?
+
+You can use the SQL API to run any query and export the results in different formats, such as a CSV or GeoPackage. This is helpful for accessing your datasets offline.
+
+**Note:** View the [response formats](https://carto.com/docs/carto-engine/sql-api/making-calls/#response-formats) that are available with the SQL API and ensure that your dataset does not exceed the maximum file size for [SQL API exports](https://carto.com/docs/faqs/carto-engine-usage-limits/#sql-api-limits).
+
+### Export Datasets as a GeoPackage
+
+You can easily export CARTO datasets using the [GeoPackage](http://www.geopackage.org/) file format, which is an "open, standards-based, platform-independent, portable, self-describing, compact format for transferring geospatial information- &copy;". A .gpkg file itself is a [type](http://www.geopackage.org/spec/#table_column_data_types) of database, more complex than a plain file.
+
+_**Tip:** GeoPackage is the recommended format since it exports your dataset in smaller pieces;  typically avoiding error messages that might appear due to long file names and/or large datasets._. If exporting a map with the SQL API, the `GPKG` format does not include any visualization or styling, which helps reduce the file size during the export process.
+
+```bash
+https://{username}.carto.com/api/v2/sql?q=SELECT * FROM {table_name}&format=gpkg&filename={file_name}.gpkg
+```
+
+The response is `file_name.gpkg` that you can download for use offline.
+
+#### Example of `GPKG` File
+
+- From your Internet browser, copy and paste the following link into a new tab and press Enter.
+
+```bash
+https://builder-demo.carto.com/api/v2/sql?q=SELECT+*+FROM+san_francisco_airbnbs&format=gpkg&filename=san_francisco_airbnbs.gpkg
+```
+
+A gpkg file is downloaded, based on your web browser process, and available for use offline.
+
+
+### Download Datasets as a URL
+
+You can use your table URL to run a response query and export downloads in different formats. For example, the following sample code shows the CSV export format for an SQL API request.
+
+
+```bash
+https://{username}.carto.com/api/v2/sql?format=csv&q=SELECT+*+FROM+tm_world_borders_sim
+```
+
+The response creates a direct dataset URL that you can download for use offline.

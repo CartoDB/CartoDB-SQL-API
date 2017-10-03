@@ -5,6 +5,7 @@ Released 2017-mm-dd
 
 Announcements:
  * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
+ * Documentation updates for Docs repo issue #840, GPKG Export.
 
 
 ## 1.47.1

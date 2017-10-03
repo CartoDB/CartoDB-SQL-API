@@ -63,6 +63,7 @@ By default, GET requests work from anywhere. In CARTO, POST requests work from a
 
 The SQL API accepts many output formats that can be useful to export data, such as: 
 
+- GPKG
 - CSV
 - SHP
 - SVG
