@@ -5,11 +5,11 @@ CARTO is based on the rock solid PostgreSQL database. All of your tables reside 
 CARTO is also based on PostGIS, so you can view the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
 
 
-## URL endpoints
+## URL Endpoints
 
 All SQL API requests to your CARTO account should follow this general pattern:
 
-#### SQL query example
+#### SQL Query Example
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q={SQL statement}
@@ -17,7 +17,7 @@ https://{username}.carto.com/api/v2/sql?q={SQL statement}
 
 If you encounter errors, double-check that you are using the correct account name, and that your SQL statement is valid. A simple example of this pattern is conducting a count of all the records in your table:
 
-#### Count example
+#### Count Example
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
@@ -59,7 +59,7 @@ $.getJSON('https://{username}.carto.com/api/v2/sql/?q='+sql_statement, function(
 By default, GET requests work from anywhere. In CARTO, POST requests work from any website as well. We achieve this by hosting a cross-domain policy file at the root of all of our servers. This allows you the greatest level of flexibility when developing your application.
 
 
-## Response formats
+## Response Formats
 
 The SQL API accepts many output formats that can be useful to export data, such as: 
 
@@ -136,7 +136,7 @@ https://{username}.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM {table_na
 }
 ```
 
-## Output filename
+## Output Filename
 
 To customize the output filename, add the `filename` parameter to your URL:
 
@@ -147,7 +147,7 @@ https://{username}.carto.com/api/v2/sql?filename={custom_filename}&q=SELECT * FR
 ```
 
 
-## Getting table information
+## Getting Table Information
 
 Currently, there is no public method to access your table schemas. The simplest way to retrieve table structure is to access the first row of the data,
 
@@ -158,7 +158,7 @@ https://{username}.carto.com/api/v2/sql?q=SELECT * FROM {table_name} LIMIT 1
 ```
 
 
-## Response errors
+## Response Errors
 
 To help you debug your SQL queries, the CARTO SQL API returns the full error provided by PostgreSQL, as part of the JSON response. Error responses appear in the following format,
 
@@ -174,9 +174,13 @@ To help you debug your SQL queries, the CARTO SQL API returns the full error pro
 
 You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through CARTO Builder, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
 
-## Write data to your CARTO account
+## Write Data to your CARTO Account
 
-Performing inserts or updates on your data is simple using your [API Key](https://carto.com/docs/carto-engine/sql-api/authentication/). All you need to do is supply a correct SQL [INSERT](http://www.postgresql.org/docs/9.1/static/sql-insert.html) or [UPDATE](http://www.postgresql.org/docs/9.1/static/sql-update.html) statement for your table along with the api_key parameter for your account. Be sure to keep these requests private, as anyone with your API Key will be able to modify your tables. A correct SQL insert statement means that all the columns you want to insert into already exist in your table, and all the values for those columns are the right type (quoted string, unquoted string for geoms and dates, or numbers).
+When writing data to your CARTO account, you are executing SQL queries to manage data in a table. Performing inserts or updates on your data is achieved by using your [API Key](https://carto.com/docs/carto-engine/sql-api/authentication/). Simply supply a well-formatted SQL [INSERT](http://www.postgresql.org/docs/9.1/static/sql-insert.html) or [UPDATE](http://www.postgresql.org/docs/9.1/static/sql-update.html) statement for your table, along with the api_key parameter for your account.
+
+**Tip:** All requests should be private, as anyone with your API Key will be able to modify your tables. 
+
+A well-formatted SQL insert statement means that all of the columns that you want to insert to your data already exist in your table, and all the values for those columns are the correct type (quoted string, unquoted string for geoms and dates, or numbers).
 
 ### Insert
 
@@ -186,7 +190,7 @@ Performing inserts or updates on your data is simple using your [API Key](https:
 https://{username}.carto.com/api/v2/sql?q=INSERT INTO test_table (column_name, column_name_2, the_geom) VALUES ('this is a string', 11, ST_SetSRID(ST_Point(-110, 43),4326))&api_key={api_key}
 ```
 
-Updates are just as simple. Here is an example of updating a row based on the value of the cartodb_id column.
+Updates are just as simple. The following example displays how to update a row based on the value of the `cartodb_id` column.
 
 ### Update
 
