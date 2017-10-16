@@ -11,9 +11,11 @@ There are two main situations in which you would want to use the SQL API:
 Remember that in order to access, read or modify data in private tables, you will need to authenticate your requests. When a table is public, you can do non-authenticated queries that read data, but you cannot write or modify data without authentication.
 
 ## Documentation
+[The following doc files are being pulled into the live documentation:](https://github.com/CartoDB/docs/tree/master/_app/_sqlapi):
 
 * [Authentication](authentication.md)
 * [Making calls to the SQL API](making_calls.md)
+* [Creating Tables with the SQL API](creating_tables.md)
 * [Batch Queries](batch_queries.md)
 * [Handling Geospatial Data](handling_geospatial_data.md)
 * [Query Optimizations](query_optimizations.md)
