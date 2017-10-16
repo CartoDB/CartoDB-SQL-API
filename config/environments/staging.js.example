@@ -108,3 +108,4 @@ module.exports.health = {
     query: 'select 1'
 };
 module.exports.disabled_file = 'pids/disabled';
+module.exports.maxQueryRows = 100 //Set the max number of results in a query
