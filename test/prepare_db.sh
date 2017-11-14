@@ -88,10 +88,19 @@ if test x"$PREPARE_PGSQL" = xyes; then
       echo ${CURL_ARGS} | xargs curl -L -s
   fi
 
+  PG_PARALLEL=$(pg_config --version | (awk '{$2*=1000; if ($2 >= 9600) print 1; else print 0;}' 2> /dev/null || echo 0))
+
   psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
   ALL_SQL_SCRIPTS="${REMOTE_SQL_SCRIPTS} ${LOCAL_SQL_SCRIPTS}"
   for i in ${ALL_SQL_SCRIPTS}
   do
+    # Strip PARALLEL labels for PostgreSQL releases before 9.6
+    if [ $PG_PARALLEL -eq 0 ]; then
+      TMPFILE=$(mktemp /tmp/$(basename $0).XXXXXXXX)
+      sed -e 's/PARALLEL \= [A-Z]*,/''/g' \
+          -e 's/PARALLEL [A-Z]*/''/g' support/sql/${i}.sql > $TMPFILE
+      mv $TMPFILE support/sql/${i}.sql
+    fi
     cat support/sql/${i}.sql |
       sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |
       sed "s/:PUBLICUSER/${PUBLICUSER}/" |
