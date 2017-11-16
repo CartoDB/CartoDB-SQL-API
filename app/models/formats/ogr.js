@@ -98,9 +98,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         if ( skipfields.indexOf(k) !== -1 ) {
             continue;
         }
-        if ( out_format !== 'CSV' && k === "the_geom_webmercator" ) {
+        if (out_format !== 'CSV' && pg.typeName(field.dataTypeID) === 'geometry' && field.name !== 'the_geom') {
             continue;
-        } // TODO: drop ?
+        }
         if ( out_format === 'CSV' ) {
             columns.push(pg.quoteIdentifier(k)+'::text');
         } else {
