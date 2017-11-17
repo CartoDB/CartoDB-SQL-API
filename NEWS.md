@@ -6,6 +6,7 @@ Released 2017-mm-dd
 Announcements:
  * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
  * Documentation updates for Docs repo issue #840, GPKG Export.
+ * Fix SHP exports, now it uses "the_geom" column by default when a dataset has more than one geometry column.
 
 
 ## 1.47.1
