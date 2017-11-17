@@ -16,7 +16,10 @@ ErrorHandler.prototype.getMessage = function() {
     // `57014: query_canceled` includes other queries than `statement timeout`, otherwise we could do something more
     // straightforward like:
     // return conditionToMessage[this.err.code] || this.err.message;
-    if (message && message.match(/statement timeout/)) {
+    if (message && 
+        (message.match(/statement timeout/) || 
+        message === 'RuntimeError: Execution of function interrupted by signal')
+    ) {
         message = conditionToMessage[pgErrorCodes.conditionToCode.query_canceled];
     }
 
