@@ -799,6 +799,30 @@ it('GET with callback must return 200 status error even if it is an error', func
             });
     });
 
+    it.only('GET with slow python script exceeding statement timeout returns proper error message', function(done){
+        assert.response(server, {
+                url: "/api/v1/sql?q=select%20py_sleep(2.1)",
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            },
+            {
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                }
+            },
+            function(err, res) {
+                var error = JSON.parse(res.body);
+                assert.deepEqual(error, {
+                    error: [
+                        'You are over platform\'s limits. Please contact us to know more details'
+                    ]
+                });
+
+                done();
+            });
+    });
+
     it('too large rows get into error log', function(done){
 
         var dbMaxRowSize = global.settings.db_max_row_size;
