@@ -812,12 +812,10 @@ it('GET with callback must return 200 status error even if it is an error', func
                 }
             },
             function(err, res) {
-                var error = JSON.parse(res.body);
-                assert.deepEqual(error, {
-                    error: [
-                        'You are over platform\'s limits. Please contact us to know more details'
-                    ]
-                });
+                var body = JSON.parse(res.body);
+                assert.deepEqual(body.error, [
+                    'You are over platform\'s limits. Please contact us to know more details'
+                ]);
 
                 done();
             });
