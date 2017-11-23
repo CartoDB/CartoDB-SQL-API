@@ -138,4 +138,3 @@ TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit,
         callback
     );
 };
-

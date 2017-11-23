@@ -169,6 +169,26 @@ cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 DEL batch:users:vizzuality
 EOF
 
+# API Key Default public
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:localhost:default \
+  user "localhost" \
+  type "default" \
+  grants_maps "true" \
+  db_role "test_windshaft_publicuser" \
+  db_password "public"
+EOF
+
+# API Key Master
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:localhost:1234 \
+  user "localhost" \
+  type "master" \
+  grants_maps "true" \
+  db_role "${TESTUSER}" \
+  db_password "${TESTPASS}"
+EOF
+
 fi
 
 echo "ok, you can run test now"
