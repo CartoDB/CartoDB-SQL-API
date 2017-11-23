@@ -72,9 +72,18 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
   var columns = [];
   var geocol;
   var pg;
-
   // Drop ending semicolon (ogr doens't like it)
   sql = sql.replace(/;\s*$/, '');
+
+  const theGeomFirst = (fieldA, fieldB) => {
+    if (fieldA.name === 'the_geom') {
+      return -1;
+    }
+    if (fieldB.name === 'the_geom') {
+      return 1;
+    }
+    return 0;
+  };
 
   step (
 
@@ -83,37 +92,26 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       pg = new PSQL(dbopts);
       pg.query(colsql, this);
     },
-    // jshint maxcomplexity:9
     function findSRS(err, result) {
       assert.ifError(err);
 
-      //if ( ! result.rows.length ) throw new Error("Query returns no rows");
-
       var needSRS = that._needSRS;
 
-      // Skip system columns, find geom column
-      for (var i=0; i<result.fields.length; ++i) {
-        var field = result.fields[i];
-        var k = field.name;
-        if ( skipfields.indexOf(k) !== -1 ) {
-            continue;
-        }
-        if ( out_format !== 'CSV' && k === "the_geom_webmercator" ) {
-            continue;
-        } // TODO: drop ?
-        if ( out_format === 'CSV' ) {
-            columns.push(pg.quoteIdentifier(k)+'::text');
-        } else {
-            columns.push(pg.quoteIdentifier(k));
-        }
-
-        if ( needSRS ) {
-          if ( ! geocol && pg.typeName(field.dataTypeID) === 'geometry' ) {
-            geocol = k;
+      columns = result.fields
+        // skip columns
+        .filter(field => skipfields.indexOf(field.name) === -1)
+        // put "the_geom" first (if exists)
+        .sort(theGeomFirst)
+        // get first geometry to calculate SRID ("the_geom" if exists)
+        .map(field => {
+          if (needSRS && !geocol && pg.typeName(field.dataTypeID) === 'geometry') {
+            geocol = field.name;
           }
-        }
-      }
-      //console.log(columns.join(','));
+
+          return field;
+        })
+        // apply quotes to columns
+        .map(field => out_format === 'CSV' ? pg.quoteIdentifier(field.name)+'::text' : pg.quoteIdentifier(field.name));
 
       if ( ! needSRS || ! geocol ) {
           return null;
@@ -137,7 +135,6 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
           next(null);
         }
       });
-
     },
     function spawnDumper(err, srid, type) {
       assert.ifError(err);
