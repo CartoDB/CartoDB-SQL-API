@@ -18,7 +18,7 @@ ErrorHandler.prototype.getMessage = function() {
     // return conditionToMessage[this.err.code] || this.err.message;
     if (message && 
         (message.match(/statement timeout/) || 
-        message === /RuntimeError: Execution of function interrupted by signal/)
+        message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1)
     ) {
         message = conditionToMessage[pgErrorCodes.conditionToCode.query_canceled];
     }
