@@ -14,7 +14,7 @@ function authenticatedMiddleware(userDatabaseService) {
         var params = _.extend({}, req.query, body);
 
         var authApi = new AuthApi(req, params);
-        userDatabaseService.getConnectionParams(authApi, res.locals.user, function cancelJob(err, userDbParams) {
+        userDatabaseService.getConnectionParams(authApi, res.locals.user, function connectionParams(err, userDbParams) {
             req.profiler.done('setDBAuth');
 
             if (err) {

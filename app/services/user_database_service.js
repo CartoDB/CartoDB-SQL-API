@@ -105,7 +105,6 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
             callback(null, dbopts, authDbOpts, userLimits);
         }
     );
-
 };
 
 module.exports = UserDatabaseService;
