@@ -16,6 +16,21 @@ ApikeyAuth.prototype.hasCredentials = function() {
         (this.req.body && this.req.body.api_key) || (this.req.body && this.req.body.map_key));
 };
 
+ApikeyAuth.prototype.getCredentials = function() {
+    if  (this.req.query.api_key) {
+        return this.req.query.api_key;
+    }
+    if (this.req.query.map_key) {
+        return this.req.query.map_key;
+    }
+    if (this.req.body && this.req.body.api_key) {
+        return this.req.body.api_key;
+    }
+    if (this.req.body && this.req.body.map_key) {
+        return this.req.body.map_key;
+    }
+};
+
 /**
  * Get id of authorized user
  *

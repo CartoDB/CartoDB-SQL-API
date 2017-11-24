@@ -8,11 +8,23 @@ function AuthApi(req, requestParams) {
     this._hasCredentials = null;
 }
 
+AuthApi.prototype.getType = function () {
+    if (this.authBacked instanceof ApiKeyAuth) {
+        return 'apiKey';
+    } else if (this.authBacked instanceof OAuthAuth) {
+        return 'oAuth';
+    }
+};
+
 AuthApi.prototype.hasCredentials = function() {
     if (this._hasCredentials === null) {
         this._hasCredentials = this.authBacked.hasCredentials();
     }
     return this._hasCredentials;
+};
+
+AuthApi.prototype.getCredentials = function() {
+    return this.authBacked.getCredentials();
 };
 
 AuthApi.prototype.verifyCredentials = function(options, callback) {

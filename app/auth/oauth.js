@@ -167,6 +167,10 @@ OAuthAuth.prototype.verifyCredentials = function(options, callback) {
     }
 };
 
+OAuthAuth.prototype.getCredentials = function() {
+  return oAuth.parseTokens(this.req);
+};
+
 OAuthAuth.prototype.hasCredentials = function() {
     if (this.isOAuthRequest === null) {
         var passed_tokens = oAuth.parseTokens(this.req);

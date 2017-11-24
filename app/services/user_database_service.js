@@ -97,6 +97,42 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
 
             return this(null, dbopts, authDbOpts, userLimits);
         },
+        function getApiKey (err, dbopts, authDbOpts, userLimits) {
+            if (err) {
+                throw err;
+            }
+            const next = this;
+
+            if (authApi.getType() !== 'apiKey') {
+                return next(null, dbopts, authDbOpts, userLimits);
+            }
+
+            self.metadataBackend.getApiKey(cdbUsername, authApi.getCredentials(), 'sql', (err, apiKey) => {
+                if (err) {
+                    return next(err);
+                }
+
+                if (!apiKey) {
+                    const unauthorizedError = new Error('permission denied');
+                    unauthorizedError.http_status = 401;
+
+                    return next(unauthorizedError);
+                }
+
+                if (!apiKey.grantsSql) {
+                    const forbiddenError = new Error('forbidden');
+                    forbiddenError.http_status = 403;
+
+                    return next(forbiddenError);
+                }
+
+                if (apiKey.type !== 'default') {
+                    dbopts = _.extend(dbopts, { user: apiKey.dbRole, pass: apiKey.dbPassword });
+                }
+
+                next(null, dbopts, authDbOpts, userLimits);
+            });
+        },
         function errorHandle(err, dbopts, authDbOpts, userLimits) {
             if (err) {
                 return callback(err);

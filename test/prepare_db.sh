@@ -142,6 +142,7 @@ HMSET rails:users:cartodb250user \
  database_host ${PGHOST} \
  database_password ${TESTPASS} \
  map_key 1234
+SADD rails:users:cartodb250user:map_key 1234
 EOF
 
   cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 3
@@ -169,22 +170,46 @@ cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 DEL batch:users:vizzuality
 EOF
 
+# User: vizzuality
+
 # API Key Default public
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
-HMSET api_keys:localhost:default \
-  user "localhost" \
+HMSET api_keys:vizzuality:default \
+  user "vizzuality" \
   type "default" \
-  grants_maps "true" \
+  grants_sql "true" \
   db_role "test_windshaft_publicuser" \
   db_password "public"
 EOF
 
 # API Key Master
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
-HMSET api_keys:localhost:1234 \
-  user "localhost" \
+HMSET api_keys:vizzuality:1234 \
+  user "vizzuality" \
   type "master" \
-  grants_maps "true" \
+  grants_sql "true" \
+  db_role "${TESTUSER}" \
+  db_password "${TESTPASS}"
+EOF
+
+# User: cartodb250user
+
+# API Key Default public
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:cartodb250user:default \
+  user "cartodb250user" \
+  type "default" \
+  grants_sql "true" \
+  db_role "test_windshaft_publicuser" \
+  db_password "public"
+EOF
+
+# API Key Master
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:cartodb250user:1234 \
+  user "cartodb250user" \
+  type "master" \
+  grants_sql "true" \
   db_role "${TESTUSER}" \
   db_password "${TESTPASS}"
 EOF
