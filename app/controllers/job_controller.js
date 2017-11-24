@@ -78,9 +78,9 @@ JobController.prototype.createJob = function (req, res) {
     var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
 
     var data = {
-        user: req.context.user,
+        user: res.locals.user,
         query: sql,
-        host: req.context.userDbParams.host
+        host: res.locals.userDbParams.host
     };
 
     this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
@@ -105,7 +105,7 @@ JobController.prototype.listWorkInProgressJobs = function (req, res) {
         if (process.env.NODE_ENV !== 'test') {
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
-                username: req.context.user,
+                username: res.locals.user,
                 action: 'list'
             }));
         }
@@ -123,7 +123,7 @@ function jobResponse(req, res, statsdClient, action, status) {
             return handleException(err, res);
         }
 
-        res.header('X-Served-By-DB-Host', req.context.userDbParams.host);
+        res.header('X-Served-By-DB-Host', res.locals.userDbParams.host);
 
         req.profiler.done(action);
         req.profiler.end();
@@ -135,7 +135,7 @@ function jobResponse(req, res, statsdClient, action, status) {
         if (process.env.NODE_ENV !== 'test') {
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
-                username: req.context.user,
+                username: res.locals.user,
                 action: action,
                 job_id: job.job_id
             }));

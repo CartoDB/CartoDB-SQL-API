@@ -104,7 +104,7 @@ function App(statsClient) {
 
     // Use step-profiler
     app.use(function bootstrap$prepareRequestResponse(req, res, next) {
-        req.context = req.context || {};
+        res.locals = res.locals || {};
 
         if (global.settings.api_hostname) {
             res.header('X-Served-By-Host', global.settings.api_hostname);

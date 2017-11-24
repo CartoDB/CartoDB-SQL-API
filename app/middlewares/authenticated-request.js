@@ -14,7 +14,7 @@ function authenticatedMiddleware(userDatabaseService) {
         var params = _.extend({}, req.query, body);
 
         var authApi = new AuthApi(req, params);
-        userDatabaseService.getConnectionParams(authApi, req.context.user, function cancelJob(err, userDbParams) {
+        userDatabaseService.getConnectionParams(authApi, res.locals.user, function cancelJob(err, userDbParams) {
             req.profiler.done('setDBAuth');
 
             if (err) {
@@ -25,7 +25,7 @@ function authenticatedMiddleware(userDatabaseService) {
                 return handleException(new Error('permission denied'), res);
             }
 
-            req.context.userDbParams = userDbParams;
+            res.locals.userDbParams = userDbParams;
 
             return next(null);
         });
