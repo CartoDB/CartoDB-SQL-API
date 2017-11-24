@@ -21,7 +21,7 @@
     "bunyan": "1.8.1",
     "cartodb-psql": "0.10.1",
     "cartodb-query-tables": "0.2.0",
-    "cartodb-redis": "0.14.0",
+    "cartodb-redis": "cartodb/node-cartodb-redis#new-auth-get-api-key-changes",
     "debug": "2.2.0",
     "express": "~4.13.3",
     "log4js": "cartodb/log4js-node#cdb",
