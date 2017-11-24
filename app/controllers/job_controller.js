@@ -80,7 +80,7 @@ JobController.prototype.createJob = function (req, res) {
     var data = {
         user: req.context.user,
         query: sql,
-        host: req.context.userDatabase.host
+        host: req.context.userDbParams.host
     };
 
     this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
@@ -123,7 +123,7 @@ function jobResponse(req, res, statsdClient, action, status) {
             return handleException(err, res);
         }
 
-        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
+        res.header('X-Served-By-DB-Host', req.context.userDbParams.host);
 
         req.profiler.done(action);
         req.profiler.end();

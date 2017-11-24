@@ -14,18 +14,18 @@ function authenticatedMiddleware(userDatabaseService) {
         var params = _.extend({}, req.query, body);
 
         var authApi = new AuthApi(req, params);
-        userDatabaseService.getConnectionParams(authApi, req.context.user, function cancelJob(err, userDatabase) {
+        userDatabaseService.getConnectionParams(authApi, req.context.user, function cancelJob(err, userDbParams) {
             req.profiler.done('setDBAuth');
 
             if (err) {
                 return handleException(err, res);
             }
 
-            if (!userDatabase.authenticated) {
+            if (!userDbParams.authenticated) {
                 return handleException(new Error('permission denied'), res);
             }
 
-            req.context.userDatabase = userDatabase;
+            req.context.userDbParams = userDbParams;
 
             return next(null);
         });
