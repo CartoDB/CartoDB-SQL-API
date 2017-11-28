@@ -32,6 +32,8 @@ module.exports = function handleException(err, res) {
       res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
     }
 
+    logErrors(msg, pgErrorHandler.getStatus(), res);
+    
     res.header('Content-Type', 'application/json; charset=utf-8');
     res.status(getStatusError(pgErrorHandler, req));
     if (req.query && req.query.callback) {
@@ -55,4 +57,14 @@ function getStatusError(pgErrorHandler, req) {
     }
 
     return statusError;
+}
+
+function logErrors(err, statusCode, res) {
+    let errorsLog = Object.assign({}, err);
+
+    errorsLog.statusCode = statusCode || 200;
+    errorsLog.message = err.error;
+    delete err.error;
+
+    res.set('X-SQLAPI-Errors', JSON.stringify(errorsLog));
 }
