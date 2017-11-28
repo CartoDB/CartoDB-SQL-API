@@ -100,6 +100,12 @@ function App(statsClient) {
         app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
     }
 
+    // default X-SQLAPI-Errors header
+    app.use((req, res, next) => {
+        res.set('X-SQLAPI-Errors', '{}');
+        next();
+    });
+
     app.use(cors());
 
     // Use step-profiler
