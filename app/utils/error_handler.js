@@ -63,8 +63,8 @@ function logErrors(err, statusCode, res) {
     let errorsLog = Object.assign({}, err);
 
     errorsLog.statusCode = statusCode || 200;
-    errorsLog.message = err.error;
-    delete err.error;
+    errorsLog.message = errorsLog.error;
+    delete errorsLog.error;
 
     res.set('X-SQLAPI-Errors', JSON.stringify(errorsLog));
 }
