@@ -64,6 +64,8 @@ function setErrorHeader(err, statusCode, res) {
 
     errorsLog.statusCode = statusCode || 200;
     errorsLog.message = errorsLog.error[0];
+    // escape quotes for logs
+    errorsLog.message = errorsLog.message.replace(/"/g, "");
     delete errorsLog.error;
 
     res.set('X-SQLAPI-Errors', JSON.stringify(errorsLog));
