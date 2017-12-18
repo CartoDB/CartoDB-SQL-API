@@ -77,3 +77,11 @@ https://{username}.carto.com/api/v2/sql?format=csv&q=SELECT+*+FROM+tm_world_bord
 ```
 
 The response creates a direct dataset URL that you can download for use offline.
+
+### How can I see at my dashboard the tables that I create through the SQL API?
+
+CARTO takes care of it automatically. As long as tables are cartodbfied, when you open your dashboard CARTO checks your database updating changes to your tables. In some cases that might take a while (up to some minutes for big datasets or too many tables). Check [Creating tables](../creating-tables/) section to learn how to use `cdb_cartodbfytable`.
+
+### What happens if I drop a table that is used by a map?
+
+A map can't use a table that doesn't exist, because it couldn't display its data and it would fail. As you know, when you delete a dataset in the dashboard you are warned about maps using that dataset. SQL API doesn't support that kind of warnings, so your maps are updated accordingly. For example, layers with deleted maps are deleted, and if the map becomes empty (no data layer), it's deleted as well.
