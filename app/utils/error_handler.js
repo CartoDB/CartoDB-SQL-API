@@ -64,9 +64,29 @@ function setErrorHeader(err, statusCode, res) {
 
     errorsLog.statusCode = statusCode || 200;
     errorsLog.message = errorsLog.error[0];
-    // remove double quotes for logs
-    errorsLog.message = errorsLog.message.replace(/"/g, "");
     delete errorsLog.error;
 
-    res.set('X-SQLAPI-Errors', JSON.stringify(errorsLog));
+    res.set('X-SQLAPI-Errors', stringifyForLogs(errorsLog));
+}
+
+/**
+ * Remove problematic nested characters 
+ * from object for logs RegEx
+ * 
+ * @param {Object} object 
+ */
+function stringifyForLogs(object) {
+    Object.keys(object).map(key => {
+        if (typeof object[key] === 'object') {
+            stringifyForLogs(object[key]);
+        } else if (object[key] instanceof Array) {
+            for (let element of object[key]) {
+                stringifyForLogs(element);
+            }
+        } else if(typeof object[key] === 'string') {
+            object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
+        }
+    });
+
+    return JSON.stringify(object);
 }
