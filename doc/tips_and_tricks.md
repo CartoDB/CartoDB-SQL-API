@@ -78,10 +78,14 @@ https://{username}.carto.com/api/v2/sql?format=csv&q=SELECT+*+FROM+tm_world_bord
 
 The response creates a direct dataset URL that you can download for use offline.
 
-### How can I see at my dashboard the tables that I create through the SQL API?
+### Why can't I see my created tables in my CARTO account?
 
-CARTO takes care of it automatically. As long as tables are cartodbfied, when you open your dashboard CARTO checks your database updating changes to your tables. In some cases that might take a while (up to some minutes for big datasets or too many tables). Check [Creating tables](../creating-tables/) section to learn how to use `cdb_cartodbfytable`.
+When you create tables with the SQL API, CARTO automatically adds the tables to _Your datasets_ dashboard in CARTO, but only if your tables are "CARTOfyed". View [Creating Tables with the SQL API](https://carto.com/docs/carto-engine/sql-api/creating-tables/#creating-tables-with-the-sql-api) to learn about the `CDB_CartodbfyTable` function.
 
-### What happens if I drop a table that is used by a map?
+After logging in, CARTO checks your database and updates changes to your tables. In some cases, there is a refresh time between the database update and your account. This is expected behavior, especially if there are a lot of tables or tables with a large amount of rows.
 
-A map can't use a table that doesn't exist, because it couldn't display its data and it would fail. As you know, when you delete a dataset in the dashboard you are warned about maps using that dataset. SQL API doesn't support that kind of warnings, so your maps are updated accordingly. For example, layers with deleted maps are deleted, and if the map becomes empty (no data layer), it's deleted as well.
+### What happens if I remove a table that is used in an existing map?
+
+If you [drop](https://carto.com/docs/carto-engine/sql-api/creating-tables/#remove-a-table) a table using the SQL API, be mindful that there is no warning that the table may be used in an existing map. This is by design. Any maps using a removed table will be missing data and fail.
+
+If you are unsure about which tables are connected to maps, it is suggested to remove tables from _Your datasets_ dashboard in CARTO, which automatically notifies you of any connected maps in use.
