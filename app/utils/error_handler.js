@@ -77,14 +77,14 @@ function setErrorHeader(err, statusCode, res) {
  */
 function stringifyForLogs(object) {
     Object.keys(object).map(key => {
-        if (typeof object[key] === 'object') {
+        if(typeof object[key] === 'string') {
+            object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
+        } else if (typeof object[key] === 'object') {
             stringifyForLogs(object[key]);
         } else if (object[key] instanceof Array) {
             for (let element of object[key]) {
                 stringifyForLogs(element);
             }
-        } else if(typeof object[key] === 'string') {
-            object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
         }
     });
 
