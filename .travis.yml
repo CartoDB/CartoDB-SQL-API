@@ -1,11 +1,10 @@
-dist: trusty
+dist: precise
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
-  postgresql: 9.5
 
 before_install:
   # Add custom PPAs from cartodb
