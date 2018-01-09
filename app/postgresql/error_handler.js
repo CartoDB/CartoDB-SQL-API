@@ -46,7 +46,7 @@ ErrorHandler.prototype.getStatus = function() {
 
 ErrorHandler.prototype.isTimeoutError = function() {
     return this.err.message && (
-        this.err.message.match(/statement timeout/) || 
+        this.err.message.indexOf('statement timeout') > -1 || 
         this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
     );
 };
