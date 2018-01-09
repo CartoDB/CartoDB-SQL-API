@@ -13,13 +13,7 @@ ErrorHandler.prototype.getName = function() {
 ErrorHandler.prototype.getMessage = function() {
     var message = this.err.message;
 
-    // `57014: query_canceled` includes other queries than `statement timeout`, otherwise we could do something more
-    // straightforward like:
-    // return conditionToMessage[this.err.code] || this.err.message;
-    if (message && 
-        (message.match(/statement timeout/) || 
-        message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1)
-    ) {
+    if (this.isTimeoutError()) {
         message = conditionToMessage[pgErrorCodes.conditionToCode.query_canceled];
     }
 
@@ -48,6 +42,13 @@ ErrorHandler.prototype.getStatus = function() {
     }
 
     return statusError;
+};
+
+ErrorHandler.prototype.isTimeoutError = function() {
+    return this.err.message && (
+        this.err.message.match(/statement timeout/) || 
+        this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
+    );
 };
 
 var conditionToMessage = {};
