@@ -5,7 +5,7 @@
   "keywords": [
     "cartodb"
   ],
-  "version": "1.47.2",
+  "version": "1.48.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
@@ -32,7 +32,7 @@
     "oauth-client": "0.3.0",
     "qs": "~6.2.1",
     "queue-async": "~1.0.7",
-    "redis-mpool": "0.4.1",
+    "redis-mpool": "0.5.0",
     "redlock": "2.0.1",
     "request": "~2.75.0",
     "step": "~0.0.5",

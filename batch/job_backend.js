@@ -61,7 +61,17 @@ function isJobFound(redisValues) {
     return !!(redisValues[0] && redisValues[1] && redisValues[2] && redisValues[3] && redisValues[4]);
 }
 
+function getNotFoundError(job_id) {
+    var notFoundError = new Error('Job with id ' + job_id + ' not found');
+    notFoundError.name = 'NotFoundError';
+    return notFoundError;
+}
+
 JobBackend.prototype.get = function (job_id, callback) {
+    if (!job_id) {
+        return callback(getNotFoundError(job_id));
+    }
+
     var self = this;
     var redisParams = [
         REDIS_PREFIX + job_id,
@@ -81,9 +91,7 @@ JobBackend.prototype.get = function (job_id, callback) {
         }
 
         if (!isJobFound(redisValues)) {
-            var notFoundError = new Error('Job with id ' + job_id + ' not found');
-            notFoundError.name = 'NotFoundError';
-            return callback(notFoundError);
+            return callback(getNotFoundError(job_id));
         }
 
         var jobData = toObject(job_id, redisParams, redisValues);

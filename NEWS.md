@@ -1,7 +1,11 @@
 #Changelog
 
-## 1.47.2
-Released 2017-mm-dd
+## 1.48.1
+Released 2018-mm-dd
+
+
+## 1.48.0
+Released 2018-02-12
 
 Announcements:
  * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
@@ -10,6 +14,8 @@ Announcements:
  * Logging all errors
  * Fix Postgres version in travis
  * Fix Python timeout error
+ * Upgrades redis-mpool to 0.5.0
+ * Upgrades cartodb-redis to 0.15.0
 
 
 ## 1.47.1
