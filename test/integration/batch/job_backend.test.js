@@ -58,7 +58,7 @@ describe('job backend', function() {
 
         delete job.data.job_id;
 
-        jobBackend.create(job, function (err) {
+        jobBackend.create(job.data, function (err) {
             assert.ok(err);
             assert.equal(err.name, 'NotFoundError');
             assert.equal(err.message, 'Job with id undefined not found');
