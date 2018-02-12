@@ -134,7 +134,7 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 }
 
                 if (apiKey.type !== 'default') {
-                    dbopts = _.extend(dbopts, { user: apiKey.dbRole, pass: apiKey.dbPassword });
+                    dbopts = _.extend(dbopts, { user: apiKey.databaseRole, pass: apiKey.databasePassword });
                 }
 
                 next(null, dbopts, authDbOpts, userLimits);
