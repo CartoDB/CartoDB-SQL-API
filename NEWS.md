@@ -1,7 +1,7 @@
 #Changelog
 
-## 1.47.2
-Released 2017-mm-dd
+## 1.48.0
+Released 2017-02-12
 
 Announcements:
  * Change work in progress jobs endpoint from `[..]/job/wip` to `[..]/jobs-wip`
