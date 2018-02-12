@@ -3,6 +3,13 @@
 var step = require('step');
 var _ = require('underscore');
 
+function isValidApiKey(apikey) {
+    return apikey.type !== null &&
+        apikey.user !== null &&
+        apikey.databasePassword !== null &&
+        apikey.databaseRole !== null;
+}
+
 function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
 }
@@ -107,12 +114,12 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 return next(null, dbopts, authDbOpts, userLimits);
             }
 
-            self.metadataBackend.getApiKey(cdbUsername, authApi.getCredentials(), 'sql', (err, apiKey) => {
+            self.metadataBackend.getApikey(cdbUsername, authApi.getCredentials(), (err, apiKey) => {
                 if (err) {
                     return next(err);
                 }
 
-                if (!apiKey) {
+                if (!isValidApiKey(apiKey)) {
                     const unauthorizedError = new Error('permission denied');
                     unauthorizedError.http_status = 401;
 
