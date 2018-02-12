@@ -10,6 +10,8 @@ Announcements:
  * Logging all errors
  * Fix Postgres version in travis
  * Fix Python timeout error
+ * Upgrades redis-mpool to 0.5.0
+ * Upgrades cartodb-redis to 0.15.0
 
 
 ## 1.47.1
