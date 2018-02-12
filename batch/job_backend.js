@@ -69,7 +69,7 @@ function getNotFoundError(job_id) {
 
 JobBackend.prototype.get = function (job_id, callback) {
     if (!job_id) {
-        return callback(getNotFoundError(job_id))
+        return callback(getNotFoundError(job_id));
     }
 
     var self = this;
