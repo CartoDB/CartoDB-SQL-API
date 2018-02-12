@@ -174,12 +174,12 @@ EOF
 
 # API Key Default public
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
-HMSET api_keys:vizzuality:default \
+HMSET api_keys:vizzuality:default_public \
   user "vizzuality" \
   type "default" \
   grants_sql "true" \
-  db_role "test_windshaft_publicuser" \
-  db_password "public"
+  database_role "test_windshaft_publicuser" \
+  database_password "public"
 EOF
 
 # API Key Master
@@ -188,20 +188,20 @@ HMSET api_keys:vizzuality:1234 \
   user "vizzuality" \
   type "master" \
   grants_sql "true" \
-  db_role "${TESTUSER}" \
-  db_password "${TESTPASS}"
+  database_role "${TESTUSER}" \
+  database_password "${TESTPASS}"
 EOF
 
 # User: cartodb250user
 
 # API Key Default public
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
-HMSET api_keys:cartodb250user:default \
+HMSET api_keys:cartodb250user:default_public \
   user "cartodb250user" \
   type "default" \
   grants_sql "true" \
-  db_role "test_windshaft_publicuser" \
-  db_password "public"
+  database_role "test_windshaft_publicuser" \
+  database_password "public"
 EOF
 
 # API Key Master
@@ -210,8 +210,8 @@ HMSET api_keys:cartodb250user:1234 \
   user "cartodb250user" \
   type "master" \
   grants_sql "true" \
-  db_role "${TESTUSER}" \
-  db_password "${TESTPASS}"
+  database_role "${TESTUSER}" \
+  database_password "${TESTPASS}"
 EOF
 
 fi
