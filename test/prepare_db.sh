@@ -75,7 +75,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
   psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
 
-  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced'
+  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep'
   REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
 
   if test x"$OFFLINE" = xno; then

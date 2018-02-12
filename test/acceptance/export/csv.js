@@ -28,8 +28,8 @@ it('CSV format', function(done){
         var row0 = rows[0].split(',');
         var row1 = rows[1].split(',');
 
-        assert.equal(row0[1], 'created_at');
-        assert.equal(row1[1], '2011-09-21 14:02:21.314252');
+        assert.equal(row0[2], 'created_at');
+        assert.equal(row1[2], '2011-09-21 14:02:21.314252');
 
         done();
     });
