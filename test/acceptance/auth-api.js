@@ -34,7 +34,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 1234 });
         this.testClient.getResult(publicSQL, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.length, 5);
+            assert.equal(result.length, 6);
             done();
         });
     });
