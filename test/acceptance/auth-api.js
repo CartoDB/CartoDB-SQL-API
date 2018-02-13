@@ -14,7 +14,7 @@ describe('Auth API', function () {
         });
     });
 
-    it('should fail while creating a map (private dataset) and using the default API key', function (done) {
+    it('should fail while fetching data (private dataset) and using the default API key', function (done) {
         this.testClient = new TestClient();
         const expectedResponse = {
             response: {
@@ -25,6 +25,25 @@ describe('Auth API', function () {
         this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
             assert.equal(result.error, 'permission denied for relation private_table');
+            done();
+        });
+    });
+
+
+    it('should get result from query using the master API key and public dataset', function (done) {
+        this.testClient = new TestClient({ apiKey: 1234 });
+        this.testClient.getResult(publicSQL, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.length, 5);
+            done();
+        });
+    });
+
+    it('should get result from query using the master API key and private dataset', function (done) {
+        this.testClient = new TestClient({ apiKey: 1234 });
+        this.testClient.getResult(privateSQL, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.length, 5);
             done();
         });
     });
