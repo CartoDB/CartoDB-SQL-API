@@ -1,5 +1,6 @@
 const assert = require('../support/assert');
 const TestClient = require('../support/test-client');
+const BatchTestClient = require('../support/batch-test-client');
 
 describe('Auth API', function () {
     const publicSQL = 'select * from untitle_table_4';
@@ -62,13 +63,31 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 'regular2' });
         const expectedResponse = {
             response: {
-                response: 401
+                status: 401
             }
         };
 
         this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
             assert.equal(result.error, 'permission denied for relation scoped_table_1');
+            done();
+        });
+    });
+
+    it('should fail while creating a job with regular api key', function (done) {
+        this.testClient = new BatchTestClient({ apiKey: 'regular1' });
+        const expectedResponse = {
+            response: {
+                status: 401
+            }
+        };
+
+        this.testClient.createJob({ query: scopedSQL }, expectedResponse, function (err, jobResult) {
+            if (err) {
+                return done(err);
+            }
+
+            assert.deepEqual(jobResult.job.error, [ 'permission denied' ]);
             done();
         });
     });

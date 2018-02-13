@@ -35,7 +35,7 @@ function BatchTestClient(config) {
     this.batch.on('ready', function() {
         this.ready = true;
         this.pendingJobs.forEach(function(pendingJob) {
-            this.createJob(pendingJob.job, pendingJob.callback);
+            this.createJob(pendingJob.job, pendingJob.override, pendingJob.callback);
         }.bind(this));
     }.bind(this));
 }
@@ -46,6 +46,10 @@ BatchTestClient.prototype.isReady = function() {
     return this.ready;
 };
 
+BatchTestClient.prototype.getExpectedResponse = function (override) {
+    return override.response || this.config.response || RESPONSE.CREATED;
+};
+
 BatchTestClient.prototype.createJob = function(job, override, callback) {
     if (!callback) {
         callback = override;
@@ -54,6 +58,7 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
     if (!this.isReady()) {
         this.pendingJobs.push({
             job: job,
+            override: override || {},
             callback: callback
         });
         return debug('Waiting for Batch service to be ready');
@@ -69,7 +74,7 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
             method: 'POST',
             data: JSON.stringify(job)
         },
-        RESPONSE.CREATED,
+        this.getExpectedResponse(override),
         function (err, res) {
             if (err) {
                 return callback(err);
