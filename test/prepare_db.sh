@@ -192,6 +192,26 @@ HMSET api_keys:vizzuality:1234 \
   database_password "${TESTPASS}"
 EOF
 
+# API Key Regular1
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  HMSET api_keys:vizzuality:regular1 \
+    user "vizzuality" \
+    type "regular" \
+    grants_sql "true" \
+    database_role "regular_1" \
+    database_password "regular1"
+EOF
+
+# API Key Regular1
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  HMSET api_keys:vizzuality:regular2 \
+    user "vizzuality" \
+    type "regular" \
+    grants_sql "true" \
+    database_role "regular_2" \
+    database_password "regular2"
+EOF
+
 # User: cartodb250user
 
 # API Key Default public

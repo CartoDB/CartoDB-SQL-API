@@ -3,6 +3,7 @@ const TestClient = require('../support/test-client');
 
 describe('Auth API', function () {
     const publicSQL = 'select * from untitle_table_4';
+    const scopedSQL = 'select * from scoped_table_1';
     const privateSQL = 'select * from private_table';
 
     it('should get result from query using the default API key', function (done) {
@@ -44,6 +45,30 @@ describe('Auth API', function () {
         this.testClient.getResult(privateSQL, (err, result) => {
             assert.ifError(err);
             assert.equal(result.length, 5);
+            done();
+        });
+    });
+
+    it('should get result from query using the regular API key and scoped dataset', function (done) {
+        this.testClient = new TestClient({ apiKey: 'regular1' });
+        this.testClient.getResult(scopedSQL, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.length, 4);
+            done();
+        });
+    });
+
+    it('should fail while fetching data (scoped dataset) and using the default API key', function (done) {
+        this.testClient = new TestClient({ apiKey: 'regular2' });
+        const expectedResponse = {
+            response: {
+                response: 401
+            }
+        };
+
+        this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.error, 'permission denied for relation scoped_table_1');
             done();
         });
     });
