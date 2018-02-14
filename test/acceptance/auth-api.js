@@ -1,6 +1,7 @@
 const assert = require('../support/assert');
 const TestClient = require('../support/test-client');
 const BatchTestClient = require('../support/batch-test-client');
+const JobStatus = require('../../batch/job_status');
 
 describe('Auth API', function () {
     const publicSQL = 'select * from untitle_table_4';
@@ -16,7 +17,7 @@ describe('Auth API', function () {
         });
     });
 
-    it.only('should fail while fetching data (private dataset) and using the default API key', function (done) {
+    it('should fail while fetching data (private dataset) and using the default API key', function (done) {
         this.testClient = new TestClient();
         const expectedResponse = {
             response: {
@@ -59,7 +60,7 @@ describe('Auth API', function () {
         });
     });
 
-    it('should fail while fetching data (scoped dataset) and using the default API key', function (done) {
+    it('should fail while fetching data (scoped dataset) and using regular API key', function (done) {
         this.testClient = new TestClient({ apiKey: 'regular2' });
         const expectedResponse = {
             response: {
@@ -74,21 +75,56 @@ describe('Auth API', function () {
         });
     });
 
-    it('should fail while creating a job with regular api key', function (done) {
-        this.testClient = new BatchTestClient({ apiKey: 'regular1' });
-        const expectedResponse = {
-            response: {
-                status: 401
-            }
-        };
+    describe('Fallback', function () {
+        it('should get result from query using master apikey (fallback) and a granted dataset', function (done) {
+            this.testClient = new TestClient({ apiKey: '4321', host: 'cartofante.cartodb.com' });
+            this.testClient.getResult(scopedSQL, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.length, 4);
+                done();
+            });
+        });
 
-        this.testClient.createJob({ query: scopedSQL }, expectedResponse, (err, jobResult) => {
-            if (err) {
-                return done(err);
-            }
+        it('should fail while getting result from query using metadata and scoped dataset', function (done) {
+            this.testClient = new TestClient({ host: 'cartofante.cartodb.com' });
 
-            assert.deepEqual(jobResult.job.error, [ 'permission denied' ]);
+            const expectedResponse = {
+                response: {
+                    status: 401
+                },
+                anonymous: true
+            };
 
+            this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.error, 'permission denied for relation private_table');
+                done();
+            });
+        });
+    });
+
+    describe('Batch API', function () {
+        it('should create while creating a job with regular api key', function (done) {
+            this.testClient = new BatchTestClient({ apiKey: 'regular1' });
+
+            this.testClient.createJob({ query: scopedSQL }, (err, jobResult) => {
+                if (err) {
+                    return done(err);
+                }
+
+                jobResult.getStatus(function (err, job) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.equal(job.status, JobStatus.DONE);
+
+                    done();
+                });
+            });
+        });
+
+        afterEach(function (done) {
             this.testClient.drain(done);
         });
     });

@@ -174,6 +174,11 @@ DROP USER IF EXISTS regular_2;
 CREATE USER regular_2 WITH PASSWORD 'regular2';
 ALTER ROLE regular_2 SET statement_timeout = 2000;
 
+-- fallback user role
+DROP USER IF EXISTS test_cartodb_user_2;
+CREATE USER test_cartodb_user_2 WITH PASSWORD 'test_cartodb_user_2_pass';
+GRANT ALL ON TABLE scoped_table_1 TO test_cartodb_user_2;
+
 -- db owner role
 DROP USER IF EXISTS :TESTUSER;
 CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
@@ -210,3 +215,4 @@ INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('private_table'::reg
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('scoped_table_1'::regclass, '2015-01-01T23:31:30.123Z');
 
 GRANT SELECT ON CDB_TableMetadata TO :TESTUSER;
+GRANT SELECT ON CDB_TableMetadata TO test_cartodb_user_2;

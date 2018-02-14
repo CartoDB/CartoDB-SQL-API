@@ -155,6 +155,16 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  time sometime
 EOF
 
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET rails:users:cartofante \
+ id 2 \
+ database_name ${TEST_DB} \
+ database_host ${PGHOST} \
+ database_password test_cartodb_user_2_pass \
+ map_key 4321
+SADD rails:users:fallback_1:map_key 4321
+EOF
+
 # delete previous jobs
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 EVAL "return redis.call('del', unpack(redis.call('keys', ARGV[1])))" 0 batch:jobs:*

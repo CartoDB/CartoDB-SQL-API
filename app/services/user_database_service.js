@@ -3,7 +3,7 @@
 var step = require('step');
 var _ = require('underscore');
 
-function isValidApiKey(apikey) {
+function isApiKeyFound(apikey) {
     return apikey.type !== null &&
         apikey.user !== null &&
         apikey.databasePassword !== null &&
@@ -27,7 +27,6 @@ function UserDatabaseService(metadataBackend) {
 UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
     var self = this;
 
-    var dbParams;
     var dbopts = {
         port: global.settings.db_port,
         pass: global.settings.db_pubuser_pass
@@ -40,9 +39,7 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
         function getDatabaseConnectionParams() {
             self.metadataBackend.getAllUserDBParams(cdbUsername, this);
         },
-        function authenticate(err, userDBParams) {
-            var next = this;
-
+        function getApiKey (err, dbParams) {
             if (err) {
                 err.http_status = 404;
                 err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
@@ -50,18 +47,93 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 return callback(err);
             }
 
-            dbParams = userDBParams;
+            const next = this;
+
+            if (authApi.getType() !== 'apiKey') {
+                return next(null, dbopts, dbParams);
+            }
+
+            const apikeyToken = authApi.getCredentials();
+
+            self.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
+                if (err) {
+                    return next(err);
+                }
+
+                if (!isApiKeyFound(apikey)) {
+                    return next(null, dbopts, dbParams);
+                }
+
+                if (!apikey.grantsSql) {
+                    const forbiddenError = new Error('forbidden');
+                    forbiddenError.http_status = 403;
+
+                    return next(forbiddenError);
+                }
+
+                dbParams.apikey = apikeyToken;
+
+                next(null, dbopts, dbParams, apikey);
+            });
+        },
+        function authenticate(err, dbopts, dbParams, apikey) {
+            var next = this;
+
+            if (err) {
+                return next(err);
+            }
 
             dbopts.host = dbParams.dbhost;
             dbopts.dbname = dbParams.dbname;
             dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-            authApi.verifyCredentials({
+            const opts = {
                 metadataBackend: self.metadataBackend,
                 apiKey: dbParams.apikey
-            }, next);
+            };
+
+
+            authApi.verifyCredentials(opts, function (err, isAuthenticated) {
+                if (err) {
+                    return next(err);
+                }
+
+                next(null, isAuthenticated, dbopts, dbParams, apikey);
+            });
         },
-        function getUserLimits (err, isAuthenticated) {
+        function setDBAuth(err, isAuthenticated, dbopts, dbParams, apikey) {
+            const next = this;
+
+            if (err) {
+                return next(err);
+            }
+
+            var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
+            var pass = null;
+
+            if (global.settings.hasOwnProperty('db_user_pass')) {
+                pass = _.template(global.settings.db_user_pass, {
+                    user_id: dbParams.dbuser,
+                    user_password: dbParams.dbpass
+                });
+            }
+
+            if (isAuthenticated) {
+                dbopts.authenticated = isAuthenticated;
+                if (apikey) {
+                    dbopts.user = apikey.databaseRole;
+                    dbopts.pass = apikey.databasePassword;
+                } else {
+                    dbopts.user = user;
+                    dbopts.pass = pass;
+                }
+            }
+
+            var authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
+
+            return next(null, isAuthenticated, dbopts, authDbOpts);
+        },
+        function getUserLimits (err, isAuthenticated, dbopts, authDbOpts) {
             var next = this;
 
             if (err) {
@@ -76,66 +148,6 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 var userLimits = {
                     timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
                 };
-
-                next(null, isAuthenticated, userLimits);
-            });
-        },
-        function setDBAuth(err, isAuthenticated, userLimits) {
-            if (err) {
-                throw err;
-            }
-
-            var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-            var pass = null;
-            if (global.settings.hasOwnProperty('db_user_pass')) {
-                pass = _.template(global.settings.db_user_pass, {
-                    user_id: dbParams.dbuser,
-                    user_password: dbParams.dbpass
-                });
-            }
-
-            if (_.isBoolean(isAuthenticated) && isAuthenticated) {
-                dbopts.authenticated = isAuthenticated;
-                dbopts.user = user;
-                dbopts.pass = pass;
-            }
-
-            var authDbOpts = _.defaults({user: user, pass: pass}, dbopts);
-
-            return this(null, dbopts, authDbOpts, userLimits);
-        },
-        function getApiKey (err, dbopts, authDbOpts, userLimits) {
-            if (err) {
-                throw err;
-            }
-            const next = this;
-
-            if (authApi.getType() !== 'apiKey') {
-                return next(null, dbopts, authDbOpts, userLimits);
-            }
-
-            self.metadataBackend.getApikey(cdbUsername, authApi.getCredentials(), (err, apiKey) => {
-                if (err) {
-                    return next(err);
-                }
-
-                if (!isValidApiKey(apiKey)) {
-                    const unauthorizedError = new Error('permission denied');
-                    unauthorizedError.http_status = 401;
-
-                    return next(unauthorizedError);
-                }
-
-                if (!apiKey.grantsSql) {
-                    const forbiddenError = new Error('forbidden');
-                    forbiddenError.http_status = 403;
-
-                    return next(forbiddenError);
-                }
-
-                if (apiKey.type !== 'default') {
-                    dbopts = _.extend(dbopts, { user: apiKey.databaseRole, pass: apiKey.databasePassword });
-                }
 
                 next(null, dbopts, authDbOpts, userLimits);
             });
