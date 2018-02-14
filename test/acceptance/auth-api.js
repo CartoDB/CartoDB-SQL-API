@@ -82,13 +82,13 @@ describe('Auth API', function () {
             }
         };
 
-        this.testClient.createJob({ query: scopedSQL }, expectedResponse, function (err, jobResult) {
+        this.testClient.createJob({ query: scopedSQL }, expectedResponse, (err, jobResult) => {
             if (err) {
                 return done(err);
             }
 
             assert.deepEqual(jobResult.job.error, [ 'permission denied' ]);
-            done();
+            this.testClient.drain(done);
         });
     });
 });
