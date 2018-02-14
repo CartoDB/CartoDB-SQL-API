@@ -16,11 +16,11 @@ describe('Auth API', function () {
         });
     });
 
-    it('should fail while fetching data (private dataset) and using the default API key', function (done) {
+    it.only('should fail while fetching data (private dataset) and using the default API key', function (done) {
         this.testClient = new TestClient();
         const expectedResponse = {
             response: {
-                response: 401
+                status: 401
             },
             anonymous: true
         };
@@ -88,6 +88,7 @@ describe('Auth API', function () {
             }
 
             assert.deepEqual(jobResult.job.error, [ 'permission denied' ]);
+
             this.testClient.drain(done);
         });
     });
