@@ -17,6 +17,38 @@ describe('Auth API', function () {
         });
     });
 
+
+    // TODO: this is obviously a really dangerous sceneario, but in order to not break
+    // some uses cases (i.e: ) and keep backwards compatiblity we will keep it during some time.
+    // It should be fixed as soon as possible
+    it('should get result from query using a wrong API key', function (done) {
+        this.testClient = new TestClient({ apiKey: 'wrong' });
+
+        this.testClient.getResult(publicSQL, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.length, 6);
+            done();
+        });
+    });
+
+    // TODO: this is obviously a really dangerous sceneario, but in order to not break
+    // some uses cases (i.e: ) and keep backwards compatiblity we will keep it during some time.
+    // It should be fixed as soon as possible
+    it('should fail while fetching data (private dataset) and using a wrong API key', function (done) {
+        this.testClient = new TestClient({ apiKey: 'wrong' });
+        const expectedResponse = {
+            response: {
+                status: 401
+            }
+        };
+
+        this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.error, 'permission denied for relation private_table');
+            done();
+        });
+    });
+
     it('should fail while fetching data (private dataset) and using the default API key', function (done) {
         this.testClient = new TestClient();
         const expectedResponse = {
