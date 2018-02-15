@@ -6,6 +6,7 @@ var util = require('util');
 var userMiddleware = require('../middlewares/user');
 var authenticatedMiddleware = require('../middlewares/authenticated-request');
 var handleException = require('../utils/error_handler');
+const apikeyMiddleware = require('../middlewares/api-key');
 
 var ONE_KILOBYTE_IN_BYTES = 1024;
 var MAX_LIMIT_QUERY_SIZE_IN_KB = 16;
@@ -45,7 +46,10 @@ module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 JobController.prototype.route = function (app) {
     app.post(
         global.settings.base_url + '/sql/job',
-        bodyPayloadSizeMiddleware, userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        bodyPayloadSizeMiddleware,
+        userMiddleware,
+        apikeyMiddleware(),
+        authenticatedMiddleware(this.userDatabaseService),
         this.createJob.bind(this)
     );
     app.get(
@@ -54,12 +58,16 @@ JobController.prototype.route = function (app) {
     );
     app.get(
         global.settings.base_url + '/sql/job/:job_id',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        userMiddleware,
+        apikeyMiddleware(),
+        authenticatedMiddleware(this.userDatabaseService),
         this.getJob.bind(this)
     );
     app.delete(
         global.settings.base_url + '/sql/job/:job_id',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
+        userMiddleware,
+        apikeyMiddleware(),
+        authenticatedMiddleware(this.userDatabaseService),
         this.cancelJob.bind(this)
     );
 };

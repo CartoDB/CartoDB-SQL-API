@@ -14,6 +14,7 @@ var formats = require('../models/formats');
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
 var handleException = require('../utils/error_handler');
+const apikeyMiddleware = require('../middlewares/api-key');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -26,8 +27,8 @@ function QueryController(userDatabaseService, tableCache, statsd_client) {
 }
 
 QueryController.prototype.route = function (app) {
-    app.all(global.settings.base_url + '/sql',  this.handleQuery.bind(this));
-    app.all(global.settings.base_url + '/sql.:f',  this.handleQuery.bind(this));
+    app.all(global.settings.base_url + '/sql', apikeyMiddleware() ,this.handleQuery.bind(this));
+    app.all(global.settings.base_url + '/sql.:f', apikeyMiddleware() ,this.handleQuery.bind(this));
 };
 
 // jshint maxcomplexity:21
@@ -121,7 +122,7 @@ QueryController.prototype.handleQuery = function (req, res) {
         // 5. Send formatted results back
         step(
             function getUserDBInfo() {
-                self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
+                self.userDatabaseService.getConnectionParams(new AuthApi(req, res, params), cdbUsername, this);
             },
             function queryExplain(err, dbParams, authDbParams, userTimeoutLimits) {
                 assert.ifError(err);
