@@ -110,10 +110,9 @@ JobBase.prototype.serialize = function () {
 
     delete data.host;
     delete data.dbuser;
-    delete data.dbport;
+    delete data.port;
     delete data.dbname;
-    delete data.dbhost;
-    delete data.dbpass;
+    delete data.pass;
 
     return data;
 };
