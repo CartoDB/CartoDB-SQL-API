@@ -3,7 +3,7 @@ require('../helper');
 var ApikeyAuth = require('../../app/auth/apikey');
 var assert = require('assert');
 
-describe('has credentials', function() {
+describe.skip('has credentials', function() {
 
     var noCredentialsRequests = [
         {
@@ -70,7 +70,7 @@ describe('has credentials', function() {
 
 });
 
-describe('verifyCredentials', function() {
+describe.skip('verifyCredentials', function() {
 
     it('callbacks with true value when request api_key is the same', function(done) {
         testVerifyCredentials({query:{api_key: 'foo'}}, {apiKey: 'foo'}, true, done);

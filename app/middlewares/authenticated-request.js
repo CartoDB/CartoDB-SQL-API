@@ -13,7 +13,7 @@ function authenticatedMiddleware(userDatabaseService) {
         // clone so don't modify req.params or req.body so oauth is not broken
         var params = _.extend({}, req.query, body);
 
-        var authApi = new AuthApi(req, params);
+        var authApi = new AuthApi(req, res, params);
         userDatabaseService.getConnectionParams(authApi, res.locals.user, function connectionParams(err, userDbParams) {
             req.profiler.done('setDBAuth');
 
