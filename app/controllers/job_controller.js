@@ -80,7 +80,11 @@ JobController.prototype.createJob = function (req, res) {
     var data = {
         user: res.locals.user,
         query: sql,
-        host: res.locals.userDbParams.host
+        host: res.locals.userDbParams.host,
+        port: res.locals.userDbParams.port,
+        pass: res.locals.userDbParams.pass,
+        dbname: res.locals.userDbParams.dbname,
+        dbuser: res.locals.userDbParams.user
     };
 
     this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
