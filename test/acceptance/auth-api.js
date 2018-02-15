@@ -19,7 +19,7 @@ describe('Auth API', function () {
 
 
     // TODO: this is obviously a really dangerous sceneario, but in order to not break
-    // some uses cases (i.e: ) and keep backwards compatiblity we will keep it during some time.
+    // some uses cases (i.e: new carto.js examples) and keep backwards compatiblity we will keep it during some time.
     // It should be fixed as soon as possible
     it('should get result from query using a wrong API key', function (done) {
         this.testClient = new TestClient({ apiKey: 'wrong' });
@@ -32,7 +32,7 @@ describe('Auth API', function () {
     });
 
     // TODO: this is obviously a really dangerous sceneario, but in order to not break
-    // some uses cases (i.e: ) and keep backwards compatiblity we will keep it during some time.
+    // some uses cases (i.e:  new carto.js examples) and keep backwards compatiblity we will keep it during some time.
     // It should be fixed as soon as possible
     it('should fail while fetching data (private dataset) and using a wrong API key', function (done) {
         this.testClient = new TestClient({ apiKey: 'wrong' });
