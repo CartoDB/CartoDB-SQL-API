@@ -136,7 +136,7 @@ describe('Auth API', function () {
     });
 
     describe('Batch API', function () {
-        it('should create while creating a job with regular api key', function (done) {
+        it('should create a job with regular api key and get it done', function (done) {
             this.testClient = new BatchTestClient({ apiKey: 'regular1' });
 
             this.testClient.createJob({ query: scopedSQL }, (err, jobResult) => {
@@ -150,6 +150,27 @@ describe('Auth API', function () {
                     }
 
                     assert.equal(job.status, JobStatus.DONE);
+
+                    done();
+                });
+            });
+        });
+
+        it('should create a job with regular api key and get it failed', function (done) {
+            this.testClient = new BatchTestClient({ apiKey: 'regular1' });
+
+            this.testClient.createJob({ query: privateSQL }, (err, jobResult) => {
+                if (err) {
+                    return done(err);
+                }
+
+                jobResult.getStatus(function (err, job) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.equal(job.status, JobStatus.FAILED);
+                    assert.equal(job.failed_reason, 'permission denied for relation private_table');
 
                     done();
                 });
