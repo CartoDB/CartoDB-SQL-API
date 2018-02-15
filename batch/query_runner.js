@@ -9,37 +9,49 @@ function QueryRunner(userDatabaseMetadataService) {
 
 module.exports = QueryRunner;
 
-QueryRunner.prototype.run = function (job_id, sql, user, timeout, callback) {
-    this.userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
+function hasDBParams (dbparams) {
+    return (dbparams.user && dbparams.host && dbparams.port && dbparams.dbname && dbparams.pass);
+}
+
+QueryRunner.prototype.run = function (job_id, sql, user, timeout, dbparams, callback) {
+    if (hasDBParams(dbparams)) {
+        return this._run(dbparams, job_id, sql, timeout, callback);
+    }
+
+    this.userDatabaseMetadataService.getUserMetadata(user, (err, userDBParams) => {
         if (err) {
             return callback(err);
         }
 
-        var pg = new PSQL(userDatabaseMetadata);
+        this._run(userDBParams, job_id, sql, timeout, callback);
+    });
+};
 
-        pg.query('SET statement_timeout=' + timeout, function (err) {
-            if(err) {
+QueryRunner.prototype._run = function (dbparams, job_id, sql, timeout, callback) {
+    var pg = new PSQL(dbparams);
+
+    pg.query('SET statement_timeout=' + timeout, function (err) {
+        if(err) {
+            return callback(err);
+        }
+
+        // mark query to allow to users cancel their queries
+        sql = '/* ' + job_id + ' */ ' + sql;
+
+        debug('Running query [timeout=%d] %s', timeout, sql);
+        pg.eventedQuery(sql, function (err, query) {
+            if (err) {
                 return callback(err);
             }
 
-            // mark query to allow to users cancel their queries
-            sql = '/* ' + job_id + ' */ ' + sql;
+            query.on('error', callback);
 
-            debug('Running query [timeout=%d] %s', timeout, sql);
-            pg.eventedQuery(sql, function (err, query) {
-                if (err) {
-                    return callback(err);
+            query.on('end', function (result) {
+                // only if result is present then query is done sucessfully otherwise an error has happened
+                // and it was handled by error listener
+                if (result) {
+                    callback(null, result);
                 }
-
-                query.on('error', callback);
-
-                query.on('end', function (result) {
-                    // only if result is present then query is done sucessfully otherwise an error has happened
-                    // and it was handled by error listener
-                    if (result) {
-                        callback(null, result);
-                    }
-                });
             });
         });
     });
