@@ -1,7 +1,10 @@
-var CdbRequest = require('../models/cartodb_request');
-var cdbRequest = new CdbRequest();
+const CdbRequest = require('../models/cartodb_request');
 
-module.exports = function userMiddleware(req, res, next) {
-    res.locals.user = cdbRequest.userByReq(req);
-    next();
+module.exports = function user () {
+    const cdbRequest = new CdbRequest();
+
+    return function userMiddleware (req, res, next) {
+        res.locals.user = cdbRequest.userByReq(req);
+        next();
+    };
 };

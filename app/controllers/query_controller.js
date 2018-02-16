@@ -8,17 +8,16 @@ var CachedQueryTables = require('../services/cached-query-tables');
 var AuthApi = require('../auth/auth_api');
 var queryMayWrite = require('../utils/query_may_write');
 
-var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-var handleException = require('../utils/error_handler');
+// var handleException = require('../utils/error_handler');
 const apikeyMiddleware = require('../middlewares/api-key');
+const userMiddleware = require('../middlewares/user');
+const errorMiddleware = require('../middlewares/error');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
-
-var cdbReq = new CdbRequest();
 
 function QueryController(userDatabaseService, tableCache, statsd_client) {
     this.statsd_client = statsd_client;
@@ -27,12 +26,24 @@ function QueryController(userDatabaseService, tableCache, statsd_client) {
 }
 
 QueryController.prototype.route = function (app) {
-    app.all(global.settings.base_url + '/sql', apikeyMiddleware() ,this.handleQuery.bind(this));
-    app.all(global.settings.base_url + '/sql.:f', apikeyMiddleware() ,this.handleQuery.bind(this));
+    app.all(
+        global.settings.base_url + '/sql',
+        userMiddleware(),
+        apikeyMiddleware(),
+        this.handleQuery.bind(this),
+        errorMiddleware()
+    );
+    app.all(
+        global.settings.base_url + '/sql.:f',
+        userMiddleware(),
+        apikeyMiddleware(),
+        this.handleQuery.bind(this),
+        errorMiddleware()
+    );
 };
 
 // jshint maxcomplexity:21
-QueryController.prototype.handleQuery = function (req, res) {
+QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
     // extract input
     var body = (req.body) ? req.body : {};
@@ -48,7 +59,7 @@ QueryController.prototype.handleQuery = function (req, res) {
     var requestedFilename = params.filename;
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
-    var cdbUsername = cdbReq.userByReq(req);
+    var cdbUsername = res.locals.user;
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration file
@@ -241,8 +252,8 @@ QueryController.prototype.handleQuery = function (req, res) {
             function errorHandle(err){
                 formatter = null;
 
-                if ( err ) {
-                    handleException(err, res);
+                if (err) {
+                    next(err);
                 }
 
                 if ( req.profiler ) {
@@ -258,7 +269,7 @@ QueryController.prototype.handleQuery = function (req, res) {
             }
         );
     } catch (err) {
-        handleException(err, res);
+        next(err);
 
         if (self.statsd_client) {
             self.statsd_client.increment('sqlapi.query.error');

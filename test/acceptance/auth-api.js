@@ -209,6 +209,22 @@ describe('Auth API', function () {
             });
         });
 
+        it('should fail when basic auth name does not match with user\'s', function (done) {
+            this.testClient = new TestClient({ authorization: 'wadus:regular2' });
+            const expectedResponse = {
+                response: {
+                    status: 401
+                },
+                anonymous: true
+            };
+
+            this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.error, 'permission denied');
+                done();
+            });
+        });
+
         // TODO: this is obviously a really dangerous sceneario, but in order to not break
         // some uses cases (i.e: new carto.js examples) and to keep backwards compatiblity
         // we will keep it during some time. It should be fixed as soon as possible

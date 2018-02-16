@@ -2,7 +2,6 @@
 
 var _ = require('underscore');
 var AuthApi = require('../auth/auth_api');
-var handleException = require('../utils/error_handler');
 
 function authenticatedMiddleware(userDatabaseService) {
     return function middleware(req, res, next) {
@@ -18,16 +17,16 @@ function authenticatedMiddleware(userDatabaseService) {
             req.profiler.done('setDBAuth');
 
             if (err) {
-                return handleException(err, res);
+                return next(err);
             }
 
             if (!userDbParams.authenticated) {
-                return handleException(new Error('permission denied'), res);
+                return next(new Error('permission denied'));
             }
 
             res.locals.userDbParams = userDbParams;
 
-            return next(null);
+            next();
         });
     };
 }

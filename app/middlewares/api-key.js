@@ -1,61 +1,89 @@
 const basicAuth = require('basic-auth');
 
-const apiKeyGetters = [
-    getApikeyTokenFromHeaderAuthorization,
-    getApikeyTokenFromRequestQueryString,
-    getApikeyTokenFromRequestBody,
+const credentialsGetters = [
+    getCredentialsFromHeaderAuthorization,
+    getCredentialsFromRequestQueryString,
+    getCredentialsFromRequestBody,
 ];
 
-module.exports = function getApiKeyTokenFromRequest () {
-    return function getApiKeyTokenFromRequestMiddleware(req, res, next) {
-        let apiKeyToken = null;
+module.exports = function getCredentials () {
+    return function getCredentialsMiddleware(req, res, next) {
+        let credentials = null;
 
-        for (var getter of apiKeyGetters) {
-            apiKeyToken = getter(req);
-            if (apiKeyTokenFound(apiKeyToken)) {
-                res.locals.api_key = apiKeyToken;
+        for (var getter of credentialsGetters) {
+            credentials = getter(req);
+
+            if (apiKeyTokenFound(credentials)) {
+                res.locals.api_key = credentials.apiKeyToken;
                 break;
             }
+        }
+
+        if (userMatches(credentials, res.locals.user)) {
+            return next(new Error('permission denied'));
         }
 
         next();
     };
 };
 
-function getApikeyTokenFromHeaderAuthorization(req) {
-    const { pass: apiKeyToken } = basicAuth(req) || {};
+function getCredentialsFromHeaderAuthorization(req) {
+    const { pass, name } = basicAuth(req) || {};
 
-    if (apiKeyToken !== undefined) {
-        return apiKeyToken;
+    if (pass !== undefined && name !== undefined) {
+        return {
+            apiKeyToken: pass,
+            user: name
+        };
     }
 
     return false;
 }
 
-function getApikeyTokenFromRequestQueryString(req) {
+function getCredentialsFromRequestQueryString(req) {
     if (req.query.api_key) {
-        return req.query.api_key;
+        return {
+            apiKeyToken: req.query.api_key
+        };
     }
 
     if (req.query.map_key) {
-        return req.query.map_key;
+        return {
+            apiKeyToken: req.query.map_key
+        };
     }
 
     return false;
 }
 
-function getApikeyTokenFromRequestBody(req) {
+function getCredentialsFromRequestBody(req) {
     if (req.body && req.body.api_key) {
-        return req.body.api_key;
+        return {
+            apiKeyToken: req.body.api_key
+        };
     }
 
     if (req.body && req.body.map_key) {
-        return req.body.map_key;
+        return {
+            apiKeyToken: req.body.map_key
+        };
     }
 
     return false;
 }
 
-function apiKeyTokenFound(apiKeyToken) {
-    return !!apiKeyToken;
+function apiKeyTokenFound(credentials) {
+    if (typeof credentials === 'boolean') {
+        return credentials;
+    }
+
+    if (credentials.apiKeyToken !== undefined) {
+        return true;
+    }
+
+    return false;
+}
+
+function userMatches (credentials, user) {
+    return (credentials.user !== undefined && credentials.user !== user);
 }
