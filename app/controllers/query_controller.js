@@ -36,7 +36,8 @@ QueryController.prototype.handleQuery = function (req, res) {
     var self = this;
     // extract input
     var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
+    // clone so don't modify req.params or req.body so oauth is not broken
+    var params = _.extend({}, res.locals, req.query, body);
     var sql = params.q;
     var limit = parseInt(params.rows_per_page);
     var offset = parseInt(params.page);

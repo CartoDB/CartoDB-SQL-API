@@ -181,4 +181,64 @@ describe('Auth API', function () {
             this.testClient.drain(done);
         });
     });
+
+    describe('Basic Auth', function () {
+        it('should get result from query using the regular API key and scoped dataset', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:regular1' });
+
+            this.testClient.getResult(scopedSQL, { anonymous: true }, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.length, 4);
+                done();
+            });
+        });
+
+        it('should fail while fetching data (scoped dataset) and using regular API key', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:regular2' });
+            const expectedResponse = {
+                response: {
+                    status: 401
+                },
+                anonymous: true
+            };
+
+            this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.error, 'permission denied for relation scoped_table_1');
+                done();
+            });
+        });
+
+        // TODO: this is obviously a really dangerous sceneario, but in order to not break
+        // some uses cases (i.e: new carto.js examples) and to keep backwards compatiblity
+        // we will keep it during some time. It should be fixed as soon as possible
+        it('should get result from query using a wrong API key and quering to public dataset', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:wrong' });
+
+            this.testClient.getResult(publicSQL, { anonymous: true }, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.length, 6);
+                done();
+            });
+        });
+
+        // TODO: this is obviously a really dangerous sceneario, but in order to not break
+        // some uses cases (i.e: new carto.js examples) and to keep backwards compatiblity
+        // we will keep it during some time. It should be fixed as soon as possible
+        it('should fail while fetching data (private dataset) and using a wrong API key', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:wrong' });
+            const expectedResponse = {
+                response: {
+                    status: 401
+                },
+                anonymous: true
+            };
+
+            this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.error, 'permission denied for relation private_table');
+                done();
+            });
+        });
+    });
 });

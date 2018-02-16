@@ -33,13 +33,15 @@ TestClient.prototype.getResult = function(query, override, callback) {
         callback = override;
         override = {};
     }
+
     assert.response(
         this.server,
         {
             url: this.getUrl(override),
             headers: {
                 host: this.getHost(override),
-                'Content-Type': this.getContentType(override)
+                'Content-Type': this.getContentType(override),
+                authorization: this.getAuthorization(override)
             },
             method: 'POST',
             data: this.getParser(override)({
@@ -66,6 +68,14 @@ TestClient.prototype.getResult = function(query, override, callback) {
 
 TestClient.prototype.getHost = function(override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
+};
+
+TestClient.prototype.getAuthorization = function (override) {
+    const auth = override.authorization || this.config.authorization;
+
+    if (auth) {
+        return `Basic ${new Buffer(auth).toString('base64')}`;
+    }
 };
 
 TestClient.prototype.getContentType = function(override) {
