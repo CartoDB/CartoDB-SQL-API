@@ -240,5 +240,52 @@ describe('Auth API', function () {
                 done();
             });
         });
+
+        describe('Batch API', function () {
+            it('should create a job with regular api key and get it done', function (done) {
+                this.testClient = new BatchTestClient({ authorization: 'vizzuality:regular1' });
+
+                this.testClient.createJob({ query: scopedSQL }, { anonymous: true }, (err, jobResult) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    jobResult.getStatus(function (err, job) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        assert.equal(job.status, JobStatus.DONE);
+
+                        done();
+                    });
+                });
+            });
+
+            it('should create a job with regular api key and get it failed', function (done) {
+                this.testClient = new BatchTestClient({ authorization: 'vizzuality:regular1' });
+
+                this.testClient.createJob({ query: privateSQL }, { anonymous: true }, (err, jobResult) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    jobResult.getStatus(function (err, job) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        assert.equal(job.status, JobStatus.FAILED);
+                        assert.equal(job.failed_reason, 'permission denied for relation private_table');
+
+                        done();
+                    });
+                });
+            });
+
+            afterEach(function (done) {
+                this.testClient.drain(done);
+            });
+        });
     });
 });
