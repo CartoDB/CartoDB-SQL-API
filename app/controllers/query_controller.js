@@ -12,7 +12,7 @@ var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-const apikeyMiddleware = require('../middlewares/api-key');
+const credentialsMiddleware = require('../middlewares/credentials');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 
@@ -28,14 +28,14 @@ QueryController.prototype.route = function (app) {
     app.all(
         global.settings.base_url + '/sql',
         userMiddleware(),
-        apikeyMiddleware(),
+        credentialsMiddleware(),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
     app.all(
         global.settings.base_url + '/sql.:f',
         userMiddleware(),
-        apikeyMiddleware(),
+        credentialsMiddleware(),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
@@ -61,7 +61,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var cdbUsername = res.locals.user;
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
-    var gn = "the_geom"; // TODO: read from configuration file
+    var gn = "the_geom"; // TODO: read from configuration FILE
     var userLimits;
 
     if ( req.profiler ) {

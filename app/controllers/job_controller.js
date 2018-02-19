@@ -3,7 +3,7 @@ const util = require('util');
 const userMiddleware = require('../middlewares/user');
 const authenticatedMiddleware = require('../middlewares/authenticated-request');
 const errorMiddleware = require('../middlewares/error');
-const apikeyMiddleware = require('../middlewares/api-key');
+const credentialsMiddleware = require('../middlewares/credentials');
 
 function JobController(userDatabaseService, jobService, statsdClient) {
     this.userDatabaseService = userDatabaseService;
@@ -20,7 +20,7 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job`,
         checkBodyPayloadSize(),
         userMiddleware(),
-        apikeyMiddleware(),
+        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
         createJob(this.jobService),
         setServedByDBHostHeader(),
@@ -45,7 +45,7 @@ JobController.prototype.route = function (app) {
     app.get(
         `${base_url}/sql/job/:job_id`,
         userMiddleware(),
-        apikeyMiddleware(),
+        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
         getJob(this.jobService),
         setServedByDBHostHeader(),
@@ -59,7 +59,7 @@ JobController.prototype.route = function (app) {
     app.delete(
         `${base_url}/sql/job/:job_id`,
         userMiddleware(),
-        apikeyMiddleware(),
+        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
         cancelJob(this.jobService),
         setServedByDBHostHeader(),
