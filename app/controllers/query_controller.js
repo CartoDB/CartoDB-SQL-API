@@ -5,7 +5,6 @@ var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
-var AuthApi = require('../auth/auth_api');
 var queryMayWrite = require('../utils/query_may_write');
 
 var formats = require('../models/formats');
@@ -15,6 +14,7 @@ var getContentDisposition = require('../utils/content_disposition');
 const credentialsMiddleware = require('../middlewares/credentials');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
+const authenticatedMiddleware = require('../middlewares/authenticated-request');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -25,17 +25,21 @@ function QueryController(userDatabaseService, tableCache, statsd_client) {
 }
 
 QueryController.prototype.route = function (app) {
+    const { base_url } = global.settings;
+
     app.all(
-        global.settings.base_url + '/sql',
+        `${base_url}/sql`,
         userMiddleware(),
         credentialsMiddleware(),
+        authenticatedMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
     app.all(
-        global.settings.base_url + '/sql.:f',
+        `${base_url}/sql.:f`,
         userMiddleware(),
         credentialsMiddleware(),
+        authenticatedMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
@@ -47,7 +51,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     // extract input
     var body = (req.body) ? req.body : {};
     // clone so don't modify req.params or req.body so oauth is not broken
-    var params = _.extend({}, res.locals, req.query, body);
+    var params = _.extend({}, req.query, body);
     var sql = params.q;
     var limit = parseInt(params.rows_per_page);
     var offset = parseInt(params.page);
@@ -58,11 +62,12 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var requestedFilename = params.filename;
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
-    var cdbUsername = res.locals.user;
+
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits } = res.locals;
+
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration FILE
-    var userLimits;
 
     if ( req.profiler ) {
         req.profiler.start('sqlapi.query');
@@ -119,29 +124,19 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             throw new Error("You must indicate a sql query");
         }
 
-        // Database options
-        var dbopts = {};
         var formatter;
 
         if ( req.profiler ) {
             req.profiler.done('init');
         }
 
-        // 1. Get user database and related parameters
-        // 3. Get the list of tables affected by the query
-        // 4. Setup headers
-        // 5. Send formatted results back
+        // 1. Get the list of tables affected by the query
+        // 2. Setup headers
+        // 3. Send formatted results back
+        // 4. Handle error
         step(
-            function getUserDBInfo() {
-                self.userDatabaseService.getConnectionParams(new AuthApi(req, res, params), cdbUsername, this);
-            },
-            function queryExplain(err, dbParams, authDbParams, userTimeoutLimits) {
-                assert.ifError(err);
-
+            function queryExplain() {
                 var next = this;
-
-                dbopts = dbParams;
-                userLimits = userTimeoutLimits;
 
                 if ( req.profiler ) {
                     req.profiler.done('setDBAuth');
@@ -150,6 +145,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 checkAborted('queryExplain');
 
                 var pg = new PSQL(authDbParams);
+
                 var skipCache = !!dbopts.authenticated;
 
                 self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
@@ -221,7 +217,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
-                  username: cdbUsername,
+                  username: username,
                   dbopts: dbopts,
                   sink: res,
                   gn: gn,

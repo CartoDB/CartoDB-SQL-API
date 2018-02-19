@@ -15,13 +15,14 @@ module.exports = JobController;
 
 JobController.prototype.route = function (app) {
     const { base_url } = global.settings;
+    const forceToBeAuthenticated = true;
 
     app.post(
         `${base_url}/sql/job`,
         checkBodyPayloadSize(),
         userMiddleware(),
         credentialsMiddleware(),
-        authenticatedMiddleware(this.userDatabaseService),
+        authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         createJob(this.jobService),
         setServedByDBHostHeader(),
         profile(),
@@ -46,7 +47,7 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job/:job_id`,
         userMiddleware(),
         credentialsMiddleware(),
-        authenticatedMiddleware(this.userDatabaseService),
+        authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         getJob(this.jobService),
         setServedByDBHostHeader(),
         profile(),
@@ -60,7 +61,7 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job/:job_id`,
         userMiddleware(),
         credentialsMiddleware(),
-        authenticatedMiddleware(this.userDatabaseService),
+        authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         cancelJob(this.jobService),
         setServedByDBHostHeader(),
         profile(),

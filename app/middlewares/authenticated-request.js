@@ -3,28 +3,31 @@
 var _ = require('underscore');
 var AuthApi = require('../auth/auth_api');
 
-function authenticatedMiddleware(userDatabaseService) {
+function authenticatedMiddleware(userDatabaseService, forceToBeAuthenticated = false) {
     return function middleware(req, res, next) {
         req.profiler.start('sqlapi.job');
         req.profiler.done('init');
 
-        var body = (req.body) ? req.body : {};
         // clone so don't modify req.params or req.body so oauth is not broken
-        var params = _.extend({}, res.locals, req.query, body);
+        const params = _.extend({}, res.locals, req.query, req.body);
+
+        const { user } = res.locals;
 
         var authApi = new AuthApi(req, res, params);
-        userDatabaseService.getConnectionParams(authApi, res.locals.user, function connectionParams(err, userDbParams) {
+        userDatabaseService.getConnectionParams(authApi, user, function (err, dbParams, authDbParams, userLimits) {
             req.profiler.done('setDBAuth');
 
             if (err) {
                 return next(err);
             }
 
-            if (!userDbParams.authenticated) {
+            if (forceToBeAuthenticated && !dbParams.authenticated) {
                 return next(new Error('permission denied'));
             }
 
-            res.locals.userDbParams = userDbParams;
+            res.locals.userDbParams = dbParams;
+            res.locals.authDbParams = authDbParams;
+            res.locals.userLimits = userLimits;
 
             next();
         });
