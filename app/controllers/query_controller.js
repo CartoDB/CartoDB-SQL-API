@@ -12,7 +12,6 @@ var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-// var handleException = require('../utils/error_handler');
 const apikeyMiddleware = require('../middlewares/api-key');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
