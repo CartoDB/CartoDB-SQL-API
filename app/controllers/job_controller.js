@@ -4,7 +4,6 @@ const userMiddleware = require('../middlewares/user');
 const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
 const authenticatedMiddleware = require('../middlewares/authenticated-request');
 const errorMiddleware = require('../middlewares/error');
-const credentialsMiddleware = require('../middlewares/credentials');
 
 function JobController(userDatabaseService, jobService, statsdClient) {
     this.userDatabaseService = userDatabaseService;
@@ -23,7 +22,6 @@ JobController.prototype.route = function (app) {
         initializeProfilerMiddleware('job'),
         checkBodyPayloadSize(),
         userMiddleware(),
-        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         createJob(this.jobService),
         setServedByDBHostHeader(),
@@ -44,7 +42,6 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job/:job_id`,
         initializeProfilerMiddleware('job'),
         userMiddleware(),
-        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         getJob(this.jobService),
         setServedByDBHostHeader(),
@@ -59,7 +56,6 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job/:job_id`,
         initializeProfilerMiddleware('job'),
         userMiddleware(),
-        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         cancelJob(this.jobService),
         setServedByDBHostHeader(),

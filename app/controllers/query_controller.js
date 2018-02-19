@@ -11,7 +11,6 @@ var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-const credentialsMiddleware = require('../middlewares/credentials');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authenticatedMiddleware = require('../middlewares/authenticated-request');
@@ -32,7 +31,6 @@ QueryController.prototype.route = function (app) {
         `${base_url}/sql`,
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
@@ -41,7 +39,6 @@ QueryController.prototype.route = function (app) {
         `${base_url}/sql.:f`,
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
