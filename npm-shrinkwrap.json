@@ -160,24 +160,7 @@
     "cartodb-redis": {
       "version": "0.15.1",
       "from": "cartodb/node-cartodb-redis#project-auth-api",
-      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#2d17fe82d66972edce5c727c679a335845ea5eb0",
-      "dependencies": {
-        "generic-pool": {
-          "version": "2.1.1",
-          "from": "generic-pool@>=2.1.1 <2.2.0",
-          "resolved": "https://registry.npmjs.org/generic-pool/-/generic-pool-2.1.1.tgz"
-        },
-        "redis": {
-          "version": "2.8.0",
-          "from": "redis@>=2.8.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/redis/-/redis-2.8.0.tgz"
-        },
-        "redis-mpool": {
-          "version": "0.5.0",
-          "from": "redis-mpool@>=0.5.0 <0.6.0",
-          "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.5.0.tgz"
-        }
-      }
+      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#ffc1dccaa5ad433a1582d8e3d5926063bd3851d3"
     },
     "caseless": {
       "version": "0.11.0",
