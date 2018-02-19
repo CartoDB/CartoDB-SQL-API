@@ -4,7 +4,7 @@ const basicAuth = require('basic-auth');
 module.exports = function authorization (userDatabaseService, forceToBeAuthenticated = false) {
     return function authorizationMiddleware (req, res, next) {
         const { user } = res.locals;
-        const credentials = getCredentialsFromRequest(req, user);
+        const credentials = getCredentialsFromRequest(req);
 
         if (!userMatches(credentials, user)) {
             return next(new Error('permission denied'));
