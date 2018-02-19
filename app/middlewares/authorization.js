@@ -13,7 +13,7 @@ module.exports = function authorization (userDatabaseService, forceToBeAuthentic
         res.locals.api_key = credentials.apiKeyToken;
 
         const params = Object.assign({}, res.locals, req.query, req.body);
-        const authApi = new AuthApi(req, res, params);
+        const authApi = new AuthApi(req, params);
 
         userDatabaseService.getConnectionParams(authApi, user, function (err, userDbParams, authDbParams, userLimits) {
             if (req.profiler) {
