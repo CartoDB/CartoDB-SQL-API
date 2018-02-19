@@ -1,4 +1,3 @@
-const _ = require('underscore');
 const util = require('util');
 
 const userMiddleware = require('../middlewares/user');
@@ -90,7 +89,9 @@ function cancelJob (jobService) {
 
 function getJob (jobService) {
     return function getJobMiddleware (req, res, next) {
-        jobService.get(req.params.job_id, (err, job) => {
+        const { job_id } = req.params;
+
+        jobService.get(job_id, (err, job) => {
             if (err) {
                 return next(err);
             }
@@ -105,11 +106,10 @@ function getJob (jobService) {
 function createJob (jobService) {
     return function createJobMiddleware (req, res, next) {
         const params = Object.assign({}, req.query, req.body);
-        var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
 
         var data = {
             user: res.locals.user,
-            query: sql,
+            query: params.query,
             host: res.locals.userDbParams.host,
             port: res.locals.userDbParams.port,
             pass: res.locals.userDbParams.pass,
