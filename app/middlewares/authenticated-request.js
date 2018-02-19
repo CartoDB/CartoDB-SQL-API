@@ -1,19 +1,15 @@
-'use strict';
-
-var _ = require('underscore');
-var AuthApi = require('../auth/auth_api');
+const AuthApi = require('../auth/auth_api');
 
 module.exports = function authenticatedRequest (userDatabaseService, forceToBeAuthenticated = false) {
     return function authenticatedRequestMiddleware (req, res, next) {
-        req.profiler.start('sqlapi.job');
-        req.profiler.done('init');
-
-        const params = _.extend({}, res.locals, req.query, req.body);
+        const params = Object.assign({}, res.locals, req.query, req.body);
         const { user } = res.locals;
         const authApi = new AuthApi(req, res, params);
 
         userDatabaseService.getConnectionParams(authApi, user, function (err, dbParams, authDbParams, userLimits) {
-            req.profiler.done('setDBAuth');
+            if (req.profiler) {
+                req.profiler.done('setDBAuth');
+            }
 
             if (err) {
                 return next(err);
