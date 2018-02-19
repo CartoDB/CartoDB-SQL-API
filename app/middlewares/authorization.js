@@ -1,8 +1,8 @@
 const AuthApi = require('../auth/auth_api');
 const basicAuth = require('basic-auth');
 
-module.exports = function authenticatedRequest (userDatabaseService, forceToBeAuthenticated = false) {
-    return function authenticatedRequestMiddleware (req, res, next) {
+module.exports = function authorization (userDatabaseService, forceToBeAuthenticated = false) {
+    return function authorizationMiddleware (req, res, next) {
         const { user } = res.locals;
         const credentials = getCredentialsFromRequest(req, user);
 
