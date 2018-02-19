@@ -19,13 +19,14 @@ JobController.prototype.route = function (app) {
 
     app.post(
         `${base_url}/sql/job`,
+        initializeProfiler('job'),
         checkBodyPayloadSize(),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         createJob(this.jobService),
         setServedByDBHostHeader(),
-        profile(),
+        finishProfiler(),
         log('create'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -35,22 +36,18 @@ JobController.prototype.route = function (app) {
     app.get(
         `${base_url}/jobs-wip`,
         listWorkInProgressJobs(this.jobService),
-        setServedByDBHostHeader(),
-        profile(),
-        log('list'),
-        incrementSuccessMetrics(this.statsdClient),
-        incrementErrorMetrics(this.statsdClient),
         errorMiddleware()
     );
 
     app.get(
         `${base_url}/sql/job/:job_id`,
+        initializeProfiler('job'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         getJob(this.jobService),
         setServedByDBHostHeader(),
-        profile(),
+        finishProfiler(),
         log('retrieve'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -59,12 +56,13 @@ JobController.prototype.route = function (app) {
 
     app.delete(
         `${base_url}/sql/job/:job_id`,
+        initializeProfiler('job'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         cancelJob(this.jobService),
         setServedByDBHostHeader(),
-        profile(),
+        finishProfiler(),
         log('cancel'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -77,6 +75,10 @@ function cancelJob (jobService) {
         const { job_id } = req.params;
 
         jobService.cancel(job_id, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('cancelJob');
+            }
+
             if (err) {
                 return next(err);
             }
@@ -93,6 +95,10 @@ function getJob (jobService) {
         const { job_id } = req.params;
 
         jobService.get(job_id, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('getJob');
+            }
+
             if (err) {
                 return next(err);
             }
@@ -119,6 +125,10 @@ function createJob (jobService) {
         };
 
         jobService.create(data, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('createJob');
+            }
+
             if (err) {
                 return next(err);
             }
@@ -143,6 +153,16 @@ function listWorkInProgressJobs (jobService) {
 
             next();
         });
+    };
+}
+
+function initializeProfiler (label) {
+    return function initializeProfilerMiddleware (req, res, next) {
+        if (req.profiler) {
+            req.profiler.start(`sqlapi.${label}`);
+        }
+
+        next();
     };
 }
 
@@ -189,8 +209,8 @@ function setServedByDBHostHeader () {
     };
 }
 
-function profile () {
-    return function profileMiddleware (req, res, next) {
+function finishProfiler () {
+    return function finishProfilerMiddleware (req, res, next) {
         if (req.profiler) {
             req.profiler.done();
             req.profiler.end();
