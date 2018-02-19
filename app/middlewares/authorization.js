@@ -15,7 +15,7 @@ module.exports = function authorization (userDatabaseService, forceToBeAuthentic
         const params = Object.assign({}, res.locals, req.query, req.body);
         const authApi = new AuthApi(req, res, params);
 
-        userDatabaseService.getConnectionParams(authApi, user, function (err, dbParams, authDbParams, userLimits) {
+        userDatabaseService.getConnectionParams(authApi, user, function (err, userDbParams, authDbParams, userLimits) {
             if (req.profiler) {
                 req.profiler.done('setDBAuth');
             }
@@ -24,11 +24,11 @@ module.exports = function authorization (userDatabaseService, forceToBeAuthentic
                 return next(err);
             }
 
-            if (forceToBeAuthenticated && !dbParams.authenticated) {
+            if (forceToBeAuthenticated && !userDbParams.authenticated) {
                 return next(new Error('permission denied'));
             }
 
-            res.locals.userDbParams = dbParams;
+            res.locals.userDbParams = userDbParams;
             res.locals.authDbParams = authDbParams;
             res.locals.userLimits = userLimits;
 
