@@ -13,7 +13,7 @@ var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
-const authenticatedMiddleware = require('../middlewares/authenticated-request');
+const authorizationMiddleware = require('../middlewares/authorization');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
@@ -31,7 +31,7 @@ QueryController.prototype.route = function (app) {
         `${base_url}/sql`,
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        authenticatedMiddleware(this.userDatabaseService),
+        authorizationMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
@@ -39,7 +39,7 @@ QueryController.prototype.route = function (app) {
         `${base_url}/sql.:f`,
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        authenticatedMiddleware(this.userDatabaseService),
+        authorizationMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     );
