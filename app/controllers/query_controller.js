@@ -15,6 +15,7 @@ const credentialsMiddleware = require('../middlewares/credentials');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authenticatedMiddleware = require('../middlewares/authenticated-request');
+const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -29,6 +30,7 @@ QueryController.prototype.route = function (app) {
 
     app.all(
         `${base_url}/sql`,
+        initializeProfilerMiddleware('query'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
@@ -37,6 +39,7 @@ QueryController.prototype.route = function (app) {
     );
     app.all(
         `${base_url}/sql.:f`,
+        initializeProfilerMiddleware('query'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService),
@@ -68,10 +71,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration FILE
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.query');
-    }
 
     req.aborted = false;
     req.on("close", function() {
@@ -137,10 +136,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         step(
             function queryExplain() {
                 var next = this;
-
-                if ( req.profiler ) {
-                    req.profiler.done('setDBAuth');
-                }
 
                 checkAborted('queryExplain');
 
@@ -252,7 +247,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 }
 
                 if ( req.profiler ) {
-                  req.profiler.sendStats();
+                    req.profiler.sendStats();
                 }
                 if (self.statsd_client) {
                   if ( err ) {

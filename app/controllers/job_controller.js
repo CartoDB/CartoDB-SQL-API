@@ -1,6 +1,7 @@
 const util = require('util');
 
 const userMiddleware = require('../middlewares/user');
+const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
 const authenticatedMiddleware = require('../middlewares/authenticated-request');
 const errorMiddleware = require('../middlewares/error');
 const credentialsMiddleware = require('../middlewares/credentials');
@@ -19,14 +20,14 @@ JobController.prototype.route = function (app) {
 
     app.post(
         `${base_url}/sql/job`,
-        initializeProfiler('job'),
+        initializeProfilerMiddleware('job'),
         checkBodyPayloadSize(),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         createJob(this.jobService),
         setServedByDBHostHeader(),
-        finishProfiler(),
+        finishProfilerMiddleware(),
         log('create'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -41,13 +42,13 @@ JobController.prototype.route = function (app) {
 
     app.get(
         `${base_url}/sql/job/:job_id`,
-        initializeProfiler('job'),
+        initializeProfilerMiddleware('job'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         getJob(this.jobService),
         setServedByDBHostHeader(),
-        finishProfiler(),
+        finishProfilerMiddleware(),
         log('retrieve'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -56,13 +57,13 @@ JobController.prototype.route = function (app) {
 
     app.delete(
         `${base_url}/sql/job/:job_id`,
-        initializeProfiler('job'),
+        initializeProfilerMiddleware('job'),
         userMiddleware(),
         credentialsMiddleware(),
         authenticatedMiddleware(this.userDatabaseService, forceToBeAuthenticated),
         cancelJob(this.jobService),
         setServedByDBHostHeader(),
-        finishProfiler(),
+        finishProfilerMiddleware(),
         log('cancel'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
@@ -156,15 +157,6 @@ function listWorkInProgressJobs (jobService) {
     };
 }
 
-function initializeProfiler (label) {
-    return function initializeProfilerMiddleware (req, res, next) {
-        if (req.profiler) {
-            req.profiler.start(`sqlapi.${label}`);
-        }
-
-        next();
-    };
-}
 
 function checkBodyPayloadSize () {
     return function checkBodyPayloadSizeMiddleware(req, res, next) {
@@ -203,20 +195,6 @@ function setServedByDBHostHeader () {
 
         if (userDbParams.host) {
             res.header('X-Served-By-DB-Host', res.locals.userDbParams.host);
-        }
-
-        next();
-    };
-}
-
-function finishProfiler () {
-    return function finishProfilerMiddleware (req, res, next) {
-        if (req.profiler) {
-            req.profiler.done();
-            req.profiler.end();
-            req.profiler.sendStats();
-
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
         next();
