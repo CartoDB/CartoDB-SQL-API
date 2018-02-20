@@ -15,57 +15,36 @@ module.exports = JobController;
 
 JobController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    const forceToBeAuthenticated = true;
-
-    app.post(
-        `${base_url}/sql/job`,
-        initializeProfilerMiddleware('job'),
-        checkBodyPayloadSize(),
-        userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService, forceToBeAuthenticated),
-        createJob(this.jobService),
-        setServedByDBHostHeader(),
-        finishProfilerMiddleware(),
-        logJobResult('create'),
-        incrementSuccessMetrics(this.statsdClient),
-        incrementErrorMetrics(this.statsdClient),
-        errorMiddleware()
+    const jobMiddlewares = composeJobMiddlewares(
+        this.userDatabaseService,
+        this.jobService,
+        this.statsdClient
     );
 
-    app.get(
-        `${base_url}/jobs-wip`,
-        listWorkInProgressJobs(this.jobService),
-        errorMiddleware()
-    );
-
-    app.get(
-        `${base_url}/sql/job/:job_id`,
-        initializeProfilerMiddleware('job'),
-        userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService, forceToBeAuthenticated),
-        getJob(this.jobService),
-        setServedByDBHostHeader(),
-        finishProfilerMiddleware(),
-        logJobResult('retrieve'),
-        incrementSuccessMetrics(this.statsdClient),
-        incrementErrorMetrics(this.statsdClient),
-        errorMiddleware()
-    );
-
-    app.delete(
-        `${base_url}/sql/job/:job_id`,
-        initializeProfilerMiddleware('job'),
-        userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService, forceToBeAuthenticated),
-        cancelJob(this.jobService),
-        setServedByDBHostHeader(),
-        finishProfilerMiddleware(),
-        logJobResult('cancel'),
-        incrementSuccessMetrics(this.statsdClient),
-        incrementErrorMetrics(this.statsdClient),
-        errorMiddleware()
-    );
+    app.get(`${base_url}/jobs-wip`, listWorkInProgressJobs(this.jobService), errorMiddleware());
+    app.post(`${base_url}/sql/job`, checkBodyPayloadSize(), jobMiddlewares('create', createJob));
+    app.get(`${base_url}/sql/job/:job_id`, jobMiddlewares('retrieve', getJob));
+    app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob));
 };
+
+function composeJobMiddlewares (userDatabaseService, jobService, statsdClient) {
+    return function jobMiddlewares (action, middleware) {
+        const forceToBeAuthenticated = true;
+
+        return [
+            initializeProfilerMiddleware('job'),
+            userMiddleware(),
+            authorizationMiddleware(userDatabaseService, forceToBeAuthenticated),
+            middleware(jobService),
+            setServedByDBHostHeader(),
+            finishProfilerMiddleware(),
+            logJobResult(action),
+            incrementSuccessMetrics(statsdClient),
+            incrementErrorMetrics(statsdClient),
+            errorMiddleware()
+        ];
+    };
+}
 
 function cancelJob (jobService) {
     return function cancelJobMiddleware (req, res, next) {
