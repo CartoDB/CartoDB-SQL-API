@@ -28,14 +28,14 @@ JobController.prototype.route = function (app) {
 };
 
 function composeJobMiddlewares (userDatabaseService, jobService, statsdClient) {
-    return function jobMiddlewares (action, middleware) {
+    return function jobMiddlewares (action, jobMiddleware) {
         const forceToBeAuthenticated = true;
 
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
             authorizationMiddleware(userDatabaseService, forceToBeAuthenticated),
-            middleware(jobService),
+            jobMiddleware(jobService),
             setServedByDBHostHeader(),
             finishProfilerMiddleware(),
             logJobResult(action),
