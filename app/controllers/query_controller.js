@@ -26,23 +26,16 @@ function QueryController(userDatabaseService, tableCache, statsd_client) {
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
+    const middlewares = [
+        initializeProfilerMiddleware('query'),
+        userMiddleware(),
+        authorizationMiddleware(this.userDatabaseService),
+        this.handleQuery.bind(this),
+        errorMiddleware()
+    ];
 
-    app.all(
-        `${base_url}/sql`,
-        initializeProfilerMiddleware('query'),
-        userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService),
-        this.handleQuery.bind(this),
-        errorMiddleware()
-    );
-    app.all(
-        `${base_url}/sql.:f`,
-        initializeProfilerMiddleware('query'),
-        userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService),
-        this.handleQuery.bind(this),
-        errorMiddleware()
-    );
+    app.all(`${base_url}/sql`, middlewares);
+    app.all(`${base_url}/sql.:f`, middlewares);
 };
 
 // jshint maxcomplexity:21
