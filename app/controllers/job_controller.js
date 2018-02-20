@@ -26,7 +26,7 @@ JobController.prototype.route = function (app) {
         createJob(this.jobService),
         setServedByDBHostHeader(),
         finishProfilerMiddleware(),
-        log('create'),
+        logJobResult('create'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
         errorMiddleware()
@@ -46,7 +46,7 @@ JobController.prototype.route = function (app) {
         getJob(this.jobService),
         setServedByDBHostHeader(),
         finishProfilerMiddleware(),
-        log('retrieve'),
+        logJobResult('retrieve'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
         errorMiddleware()
@@ -60,7 +60,7 @@ JobController.prototype.route = function (app) {
         cancelJob(this.jobService),
         setServedByDBHostHeader(),
         finishProfilerMiddleware(),
-        log('cancel'),
+        logJobResult('cancel'),
         incrementSuccessMetrics(this.statsdClient),
         incrementErrorMetrics(this.statsdClient),
         errorMiddleware()
@@ -197,8 +197,8 @@ function setServedByDBHostHeader () {
     };
 }
 
-function log (action) {
-    return function logMiddleware (req, res, next) {
+function logJobResult (action) {
+    return function logJobResultMiddleware (req, res, next) {
         if (process.env.NODE_ENV !== 'test') {
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
