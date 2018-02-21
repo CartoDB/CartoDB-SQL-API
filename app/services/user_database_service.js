@@ -92,7 +92,6 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 apiKey: dbParams.apikey
             };
 
-
             authApi.verifyCredentials(opts, function (err, isAuthenticated) {
                 if (err) {
                     return next(err);
