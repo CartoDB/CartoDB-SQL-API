@@ -7,6 +7,7 @@ describe('Auth API', function () {
     const publicSQL = 'select * from untitle_table_4';
     const scopedSQL = 'select * from scoped_table_1';
     const privateSQL = 'select * from private_table';
+    const systemSQL = 'select * from information_schema.tables';
 
     it('should get result from query using the default API key', function (done) {
         this.testClient = new TestClient();
@@ -205,6 +206,23 @@ describe('Auth API', function () {
             this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
                 assert.equal(result.error, 'permission denied for relation scoped_table_1');
+                done();
+            });
+        });
+
+
+        it('should fail while fetching information schema and using default API key', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:default_public' });
+            const expectedResponse = {
+                response: {
+                    status: 403
+                },
+                anonymous: true
+            };
+
+            this.testClient.getResult(systemSQL, expectedResponse, (err, result) => {
+                assert.ifError(err);
+                assert.equal(result.error, 'system tables are forbidden');
                 done();
             });
         });

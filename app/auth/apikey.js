@@ -20,13 +20,6 @@ ApikeyAuth.prototype.getCredentials = function () {
     return this.apikey;
 };
 
-/**
- * Get id of authorized user
- *
- * @param {Object} req - standard req object. Importantly contains table and host information
- * @param {String} requiredApi - the API associated to the user, req must contain it
- * @param {Function} callback - err, boolean (whether the request is authenticated or not)
- */
 function verifyRequest(apikey, requiredApikey) {
-    return (apikey === requiredApikey);
+    return (apikey === requiredApikey && apikey !== 'default_public');
 }
