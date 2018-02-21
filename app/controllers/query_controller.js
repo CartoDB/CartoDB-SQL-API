@@ -26,7 +26,7 @@ function QueryController(userDatabaseService, tableCache, statsd_client) {
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    const middlewares = [
+    const queryMiddlewares = [
         initializeProfilerMiddleware('query'),
         userMiddleware(),
         authorizationMiddleware(this.userDatabaseService),
@@ -34,8 +34,8 @@ QueryController.prototype.route = function (app) {
         errorMiddleware()
     ];
 
-    app.all(`${base_url}/sql`, middlewares);
-    app.all(`${base_url}/sql.:f`, middlewares);
+    app.all(`${base_url}/sql`, queryMiddlewares);
+    app.all(`${base_url}/sql.:f`, queryMiddlewares);
 };
 
 // jshint maxcomplexity:21
