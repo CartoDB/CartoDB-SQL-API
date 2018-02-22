@@ -1,6 +1,5 @@
 'use strict';
 
-var step = require('step');
 var _ = require('underscore');
 
 function isApiKeyFound(apikey) {
@@ -25,18 +24,45 @@ function UserDatabaseService(metadataBackend) {
  * @param {Function} callback (err, dbParams, authDbParams)
  */
 UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apikeyToken, isAuthenticated, callback) {
-    var self = this;
+    this.metadataBackend.getAllUserDBParams(cdbUsername, (err, dbParams) => {
+        if (err) {
+            err.http_status = 404;
+            err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
+                "Please check that you have entered the correct domain.";
+            return callback(err);
+        }
 
-    var dbopts = {
-        port: global.settings.db_port,
-        pass: global.settings.db_pubuser_pass
-    };
+        const dbopts = {
+            port: global.settings.db_port,
+            pass: global.settings.db_pubuser_pass
+        };
 
-    step(
-        function getDatabaseConnectionParams() {
-            self.metadataBackend.getAllUserDBParams(cdbUsername, this);
-        },
-        function getApiKey (err, dbParams) {
+        dbopts.host = dbParams.dbhost;
+        dbopts.dbname = dbParams.dbname;
+        dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
+
+        var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
+        var pass = null;
+
+        if (global.settings.hasOwnProperty('db_user_pass')) {
+            pass = _.template(global.settings.db_user_pass, {
+                user_id: dbParams.dbuser,
+                user_password: dbParams.dbpass
+            });
+        }
+
+        if (isAuthenticated) {
+            dbopts.user = user;
+            dbopts.pass = pass;
+        }
+
+        let authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
+
+        if (!apikeyToken) {
+            return callback(null, dbopts, authDbOpts);
+        }
+
+        this.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
             if (err) {
                 err.http_status = 404;
                 err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
@@ -44,80 +70,17 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
                 return callback(err);
             }
 
-            const next = this;
-
-            if (apikeyToken === undefined) {
-                return next(null, dbopts, dbParams);
+            if (!isApiKeyFound(apikey)) {
+                return callback(null, dbopts, authDbOpts);
             }
 
-            self.getApiKey(cdbUsername, apikeyToken, function (err, apikey) {
-                if (err) {
-                    return next(err);
-                }
+            dbopts.user = apikey.databaseRole;
+            dbopts.pass = apikey.databasePassword;
 
-                if (!apikey) {
-                    return next(null, dbopts, dbParams);
-                }
-
-                next(null, dbopts, dbParams, apikey);
-            });
-        },
-        function setDBAuth(err, dbopts, dbParams, apikey) {
-            const next = this;
-
-            if (err) {
-                return next(err);
-            }
-
-            dbopts.host = dbParams.dbhost;
-            dbopts.dbname = dbParams.dbname;
-            dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-            var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-            var pass = null;
-
-            if (global.settings.hasOwnProperty('db_user_pass')) {
-                pass = _.template(global.settings.db_user_pass, {
-                    user_id: dbParams.dbuser,
-                    user_password: dbParams.dbpass
-                });
-            }
-
-            if (isAuthenticated) {
-                if (apikey) {
-                    dbopts.user = apikey.databaseRole;
-                    dbopts.pass = apikey.databasePassword;
-                } else {
-                    dbopts.user = user;
-                    dbopts.pass = pass;
-                }
-            }
-
-            var authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
-
-            return next(null, dbopts, authDbOpts);
-        },
-        function errorHandle(err, dbopts, authDbOpts) {
-            if (err) {
-                return callback(err);
-            }
+            authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
 
             callback(null, dbopts, authDbOpts);
-        }
-    );
-};
-
-UserDatabaseService.prototype.getApiKey = function (cdbUsername, apikeyToken, callback) {
-    this.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
-        if (err) {
-            return callback(err);
-        }
-
-        if (!isApiKeyFound(apikey)) {
-            return callback(null);
-        }
-
-        callback(null, apikey);
+        });
     });
 };
 
