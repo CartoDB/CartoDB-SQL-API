@@ -1,6 +1,4 @@
-'use strict';
-
-var _ = require('underscore');
+const _ = require('underscore');
 
 function isApiKeyFound(apikey) {
     return apikey.type !== null &&
@@ -23,7 +21,7 @@ function UserDatabaseService(metadataBackend) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apikeyToken, isAuthenticated, callback) {
+UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apikeyToken, authenticated, callback) {
     this.metadataBackend.getAllUserDBParams(cdbUsername, (err, dbParams) => {
         if (err) {
             err.http_status = 404;
@@ -41,8 +39,8 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
         dbopts.dbname = dbParams.dbname;
         dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-        var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-        var pass = null;
+        const user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
+        let pass = null;
 
         if (global.settings.hasOwnProperty('db_user_pass')) {
             pass = _.template(global.settings.db_user_pass, {
@@ -51,7 +49,7 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
             });
         }
 
-        if (isAuthenticated) {
+        if (authenticated) {
             dbopts.user = user;
             dbopts.pass = pass;
         }
