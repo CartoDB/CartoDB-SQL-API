@@ -110,7 +110,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });
@@ -207,7 +207,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error , {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });

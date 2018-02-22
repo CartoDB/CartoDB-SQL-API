@@ -10,12 +10,16 @@ function ApikeyAuth(req, metadataBackend, username, apikey) {
 
 module.exports = ApikeyAuth;
 
+function errorUserNotFoundMessageTemplate (user) {
+    return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
+}
+
 ApikeyAuth.prototype.verifyCredentials = function (options, callback) {
     this.metadataBackend.getApikey(this.username, this.apikey, (err, apikey) => {
         if (err) {
             err.http_status = 404;
-            err.message = "Sorry, we can't find CartoDB user '" + this.username + "'. " +
-                "Please check that you have entered the correct domain.";
+            err.message = errorUserNotFoundMessageTemplate(this.username);
+
             return callback(err);
         }
 
@@ -34,8 +38,8 @@ ApikeyAuth.prototype.verifyCredentials = function (options, callback) {
         this.metadataBackend.getAllUserDBParams(this.username, function (err, dbParams) {
             if (err) {
                 err.http_status = 404;
-                err.message = "Sorry, we can't find CartoDB user '" + this.username + "'. " +
-                    "Please check that you have entered the correct domain.";
+                err.message = errorUserNotFoundMessageTemplate(this.username);
+
                 return callback(err);
             }
 

@@ -11,6 +11,10 @@ function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
 }
 
+function errorUserNotFoundMessageTemplate (user) {
+    return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
+}
+
 /**
  * Callback is invoked with `dbParams` and `authDbParams`.
  * `dbParams` depends on AuthApi verification so it might return a public user with just SELECT permission, where
@@ -21,12 +25,12 @@ function UserDatabaseService(metadataBackend) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apikeyToken, authenticated, callback) {
-    this.metadataBackend.getAllUserDBParams(cdbUsername, (err, dbParams) => {
+UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authenticated, callback) {
+    this.metadataBackend.getAllUserDBParams(username, (err, dbParams) => {
         if (err) {
             err.http_status = 404;
-            err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
-                "Please check that you have entered the correct domain.";
+            err.message = errorUserNotFoundMessageTemplate(username);
+
             return callback(err);
         }
 
@@ -60,11 +64,11 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
             return callback(null, dbopts, authDbOpts);
         }
 
-        this.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
+        this.metadataBackend.getApikey(username, apikeyToken, (err, apikey) => {
             if (err) {
                 err.http_status = 404;
-                err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
-                    "Please check that you have entered the correct domain.";
+                err.message = errorUserNotFoundMessageTemplate(username);
+
                 return callback(err);
             }
 
