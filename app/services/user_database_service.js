@@ -100,29 +100,14 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
 
             var authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
 
-            return next(null, isAuthenticated, dbopts, authDbOpts);
+            return next(null, dbopts, authDbOpts);
         },
-        function getUserLimits (err, isAuthenticated, dbopts, authDbOpts) {
-            var next = this;
-
-            if (err) {
-                return next(err);
-            }
-
-            self.getUserLimits(cdbUsername, isAuthenticated, function (err, userLimits) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, dbopts, authDbOpts, userLimits);
-            });
-        },
-        function errorHandle(err, dbopts, authDbOpts, userLimits) {
+        function errorHandle(err, dbopts, authDbOpts) {
             if (err) {
                 return callback(err);
             }
 
-            callback(null, dbopts, authDbOpts, userLimits);
+            callback(null, dbopts, authDbOpts);
         }
     );
 };
@@ -138,20 +123,6 @@ UserDatabaseService.prototype.getApiKey = function (cdbUsername, apikeyToken, ca
         }
 
         callback(null, apikey);
-    });
-};
-
-UserDatabaseService.prototype.getUserLimits = function (cdbUsername, isAuthenticated, callback) {
-    this.metadataBackend.getUserTimeoutRenderLimits(cdbUsername, function (err, timeoutRenderLimit) {
-        if (err) {
-            return callback(err);
-        }
-
-        var userLimits = {
-            timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
-        };
-
-        callback(null, userLimits);
     });
 };
 
