@@ -89,7 +89,6 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
             }
 
             if (isAuthenticated) {
-                dbopts.authenticated = isAuthenticated;
                 if (apikey) {
                     dbopts.user = apikey.databaseRole;
                     dbopts.pass = apikey.databasePassword;
