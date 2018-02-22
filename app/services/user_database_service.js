@@ -32,9 +32,6 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
         pass: global.settings.db_pubuser_pass
     };
 
-    // 1. Get database from redis via the username stored in the host header subdomain
-    // 2. Run the request through OAuth to get R/W user id if signed
-    // 3. Set to user authorization params
     step(
         function getDatabaseConnectionParams() {
             self.metadataBackend.getAllUserDBParams(cdbUsername, this);
@@ -61,8 +58,6 @@ UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apike
                 if (!apikey) {
                     return next(null, dbopts, dbParams);
                 }
-
-                dbParams.apikey = apikeyToken;
 
                 next(null, dbopts, dbParams, apikey);
             });
