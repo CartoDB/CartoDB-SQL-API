@@ -5,7 +5,7 @@ module.exports = function connectionParams (userDatabaseService) {
         userDatabaseService.getConnectionParams(user, apikeyToken, authenticated,
             function (err, userDbParams, authDbParams, userLimits) {
             if (req.profiler) {
-                req.profiler.done('setDBAuth');
+                req.profiler.done('getConnectionParams');
             }
 
             if (err) {
