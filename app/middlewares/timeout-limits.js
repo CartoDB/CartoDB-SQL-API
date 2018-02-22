@@ -3,6 +3,10 @@ module.exports = function timeoutLimits (metadataBackend) {
         const { user, authenticated } = res.locals;
 
         metadataBackend.getUserTimeoutRenderLimits(user, function (err, timeoutRenderLimit) {
+            if (req.profiler) {
+                req.profiler.done('getUserTimeoutLimits');
+            }
+
             if (err) {
                 return next(err);
             }
