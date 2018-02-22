@@ -147,10 +147,10 @@ function App(statsClient) {
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(userDatabaseService, tableCache, statsClient);
+    var queryController = new QueryController(metadataBackend, userDatabaseService, tableCache, statsClient);
     queryController.route(app);
 
-    var jobController = new JobController(userDatabaseService, jobService, statsClient);
+    var jobController = new JobController(metadataBackend, userDatabaseService, jobService, statsClient);
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);

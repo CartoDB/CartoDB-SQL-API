@@ -18,7 +18,8 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
-function QueryController(userDatabaseService, tableCache, statsd_client) {
+function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client) {
+    this.metadataBackend = metadataBackend;
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
     this.queryTables = new CachedQueryTables(tableCache);
@@ -29,7 +30,7 @@ QueryController.prototype.route = function (app) {
     const queryMiddlewares = [
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        authorizationMiddleware(this.userDatabaseService),
+        authorizationMiddleware(this.metadataBackend ,this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     ];

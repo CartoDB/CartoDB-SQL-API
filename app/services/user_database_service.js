@@ -24,7 +24,7 @@ function UserDatabaseService(metadataBackend) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
+UserDatabaseService.prototype.getConnectionParams = function (cdbUsername, apikeyToken, isAuthenticated, callback) {
     var self = this;
 
     var dbopts = {
@@ -49,26 +49,17 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
 
             const next = this;
 
-            if (authApi.getType() !== 'apiKey') {
+            if (apikeyToken === undefined) {
                 return next(null, dbopts, dbParams);
             }
 
-            const apikeyToken = authApi.getCredentials();
-
-            self.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
+            self.getApiKey(cdbUsername, apikeyToken, function (err, apikey) {
                 if (err) {
                     return next(err);
                 }
 
-                if (!isApiKeyFound(apikey)) {
+                if (!apikey) {
                     return next(null, dbopts, dbParams);
-                }
-
-                if (!apikey.grantsSql) {
-                    const forbiddenError = new Error('forbidden');
-                    forbiddenError.http_status = 403;
-
-                    return next(forbiddenError);
                 }
 
                 dbParams.apikey = apikeyToken;
@@ -76,8 +67,8 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 next(null, dbopts, dbParams, apikey);
             });
         },
-        function authenticate(err, dbopts, dbParams, apikey) {
-            var next = this;
+        function setDBAuth(err, dbopts, dbParams, apikey) {
+            const next = this;
 
             if (err) {
                 return next(err);
@@ -86,26 +77,6 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
             dbopts.host = dbParams.dbhost;
             dbopts.dbname = dbParams.dbname;
             dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-            const opts = {
-                metadataBackend: self.metadataBackend,
-                apiKey: dbParams.apikey
-            };
-
-            authApi.verifyCredentials(opts, function (err, isAuthenticated) {
-                if (err) {
-                    return next(err);
-                }
-
-                next(null, isAuthenticated, dbopts, dbParams, apikey);
-            });
-        },
-        function setDBAuth(err, isAuthenticated, dbopts, dbParams, apikey) {
-            const next = this;
-
-            if (err) {
-                return next(err);
-            }
 
             var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
             var pass = null;
@@ -139,14 +110,10 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
                 return next(err);
             }
 
-            self.metadataBackend.getUserTimeoutRenderLimits(cdbUsername, function (err, timeoutRenderLimit) {
+            self.getUserLimits(cdbUsername, isAuthenticated, function (err, userLimits) {
                 if (err) {
                     return next(err);
                 }
-
-                var userLimits = {
-                    timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
-                };
 
                 next(null, dbopts, authDbOpts, userLimits);
             });
@@ -159,6 +126,34 @@ UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUserna
             callback(null, dbopts, authDbOpts, userLimits);
         }
     );
+};
+
+UserDatabaseService.prototype.getApiKey = function (cdbUsername, apikeyToken, callback) {
+    this.metadataBackend.getApikey(cdbUsername, apikeyToken, (err, apikey) => {
+        if (err) {
+            return callback(err);
+        }
+
+        if (!isApiKeyFound(apikey)) {
+            return callback(null);
+        }
+
+        callback(null, apikey);
+    });
+};
+
+UserDatabaseService.prototype.getUserLimits = function (cdbUsername, isAuthenticated, callback) {
+    this.metadataBackend.getUserTimeoutRenderLimits(cdbUsername, function (err, timeoutRenderLimit) {
+        if (err) {
+            return callback(err);
+        }
+
+        var userLimits = {
+            timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
+        };
+
+        callback(null, userLimits);
+    });
 };
 
 module.exports = UserDatabaseService;

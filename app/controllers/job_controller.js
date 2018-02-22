@@ -5,7 +5,8 @@ const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../m
 const authorizationMiddleware = require('../middlewares/authorization');
 const errorMiddleware = require('../middlewares/error');
 
-function JobController(userDatabaseService, jobService, statsdClient) {
+function JobController(metadataBackend, userDatabaseService, jobService, statsdClient) {
+    this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.jobService = jobService;
     this.statsdClient = statsdClient;
@@ -16,6 +17,7 @@ module.exports = JobController;
 JobController.prototype.route = function (app) {
     const { base_url } = global.settings;
     const jobMiddlewares = composeJobMiddlewares(
+        this.metadataBackend,
         this.userDatabaseService,
         this.jobService,
         this.statsdClient
@@ -27,14 +29,14 @@ JobController.prototype.route = function (app) {
     app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob));
 };
 
-function composeJobMiddlewares (userDatabaseService, jobService, statsdClient) {
+function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient) {
     return function jobMiddlewares (action, jobMiddleware) {
         const forceToBeAuthenticated = true;
 
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
-            authorizationMiddleware(userDatabaseService, forceToBeAuthenticated),
+            authorizationMiddleware(metadataBackend, userDatabaseService, forceToBeAuthenticated),
             jobMiddleware(jobService),
             setServedByDBHostHeader(),
             finishProfilerMiddleware(),

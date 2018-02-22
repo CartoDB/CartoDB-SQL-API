@@ -1,7 +1,7 @@
 var ApiKeyAuth = require('./apikey'),
     OAuthAuth  = require('./oauth');
 
-function AuthApi(req,requestParams) {
+function AuthApi(req, requestParams) {
     this.req = req;
     this.authBacked = getAuthBackend(req, requestParams);
 
@@ -37,7 +37,7 @@ AuthApi.prototype.verifyCredentials = function(options, callback) {
 
 function getAuthBackend(req, requestParams) {
     if (requestParams.api_key) {
-        return new ApiKeyAuth(req, requestParams.api_key);
+        return new ApiKeyAuth(req, requestParams.metadataBackend, requestParams.user, requestParams.api_key);
     } else {
         return new OAuthAuth(req);
     }

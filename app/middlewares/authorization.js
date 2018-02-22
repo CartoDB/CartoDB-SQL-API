@@ -1,7 +1,7 @@
 const AuthApi = require('../auth/auth_api');
 const basicAuth = require('basic-auth');
 
-module.exports = function authorization (userDatabaseService, forceToBeAuthenticated = false) {
+module.exports = function authorization (metadataBackend, userDatabaseService, forceToBeAuthenticated = false) {
     return function authorizationMiddleware (req, res, next) {
         const { user } = res.locals;
         const credentials = getCredentialsFromRequest(req);
@@ -12,27 +12,38 @@ module.exports = function authorization (userDatabaseService, forceToBeAuthentic
 
         res.locals.api_key = credentials.apiKeyToken;
 
-        const params = Object.assign({}, res.locals, req.query, req.body);
+        const params = Object.assign({ metadataBackend }, res.locals, req.query, req.body);
         const authApi = new AuthApi(req, params);
 
-        userDatabaseService.getConnectionParams(authApi, user, function (err, userDbParams, authDbParams, userLimits) {
-            if (req.profiler) {
-                req.profiler.done('setDBAuth');
-            }
-
+        authApi.verifyCredentials({}, function (err, authenticated) {
             if (err) {
                 return next(err);
             }
 
-            if (forceToBeAuthenticated && !userDbParams.authenticated) {
+            res.locals.authenticated = authenticated;
+
+            if (forceToBeAuthenticated && !authenticated) {
                 return next(new Error('permission denied'));
             }
 
-            res.locals.userDbParams = userDbParams;
-            res.locals.authDbParams = authDbParams;
-            res.locals.userLimits = userLimits;
+            const apikeyToken = (authApi.getType() === 'apiKey') ? authApi.getCredentials() : undefined;
 
-            next();
+            userDatabaseService.getConnectionParams(user, apikeyToken, authenticated,
+                function (err, userDbParams, authDbParams, userLimits) {
+                if (req.profiler) {
+                    req.profiler.done('setDBAuth');
+                }
+
+                if (err) {
+                    return next(err);
+                }
+
+                res.locals.userDbParams = userDbParams;
+                res.locals.authDbParams = authDbParams;
+                res.locals.userLimits = userLimits;
+
+                next();
+            });
         });
     };
 };
