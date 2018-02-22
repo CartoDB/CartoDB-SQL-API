@@ -26,7 +26,7 @@ module.exports = function authorization (metadataBackend, userDatabaseService, f
                 return next(new Error('permission denied'));
             }
 
-            const apikeyToken = (authApi.getType() === 'apiKey') ? authApi.getCredentials() : undefined;
+            const apikeyToken = res.locals.api_key;
 
             userDatabaseService.getConnectionParams(user, apikeyToken, authenticated,
                 function (err, userDbParams, authDbParams, userLimits) {
