@@ -3,6 +3,7 @@ const util = require('util');
 const userMiddleware = require('../middlewares/user');
 const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
 const authorizationMiddleware = require('../middlewares/authorization');
+const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient) {
@@ -36,7 +37,8 @@ function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
-            authorizationMiddleware(metadataBackend, userDatabaseService, forceToBeAuthenticated),
+            authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
+            connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),
             setServedByDBHostHeader(),
             finishProfilerMiddleware(),

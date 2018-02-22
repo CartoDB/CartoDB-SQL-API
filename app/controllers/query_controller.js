@@ -14,6 +14,7 @@ var getContentDisposition = require('../utils/content_disposition');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
+const connectionParamsMiddleware = require('../middlewares/connection-params');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
@@ -30,7 +31,8 @@ QueryController.prototype.route = function (app) {
     const queryMiddlewares = [
         initializeProfilerMiddleware('query'),
         userMiddleware(),
-        authorizationMiddleware(this.metadataBackend ,this.userDatabaseService),
+        authorizationMiddleware(this.metadataBackend),
+        connectionParamsMiddleware(this.userDatabaseService),
         this.handleQuery.bind(this),
         errorMiddleware()
     ];
