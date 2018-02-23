@@ -44,6 +44,7 @@ function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService
             finishProfilerMiddleware(),
             logJobResult(action),
             incrementSuccessMetrics(statsdClient),
+            sendResponse(),
             incrementErrorMetrics(statsdClient),
             errorMiddleware()
         ];
@@ -63,7 +64,7 @@ function cancelJob (jobService) {
                 return next(err);
             }
 
-            res.status(200).send(job.serialize());
+            res.body = job.serialize();
 
             next();
         });
@@ -83,7 +84,7 @@ function getJob (jobService) {
                 return next(err);
             }
 
-            res.status(200).send(job.serialize());
+            res.body = job.serialize();
 
             next();
         });
@@ -115,7 +116,8 @@ function createJob (jobService) {
 
             res.locals.job_id = job.job_id;
 
-            res.status(201).send(job.serialize());
+            res.statusCode = 201;
+            res.body = job.serialize();
 
             next();
         });
@@ -129,7 +131,7 @@ function listWorkInProgressJobs (jobService) {
                 return next(err);
             }
 
-            res.status(200).send(list);
+            res.body = list;
 
             next();
         });
@@ -214,5 +216,11 @@ function incrementErrorMetrics (statsdClient) {
         }
 
         next(err);
+    };
+}
+
+function sendResponse () {
+    return function sendResponseMiddleware (req, res) {
+        res.status(res.statusCode || 200).send(res.body);
     };
 }
