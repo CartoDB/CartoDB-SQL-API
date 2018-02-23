@@ -19,22 +19,22 @@ describe('app.auth', function() {
         {
             desc: 'invalid api key should NOT allow insert in protected tables',
             url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 401
+            statusCode: 403
         },
         {
             desc: 'invalid api key (old redis location) should NOT allow insert in protected tables',
             url: "/api/v1/sql?api_key=1235&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 401
+            statusCode: 403
         },
         {
             desc: 'no api key should NOT allow insert in protected tables',
             url: "/api/v1/sql?q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 401
+            statusCode: 403
         },
         {
             desc: 'no api key should NOT allow insert in public tables',
             url: "/api/v1/sql?q=INSERT%20INTO%20untitle_table_4%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 401
+            statusCode: 403
         }
     ];
 

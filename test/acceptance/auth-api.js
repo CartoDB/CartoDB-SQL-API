@@ -39,7 +39,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 'wrong' });
         const expectedResponse = {
             response: {
-                status: 401
+                status: 403
             }
         };
 
@@ -54,7 +54,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient();
         const expectedResponse = {
             response: {
-                status: 401
+                status: 403
             },
             anonymous: true
         };
@@ -97,7 +97,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 'regular2' });
         const expectedResponse = {
             response: {
-                status: 401
+                status: 403
             }
         };
 
@@ -123,7 +123,7 @@ describe('Auth API', function () {
 
             const expectedResponse = {
                 response: {
-                    status: 401
+                    status: 403
                 },
                 anonymous: true
             };
@@ -198,7 +198,7 @@ describe('Auth API', function () {
             this.testClient = new TestClient({ authorization: 'vizzuality:regular2' });
             const expectedResponse = {
                 response: {
-                    status: 401
+                    status: 403
                 },
                 anonymous: true
             };
@@ -231,7 +231,7 @@ describe('Auth API', function () {
             this.testClient = new TestClient({ authorization: 'wadus:regular2' });
             const expectedResponse = {
                 response: {
-                    status: 401
+                    status: 403
                 },
                 anonymous: true
             };
@@ -263,7 +263,7 @@ describe('Auth API', function () {
             this.testClient = new TestClient({ authorization: 'vizzuality:wrong' });
             const expectedResponse = {
                 response: {
-                    status: 401
+                    status: 403
                 },
                 anonymous: true
             };
