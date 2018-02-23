@@ -11,7 +11,6 @@ module.exports.initializeProfilerMiddleware = function initializeProfiler (label
 module.exports.finishProfilerMiddleware = function finishProfiler () {
     return function finishProfilerMiddleware (req, res, next) {
         if (req.profiler) {
-            req.profiler.done();
             req.profiler.end();
             req.profiler.sendStats();
 
