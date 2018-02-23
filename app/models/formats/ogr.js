@@ -145,6 +145,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
 
       var ogrargs = [
         '-f', out_format,
+        '-lco', 'RESIZE=YES',
         '-lco', 'ENCODING=UTF-8',
         '-lco', 'LINEFORMAT=CRLF',
         out_filename,
