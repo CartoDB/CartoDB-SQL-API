@@ -24,7 +24,7 @@ JobController.prototype.route = function (app) {
         this.statsdClient
     );
 
-    app.get(`${base_url}/jobs-wip`, listWorkInProgressJobs(this.jobService), errorMiddleware());
+    app.get(`${base_url}/jobs-wip`, listWorkInProgressJobs(this.jobService), sendResponse(), errorMiddleware());
     app.post(`${base_url}/sql/job`, checkBodyPayloadSize(), jobMiddlewares('create', createJob));
     app.get(`${base_url}/sql/job/:job_id`, jobMiddlewares('retrieve', getJob));
     app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob));
