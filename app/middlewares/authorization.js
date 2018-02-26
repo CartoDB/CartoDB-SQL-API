@@ -15,7 +15,7 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
         const params = Object.assign({ metadataBackend }, res.locals, req.query, req.body);
         const authApi = new AuthApi(req, params);
 
-        authApi.verifyCredentials({}, function (err, authenticated) {
+        authApi.verifyCredentials(function (err, authenticated) {
             if (req.profiler) {
                 req.profiler.done('verifyCredentials');
             }

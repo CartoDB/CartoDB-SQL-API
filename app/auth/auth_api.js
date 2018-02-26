@@ -27,9 +27,9 @@ AuthApi.prototype.getCredentials = function() {
     return this.authBacked.getCredentials();
 };
 
-AuthApi.prototype.verifyCredentials = function(options, callback) {
+AuthApi.prototype.verifyCredentials = function(callback) {
     if (this.hasCredentials()) {
-        this.authBacked.verifyCredentials(options, callback);
+        this.authBacked.verifyCredentials(callback);
     } else {
         callback(null, false);
     }
@@ -39,7 +39,7 @@ function getAuthBackend(req, requestParams) {
     if (requestParams.api_key) {
         return new ApiKeyAuth(req, requestParams.metadataBackend, requestParams.user, requestParams.api_key);
     } else {
-        return new OAuthAuth(req);
+        return new OAuthAuth(req, requestParams.metadataBackend);
     }
 }
 

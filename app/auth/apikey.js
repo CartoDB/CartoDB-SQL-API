@@ -14,7 +14,7 @@ function errorUserNotFoundMessageTemplate (user) {
     return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
 }
 
-ApikeyAuth.prototype.verifyCredentials = function (options, callback) {
+ApikeyAuth.prototype.verifyCredentials = function (callback) {
     this.metadataBackend.getApikey(this.username, this.apikey, (err, apikey) => {
         if (err) {
             err.http_status = 404;
