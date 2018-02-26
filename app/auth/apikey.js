@@ -35,7 +35,7 @@ ApikeyAuth.prototype.verifyCredentials = function (options, callback) {
         }
 
         // Auth API Fallback
-        this.metadataBackend.getAllUserDBParams(this.username, function (err, dbParams) {
+        this.metadataBackend.getAllUserDBParams(this.username, (err, dbParams) => {
             if (err) {
                 err.http_status = 404;
                 err.message = errorUserNotFoundMessageTemplate(this.username);

@@ -61,7 +61,7 @@ TestClient.prototype.getResult = function(query, override, callback) {
                 return callback(null, result);
             }
 
-            return callback(null, result.rows || []);
+            return callback(null, result.rows || [], result);
         }
     );
 };

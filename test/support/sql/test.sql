@@ -178,6 +178,7 @@ ALTER ROLE regular_2 SET statement_timeout = 2000;
 DROP USER IF EXISTS test_cartodb_user_2;
 CREATE USER test_cartodb_user_2 WITH PASSWORD 'test_cartodb_user_2_pass';
 GRANT ALL ON TABLE scoped_table_1 TO test_cartodb_user_2;
+GRANT ALL ON SEQUENCE scoped_table_1_cartodb_id_seq TO test_cartodb_user_2;
 
 -- db owner role
 DROP USER IF EXISTS :TESTUSER;

@@ -18,7 +18,6 @@ describe('Auth API', function () {
         });
     });
 
-
     // TODO: this is obviously a really dangerous sceneario, but in order to not break
     // some uses cases (i.e: new carto.js examples) and keep backwards compatiblity we will keep it during some time.
     // It should be fixed as soon as possible
@@ -64,7 +63,6 @@ describe('Auth API', function () {
             done();
         });
     });
-
 
     it('should get result from query using the master API key and public dataset', function (done) {
         this.testClient = new TestClient({ apiKey: 1234 });
@@ -132,6 +130,32 @@ describe('Auth API', function () {
                 assert.ifError(err);
                 assert.equal(result.error, 'permission denied for relation private_table');
                 done();
+            });
+        });
+
+        it('should insert and delete values on scoped datase using the master apikey', function (done) {
+            this.testClient = new TestClient({ apiKey: 4321, host: 'cartofante.cartodb.com' });
+
+            const insertSql = "INSERT INTO scoped_table_1(name) VALUES('wadus1')";
+
+            this.testClient.getResult(insertSql, (err, rows, body) => {
+                assert.ifError(err);
+
+                assert.ok(body.hasOwnProperty('time'));
+                assert.equal(body.total_rows, 1);
+                assert.equal(rows.length, 0);
+
+                const deleteSql = "DELETE FROM scoped_table_1 WHERE name = 'wadus1'";
+
+                this.testClient.getResult(deleteSql, (err, rows, body) => {
+                    assert.ifError(err);
+
+                    assert.ok(body.hasOwnProperty('time'));
+                    assert.equal(body.total_rows, 1);
+                    assert.equal(rows.length, 0);
+
+                    done();
+                });
             });
         });
     });
