@@ -1,7 +1,10 @@
-#Changelog
+# Changelog
 
 ## 1.48.1
 Released 2018-mm-dd
+
+Announcements:
+ * Added `RESIZE=yes` param to gdal shapefile driver, wich optimizes size of exported shapefiles [#462](https://github.com/CartoDB/CartoDB-SQL-API/pull/462)
 
 
 ## 1.48.0
