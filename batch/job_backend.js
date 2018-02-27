@@ -82,7 +82,12 @@ JobBackend.prototype.get = function (job_id, callback) {
         'updated_at',
         'host',
         'failed_reason',
-        'fallback_status'
+        'fallback_status',
+        'host',
+        'port',
+        'pass',
+        'dbname',
+        'dbuser'
     ];
 
     self.metadataBackend.redisCmd(REDIS_DB, 'HMGET', redisParams , function (err, redisValues) {

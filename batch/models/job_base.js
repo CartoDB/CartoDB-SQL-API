@@ -107,7 +107,12 @@ JobBase.prototype.validate = function () {
 
 JobBase.prototype.serialize = function () {
     var data = JSON.parse(JSON.stringify(this.data));
+
     delete data.host;
+    delete data.dbuser;
+    delete data.port;
+    delete data.dbname;
+    delete data.pass;
 
     return data;
 };

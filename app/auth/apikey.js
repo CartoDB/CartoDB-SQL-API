@@ -1,44 +1,68 @@
 /**
  * this module allows to auth user using an pregenerated api key
  */
-function ApikeyAuth(req) {
+function ApikeyAuth(req, metadataBackend, username, apikey) {
     this.req = req;
+    this.metadataBackend = metadataBackend;
+    this.username = username;
+    this.apikey = apikey;
 }
 
 module.exports = ApikeyAuth;
 
-ApikeyAuth.prototype.verifyCredentials = function(options, callback) {
-    verifyRequest(this.req, options.apiKey, callback);
-};
+function errorUserNotFoundMessageTemplate (user) {
+    return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
+}
 
-ApikeyAuth.prototype.hasCredentials = function() {
-    return !!(this.req.query.api_key || this.req.query.map_key ||
-        (this.req.body && this.req.body.api_key) || (this.req.body && this.req.body.map_key));
-};
+ApikeyAuth.prototype.verifyCredentials = function (callback) {
+    this.metadataBackend.getApikey(this.username, this.apikey, (err, apikey) => {
+        if (err) {
+            err.http_status = 404;
+            err.message = errorUserNotFoundMessageTemplate(this.username);
 
-/**
- * Get id of authorized user
- *
- * @param {Object} req - standard req object. Importantly contains table and host information
- * @param {String} requiredApi - the API associated to the user, req must contain it
- * @param {Function} callback - err, boolean (whether the request is authenticated or not)
- */
-function verifyRequest(req, requiredApi, callback) {
-
-    var valid = false;
-
-    if ( requiredApi ) {
-        if ( requiredApi === req.query.map_key ) {
-            valid = true;
-        } else if ( requiredApi === req.query.api_key ) {
-            valid = true;
-        // check also in request body
-        } else if ( req.body && req.body.map_key && requiredApi === req.body.map_key ) {
-            valid = true;
-        } else if ( req.body && req.body.api_key && requiredApi === req.body.api_key ) {
-            valid = true;
+            return callback(err);
         }
-    }
 
-    callback(null, valid);
+        if (isApiKeyFound(apikey)) {
+            if (!apikey.grantsSql) {
+                const forbiddenError = new Error('forbidden');
+                forbiddenError.http_status = 403;
+
+                return callback(forbiddenError);
+            }
+
+            return callback(null, verifyRequest(this.apikey, this.apikey));
+        }
+
+        // Auth API Fallback
+        this.metadataBackend.getAllUserDBParams(this.username, (err, dbParams) => {
+            if (err) {
+                err.http_status = 404;
+                err.message = errorUserNotFoundMessageTemplate(this.username);
+
+                return callback(err);
+            }
+
+            callback(null, verifyRequest(this.apikey, dbParams.apikey));
+        });
+    });
+};
+
+ApikeyAuth.prototype.hasCredentials = function () {
+    return !!this.apikey;
+};
+
+ApikeyAuth.prototype.getCredentials = function () {
+    return this.apikey;
+};
+
+function verifyRequest(apikey, requiredApikey) {
+    return (apikey === requiredApikey && apikey !== 'default_public');
+}
+
+function isApiKeyFound(apikey) {
+    return apikey.type !== null &&
+        apikey.user !== null &&
+        apikey.databasePassword !== null &&
+        apikey.databaseRole !== null;
 }

@@ -154,17 +154,22 @@ var oAuth = (function(){
   return me;
 })();
 
-function OAuthAuth(req) {
+function OAuthAuth(req, metadataBackend) {
     this.req = req;
+    this.metadataBackend = metadataBackend;
     this.isOAuthRequest = null;
 }
 
-OAuthAuth.prototype.verifyCredentials = function(options, callback) {
+OAuthAuth.prototype.verifyCredentials = function(callback) {
     if (this.hasCredentials()) {
-        oAuth.verifyRequest(this.req, options.metadataBackend, callback);
+        oAuth.verifyRequest(this.req, this.metadataBackend, callback);
     } else {
         callback(null, false);
     }
+};
+
+OAuthAuth.prototype.getCredentials = function() {
+  return oAuth.parseTokens(this.req);
 };
 
 OAuthAuth.prototype.hasCredentials = function() {

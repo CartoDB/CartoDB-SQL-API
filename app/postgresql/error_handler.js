@@ -34,7 +34,7 @@ ErrorHandler.prototype.getStatus = function() {
     var message = this.getMessage();
 
     if (message && message.match(/permission denied/)) {
-        statusError = 401;
+        statusError = 403;
     }
 
     if (message === conditionToMessage[pgErrorCodes.conditionToCode.query_canceled]) {
@@ -46,7 +46,7 @@ ErrorHandler.prototype.getStatus = function() {
 
 ErrorHandler.prototype.isTimeoutError = function() {
     return this.err.message && (
-        this.err.message.indexOf('statement timeout') > -1 || 
+        this.err.message.indexOf('statement timeout') > -1 ||
         this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
     );
 };

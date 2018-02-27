@@ -79,7 +79,7 @@ describe('job module', function() {
         });
     });
 
-    it('POST /api/v2/sql/job with wrong api key should respond with 401 permission denied', function (done){
+    it('POST /api/v2/sql/job with wrong api key should respond with 403 permission denied', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -88,7 +88,7 @@ describe('job module', function() {
                 query: "SELECT * FROM untitle_table_4"
             })
         }, {
-            status: 401
+            status: 403
         }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
@@ -110,7 +110,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });
@@ -134,13 +134,13 @@ describe('job module', function() {
         });
     });
 
-    it('GET /api/v2/sql/job/:job_id with wrong api key should respond with 401 permission denied', function (done){
+    it('GET /api/v2/sql/job/:job_id with wrong api key should respond with 403 permission denied', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'GET'
         }, {
-            status: 401
+            status: 403
         }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
@@ -182,13 +182,13 @@ describe('job module', function() {
         });
     });
 
-    it('DELETE /api/v2/sql/job/:job_id with wrong api key should respond with 401 permission denied', function (done){
+    it('DELETE /api/v2/sql/job/:job_id with wrong api key should respond with 403 permission denied', function (done){
         assert.response(server, {
             url: '/api/v2/sql/job/' + job.job_id + '?api_key=wrong',
             headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'DELETE'
         }, {
-            status: 401
+            status: 403
         }, function(err, res) {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, { error: [ 'permission denied' ] });
@@ -207,7 +207,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error , {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });

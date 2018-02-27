@@ -100,7 +100,7 @@ it('GET /api/v1/sql with INSERT. oAuth not used, so public user - should fail', 
         method: 'GET'
     },{
     }, function(err, res) {
-        assert.equal(res.statusCode, 401, res.statusCode + ': ' + res.body);
+        assert.equal(res.statusCode, 403, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
         assert.deepEqual(JSON.parse(res.body),
@@ -422,7 +422,7 @@ it('GET decent error if domain is incorrect', function(done){
         var result = JSON.parse(res.body);
         assert.equal(
             result.error[0],
-            "Sorry, we can't find CartoDB user 'vizzualinot'. Please check that you have entered the correct domain."
+            "Sorry, we can't find CARTO user 'vizzualinot'. Please check that you have entered the correct domain."
         );
         done();
     });
@@ -818,7 +818,7 @@ it('GET with callback must return 200 status error even if it is an error', func
                         'You are over platform\'s limits. Please contact us to know more details'
                     ]
                 });
-                
+
                 done();
             });
     });

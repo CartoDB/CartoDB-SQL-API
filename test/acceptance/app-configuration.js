@@ -29,6 +29,7 @@ describe('app-configuration', function() {
     it('GET /api/v1/sql', function(done){
         assert.response(server, {
             url: '/api/v1/sql',
+            headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
         },{
             status: 400

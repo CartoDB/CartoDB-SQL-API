@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "1.47.2",
+  "version": "1.48.1",
   "dependencies": {
     "accepts": {
       "version": "1.2.13",
@@ -61,6 +61,11 @@
       "version": "1.0.0",
       "from": "balanced-match@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz"
+    },
+    "basic-auth": {
+      "version": "2.0.0",
+      "from": "basic-auth@>=2.0.0 <3.0.0",
+      "resolved": "https://registry.npmjs.org/basic-auth/-/basic-auth-2.0.0.tgz"
     },
     "bcrypt-pbkdf": {
       "version": "1.0.1",
@@ -153,9 +158,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "0.15.0",
-      "from": "cartodb-redis@0.15.0",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.15.0.tgz"
+      "version": "0.15.1",
+      "from": "cartodb/node-cartodb-redis#project-auth-api",
+      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#ffc1dccaa5ad433a1582d8e3d5926063bd3851d3"
     },
     "caseless": {
       "version": "0.11.0",

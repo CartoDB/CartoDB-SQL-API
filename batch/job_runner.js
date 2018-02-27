@@ -81,7 +81,15 @@ JobRunner.prototype.getQueryStatementTimeout = function(username, callback) {
 JobRunner.prototype._run = function (job, query, timeout, profiler, callback) {
     var self = this;
 
-    self.queryRunner.run(job.data.job_id, query, job.data.user, timeout, function (err /*, result */) {
+    const dbparams = {
+        pass: job.data.pass,
+        user: job.data.dbuser,
+        dbname: job.data.dbname,
+        port: job.data.port,
+        host: job.data.host
+    };
+
+    self.queryRunner.run(job.data.job_id, query, job.data.user, timeout, dbparams, function (err /*, result */) {
         if (err) {
             if (!err.code) {
                 return callback(err);

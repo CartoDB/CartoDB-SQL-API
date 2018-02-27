@@ -1,17 +1,18 @@
 'use strict';
 
 var assert = require('assert');
-var errorHandler = require('../../app/utils/error_handler');
+var errorMiddleware = require('../../app/middlewares/error');
 
 describe('error-handler', function() {
     it('should return a header with errors', function (done) {
+
         let error = new Error('error test');
         error.detail = 'test detail';
         error.hint = 'test hint';
         error.context = 'test context';
 
+        const req = {};
         const res = {
-            req: {},
             headers: {},
             set (key, value) {
                 this.headers[key] = value;
@@ -34,15 +35,15 @@ describe('error-handler', function() {
             message: error.message
         };
 
-        errorHandler(error, res);
-        
-        assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-        assert.deepEqual(
-            res.headers['X-SQLAPI-Errors'], 
-            JSON.stringify(errorHeader)
-        );
+        errorMiddleware()(error, req, res, function next () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(errorHeader)
+            );
 
-        done();
+            done();
+        });
     });
 
     it('JSONP should return a header with error statuscode', function (done) {
@@ -51,10 +52,10 @@ describe('error-handler', function() {
         error.hint = 'test hint';
         error.context = 'test context';
 
+        const req = {
+            query: { callback: true }
+        };
         const res = {
-            req: { 
-                query: { callback: true }
-            },
             headers: {},
             set (key, value) {
                 this.headers[key] = value;
@@ -77,15 +78,15 @@ describe('error-handler', function() {
             message: error.message
         };
 
-        errorHandler(error, res);
-        
-        assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-        assert.deepEqual(
-            res.headers['X-SQLAPI-Errors'], 
-            JSON.stringify(errorHeader)
-        );
+        errorMiddleware()(error, req, res, function next () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(errorHeader)
+            );
 
-        done();
+            done();
+        });
     });
 
     it('should escape chars that broke logs regex', function (done) {
@@ -97,10 +98,10 @@ describe('error-handler', function() {
         error.hint = badString;
         error.context = badString;
 
+        const req = {
+            query: { callback: true }
+        };
         const res = {
-            req: { 
-                query: { callback: true }
-            },
             headers: {},
             set (key, value) {
                 this.headers[key] = value;
@@ -123,15 +124,14 @@ describe('error-handler', function() {
             message: escapedString
         };
 
-        errorHandler(error, res);
-        
-        assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-        assert.deepEqual(
-            res.headers['X-SQLAPI-Errors'], 
-            JSON.stringify(errorHeader)
-        );
+        errorMiddleware()(error, req, res, function () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(errorHeader)
+            );
 
-        done();
+            done();
+        });
     });
-  
 });

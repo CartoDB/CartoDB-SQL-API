@@ -17,11 +17,12 @@
     "Sandro Santilli <strk@vizzuality.com>"
   ],
   "dependencies": {
+    "basic-auth": "^2.0.0",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
     "cartodb-psql": "0.10.1",
     "cartodb-query-tables": "0.2.0",
-    "cartodb-redis": "0.15.0",
+    "cartodb-redis": "github:cartodb/node-cartodb-redis#project-auth-api",
     "debug": "2.2.0",
     "express": "~4.13.3",
     "log4js": "cartodb/log4js-node#cdb",
