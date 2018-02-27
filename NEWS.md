@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.48.2
+Released 2018-mm-dd
+
+Announcements:
+
+
 ## 1.48.1
 Released 2018-02-27
 
