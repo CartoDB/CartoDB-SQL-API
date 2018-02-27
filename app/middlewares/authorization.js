@@ -7,6 +7,10 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
         const credentials = getCredentialsFromRequest(req);
 
         if (!userMatches(credentials, user)) {
+            if (req.profiler) {
+                req.profiler.done('authorization');
+            }
+
             return next(new Error('permission denied'));
         }
 
@@ -17,7 +21,7 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
 
         authApi.verifyCredentials(function (err, authenticated) {
             if (req.profiler) {
-                req.profiler.done('verifyCredentials');
+                req.profiler.done('authorization');
             }
 
             if (err) {
