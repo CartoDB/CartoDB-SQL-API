@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.48.2
+## 1.49.0
 Released 2018-mm-dd
 
-Announcements:
+Features:
+ * Implemented middleware to authenticate users throug the new Authorization System.
 
 
 ## 1.48.1
