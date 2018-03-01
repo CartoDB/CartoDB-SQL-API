@@ -27,10 +27,27 @@ JobController.prototype.route = function (app) {
         this.statsdClient
     );
 
-    app.get(`${base_url}/jobs-wip`, listWorkInProgressJobs(this.jobService), sendResponse(), errorMiddleware());
-    app.post(`${base_url}/sql/job`, checkBodyPayloadSize(), jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE));
-    app.get(`${base_url}/sql/job/:job_id`, jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET));
-    app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE));
+    app.get(
+        `${base_url}/jobs-wip`, 
+        listWorkInProgressJobs(this.jobService), 
+        sendResponse(), 
+        errorMiddleware()
+    );
+    app.post(
+        `${base_url}/sql/job`, 
+        checkBodyPayloadSize(), 
+        jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
+    );
+    app.get(
+        `${base_url}/sql/job/:job_id`, 
+        jobMiddlewares('retrieve', 
+        getJob, 
+        RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
+    );
+    app.delete(
+        `${base_url}/sql/job/:job_id`, 
+        jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
+    );
 };
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient) {

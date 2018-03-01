@@ -1,3 +1,4 @@
+const RATE_LIMIT_REDIS_DB = 8;
 const getRateLimitLuaScript = `
     local results = {}
     local resultsCounter = 0
@@ -137,7 +138,9 @@ class UserLimits {
             this.rateLimits.redisCommand,
             redisParams,
             (err, rateLimits) => {
-                if (err && err.name === 'ReplyError' && err.message === 'NOSCRIPT No matching script. Please use EVAL.') {
+                if (err && err.name === 'ReplyError' && 
+                    err.message === 'NOSCRIPT No matching script. Please use EVAL.')
+                {
                     self.rateLimits.redisCommand = 'EVAL';
                     return self.getRateLimit(user, endpointGroup, callback);
                 }
@@ -150,7 +153,7 @@ class UserLimits {
                 callback(err, rateLimit);
             }
         );
-    };
-};
+    }
+}
 
 module.exports = UserLimits;

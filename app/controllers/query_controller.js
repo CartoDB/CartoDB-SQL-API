@@ -43,7 +43,7 @@ QueryController.prototype.route = function (app) {
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
-    }
+    };
 
     app.all(`${base_url}/sql`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
     app.all(`${base_url}/sql.:f`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY_FORMAT));

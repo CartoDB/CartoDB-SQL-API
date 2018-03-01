@@ -40,9 +40,9 @@ function rateLimitFn(userLimits, endpointGroup = null) {
             });
     
             if (isBlocked) {
-                const err = new Error('You are over the limits.');
-                err.http_status = 429;
-                return next(err);
+                const rateLimitError = new Error('You are over the limits.');
+                rateLimitError.http_status = 429;
+                return next(rateLimitError);
             }
     
             return next();
