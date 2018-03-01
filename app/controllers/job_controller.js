@@ -6,7 +6,7 @@ const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
-const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware.rateLimitsMiddleware;
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;

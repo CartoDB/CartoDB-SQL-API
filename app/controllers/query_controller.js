@@ -18,7 +18,7 @@ const connectionParamsMiddleware = require('../middlewares/connection-params');
 const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
-const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware.rateLimitsMiddleware;
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
