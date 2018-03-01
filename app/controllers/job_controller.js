@@ -5,6 +5,8 @@ const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../m
 const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
+const rateLimitsMiddleware = require('../middlewares/rate-limit');
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware.rateLimitsMiddleware;
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -26,18 +28,19 @@ JobController.prototype.route = function (app) {
     );
 
     app.get(`${base_url}/jobs-wip`, listWorkInProgressJobs(this.jobService), sendResponse(), errorMiddleware());
-    app.post(`${base_url}/sql/job`, checkBodyPayloadSize(), jobMiddlewares('create', createJob));
-    app.get(`${base_url}/sql/job/:job_id`, jobMiddlewares('retrieve', getJob));
-    app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob));
+    app.post(`${base_url}/sql/job`, checkBodyPayloadSize(), jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE));
+    app.get(`${base_url}/sql/job/:job_id`, jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET));
+    app.delete(`${base_url}/sql/job/:job_id`, jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE));
 };
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient) {
-    return function jobMiddlewares (action, jobMiddleware) {
+    return function jobMiddlewares (action, jobMiddleware, endpoint) {
         const forceToBeAuthenticated = true;
 
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
+            rateLimitsMiddleware(this.userLimitsService, endpoint),
             authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
             connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),

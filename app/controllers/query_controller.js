@@ -17,6 +17,8 @@ const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
 const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
+const rateLimitsMiddleware = require('../middlewares/rate-limit');
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware.rateLimitsMiddleware;
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -30,18 +32,21 @@ function QueryController(metadataBackend, userDatabaseService, tableCache, stats
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    const queryMiddlewares = [
-        initializeProfilerMiddleware('query'),
-        userMiddleware(),
-        authorizationMiddleware(this.metadataBackend),
-        connectionParamsMiddleware(this.userDatabaseService),
-        timeoutLimitsMiddleware(this.metadataBackend),
-        this.handleQuery.bind(this),
-        errorMiddleware()
-    ];
+    const queryMiddlewares = endpoint => {
+        return [
+            initializeProfilerMiddleware('query'),
+            userMiddleware(),
+            rateLimitsMiddleware(this.userLimitsService, endpoint),
+            authorizationMiddleware(this.metadataBackend),
+            connectionParamsMiddleware(this.userDatabaseService),
+            timeoutLimitsMiddleware(this.metadataBackend),
+            this.handleQuery.bind(this),
+            errorMiddleware()
+        ];
+    }
 
-    app.all(`${base_url}/sql`, queryMiddlewares);
-    app.all(`${base_url}/sql.:f`, queryMiddlewares);
+    app.all(`${base_url}/sql`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
+    app.all(`${base_url}/sql.:f`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY_FORMAT));
 };
 
 // jshint maxcomplexity:21
