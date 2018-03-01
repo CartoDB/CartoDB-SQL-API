@@ -34,6 +34,8 @@ class UserLimits {
             sha: null,
             lua: getRateLimitLuaScript
         };
+
+        this.preprareRateLimit();
     }
 
     /**
@@ -46,7 +48,7 @@ class UserLimits {
      * @param {string} endpointGroup 
      */
     static getRateLimitsStoreKey(user, endpointGroup) {
-        return `limits:rate:store:${user}:${endpointGroup}`;
+        return `limits:rate:store:${user}:sql:${endpointGroup}`;
     }
 
     /**
@@ -56,7 +58,7 @@ class UserLimits {
      * @param {string} endpointGroup 
      */
     static getRateLimitStatusKey(user, endpointGroup) {
-        return `limits:rate:status:${user}:${endpointGroup}`;
+        return `limits:rate:status:${user}:sql:${endpointGroup}`;
     }
 
     /**
