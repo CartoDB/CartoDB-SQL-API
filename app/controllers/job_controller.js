@@ -6,11 +6,12 @@ const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
 
-function JobController(metadataBackend, userDatabaseService, jobService, statsdClient) {
+function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.jobService = jobService;
     this.statsdClient = statsdClient;
+    this.userLimitsService = userLimitsService;
 }
 
 module.exports = JobController;
