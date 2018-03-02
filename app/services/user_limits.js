@@ -5,7 +5,7 @@ const getRateLimitLuaScript = `
 
     local limits = {}
     local limitsArray = redis.call("LRANGE", KEYS[1], 0, -1)
-    
+     
     for i, v in ipairs(limitsArray) do
         local rest = i % 3
         if rest ~= 0 then
@@ -15,7 +15,7 @@ const getRateLimitLuaScript = `
             results[resultsCounter] = redis.call("CL.THROTTLE", KEYS[2], limits[1], limits[2], v)
         end
     end
-
+ 
     return results
 `;
 
@@ -159,3 +159,4 @@ class UserLimits {
 }
 
 module.exports = UserLimits;
+module.exports.RATE_LIMIT_REDIS_DB = RATE_LIMIT_REDIS_DB;
