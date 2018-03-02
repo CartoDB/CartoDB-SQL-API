@@ -7,7 +7,8 @@ const UserLimits = require('../../app/services/user_limits');
 const rateLimitMiddleware = require('../../app/middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitMiddleware;
 
-const server = require('../../app/server')();
+const app = require('../../app/server');
+let server;
 
 let redisClient;
 let keysToDelete = [];
@@ -43,6 +44,7 @@ describe('rate limit', function() {
         global.settings.ratelimits.rateLimitsEnabled = true;
         global.settings.ratelimits.endpoints.query = true;
         
+        server = app();
         redisClient = redis.createClient(global.settings.redis_port);
 
         const count = 1;
