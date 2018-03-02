@@ -46,7 +46,6 @@ before_install:
   - sudo make install
   - cd ..
   - rm redis-stable.tar.gz
-  - rm -R redis-stable
 
   # configure it to accept local connections from postgres
   - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
