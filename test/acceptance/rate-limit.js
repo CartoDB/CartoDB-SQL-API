@@ -39,6 +39,25 @@ function setLimit(count, period, burst) {
     });
 }
 
+function checkResult (status, limit, remaining, reset, retry, done = null) {
+    assert.response(
+        server, 
+        request, 
+        { status }, 
+        function(err, res) {
+            assert.ifError(err);
+            assert.equal(res.headers['x-rate-limit-limit'], limit);
+            assert.equal(res.headers['x-rate-limit-remaining'], remaining);
+            assert.equal(res.headers['x-rate-limit-reset'], reset);
+            assert.equal(res.headers['x-rate-limit-retry-after'], retry);
+
+            if (done) {
+                setTimeout(done, 1000);
+            }
+        }
+    );
+}
+
 describe('rate limit', function() {
     before(function() {
         global.settings.ratelimits.rateLimitsEnabled = true;
@@ -63,109 +82,12 @@ describe('rate limit', function() {
     });
 
     it("1 req/sec: 2 req/seg should be limited", function(done) {
-        assert.response(
-            server, 
-            request, 
-            { status: 200 }, 
-            function(err, res) {
-                assert.ifError(err);
-                assert.equal(res.headers['x-rate-limit-limit'], '2');
-                assert.equal(res.headers['x-rate-limit-remaining'], '1');
-                assert.equal(res.headers['x-rate-limit-reset'], '1');
-                assert.equal(res.headers['x-rate-limit-retry-after'], '-1');
-            }
-        );
-
-        setTimeout(
-            function() {
-                assert.response(
-                    server, 
-                    request, 
-                    { status: 200 }, 
-                    function(err, res) {
-                        assert.ifError(err);
-                        assert.equal(res.headers['x-rate-limit-limit'], '2');
-                        assert.equal(res.headers['x-rate-limit-remaining'], '0');
-                        assert.equal(res.headers['x-rate-limit-reset'], '1');
-                        assert.equal(res.headers['x-rate-limit-retry-after'], '-1');
-                    }
-                );
-            },
-            250
-        );
-
-        setTimeout(
-            function() {
-                assert.response(
-                    server, 
-                    request, 
-                    { status: 429 }, 
-                    function(err, res) {
-                        assert.ifError(err);
-                        assert.equal(res.headers['x-rate-limit-limit'], '2');
-                        assert.equal(res.headers['x-rate-limit-remaining'], '0');
-                        assert.equal(res.headers['x-rate-limit-reset'], '1');
-                        assert.equal(res.headers['x-rate-limit-retry-after'], '0');
-                    }
-                );
-            },
-            500
-        );
-
-        setTimeout(
-            function() {
-                assert.response(
-                    server, 
-                    request, 
-                    { status: 429 }, 
-                    function(err, res) {
-                        assert.ifError(err);
-                        assert.equal(res.headers['x-rate-limit-limit'], '2');
-                        assert.equal(res.headers['x-rate-limit-remaining'], '0');
-                        assert.equal(res.headers['x-rate-limit-reset'], '1');
-                        assert.equal(res.headers['x-rate-limit-retry-after'], '0');
-                    }
-                );
-            },
-            750
-        );
-
-        setTimeout(
-            function() {
-                assert.response(
-                    server, 
-                    request, 
-                    { status: 429 }, 
-                    function(err, res) {
-                        assert.ifError(err);
-                        assert.equal(res.headers['x-rate-limit-limit'], '2');
-                        assert.equal(res.headers['x-rate-limit-remaining'], '0');
-                        assert.equal(res.headers['x-rate-limit-reset'], '1');
-                        assert.equal(res.headers['x-rate-limit-retry-after'], '0');
-                    }
-                );
-            },
-            950
-        );
-        
-        setTimeout(
-            function() {
-                assert.response(
-                    server, 
-                    request, 
-                    { status: 200 }, 
-                    function(err, res) {
-                        assert.ifError(err);
-                        assert.equal(res.headers['x-rate-limit-limit'], '2');
-                        assert.equal(res.headers['x-rate-limit-remaining'], '0');
-                        assert.equal(res.headers['x-rate-limit-reset'], '1');
-                        assert.equal(res.headers['x-rate-limit-retry-after'], '-1');
-                        setTimeout(done, 1000);
-                    }
-                );
-            },
-            1050
-        );
+        checkResult(200, 2, 1, 1, -1);  
+        setTimeout( () => checkResult(200, 2, 0, 1, -1), 250 );
+        setTimeout( () => checkResult(429, 2, 0, 1, 0),  500 );
+        setTimeout( () => checkResult(429, 2, 0, 1, 0),  750 );
+        setTimeout( () => checkResult(429, 2, 0, 1, 0),  950 );
+        setTimeout( () => checkResult(200, 2, 0, 1, -1, done), 1050 );
     });
 
 });
