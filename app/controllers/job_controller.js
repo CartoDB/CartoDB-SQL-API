@@ -40,9 +40,7 @@ JobController.prototype.route = function (app) {
     );
     app.get(
         `${base_url}/sql/job/:job_id`, 
-        jobMiddlewares('retrieve', 
-        getJob, 
-        RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
+        jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
     );
     app.delete(
         `${base_url}/sql/job/:job_id`, 
@@ -51,13 +49,13 @@ JobController.prototype.route = function (app) {
 };
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient) {
-    return function jobMiddlewares (action, jobMiddleware, endpoint) {
+    return function jobMiddlewares (action, jobMiddleware, endpointGroup) {
         const forceToBeAuthenticated = true;
 
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
-            rateLimitsMiddleware(this.userLimitsService, endpoint),
+            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
             connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),

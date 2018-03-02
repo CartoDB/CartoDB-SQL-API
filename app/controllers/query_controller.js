@@ -32,11 +32,11 @@ function QueryController(metadataBackend, userDatabaseService, tableCache, stats
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    const queryMiddlewares = endpoint => {
+    const queryMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('query'),
             userMiddleware(),
-            rateLimitsMiddleware(this.userLimitsService, endpoint),
+            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
