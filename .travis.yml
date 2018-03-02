@@ -39,6 +39,15 @@ before_install:
   - sudo apt-get install -q gdal-bin
   - sudo apt-get install -q ogr2ogr2-static-bin
 
+  - wget http://download.redis.io/redis-stable.tar.gz
+  - tar xvzf redis-stable.tar.gz
+  - cd redis-stable
+  - make
+  - make install
+  - cd ..
+  - rm redis-stable.tar.gz
+  - rm -R redis-stable
+
   # configure it to accept local connections from postgres
   - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
     | sudo tee /etc/postgresql/9.5/main/pg_hba.conf
