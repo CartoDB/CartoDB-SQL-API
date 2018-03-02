@@ -43,7 +43,7 @@ before_install:
   - tar xvzf redis-stable.tar.gz
   - cd redis-stable
   - make
-  - make install
+  - sudo make install
   - cd ..
   - rm redis-stable.tar.gz
   - rm -R redis-stable
