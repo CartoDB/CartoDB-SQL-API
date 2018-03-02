@@ -9,28 +9,22 @@ const RATE_LIMIT_ENDPOINTS_GROUPS = {
 };
 
 
-function rateLimitFn(userLimits, endpointGroup = null) {
+function rateLimit(userLimits, endpointGroup = null) {
+    if (!isRateLimitEnabled(endpointGroup)) {
+        return function rateLimitDisabledMiddleware(req, res, next) { next(); };
+    }
+
     return function rateLimitMiddleware(req, res, next) {
-        if (!global.settings.ratelimits.rateLimitsEnabled) {
-            return next();
-        }
-
-        const user = res.locals.user;
-
-        if (!endpointGroup || !isRateLimitEnabledByEndpoint(endpointGroup)) {
-            return next();
-        }
-
-        userLimits.getRateLimit(user, endpointGroup, function(err, rateLimit) {
+        userLimits.getRateLimit(res.locals.user, endpointGroup, function(err, userRateLimit) {
             if (err) {
                 return next(err);
             }
     
-            if (!rateLimit) {
+            if (!userRateLimit) {
                 return next();
             }
     
-            const [isBlocked, limit, remaining, retry, reset] = rateLimit;
+            const [isBlocked, limit, remaining, retry, reset] = userRateLimit;
     
             res.set({
                 'X-Rate-Limit-Limit': limit,
@@ -50,11 +44,11 @@ function rateLimitFn(userLimits, endpointGroup = null) {
     };
 }
 
-
-function isRateLimitEnabledByEndpoint(endpointGroup) {
-    return global.settings.ratelimits.endpoints[endpointGroup] === true;
+function isRateLimitEnabled(endpointGroup) {
+    return global.settings.ratelimits.rateLimitsEnabled &&
+        endpointGroup &&
+        global.settings.ratelimits.endpoints[endpointGroup];
 }
 
-
-module.exports = rateLimitFn;
+module.exports = rateLimit;
 module.exports.RATE_LIMIT_ENDPOINTS_GROUPS = RATE_LIMIT_ENDPOINTS_GROUPS;
