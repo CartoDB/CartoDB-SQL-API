@@ -68,35 +68,32 @@ class UserLimits {
      */
     static getLowerRateLimit(rateLimits) {
         /*jshint maxcomplexity:10 */
-        if (!rateLimits || !Array.isArray(rateLimits) || !rateLimits.length) {
+        if (!Array.isArray(rateLimits) || !rateLimits.length) {
             return;
         }
-
-        let minIndex = 0;
+    
+        let minIndex;
         let minRemainingValue;
-        let currentIndex = 0;
-        for (let rateLimit of rateLimits) {
+        for (let currentIndex = 0; currentIndex < rateLimits.length; currentIndex++) {
+            const rateLimit = rateLimits[currentIndex];
             if (!UserLimits.validateRatelimit(rateLimit)) {
-                currentIndex++;
                 continue;
             }
-
+    
             const [isBlocked, , remaining] = rateLimit;
-
+    
             if (isBlocked === 1) {
                 minIndex = currentIndex;
                 break;
             }
-
+    
             if (minRemainingValue === undefined || remaining < minRemainingValue) {
                 minIndex = currentIndex;
                 minRemainingValue = remaining;
             }
-
-            currentIndex++;
         }
-
-        if (UserLimits.validateRatelimit(rateLimits[minIndex])) {
+    
+        if (rateLimits[minIndex]) {
             return rateLimits[minIndex];
         } else {
             return;
@@ -140,19 +137,16 @@ class UserLimits {
             this.rateLimits.redisCommand,
             redisParams,
             (err, rateLimits) => {
-                if (err && err.name === 'ReplyError' && 
-                    err.message === 'NOSCRIPT No matching script. Please use EVAL.')
-                {
-                    self.rateLimits.redisCommand = 'EVAL';
-                    return self.getRateLimit(user, endpointGroup, callback);
+                if (err) {
+                    if (err.name === 'ReplyError' && err.message === 'NOSCRIPT No matching script. Please use EVAL.') {
+                        self.rateLimits.redisCommand = 'EVAL';
+                        return self.getRateLimit(user, endpointGroup, callback);
+                    } else {
+                        callback(err);
+                    }
                 }
-
-                let rateLimit;
-                if (!err) {
-                    rateLimit = UserLimits.getLowerRateLimit(rateLimits);
-                }
-
-                callback(err, rateLimit);
+    
+                callback(null, UserLimits.getLowerRateLimit(rateLimits));
             }
         );
     }
