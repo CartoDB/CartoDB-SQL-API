@@ -39,7 +39,7 @@ function setLimit(count, period, burst) {
     });
 }
 
-function checkResult (status, limit, remaining, reset, retry, done = null) {
+function assertRequest (status, limit, remaining, reset, retry, done = null) {
     assert.response(
         server, 
         request, 
@@ -82,12 +82,12 @@ describe('rate limit', function() {
     });
 
     it("1 req/sec: 2 req/seg should be limited", function(done) {
-        checkResult(200, 2, 1, 1, -1);  
-        setTimeout( () => checkResult(200, 2, 0, 1, -1), 250 );
-        setTimeout( () => checkResult(429, 2, 0, 1, 0),  500 );
-        setTimeout( () => checkResult(429, 2, 0, 1, 0),  750 );
-        setTimeout( () => checkResult(429, 2, 0, 1, 0),  950 );
-        setTimeout( () => checkResult(200, 2, 0, 1, -1, done), 1050 );
+        assertRequest(200, 2, 1, 1, -1);  
+        setTimeout( () => assertRequest(200, 2, 0, 1, -1), 250 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  500 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  750 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  950 );
+        setTimeout( () => assertRequest(200, 2, 0, 1, -1, done), 1050 );
     });
 
 });
