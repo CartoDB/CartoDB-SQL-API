@@ -14,21 +14,19 @@ const user = 'vizzuality';
 
 
 describe('Lower rate limit', function () {
-    it("1 limit: not limited", function (done) {
+    it("1 limit: not limited", function () {
         const limits = [[0, 3, 1, -1, 1]];
         const result = getLowerRateLimit(limits);
         assert.deepEqual(limits[0], result);
-        done();
     });
 
-    it("1 limit: limited", function (done) {
+    it("1 limit: limited", function () {
         const limits = [[1, 3, 0, 0, 1]];
         const result = getLowerRateLimit(limits);
         assert.deepEqual(limits[0], result);
-        done();
     });
 
-    it("empty or invalid", function (done) {
+    it("empty or invalid", function () {
         let limits = [];
         let result = getLowerRateLimit(limits);
         assert.deepEqual(null, result);
@@ -60,11 +58,9 @@ describe('Lower rate limit', function () {
         limits = [[1, 2]];
         result = getLowerRateLimit(limits);
         assert.deepEqual(null, result);
-
-        done();
     });
 
-    it("multiple limits: valid and invalid", function (done) {
+    it("multiple limits: valid and invalid", function () {
         const limit1 = [0, 3, 0];
         const limit2 = [0, 3, 1, 0, 1];
 
@@ -75,11 +71,9 @@ describe('Lower rate limit', function () {
         limits = [limit2, limit1];
         result = getLowerRateLimit(limits);
         assert.deepEqual(limit2, result);
-
-        done();
     });
 
-    it("multiple limits: not limited", function (done) {
+    it("multiple limits: not limited", function () {
         const limit1 = [0, 3, 2, 0, 1];
         const limit2 = [0, 3, 3, 0, 1];
         const limit3 = [0, 3, 1, 0, 1];
@@ -93,11 +87,9 @@ describe('Lower rate limit', function () {
         limits = [limit1, limit2];
         result = getLowerRateLimit(limits);
         assert.deepEqual(limit1, result);
-
-        done();
     });
 
-    it("multiple limits: limited", function (done) {
+    it("multiple limits: limited", function () {
         const limit1 = [0, 3, 2, 0, 1];
         const limit2 = [0, 3, 3, 0, 1];
         const limit3 = [0, 3, 1, 0, 1];
@@ -111,8 +103,6 @@ describe('Lower rate limit', function () {
         limits = [limit1, limit2, limit5, limit3, limit4];
         result = getLowerRateLimit(limits);
         assert.deepEqual(limit5, result);
-
-        done();
     });
 });
 
