@@ -31,7 +31,7 @@ function setLimit(count, period, burst) {
             return;
         }
 
-        const key = UserLimits.getRateLimitsStoreKey(user, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY);        
+        const key = `limits:rate:store:${user}:sql:${RATE_LIMIT_ENDPOINTS_GROUPS.QUERY}`;        
         redisClient.rpush(key, burst);
         redisClient.rpush(key, count);
         redisClient.rpush(key, period);
