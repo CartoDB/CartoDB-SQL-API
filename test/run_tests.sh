@@ -112,7 +112,7 @@ TESTS=$@
 
 if test x"$OPT_CREATE_REDIS" = xyes; then
   echo "Starting redis on port ${REDIS_PORT}"
-  BASEDIR2=$(pwd)
+  CURRENTPATH=$(pwd)
   echo "${CURRENTPATH}"
   LISTDIR=$(ls -la)
   echo "${LISTDIR}"
@@ -153,6 +153,9 @@ else
   mocha -u tdd -t 5000 ${TESTS}
 fi
 ret=$?
+
+READISLOG=$(cat ${BASEDIR}/test.log)
+echo ${READISLOG}
 
 cleanup || exit 1
 
