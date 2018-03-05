@@ -3,7 +3,6 @@ require('../helper');
 const qs = require('querystring');
 const assert = require('../support/assert');
 const redis = require('redis');
-const UserLimits = require('../../app/services/user_limits');
 const rateLimitMiddleware = require('../../app/middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitMiddleware;
 
