@@ -112,11 +112,7 @@ TESTS=$@
 
 if test x"$OPT_CREATE_REDIS" = xyes; then
   echo "Starting redis on port ${REDIS_PORT}"
-  CURRENTPATH=$(pwd)
-  echo "${CURRENTPATH}"
-  LISTDIR=$(ls -la)
-  echo "${LISTDIR}"
-  echo "port ${REDIS_PORT}" | redis-server - --loadmodule ${CURRENTPATH}/libredis_cell.so > ${BASEDIR}/test.log &
+  echo "port ${REDIS_PORT}" | redis-server - --loadmodule ./libredis_cell.so > ${BASEDIR}/test.log &
   PID_REDIS=$!
   echo ${PID_REDIS} > ${BASEDIR}/redis.pid
 fi
