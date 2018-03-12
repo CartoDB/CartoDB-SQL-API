@@ -46,6 +46,9 @@ before_install:
   - sudo make install
   - cd ..
   - rm redis-stable.tar.gz
+  - wget https://github.com/brandur/redis-cell/releases/download/v0.2.2/redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz
+  - tar xvzf redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz
+  - rm redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz
   
   # configure it to accept local connections from postgres
   - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \

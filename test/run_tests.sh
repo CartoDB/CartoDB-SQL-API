@@ -117,6 +117,8 @@ if test x"$OPT_CREATE_REDIS" = xyes; then
   redis-server -v
   redis-cli -v
   ls -la
+  ls -la ./libredis_cell.so
+  ls -la libredis_cell.so
   echo "port ${REDIS_PORT}" | redis-server - --loadmodule ./libredis_cell.so > ${BASEDIR}/test.log &
   PID_REDIS=$!
   echo ${PID_REDIS} > ${BASEDIR}/redis.pid
