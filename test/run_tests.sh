@@ -116,7 +116,7 @@ if test x"$OPT_CREATE_REDIS" = xyes; then
   echo "-------------> ${CURRENTDIR}"
   redis-server -v
   redis-cli -v
-  ls -la libredis_cell.so
+  ls -la
   echo "port ${REDIS_PORT}" | redis-server - --loadmodule ./libredis_cell.so > ${BASEDIR}/test.log &
   PID_REDIS=$!
   echo ${PID_REDIS} > ${BASEDIR}/redis.pid
@@ -154,6 +154,8 @@ else
   mocha -u tdd -t 5000 ${TESTS}
 fi
 ret=$?
+
+cat ${BASEDIR}/test.log
 
 cleanup || exit 1
 
