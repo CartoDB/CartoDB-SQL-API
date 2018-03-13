@@ -34,6 +34,8 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
                 return next(new Error('permission denied'));
             }
 
+            res.set('vary', 'Authorization'); //Honor Authorization header when caching.
+
             next();
         });
     };
