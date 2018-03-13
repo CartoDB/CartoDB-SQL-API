@@ -159,8 +159,8 @@
     },
     "cartodb-redis": {
       "version": "0.16.0",
-      "from": "cartodb-redis@0.16.0",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-0.16.0.tgz"
+      "from": "cartodb/node-cartodb-redis#rateLimits",
+      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#59aa24c1729e7d39a1b2fecaa626168433a96d65"
     },
     "caseless": {
       "version": "0.11.0",
