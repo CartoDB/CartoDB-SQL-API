@@ -150,6 +150,8 @@ else
 fi
 ret=$?
 
+cat ${BASEDIR}/test.log
+
 cleanup || exit 1
 
 exit $ret
