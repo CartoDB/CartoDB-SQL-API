@@ -99,7 +99,7 @@ function createJob (jobService) {
             user: res.locals.user,
             query: params.query,
             host: res.locals.userDbParams.host,
-            port: res.locals.userDbParams.port,
+            port: global.settings.db_batch_port || global.settings.db_port,
             pass: res.locals.userDbParams.pass,
             dbname: res.locals.userDbParams.dbname,
             dbuser: res.locals.userDbParams.user
