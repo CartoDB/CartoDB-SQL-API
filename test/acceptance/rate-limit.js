@@ -45,10 +45,10 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
         { status }, 
         function(err, res) {
             assert.ifError(err);
-            assert.equal(res.headers['x-rate-limit-limit'], limit);
-            assert.equal(res.headers['x-rate-limit-remaining'], remaining);
-            assert.equal(res.headers['x-rate-limit-reset'], reset);
-            assert.equal(res.headers['x-rate-limit-retry-after'], retry);
+            assert.equal(res.headers['carto-rate-limit-limit'], limit);
+            assert.equal(res.headers['carto-rate-limit-remaining'], remaining);
+            assert.equal(res.headers['carto-rate-limit-reset'], reset);
+            assert.equal(res.headers['retry-after'], retry);
 
             if (done) {
                 setTimeout(done, 1000);
