@@ -58,9 +58,9 @@ die() {
 get_redis_cell() {
   if test x"$OPT_REDIS_CELL" = xyes; then
     echo "Downloading redis-cell"
-    wget https://github.com/brandur/redis-cell/releases/download/v0.2.2/redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz > /dev/null 2>&1
-    tar xvzf redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz > /dev/null 2>&1
-    rm redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz
+    curl -L https://github.com/brandur/redis-cell/releases/download/v0.2.2/redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz --output redis-cell.tar.gz > /dev/null 2>&1
+    tar xvzf redis-cell.tar.gz > /dev/null 2>&1
+    rm redis-cell.tar.gz
     rm libredis_cell.d
   fi
 }
