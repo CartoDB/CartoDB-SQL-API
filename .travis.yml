@@ -40,13 +40,13 @@ before_install:
   - sudo apt-get install -q ogr2ogr2-static-bin
   - sudo apt-get install -y libc6
 
-  - wget http://download.redis.io/redis-stable.tar.gz
-  - tar xvzf redis-stable.tar.gz
-  - cd redis-stable
+  - wget http://download.redis.io/releases/redis-4.0.8.tar.gz
+  - tar xvzf redis-4.0.8.tar.gz
+  - cd redis-4.0.8
   - make
   - sudo make install
   - cd ..
-  - rm redis-stable.tar.gz
+  - rm redis-4.0.8.tar.gz
   
   # configure it to accept local connections from postgres
   - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
