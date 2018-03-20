@@ -24,7 +24,8 @@ JobController.prototype.route = function (app) {
         this.metadataBackend,
         this.userDatabaseService,
         this.jobService,
-        this.statsdClient
+        this.statsdClient,
+        this.userLimitsService
     );
 
     app.get(
@@ -48,14 +49,14 @@ JobController.prototype.route = function (app) {
     );
 };
 
-function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient) {
+function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     return function jobMiddlewares (action, jobMiddleware, endpointGroup) {
         const forceToBeAuthenticated = true;
 
         return [
             initializeProfilerMiddleware('job'),
             userMiddleware(),
-            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
+            rateLimitsMiddleware(userLimitsService, endpointGroup),
             authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
             connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),
