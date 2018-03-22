@@ -107,3 +107,16 @@ module.exports.health = {
     query: 'select 1'
 };
 module.exports.disabled_file = 'pids/disabled';
+
+module.exports.ratelimits = {
+  // whether it should rate limit endpoints (global configuration)
+  rateLimitsEnabled: false,
+  // whether it should rate limit one or more endpoints (only if rateLimitsEnabled = true)
+  endpoints: {
+    query: false,
+    query_format: false,
+    job_create: false,
+    job_get: false,
+    job_delete: false
+  }
+}

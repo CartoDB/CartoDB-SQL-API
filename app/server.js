@@ -23,6 +23,7 @@ var TableCacheFactory = require('./utils/table_cache_factory');
 var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
 var UserDatabaseService = require('./services/user_database_service');
+var UserLimitsService = require('./services/user_limits');
 var JobPublisher = require('../batch/pubsub/job-publisher');
 var JobQueue = require('../batch/job_queue');
 var JobBackend = require('../batch/job_backend');
@@ -61,7 +62,6 @@ function App(statsClient) {
         reapIntervalMillis: global.settings.redisReapIntervalMillis
     });
     var metadataBackend = cartodbRedis({ pool: redisPool });
-
 
     // Set default configuration
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -136,6 +136,13 @@ function App(statsClient) {
     // basic routing
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
+    
+    const userLimitsServiceOptions = {
+        limits: {
+            rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
+        }
+    };
+    const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
 
     var jobPublisher = new JobPublisher(redisPool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher);
@@ -147,10 +154,22 @@ function App(statsClient) {
     var genericController = new GenericController();
     genericController.route(app);
 
-    var queryController = new QueryController(metadataBackend, userDatabaseService, tableCache, statsClient);
+    var queryController = new QueryController(
+        metadataBackend, 
+        userDatabaseService, 
+        tableCache, 
+        statsClient, 
+        userLimitsService
+    );
     queryController.route(app);
 
-    var jobController = new JobController(metadataBackend, userDatabaseService, jobService, statsClient);
+    var jobController = new JobController(
+        metadataBackend, 
+        userDatabaseService, 
+        jobService, 
+        statsClient, 
+        userLimitsService
+    );
     jobController.route(app);
 
     var cacheStatusController = new CacheStatusController(tableCache);
