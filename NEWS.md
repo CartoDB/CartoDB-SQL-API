@@ -1,10 +1,15 @@
 # Changelog
 
-## 1.49.0
-Released 2018-mm-dd
+## 2.0.0
+Released 2018-03-22
+
+Breaking changes:
+ * Needs Redis v4
 
 Features:
  * Implemented middleware to authenticate users throug the new Authorization System.
+ * Upgrades cartodb-redis to 1.0.0
+ * Rate limit feature (disabled by default)
 
 
 ## 1.48.1
