@@ -3,7 +3,7 @@ var pgErrorCodes = require('./error_codes');
 function ErrorHandler(err) {
     this.err = err;
 
-    if(this.isTimeoutError()) {
+    if (this.isTimeoutError()) {
         this.err = new Error('You are over platform\'s limits. Please contact us to know more details');
         this.err.http_status = 429;
     }
@@ -19,9 +19,8 @@ ErrorHandler.prototype.getMessage = function() {
     return this.err.message;
 };
 
-ErrorHandler.prototype.getFields = function(fields) {
-    fields = fields || ['detail', 'hint', 'context'];
-    return fields.reduce(function (previousValue, current) {
+ErrorHandler.prototype.getFields = function() {
+    return ['detail', 'hint', 'context'].reduce(function (previousValue, current) {
         previousValue[current] = this.err[current];
         return previousValue;
     }.bind(this), {});
