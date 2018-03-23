@@ -36,7 +36,9 @@ function rateLimit(userLimits, endpointGroup = null) {
                 // retry is floor rounded in seconds by redis-cell
                 res.set('Retry-After', retry + 1);
                 
-                const rateLimitError = new Error('You are over the limits.');
+                const rateLimitError = new Error(
+                    'You are over platform\'s limits. Please contact us to know more details'
+                );
                 rateLimitError.http_status = 429;
                 return next(rateLimitError);
             }
