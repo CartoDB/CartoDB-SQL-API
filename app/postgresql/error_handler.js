@@ -2,6 +2,11 @@ var pgErrorCodes = require('./error_codes');
 
 function ErrorHandler(err) {
     this.err = err;
+
+    if(this.isTimeoutError()) {
+        this.err = new Error('You are over platform\'s limits. Please contact us to know more details');
+        this.err.http_status = 429;
+    }
 }
 
 module.exports = ErrorHandler;
@@ -11,13 +16,7 @@ ErrorHandler.prototype.getName = function() {
 };
 
 ErrorHandler.prototype.getMessage = function() {
-    var message = this.err.message;
-
-    if (this.isTimeoutError()) {
-        message = conditionToMessage[pgErrorCodes.conditionToCode.query_canceled];
-    }
-
-    return message;
+    return this.err.message;
 };
 
 ErrorHandler.prototype.getFields = function(fields) {
@@ -37,10 +36,6 @@ ErrorHandler.prototype.getStatus = function() {
         statusError = 403;
     }
 
-    if (message === conditionToMessage[pgErrorCodes.conditionToCode.query_canceled]) {
-        statusError = 429;
-    }
-
     return statusError;
 };
 
@@ -50,8 +45,3 @@ ErrorHandler.prototype.isTimeoutError = function() {
         this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
     );
 };
-
-var conditionToMessage = {};
-conditionToMessage[pgErrorCodes.conditionToCode.query_canceled] = [
-    'You are over platform\'s limits. Please contact us to know more details'
-].join(' ');
