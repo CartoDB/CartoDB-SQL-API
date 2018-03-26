@@ -50,6 +50,16 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
             assert.equal(res.headers['carto-rate-limit-reset'], reset);
             assert.equal(res.headers['retry-after'], retry);
 
+            if(status === 429) { 
+                const expectedResponse = { 
+                    error: ["You are over the limits."],
+                    context: "limit", 
+                    detail: "rate-limit"
+                };
+
+                assert.deepEqual(JSON.parse(res.body), expectedResponse);
+            }
+
             if (done) {
                 setTimeout(done, 1000);
             }
