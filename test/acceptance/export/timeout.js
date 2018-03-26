@@ -99,7 +99,11 @@ describe('timeout', function () {
                     assert.deepEqual(res, {
                         error: [
                             'You are over platform\'s limits. Please contact us to know more details'
-                        ]
+                        ],
+                        context: {
+                            subtype: "datasource",
+                            type: "limit"
+                        }
                     });
 
                     done();
@@ -179,7 +183,11 @@ describe('timeout', function () {
                     assert.deepEqual(res, {
                         error: [
                             'You are over platform\'s limits. Please contact us to know more details'
-                        ]
+                        ],
+                        context: {
+                            subtype: "datasource",
+                            type: "limit"
+                        }
                     });
 
                     done();

@@ -6,6 +6,10 @@ function ErrorHandler(err) {
     if (this.isTimeoutError()) {
         this.err = new Error('You are over platform\'s limits. Please contact us to know more details');
         this.err.http_status = 429;
+        this.err.context = {
+            type: 'limit',
+            subtype: 'datasource'
+        };
     }
 }
 

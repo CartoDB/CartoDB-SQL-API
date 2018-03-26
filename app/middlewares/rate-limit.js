@@ -36,6 +36,10 @@ function rateLimit(userLimits, endpointGroup = null) {
             if (isBlocked) {
                 const rateLimitError = new Error('You are over the limits.');
                 rateLimitError.http_status = 429;
+                rateLimitError.context = {
+                    type: 'limit',
+                    subtype: 'rate-limit'
+                };
                 return next(rateLimitError);
             }
     

@@ -792,7 +792,11 @@ it('GET with callback must return 200 status error even if it is an error', func
                 assert.deepEqual(error, {
                     error: [
                         'You are over platform\'s limits. Please contact us to know more details'
-                    ]
+                    ],
+                    context: {
+                        subtype: "datasource",
+                        type: "limit"
+                    }
                 });
 
                 done();
@@ -816,7 +820,11 @@ it('GET with callback must return 200 status error even if it is an error', func
                 assert.deepEqual(error, {
                     error: [
                         'You are over platform\'s limits. Please contact us to know more details'
-                    ]
+                    ],
+                    context: {
+                        subtype: "datasource",
+                        type: "limit"
+                    }
                 });
 
                 done();
