@@ -48,7 +48,10 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
             assert.equal(res.headers['carto-rate-limit-limit'], limit);
             assert.equal(res.headers['carto-rate-limit-remaining'], remaining);
             assert.equal(res.headers['carto-rate-limit-reset'], reset);
-            assert.equal(res.headers['retry-after'], retry);
+
+            if (retry) {
+                assert.equal(res.headers['retry-after'], retry);
+            }
 
             if(status === 429) { 
                 const expectedResponse = { 
@@ -91,12 +94,12 @@ describe('rate limit', function() {
     });
 
     it("1 req/sec: 2 req/seg should be limited", function(done) {
-        assertRequest(200, 2, 1, 1, -1);  
-        setTimeout( () => assertRequest(200, 2, 0, 1, -1), 250 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  500 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  750 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 0),  950 );
-        setTimeout( () => assertRequest(200, 2, 0, 1, -1, done), 1050 );
+        assertRequest(200, 2, 1, 1);  
+        setTimeout( () => assertRequest(200, 2, 0, 1, null), 250 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  500 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  750 );
+        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  950 );
+        setTimeout( () => assertRequest(200, 2, 0, 1, null, done), 1050 );
     });
 
 });

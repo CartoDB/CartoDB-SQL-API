@@ -29,12 +29,16 @@ function rateLimit(userLimits, endpointGroup = null) {
             res.set({
                 'Carto-Rate-Limit-Limit': limit,
                 'Carto-Rate-Limit-Remaining': remaining,
-                'Retry-After': retry,
                 'Carto-Rate-Limit-Reset': reset
             });
     
             if (isBlocked) {
-                const rateLimitError = new Error('You are over the limits.');
+                // retry is floor rounded in seconds by redis-cell
+                res.set('Retry-After', retry + 1);
+                
+                const rateLimitError = new Error(
+                    'You are over platform\'s limits. Please contact us to know more details'
+                );
                 rateLimitError.http_status = 429;
                 rateLimitError.context = 'limit';
                 rateLimitError.detail = 'rate-limit';
