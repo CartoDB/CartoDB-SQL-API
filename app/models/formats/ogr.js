@@ -194,7 +194,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         clearTimeout(ogrTimeout);
 
         if (timedOut) {
-          return next(new Error('You are over platform\'s limits. Please contact us to know more details'));
+          return next(new Error('statement timeout'));
         }
 
         if (code !== 0) {

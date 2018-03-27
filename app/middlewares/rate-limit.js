@@ -40,6 +40,8 @@ function rateLimit(userLimits, endpointGroup = null) {
                     'You are over platform\'s limits. Please contact us to know more details'
                 );
                 rateLimitError.http_status = 429;
+                rateLimitError.context = 'limit';
+                rateLimitError.detail = 'rate-limit';
                 return next(rateLimitError);
             }
     
