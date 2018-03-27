@@ -22,10 +22,11 @@ ErrorHandler.prototype.getMessage = function() {
 };
 
 ErrorHandler.prototype.getFields = function() {
-    return ['detail', 'hint', 'context'].reduce(function (previousValue, current) {
-        previousValue[current] = this.err[current];
-        return previousValue;
-    }.bind(this), {});
+    return {
+        detail: this.err.detail,
+        hint: this.err.hint,
+        context: this.err.context,
+    };
 };
 
 ErrorHandler.prototype.getStatus = function() {
