@@ -22,7 +22,7 @@ module.exports = function errorMiddleware() {
             res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
-        setErrorHeader(errorResponse, errorHandler.http_status, res);
+        setErrorHeader(errorHandler, res);
 
         res.header('Content-Type', 'application/json; charset=utf-8');
         res.status(getStatusError(errorHandler, req));
@@ -52,12 +52,14 @@ function getStatusError(errorHandler, req) {
     return statusError;
 }
 
-function setErrorHeader(err, statusCode, res) {
-    let errorsLog = Object.assign({}, err);
-
-    errorsLog.statusCode = statusCode || 200;
-    errorsLog.message = errorsLog.error[0];
-    delete errorsLog.error;
+function setErrorHeader(errorHandler, res) {
+    const errorsLog = {
+        context: errorHandler.context,
+        detail: errorHandler.detail,
+        hint: errorHandler.hint,
+        statusCode: errorHandler.http_status,
+        message: errorHandler.message
+    };
 
     res.set('X-SQLAPI-Errors', stringifyForLogs(errorsLog));
 }
