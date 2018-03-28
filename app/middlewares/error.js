@@ -3,11 +3,10 @@ var errorHandlerFactory = require('../services/error_handler_factory');
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
         const errorHandler = errorHandlerFactory(err);
-
-        var msg = errorHandler.getResponse();
+        let errorResponse = errorHandler.getResponse();
 
         if (global.settings.environment === 'development') {
-            msg.stack = err.stack;
+            errorResponse.stack = err.stack;
         }
 
         if (global.settings.environment !== 'test') {
@@ -23,14 +22,14 @@ module.exports = function errorMiddleware() {
             res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
-        setErrorHeader(msg, errorHandler.http_status, res);
+        setErrorHeader(errorResponse, errorHandler.http_status, res);
 
         res.header('Content-Type', 'application/json; charset=utf-8');
         res.status(getStatusError(errorHandler, req));
         if (req.query && req.query.callback) {
-            res.jsonp(msg);
+            res.jsonp(errorResponse);
         } else {
-            res.json(msg);
+            res.json(errorResponse);
         }
 
         if (req && req.profiler) {
