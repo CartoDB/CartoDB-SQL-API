@@ -1,7 +1,7 @@
 const ErrorHandler = require('./error_handler');
-const pgErrorCodes = require('../postgresql/error_codes');
+const { codeToCondition } = require('../postgresql/error_codes');
 
-module.exports = function ErrorHandlerFactory () {
+module.exports = function ErrorHandlerFactory (err) {
     if (isTimeoutError(err)) {
         return createTimeoutError();
     } else {
@@ -33,6 +33,6 @@ function createGenericError(err) {
         err.detail,
         err.hint,
         err.http_status,
-        pgErrorCodes.codeToCondition[err.code] || err.name
+        codeToCondition[err.code] || err.name
     );
 }
