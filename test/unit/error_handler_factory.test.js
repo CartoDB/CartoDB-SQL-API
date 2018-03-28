@@ -53,4 +53,19 @@ describe('error-handler-factory', function () {
 
         assert.deepEqual(errorHandler, expectedError);
     });
+
+    it('permission denied error', function() {
+        const error = new Error('permission denied');
+        const errorHandler = errorHandlerFactory(error);
+        const expectedError = new ErrorHandler(
+            error.message,
+            error.context,
+            error.detail,
+            error.hint,
+            403,
+            codeToCondition[error.code] || error.name
+        );
+
+        assert.deepEqual(errorHandler, expectedError);
+    });
 });
