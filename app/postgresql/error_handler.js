@@ -1,7 +1,8 @@
 var pgErrorCodes = require('./error_codes');
 
-class ErrorHandler {
+class ErrorHandler extends Error {
     constructor(err) {
+        super();
         this.err = err;
     
         if (this.isTimeoutError()) {
