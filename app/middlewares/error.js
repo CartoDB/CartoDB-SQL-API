@@ -1,8 +1,8 @@
 var _ = require('underscore');
 var PgErrorHandler = require('../postgresql/error_handler');
 
-module.exports = function errorMiddleware () {
-    return function error (err, req, res, next) {
+module.exports = function errorMiddleware() {
+    return function error(err, req, res, next) {
         var pgErrorHandler = new PgErrorHandler(err);
 
         var msg = {
@@ -15,7 +15,7 @@ module.exports = function errorMiddleware () {
             msg.stack = err.stack;
         }
 
-        if (global.settings.environment !== 'test'){
+        if (global.settings.environment !== 'test') {
             // TODO: email this Exception report
             console.error("EXCEPTION REPORT: " + err.stack);
         }
@@ -23,9 +23,9 @@ module.exports = function errorMiddleware () {
         // Force inline content disposition
         res.header("Content-Disposition", 'inline');
 
-        if (req && req.profiler ) {
-          req.profiler.done('finish');
-          res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        if (req && req.profiler) {
+            req.profiler.done('finish');
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
         setErrorHeader(msg, pgErrorHandler.getStatus(), res);
@@ -76,7 +76,7 @@ function setErrorHeader(err, statusCode, res) {
  */
 function stringifyForLogs(object) {
     Object.keys(object).map(key => {
-        if(typeof object[key] === 'string') {
+        if (typeof object[key] === 'string') {
             object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
         } else if (typeof object[key] === 'object') {
             stringifyForLogs(object[key]);
