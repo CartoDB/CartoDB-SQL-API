@@ -1,4 +1,4 @@
-var errorHandlerFactory = require('../services/error_handler_factory');
+const errorHandlerFactory = require('../services/error_handler_factory');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
@@ -41,8 +41,7 @@ module.exports = function errorMiddleware() {
 };
 
 function getStatusError(errorHandler, req) {
-
-    var statusError = errorHandler.http_status;
+    let statusError = errorHandler.http_status;
 
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
