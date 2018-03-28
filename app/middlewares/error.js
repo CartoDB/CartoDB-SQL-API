@@ -1,4 +1,5 @@
 var PgErrorHandler = require('../postgresql/error_handler');
+var pgErrorCodes = require('../postgresql/error_codes');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
@@ -117,6 +118,6 @@ function createPgError(err) {
         err.detail, 
         err.hint, 
         err.http_status, 
-        PgErrorHandler.getName(err)
+        pgErrorCodes.codeToCondition[err.code] || err.name
     );
 }

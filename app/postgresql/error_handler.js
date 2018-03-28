@@ -1,5 +1,3 @@
-var pgErrorCodes = require('./error_codes');
-
 class ErrorHandler extends Error {
     constructor(message, context, detail, hint, http_status = 400, name = null) {
         super(message);
@@ -21,10 +19,6 @@ class ErrorHandler extends Error {
             detail: this.detail,
             hint: this.hint
         };
-    }
-
-    static getName (err) {
-        return pgErrorCodes.codeToCondition[err.code] || err.name;
     }
     
     getHttpStatus (http_status) {
