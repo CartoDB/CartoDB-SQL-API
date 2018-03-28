@@ -1,11 +1,11 @@
-var PgErrorHandler = require('../postgresql/error_handler');
+var ErrorHandler = require('../services/error_handler');
 var pgErrorCodes = require('../postgresql/error_codes');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
-        let pgErrorHandler = getErrorHandler(err);
+        let errorHandler = getErrorHandler(err);
 
-        var msg = pgErrorHandler.getResponse();
+        var msg = errorHandler.getResponse();
 
         if (global.settings.environment === 'development') {
             msg.stack = err.stack;
@@ -24,10 +24,10 @@ module.exports = function errorMiddleware() {
             res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
-        setErrorHeader(msg, pgErrorHandler.http_status, res);
+        setErrorHeader(msg, errorHandler.http_status, res);
 
         res.header('Content-Type', 'application/json; charset=utf-8');
-        res.status(getStatusError(pgErrorHandler, req));
+        res.status(getStatusError(errorHandler, req));
         if (req.query && req.query.callback) {
             res.jsonp(msg);
         } else {
@@ -42,9 +42,9 @@ module.exports = function errorMiddleware() {
     };
 };
 
-function getStatusError(pgErrorHandler, req) {
+function getStatusError(errorHandler, req) {
 
-    var statusError = pgErrorHandler.http_status;
+    var statusError = errorHandler.http_status;
 
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
@@ -102,7 +102,7 @@ function isTimeoutError(err) {
 }
 
 function createTimeoutError() {
-    return new PgErrorHandler(
+    return new ErrorHandler(
         'You are over platform\'s limits. Please contact us to know more details',
         'limit',
         'datasource',
@@ -112,7 +112,7 @@ function createTimeoutError() {
 }
 
 function createGenericError(err) {
-    return new PgErrorHandler(
+    return new ErrorHandler(
         err.message,
         err.context, 
         err.detail, 
