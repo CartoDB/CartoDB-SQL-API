@@ -3,11 +3,7 @@ var PgErrorHandler = require('../postgresql/error_handler');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
-        if (isTimeoutError(err)) {
-            pgErrorHandler = createTimeoutError();
-        } else {
-            pgErrorHandler = createPgError(err);
-        }
+        let pgErrorHandler = getErrorHandler(err);
 
         var msg = pgErrorHandler.getResponse();
 
@@ -88,6 +84,14 @@ function stringifyForLogs(object) {
     });
 
     return JSON.stringify(object);
+}
+
+function getErrorHandler (err) {
+    if (isTimeoutError(err)) {
+        return createTimeoutError();
+    } else {
+        return createPgError(err);
+    }
 }
 
 function isTimeoutError(err) {
