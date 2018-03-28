@@ -3,13 +3,13 @@ var PgErrorHandler = require('../postgresql/error_handler');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
-        var pgErrorHandler = new PgErrorHandler(err);
+        if (isTimeoutError(err)) {
+            pgErrorHandler = createTimeoutError();
+        } else {
+            pgErrorHandler = createPgError(err);
+        }
 
-        var msg = {
-            error: [pgErrorHandler.getMessage()]
-        };
-
-        _.defaults(msg, pgErrorHandler.getFields());
+        var msg = pgErrorHandler.getResponse();
 
         if (global.settings.environment === 'development') {
             msg.stack = err.stack;
@@ -28,7 +28,7 @@ module.exports = function errorMiddleware() {
             res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
-        setErrorHeader(msg, pgErrorHandler.getStatus(), res);
+        setErrorHeader(msg, pgErrorHandler.http_status, res);
 
         res.header('Content-Type', 'application/json; charset=utf-8');
         res.status(getStatusError(pgErrorHandler, req));
@@ -48,7 +48,7 @@ module.exports = function errorMiddleware() {
 
 function getStatusError(pgErrorHandler, req) {
 
-    var statusError = pgErrorHandler.getStatus();
+    var statusError = pgErrorHandler.http_status;
 
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
@@ -88,4 +88,31 @@ function stringifyForLogs(object) {
     });
 
     return JSON.stringify(object);
+}
+
+function isTimeoutError(err) {
+    return err.message && (
+        err.message.indexOf('statement timeout') > -1 ||
+        err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
+    );
+}
+
+function createTimeoutError() {
+    return new PgErrorHandler(
+        'You are over platform\'s limits. Please contact us to know more details',
+        429,
+        'limit',
+        'datasource'
+    );
+}
+
+function createPgError(err) {
+    return new PgErrorHandler(
+        err.message,
+        PgErrorHandler.getStatus(err), 
+        err.context, 
+        err.detail, 
+        err.hint, 
+        PgErrorHandler.getName(err)
+    );
 }
