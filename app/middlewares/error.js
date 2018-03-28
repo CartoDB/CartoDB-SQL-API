@@ -1,8 +1,8 @@
-var ErrorHandler = require('../services/error_handler');
+var errorHandlerFactory = require('../services/error_handler_factory');
 
 module.exports = function errorMiddleware() {
     return function error(err, req, res, next) {
-        let errorHandler = ErrorHandler.getErrorHandler(err);
+        const errorHandler = errorHandlerFactory(err);
 
         var msg = errorHandler.getResponse();
 
