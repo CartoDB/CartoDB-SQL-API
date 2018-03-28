@@ -33,7 +33,7 @@ const getErrorHeader = (context, detail, hint, message) => {
     }
 };
 
-describe.only('error-handler', function() {
+describe('error-handler', function() {
     it('should return a header with errors', function (done) {
 
         let error = new Error('error test');
