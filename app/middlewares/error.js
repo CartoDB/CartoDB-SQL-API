@@ -1,4 +1,3 @@
-var _ = require('underscore');
 var PgErrorHandler = require('../postgresql/error_handler');
 
 module.exports = function errorMiddleware() {
