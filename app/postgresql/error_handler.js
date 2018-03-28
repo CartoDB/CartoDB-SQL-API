@@ -19,7 +19,7 @@ class ErrorHandler extends Error {
             context: this.context,
             detail: this.detail,
             hint: this.hint
-        }
+        };
     }
 
     static getName (err) {

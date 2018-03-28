@@ -20,7 +20,7 @@ const getRes = () => {
         },
         json () {},
         jsonp () {}
-    }
+    };
 };
 
 const getErrorHeader = (context, detail, hint, message) => {
@@ -30,7 +30,7 @@ const getErrorHeader = (context, detail, hint, message) => {
         hint,
         statusCode: 400,
         message
-    }
+    };
 };
 
 describe('error-handler', function() {
