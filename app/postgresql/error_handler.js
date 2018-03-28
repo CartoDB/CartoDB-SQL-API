@@ -14,11 +14,11 @@ class ErrorHandler {
 
     getName () {
         return pgErrorCodes.codeToCondition[this.err.code] || this.err.name;
-    };
+    }
     
     getMessage () {
         return this.err.message;
-    };
+    }
     
     getFields () {
         return {
@@ -26,7 +26,7 @@ class ErrorHandler {
             hint: this.err.hint,
             context: this.err.context,
         };
-    };
+    }
     
     getStatus () {
         var statusError = this.err.http_status || 400;
@@ -38,15 +38,14 @@ class ErrorHandler {
         }
     
         return statusError;
-    };
+    }
     
     isTimeoutError () {
         return this.err.message && (
             this.err.message.indexOf('statement timeout') > -1 ||
             this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
         );
-    };
-    
+    }
 }
 
 module.exports = ErrorHandler;
