@@ -1,7 +1,6 @@
 var _ = require('underscore');
 
 var pg  = require('./../pg');
-var PgErrorHandler = require('../../../postgresql/error_handler');
 
 function JsonFormat() {
     this.buffer = '';
@@ -130,8 +129,7 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
     ];
 
     if (this.error) {
-        var pgErrorHandler = new PgErrorHandler(this.error);
-        out.push(',"error":', JSON.stringify([pgErrorHandler.getMessage()]));
+        out.push(',"error":', JSON.stringify([this.error.message]));
     }
 
 
