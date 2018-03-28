@@ -90,7 +90,7 @@ function getErrorHandler (err) {
     if (isTimeoutError(err)) {
         return createTimeoutError();
     } else {
-        return createPgError(err);
+        return createGenericError(err);
     }
 }
 
@@ -111,7 +111,7 @@ function createTimeoutError() {
     );
 }
 
-function createPgError(err) {
+function createGenericError(err) {
     return new PgErrorHandler(
         err.message,
         err.context, 
