@@ -1,51 +1,39 @@
 var pgErrorCodes = require('./error_codes');
 
 class ErrorHandler extends Error {
-    constructor(err) {
-        super();
-        this.err = err;
-    
-        if (this.isTimeoutError()) {
-            this.err = new Error('You are over platform\'s limits. Please contact us to know more details');
-            this.err.http_status = 429;
-            this.err.context = 'limit';
-            this.err.detail = 'datasource';
+    constructor(message, http_status, context, detail, hint, name = null) {
+        super(message);
+        this.http_status = http_status;
+        this.context = context;
+        this.detail = detail;
+        this.hint = hint;
+
+        if (name) {
+            this.name = name;
         }
     }
 
-    getName () {
-        return pgErrorCodes.codeToCondition[this.err.code] || this.err.name;
-    }
-    
-    getMessage () {
-        return this.err.message;
-    }
-    
-    getFields () {
+    getResponse () {
         return {
-            detail: this.err.detail,
-            hint: this.err.hint,
-            context: this.err.context,
-        };
+            error: [this.message],
+            context: this.context,
+            detail: this.detail,
+            hint: this.hint
+        }
+    }
+
+    static getName (err) {
+        return pgErrorCodes.codeToCondition[err.code] || err.name;
     }
     
-    getStatus () {
-        var statusError = this.err.http_status || 400;
+    static getStatus (err) {
+        var statusError = err.http_status || 400;
     
-        var message = this.getMessage();
-    
-        if (message && message.match(/permission denied/)) {
+        if (err.message && err.message.match(/permission denied/)) {
             statusError = 403;
         }
     
         return statusError;
-    }
-    
-    isTimeoutError () {
-        return this.err.message && (
-            this.err.message.indexOf('statement timeout') > -1 ||
-            this.err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
-        );
     }
 }
 
