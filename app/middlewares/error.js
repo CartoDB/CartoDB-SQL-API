@@ -1,8 +1,8 @@
 var _ = require('underscore');
 var PgErrorHandler = require('../postgresql/error_handler');
 
-module.exports = function error () {
-    return function errorMiddleware (err, req, res, next) {
+module.exports = function errorMiddleware () {
+    return function error (err, req, res, next) {
         var pgErrorHandler = new PgErrorHandler(err);
 
         var msg = {
