@@ -103,19 +103,20 @@ function isTimeoutError(err) {
 function createTimeoutError() {
     return new PgErrorHandler(
         'You are over platform\'s limits. Please contact us to know more details',
-        429,
         'limit',
-        'datasource'
+        'datasource',
+        undefined,
+        429
     );
 }
 
 function createPgError(err) {
     return new PgErrorHandler(
         err.message,
-        PgErrorHandler.getStatus(err), 
         err.context, 
         err.detail, 
         err.hint, 
+        err.http_status, 
         PgErrorHandler.getName(err)
     );
 }

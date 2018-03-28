@@ -1,9 +1,10 @@
 var pgErrorCodes = require('./error_codes');
 
 class ErrorHandler extends Error {
-    constructor(message, http_status, context, detail, hint, name = null) {
+    constructor(message, context, detail, hint, http_status = 400, name = null) {
         super(message);
-        this.http_status = http_status;
+
+        this.http_status = this.getHttpStatus(http_status);
         this.context = context;
         this.detail = detail;
         this.hint = hint;
@@ -26,14 +27,12 @@ class ErrorHandler extends Error {
         return pgErrorCodes.codeToCondition[err.code] || err.name;
     }
     
-    static getStatus (err) {
-        var statusError = err.http_status || 400;
-    
-        if (err.message && err.message.match(/permission denied/)) {
-            statusError = 403;
+    getHttpStatus (http_status) {
+        if (this.message.includes('permission denied')) {
+            return 403;
         }
     
-        return statusError;
+        return http_status;
     }
 }
 
