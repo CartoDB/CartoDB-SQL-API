@@ -17,22 +17,21 @@ function isTimeoutError(err) {
 }
 
 function createTimeoutError() {
-    return new ErrorHandler(
-        'You are over platform\'s limits. Please contact us to know more details',
-        'limit',
-        'datasource',
-        undefined,
-        429
-    );
+    return new ErrorHandler({
+        message: 'You are over platform\'s limits. Please contact us to know more details',
+        context: 'limit',
+        detail: 'datasource',
+        http_status: 429
+    });
 }
 
 function createGenericError(err) {
-    return new ErrorHandler(
-        err.message,
-        err.context,
-        err.detail,
-        err.hint,
-        err.http_status,
-        codeToCondition[err.code] || err.name
-    );
+    return new ErrorHandler({
+        message: err.message,
+        context: err.context,
+        detail: err.detail,
+        hint: err.hint,
+        http_status: err.http_status,
+        name: codeToCondition[err.code] || err.name
+    });
 }

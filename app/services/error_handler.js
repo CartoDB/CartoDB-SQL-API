@@ -1,5 +1,5 @@
 class ErrorHandler extends Error {
-    constructor(message, context, detail, hint, http_status = 400, name = null) {
+    constructor({ message, context, detail, hint, http_status, name }) {
         super(message);
 
         this.http_status = this.getHttpStatus(http_status);
@@ -12,7 +12,7 @@ class ErrorHandler extends Error {
         }
     }
 
-    getResponse () {
+    getResponse() {
         return {
             error: [this.message],
             context: this.context,
@@ -20,12 +20,12 @@ class ErrorHandler extends Error {
             hint: this.hint
         };
     }
-    
-    getHttpStatus (http_status) {
+
+    getHttpStatus(http_status = 400) {
         if (this.message.includes('permission denied')) {
             return 403;
         }
-    
+
         return http_status;
     }
 
