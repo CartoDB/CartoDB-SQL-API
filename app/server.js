@@ -36,6 +36,7 @@ var cors = require('./middlewares/cors');
 
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
+var CopyController = require('./controllers/copy_controller');
 var JobController = require('./controllers/job_controller');
 var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
@@ -163,6 +164,15 @@ function App(statsClient) {
     );
     queryController.route(app);
 
+    var copyController = new CopyController(
+        metadataBackend, 
+        userDatabaseService, 
+        tableCache, 
+        statsClient, 
+        userLimitsService
+    );
+    copyController.route(app);
+    
     var jobController = new JobController(
         metadataBackend, 
         userDatabaseService, 

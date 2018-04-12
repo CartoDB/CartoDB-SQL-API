@@ -141,5 +141,5 @@ exports.parse['application/json'] = function(req, options, fn){
     });
 };
 
-var multipartMiddleware = multer({ limits: { fieldSize: Infinity } });
-exports.parse['multipart/form-data'] = multipartMiddleware.none();
+// var multipartMiddleware = multer({ limits: { fieldSize: Infinity } });
+// exports.parse['multipart/form-data'] = multipartMiddleware.none();
