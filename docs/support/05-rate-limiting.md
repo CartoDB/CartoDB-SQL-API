@@ -1,6 +1,6 @@
 ## Rate limiting
 
-Rate limits ensure that CARTo platform is not flooded with so many requests it does not have the time and resources to service them all.
+Rate limits ensure that CARTO platform is not flooded with so many requests it does not have the time and resources to service them all.
 
 Of course, there is nothing we can do to prevent people from actually sending as many requests to our platform as they want, but requests over a user's rate limit will be acknowledged with an error so that the sender understands they need to lower the rate at which requests are sent before they are serviced again.
 
