@@ -1,7 +1,6 @@
 ## Metrics
 
-CartoDB-SQL-API metrics
-=======================
+SQL API provides you with a set of operations to handle metrics. You are able to manage timers operations that allow you to analyze your queries, and counters operations that allow you to meaure success and failed queries.
 
 ### Timers
 - **sqlapi.query**: time to return a query resultset from the API, splitted into:
