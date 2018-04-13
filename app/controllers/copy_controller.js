@@ -1,16 +1,9 @@
 'use strict';
 
 var _ = require('underscore');
-var step = require('step');
-var assert = require('assert');
-var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
-var queryMayWrite = require('../utils/query_may_write');
 
-var formats = require('../models/formats');
 
-var sanitize_filename = require('../utils/filename_sanitizer');
-var getContentDisposition = require('../utils/content_disposition');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -20,7 +13,6 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 
-var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
 // We need NPM body-parser so we can use the multer and
 // still decode the urlencoded 'sql' parameter from
@@ -68,7 +60,7 @@ CopyController.prototype.route = function (app) {
 };
 
 // jshint maxcomplexity:21
-CopyController.prototype.handleCopyFrom = function (req, res, next) {
+CopyController.prototype.handleCopyFrom = function (req, res) {
 
     // Why doesn't this function do much of anything?
     // Because all the excitement is in the bodyParser and the upload
@@ -89,7 +81,7 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
         req.aborted = true; // TODO: there must be a builtin way to check this
     });
 
-    console.debug("CopyController.prototype.handleCopyFrom: sql = '%s'", req.body.sql)
+    console.debug("CopyController.prototype.handleCopyFrom: sql = '%s'", req.body.sql);
 
     res.send('got into handleCopyFrom');
         

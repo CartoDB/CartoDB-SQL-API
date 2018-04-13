@@ -11,7 +11,7 @@
  */
 
 var qs = require('qs');
-var multer = require('multer');
+//var multer = require('multer');
 
 /**
  * Extract the mime type from the given request's

@@ -6,8 +6,6 @@ var _ = require('underscore');
 var fs = require('fs');
 var copyFrom = require('pg-copy-streams').from;
 
-var opts;
-
 function PgCopyCustomStorage (opts) {
   this.opts = opts || {};
 }
@@ -72,12 +70,12 @@ PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb)
       file.stream.pipe(outStream);
     });
   }
-}
+};
 
 PgCopyCustomStorage.prototype._removeFile = function _removeFile (req, file, cb) {
-  fs.unlink(file.path, cb)
-}
+    fs.unlink(file.path, cb);
+};
 
 module.exports = function (opts) {
-  return new PgCopyCustomStorage(opts)
-}
+    return new PgCopyCustomStorage(opts);
+};
