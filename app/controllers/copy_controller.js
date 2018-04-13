@@ -57,7 +57,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
-            // bodyParser.urlencoded({ extended: true }),
+            bodyParser.urlencoded({ extended: true }),
             upload.single('file'),
             this.handleCopyFrom.bind(this),
             errorMiddleware()
