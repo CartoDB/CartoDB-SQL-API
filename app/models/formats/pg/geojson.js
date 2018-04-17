@@ -1,7 +1,6 @@
 var _ = require('underscore');
 
 var pg  = require('./../pg');
-var PgErrorHandler = require('../../../postgresql/error_handler');
 
 function GeoJsonFormat() {
     this.buffer = '';
@@ -71,8 +70,7 @@ GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
     this.buffer += ']'; // end of features
 
     if (this.error) {
-        var pgErrorHandler = new PgErrorHandler(this.error);
-        this.buffer += ',"error":' + JSON.stringify([pgErrorHandler.getMessage()]);
+        this.buffer += ',"error":' + JSON.stringify([this.error.message]);
     }
 
     this.buffer += '}'; // end of root object
