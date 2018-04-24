@@ -7,15 +7,13 @@ describe('PG entities access validator', function () {
         'select * from pg_catalog.pg_auth_members'
     ];
 
-    const testClientEmpty = new TestClient();
     const testClientApiKey = new TestClient({ apiKey: 1234 });
     const testClientAuthorized = new TestClient({ authorization: 'vizzuality:regular1' });
 
     const expectedResponse = {
         response: {
             status: 403
-        },
-        anonymous: true
+        }
     };
 
     function assertQuery(query, testClient, done) {
@@ -32,10 +30,6 @@ describe('PG entities access validator', function () {
         });
 
         forbiddenQueries.forEach(query => {
-            it(`testClientEmpty: query: ${query}`, function(done) {
-                assertQuery(query, testClientEmpty, done);
-            });
-    
             it(`testClientApiKey: query: ${query}`, function(done) {
                 assertQuery(query, testClientApiKey, done);
             });
@@ -52,12 +46,11 @@ describe('PG entities access validator', function () {
         });
         
         forbiddenQueries.forEach(query => {
-            it(`testClientEmpty: query: ${query}`, function(done) {
-                assertQuery(query, testClientEmpty, done);
-            });
-    
             it(`testClientApiKey: query: ${query}`, function(done) {
-                assertQuery(query, testClientApiKey, done);
+                testClientApiKey.getResult(query, err => {
+                    assert.ifError(err);
+                    done();
+                });
             });
     
             it(`testClientAuthorized: query: ${query}`, function(done) {
