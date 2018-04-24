@@ -71,7 +71,7 @@ const fakeAffectedTablesTopologyKO = [
 
 
 
-describe.only('pg entities access validator with validatePGEntitiesAccess enabled', function () {
+describe('pg entities access validator with validatePGEntitiesAccess enabled', function () {
     before(function() {
         global.validatePGEntitiesAccess = true;
     });
