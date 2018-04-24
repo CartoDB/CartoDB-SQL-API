@@ -15,6 +15,8 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 // Database requirements
 var PSQL = require('cartodb-psql');
 var fs = require('fs');
+var copyTo = require('pg-copy-streams').to;
+var copyFrom = require('pg-copy-streams').from;
 
 // We need NPM body-parser so we can use the multer and
 // still decode the urlencoded 'sql' parameter from
@@ -81,7 +83,45 @@ CopyController.prototype.route = function (app) {
 
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
-    res.send("/copyto Called\n");
+    
+    // curl "http://cdb.localhost.lan:8080/api/v2/copyto?sql=copy+foo+to+stdout&filename=output.dmp"
+        
+    var sql = req.query.sql;
+    var filename = req.query.filename;
+    sql = (sql === "" || _.isUndefined(sql)) ? null : sql;
+    
+    // Ensure SQL parameter is not missing
+    if (!_.isString(sql)) {
+        throw new Error("Parameter 'sql' is missing");
+    }
+    
+    // console.debug("CopyController.prototype.handleCopyTo: sql = '%s'", sql);
+    
+    // Only accept SQL that starts with 'COPY'
+    if (!sql.toUpperCase().startsWith("COPY ")) {
+        throw new Error("SQL must start with COPY");
+    }
+    
+    try {        
+        // Open pgsql COPY pipe and stream out to HTTP response
+        const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
+        var pg = new PSQL(authDbParams);
+        pg.connect(function(err, client, cb) {
+            var copyToStream = copyTo(sql);
+            var pgstream = client.query(copyToStream);
+            res.on('error', next);
+            pgstream.on('error', next);
+            pgstream.on('end', cb);
+            if (_.isString(filename)) {
+                var contentDisposition = "attachment; filename*=UTF-8''" + encodeURIComponent(filename);
+                res.setHeader("Content-Disposition", contentDisposition);
+            }
+            res.setHeader("Content-Type", "application/octet-stream");
+            pgstream.pipe(res)
+        });
+    } catch (err) {
+        next(err);
+    }    
 }
 
 
@@ -103,11 +143,6 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
         throw new Error("SQL must start with COPY");
     }
     
-    // If SQL doesn't include "from stdin", add it
-    if (!sql.toUpperCase().endsWith(" FROM STDIN")) {
-        sql += " FROM STDIN";
-    }
-    
     // console.debug("CopyController.handleCopyFrom: sql = '%s'", sql);
     
     // The multer middleware should have filled 'req.file' in
@@ -116,7 +151,6 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
         throw new Error("Parameter 'file' is missing");
     }
 
-    var copyFrom = require('pg-copy-streams').from;
     var copyFromStream = copyFrom(sql);
 
     var returnResult = function() {
