@@ -27,7 +27,7 @@ SELECT cdb_cartodbfytable({table_name});
 **Tip:** If you are an developer using an Enterprise account, you must also include the organization username as part of the request. For example:
 
 ```bash
-SELECT cdb_cartodbfytable({org_username}, {table_name});
+SELECT cdb_cartodbfytable({username}, {table_name});
 ```
 
 The table is created and added as a connected dataset in _Your datasets_ dashboard. Refresh your browser to ensure that you can visualize it in your account. Once a table is connected to _Your datasets_ dashboard in CARTO, any modifications that you apply to your data through the SQL API are automatically updated.
