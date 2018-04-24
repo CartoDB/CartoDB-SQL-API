@@ -34,7 +34,7 @@ module.exports = {
     },
 
     hardValidation(tables) {
-        for (const table of tables) {
+        for (let table of tables) {
             if (FORBIDDEN_ENTITIES[table.schema_name] &&
                 (
                     FORBIDDEN_ENTITIES[table.schema_name] === ['*'] ||
@@ -49,7 +49,7 @@ module.exports = {
     },
 
     softValidation(tables) {
-        for (const table of tables) {
+        for (let table of tables) {
             if (table.table_name.match(/\bpg_/)) {
                 return false;
             }
