@@ -46,9 +46,10 @@ function CopyController(metadataBackend, userDatabaseService, tableCache, statsd
 
 CopyController.prototype.route = function (app) {
     const { base_url } = global.settings;
+    
     const copyFromMiddlewares = endpointGroup => {
         return [
-            initializeProfilerMiddleware('query'),
+            initializeProfilerMiddleware('copyfrom'),
             userMiddleware(),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
@@ -60,16 +61,34 @@ CopyController.prototype.route = function (app) {
             errorMiddleware()
         ];
     };
+    
+    const copyToMiddlewares = endpointGroup => {
+        return [
+            initializeProfilerMiddleware('copyto'),
+            userMiddleware(),
+            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
+            authorizationMiddleware(this.metadataBackend),
+            connectionParamsMiddleware(this.userDatabaseService),
+            timeoutLimitsMiddleware(this.metadataBackend),
+            this.handleCopyTo.bind(this),
+            errorMiddleware()
+        ];
+    };
 
     app.post(`${base_url}/copyfrom`, copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
+    app.get(`${base_url}/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
 };
+
+
+CopyController.prototype.handleCopyTo = function (req, res, next) {
+    res.send("/copyto Called\n");
+}
+
 
 // jshint maxcomplexity:21
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
 
-    // Test with:
-    // curl --form file=@package.json --form sql="COPY this FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom
-
+    // curl --form file=@copyfrom.txt --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom
 
     var sql = req.body.sql;
     sql = (sql === "" || _.isUndefined(sql)) ? null : sql;
@@ -85,44 +104,44 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
     }
     
     // If SQL doesn't include "from stdin", add it
-    if (!sql.toUpperCase().endsWith(" FROM STDOUT")) {
-        sql += " FROM STDOUT";
+    if (!sql.toUpperCase().endsWith(" FROM STDIN")) {
+        sql += " FROM STDIN";
     }
     
-    console.debug("CopyController.handleCopyFrom: sql = '%s'", sql);
+    // console.debug("CopyController.handleCopyFrom: sql = '%s'", sql);
     
     // The multer middleware should have filled 'req.file' in
     // with the name, size, path, etc of the file
     if (typeof req.file === 'undefined') {
         throw new Error("Parameter 'file' is missing");
     }
-    
+
+    var copyFrom = require('pg-copy-streams').from;
+    var copyFromStream = copyFrom(sql);
+
+    var returnResult = function() {
+        // Return some useful information about the process,
+        // pg-copy-streams fills in the rowCount after import is complete
+        var result = "handleCopyFrom completed with row count = " + copyFromStream.rowCount;
+        res.send(result + "\n");
+    }
+        
     try {        
-        // Open pgsql COPY pipe and stream file into it
+        // Open pgsql COPY pipe and stream in tmp file
         const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
         var pg = new PSQL(authDbParams);
-        var copyFrom = require('pg-copy-streams').from;
-        var copyFromStream = copyFrom(sql);
-        // console.debug("XXX connect " + sql);
-        pg.dbConnect(pg.getConnectionConfig(), function(err, client, next) {
+        pg.connect(function(err, client, cb) {
             var stream = client.query(copyFromStream);
             var fileStream = fs.createReadStream(req.file.path);
             fileStream.on('error', next);
             stream.on('error', next);
-            stream.on('end', next);
+            stream.on('end', returnResult);
             fileStream.pipe(stream)
         });
     } catch (err) {
-        console.debug("ERRROR!!!!")
         next(err);
     }
-        
-    // Return some useful information about the process,
-    // pg-copy-streams fills in the rowCount after import is complete    
-    var result = "handleCopyFrom completed with row count = " + copyFromStream.rowCount;
-    console.debug("CopyController.handleCopyFrom: rowCount = '%s'", copyFromStream.rowCount);
     
-    res.send(result + "\n");        
 };
 
 module.exports = CopyController;
