@@ -7,23 +7,65 @@ describe('PG entities access validator', function () {
         'select * from pg_catalog.pg_auth_members'
     ];
 
-    forbiddenQueries.forEach(query => {
-        let apiKey = 1234;
-        const expectedResponse = {
-            response: {
-                status: 403
-            },
-            anonymous: true
-        };
+    const testClientEmpty = new TestClient();
+    const testClientApiKey = new TestClient({ apiKey: 1234 });
+    const testClientAuthorized = new TestClient({ authorization: 'vizzuality:regular1' });
 
-        it(`query: ${query}`, function(done) {
-            this.testClient = new TestClient({ apiKey });
-            this.testClient.getResult(query, expectedResponse, (err, result) => {
-                assert.ifError(err);
-                assert.equal(result.error, 'system tables are forbidden');                
-                done();
+    const expectedResponse = {
+        response: {
+            status: 403
+        },
+        anonymous: true
+    };
+
+    function assertQuery(query, testClient, done) {
+        testClient.getResult(query, expectedResponse, (err, result) => {
+            assert.ifError(err);
+            assert.equal(result.error, 'system tables are forbidden');
+            done();
+        });
+    }
+
+    describe('validatePGEntitiesAccess enabled', function() {
+        before(function(){
+            global.validatePGEntitiesAccess = true;            
+        });
+
+        forbiddenQueries.forEach(query => {
+            it(`testClientEmpty: query: ${query}`, function(done) {
+                assertQuery(query, testClientEmpty, done);
             });
+    
+            it(`testClientApiKey: query: ${query}`, function(done) {
+                assertQuery(query, testClientApiKey, done);
+            });
+    
+            it(`testClientAuthorized: query: ${query}`, function(done) {
+                assertQuery(query, testClientAuthorized, done);
+            });    
         });
     });
-
+    
+    describe('validatePGEntitiesAccess disabled', function() {
+        before(function(){
+            global.validatePGEntitiesAccess = false;            
+        });
+        
+        forbiddenQueries.forEach(query => {
+            it(`testClientEmpty: query: ${query}`, function(done) {
+                assertQuery(query, testClientEmpty, done);
+            });
+    
+            it(`testClientApiKey: query: ${query}`, function(done) {
+                assertQuery(query, testClientApiKey, done);
+            });
+    
+            it(`testClientAuthorized: query: ${query}`, function(done) {
+                testClientAuthorized.getResult(query, err => {
+                    assert.ifError(err);
+                    done();
+                });
+            });    
+        });
+    });
 });
