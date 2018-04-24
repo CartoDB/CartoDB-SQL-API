@@ -14,14 +14,13 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
-
-module.exports = {
+const Validator = {
     validate(affectedTables, authenticated) {
         let hardValidationResult = true;
         let softValidationResult = true;
 
         if (!!affectedTables && affectedTables.tables) {
-            if (global.pgEntitiesAccessValidator) {
+            if (global.validatePGEntitiesAccess) {
                 hardValidationResult = this.hardValidation(affectedTables.tables);
             }
 
@@ -35,9 +34,9 @@ module.exports = {
 
     hardValidation(tables) {
         for (let table of tables) {
-            if (FORBIDDEN_ENTITIES[table.schema_name] &&
+            if (FORBIDDEN_ENTITIES[table.schema_name] && FORBIDDEN_ENTITIES[table.schema_name].length &&
                 (
-                    FORBIDDEN_ENTITIES[table.schema_name] === ['*'] ||
+                    FORBIDDEN_ENTITIES[table.schema_name][0] === '*' ||
                     FORBIDDEN_ENTITIES[table.schema_name].includes(table.table_name)
                 )
             ) {
@@ -57,4 +56,6 @@ module.exports = {
 
         return true;
     }
-};
+}; 
+
+module.exports = Validator;
