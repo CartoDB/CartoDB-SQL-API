@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "basic-auth": "^2.0.0",
-    "body-parser":  "1.18.2",
+    "body-parser":  "~1.18.2",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
     "cartodb-psql": "0.10.1",
@@ -28,7 +28,7 @@
     "express": "~4.13.3",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
-    "multer": "~1.2.0",
+    "multer": "~1.3.0",
     "node-statsd": "~0.0.7",
     "node-uuid": "^1.4.7",
     "oauth-client": "0.3.0",
