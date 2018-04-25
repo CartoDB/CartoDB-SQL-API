@@ -16,7 +16,6 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 var PSQL = require('cartodb-psql');
 var fs = require('fs');
 var copyTo = require('pg-copy-streams').to;
-var copyFrom = require('pg-copy-streams').from;
 
 // We need NPM body-parser so we can use the multer and
 // still decode the urlencoded 'sql' parameter from
@@ -30,13 +29,13 @@ var multer = require('multer');
 // do what we need, which is pipe the multer read stream
 // straight into the pg-copy write stream, so we use
 // a custom storage engine
-// var multerpgcopy = require('../utils/multer-pg-copy');
-// var upload = multer({ storage: multerpgcopy() });
+var multerpgcopy = require('../utils/multer-pg-copy');
+var upload = multer({ storage: multerpgcopy() });
 
 // Store the uploaded file in the tmp directory, with limits on the
 // size of acceptable uploads
-var uploadLimits = { fileSize: 1024*1024*1024, fields: 10, files: 1 };
-var upload = multer({ storage: multer.diskStorage({}), limits: uploadLimits });
+// var uploadLimits = { fileSize: 1024*1024*1024, fields: 10, files: 1 };
+// var upload = multer({ storage: multer.diskStorage({}), limits: uploadLimits });
 
 function CopyController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -49,6 +48,8 @@ function CopyController(metadataBackend, userDatabaseService, tableCache, statsd
 CopyController.prototype.route = function (app) {
     const { base_url } = global.settings;
     
+    console.debug("CopyController.prototype.route");
+    
     const copyFromMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyfrom'),
@@ -57,6 +58,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
+            this.copyDbParamsToReq.bind(this),
             bodyParser.urlencoded({ extended: true }),
             upload.single('file'),
             this.handleCopyFrom.bind(this),
@@ -81,9 +83,14 @@ CopyController.prototype.route = function (app) {
     app.get(`${base_url}/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
 };
 
+CopyController.prototype.copyDbParamsToReq = function (req, res, next) {
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
+    req.authDbParams = authDbParams;
+    next();    
+}
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
-    
+        
     // curl "http://cdb.localhost.lan:8080/api/v2/copyto?sql=copy+foo+to+stdout&filename=output.dmp"
         
     var sql = req.query.sql;
@@ -94,9 +101,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
     if (!_.isString(sql)) {
         throw new Error("Parameter 'sql' is missing");
     }
-    
-    // console.debug("CopyController.prototype.handleCopyTo: sql = '%s'", sql);
-    
+        
     // Only accept SQL that starts with 'COPY'
     if (!sql.toUpperCase().startsWith("COPY ")) {
         throw new Error("SQL must start with COPY");
@@ -121,60 +126,29 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
         });
     } catch (err) {
         next(err);
-    }    
+    }
+    
 }
 
 
 // jshint maxcomplexity:21
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
 
+    // All the action happens in multer, which reads the incoming
+    // file into a stream, and then hands it to the custom storage
+    // engine defined in multer-pg-copy.js.
+    // The storage engine writes the rowCount into req when it's 
+    // finished. Hopefully any errors just propogate up.
+    
     // curl --form file=@copyfrom.txt --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom
 
-    var sql = req.body.sql;
-    sql = (sql === "" || _.isUndefined(sql)) ? null : sql;
-
-    // Ensure SQL parameter is not missing
-    if (!_.isString(sql)) {
-        throw new Error("Parameter 'sql' is missing");
+    if (typeof req.rowCount === "undefined")
+    {
+        throw new Error("no rows copied");
     }
     
-    // Only accept SQL that starts with 'COPY'
-    if (!sql.toUpperCase().startsWith("COPY ")) {
-        throw new Error("SQL must start with COPY");
-    }
-    
-    // console.debug("CopyController.handleCopyFrom: sql = '%s'", sql);
-    
-    // The multer middleware should have filled 'req.file' in
-    // with the name, size, path, etc of the file
-    if (typeof req.file === 'undefined') {
-        throw new Error("Parameter 'file' is missing");
-    }
-
-    var copyFromStream = copyFrom(sql);
-
-    var returnResult = function() {
-        // Return some useful information about the process,
-        // pg-copy-streams fills in the rowCount after import is complete
-        var result = "handleCopyFrom completed with row count = " + copyFromStream.rowCount;
-        res.send(result + "\n");
-    }
-        
-    try {        
-        // Open pgsql COPY pipe and stream in tmp file
-        const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
-        var pg = new PSQL(authDbParams);
-        pg.connect(function(err, client, cb) {
-            var stream = client.query(copyFromStream);
-            var fileStream = fs.createReadStream(req.file.path);
-            fileStream.on('error', next);
-            stream.on('error', next);
-            stream.on('end', returnResult);
-            fileStream.pipe(stream)
-        });
-    } catch (err) {
-        next(err);
-    }
+    var result = "handleCopyFrom completed with row count = " + req.rowCount;
+    res.send(result + "\n");
     
 };
 
