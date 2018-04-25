@@ -121,3 +121,5 @@ module.exports.ratelimits = {
     job_delete: false
   }
 }
+
+module.exports.validatePGEntitiesAccess = false;
