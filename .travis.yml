@@ -1,3 +1,5 @@
+dist: precise
+
 addons:
   apt:
     sources:
