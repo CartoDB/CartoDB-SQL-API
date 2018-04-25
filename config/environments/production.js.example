@@ -111,3 +111,5 @@ module.exports.oauth = {
     allowedHosts: ['carto.com', 'cartodb.com']
 };
 module.exports.disabled_file = 'pids/disabled';
+
+module.exports.validatePGEntitiesAccess = false;
