@@ -26,7 +26,7 @@ describe('PG entities access validator', function () {
 
     describe('validatePGEntitiesAccess enabled', function() {
         before(function(){
-            global.validatePGEntitiesAccess = true;            
+            global.settings.validatePGEntitiesAccess = true;            
         });
 
         forbiddenQueries.forEach(query => {
@@ -42,7 +42,7 @@ describe('PG entities access validator', function () {
     
     describe('validatePGEntitiesAccess disabled', function() {
         before(function(){
-            global.validatePGEntitiesAccess = false;            
+            global.settings.validatePGEntitiesAccess = false;            
         });
         
         forbiddenQueries.forEach(query => {

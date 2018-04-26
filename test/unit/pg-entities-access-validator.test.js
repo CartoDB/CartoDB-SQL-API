@@ -73,11 +73,11 @@ const fakeAffectedTablesTopologyKO = [
 
 describe('pg entities access validator with validatePGEntitiesAccess enabled', function () {
     before(function() {
-        global.validatePGEntitiesAccess = true;
+        global.settings.validatePGEntitiesAccess = true;
     });
 
     after(function() {
-        global.validatePGEntitiesAccess = false;
+        global.settings.validatePGEntitiesAccess = false;
     });
 
     it('validate function: bad parameters', function () {
