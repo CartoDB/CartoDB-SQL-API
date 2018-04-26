@@ -47,9 +47,7 @@ function CopyController(metadataBackend, userDatabaseService, tableCache, statsd
 
 CopyController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    
-    console.debug("CopyController.prototype.route");
-    
+        
     const copyFromMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyfrom'),
