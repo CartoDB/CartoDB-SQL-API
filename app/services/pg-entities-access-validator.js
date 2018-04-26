@@ -20,7 +20,7 @@ const Validator = {
         let softValidationResult = true;
 
         if (!!affectedTables && affectedTables.tables) {
-            if (global.validatePGEntitiesAccess) {
+            if (global.settings.validatePGEntitiesAccess) {
                 hardValidationResult = this.hardValidation(affectedTables.tables);
             }
 
