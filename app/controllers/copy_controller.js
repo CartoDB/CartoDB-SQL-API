@@ -129,7 +129,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 
 
 // jshint maxcomplexity:21
-CopyController.prototype.handleCopyFrom = function (req, res, next) {
+CopyController.prototype.handleCopyFrom = function (req, res) {
 
     // All the action happens in multer, which reads the incoming
     // file into a stream, and then hands it to the custom storage
@@ -140,14 +140,15 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
     // curl --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom --form file=@copyfrom.txt 
 
 
-    if (typeof req.file === "undefined" || typeof req.file.rowCount === "undefined")
-    {
+    if (typeof req.file === "undefined") {
         throw new Error("no rows copied");
     }
-    var rowCount = req.file.rowCount;
-    
-    var result = result + "handleCopyFrom completed with row count = " + rowCount;
-    res.send(result + "\n");
+    var msg = {time: req.file.time, total_rows: req.file.total_rows};
+    if (req.query && req.query.callback) {
+        res.jsonp(msg);
+    } else {
+        res.json(msg);
+    }
     
 };
 
