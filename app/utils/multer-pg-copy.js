@@ -42,14 +42,6 @@ PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb)
 
     var copyFromStream = copyFrom(sql);
 
-    var returnResult = function() {
-        // Fill in the rowCount on the request (because we don't have)
-        // access to the response here, so that the final handler 
-        // can return a response
-        req.rowCount = copyFromStream.rowCount;
-        
-    }
-        
     try {
         // Connect and run the COPY
         var pg = new PSQL(req.authDbParams);
@@ -71,7 +63,7 @@ PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb)
     } catch (err) {
         cb(err);
     }
-    return 
+    return;
 
 };
 

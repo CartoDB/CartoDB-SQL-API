@@ -14,7 +14,6 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 
 // Database requirements
 var PSQL = require('cartodb-psql');
-var fs = require('fs');
 var copyTo = require('pg-copy-streams').to;
 
 // We need NPM body-parser so we can use the multer and
@@ -82,10 +81,10 @@ CopyController.prototype.route = function (app) {
 };
 
 CopyController.prototype.copyDbParamsToReq = function (req, res, next) {
-    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
-    req.authDbParams = authDbParams;
+
+    req.authDbParams = res.locals.authDbParams;
     next();    
-}
+};
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
         
@@ -107,7 +106,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
     
     try {        
         // Open pgsql COPY pipe and stream out to HTTP response
-        const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
+        const authDbParams = res.locals.authDbParams;
         var pg = new PSQL(authDbParams);
         pg.connect(function(err, client, cb) {
             var copyToStream = copyTo(sql);
@@ -120,13 +119,13 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
                 res.setHeader("Content-Disposition", contentDisposition);
             }
             res.setHeader("Content-Type", "application/octet-stream");
-            pgstream.pipe(res)
+            pgstream.pipe(res);
         });
     } catch (err) {
         next(err);
     }
     
-}
+};
 
 
 // jshint maxcomplexity:21
@@ -138,14 +137,16 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
     // The storage engine writes the rowCount into req when it's 
     // finished. Hopefully any errors just propogate up.
     
-    // curl --form file=@copyfrom.txt --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom
+    // curl --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom --form file=@copyfrom.txt 
 
-    if (typeof req.rowCount === "undefined")
+
+    if (typeof req.file === "undefined" || typeof req.file.rowCount === "undefined")
     {
         throw new Error("no rows copied");
     }
+    var rowCount = req.file.rowCount;
     
-    var result = "handleCopyFrom completed with row count = " + req.rowCount;
+    var result = result + "handleCopyFrom completed with row count = " + rowCount;
     res.send(result + "\n");
     
 };
