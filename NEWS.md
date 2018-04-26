@@ -1,5 +1,12 @@
 #Changelog
 
+## 1.47.2
+Released 2018-04-26
+
+Announcements:
+ * Adding Postgres entities access validator
+ 
+
 ## 1.47.1
 Released 2017-08-13
 
