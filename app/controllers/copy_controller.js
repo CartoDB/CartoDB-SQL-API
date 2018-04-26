@@ -82,7 +82,7 @@ CopyController.prototype.route = function (app) {
 
 CopyController.prototype.copyDbParamsToReq = function (req, res, next) {
 
-    req.authDbParams = res.locals.authDbParams;
+    req.userDbParams = res.locals.userDbParams;
     next();    
 };
 
@@ -106,8 +106,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
     
     try {        
         // Open pgsql COPY pipe and stream out to HTTP response
-        const authDbParams = res.locals.authDbParams;
-        var pg = new PSQL(authDbParams);
+        var pg = new PSQL(res.locals.userDbParams);
         pg.connect(function(err, client, cb) {
             var copyToStream = copyTo(sql);
             var pgstream = client.query(copyToStream);

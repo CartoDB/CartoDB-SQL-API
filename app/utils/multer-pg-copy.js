@@ -42,15 +42,15 @@ PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb)
     // We expect the an earlier middleware to have 
     // set this by the time we are called via multer,
     // so this should never happen
-    if (!req.authDbParams) {
-        cb(new Error("req.authDbParams is not set"));
+    if (!req.userDbParams) {
+        cb(new Error("req.userDbParams is not set"));
     }
 
     var copyFromStream = copyFrom(sql);
 
     try {
         // Connect and run the COPY
-        var pg = new PSQL(req.authDbParams);
+        var pg = new PSQL(req.userDbParams);
         var start_time = Date.now();
         
         pg.connect(function(err, client, done) {
