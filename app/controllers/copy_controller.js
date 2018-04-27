@@ -113,14 +113,12 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
             res.on('error', next);
             pgstream.on('error', next);
             pgstream.on('end', cb);
-            if (_.isString(filename)) {
-                var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
-                res.setHeader("Content-Disposition", contentDisposition);
-            } else {
+            // User did not provide a preferred download filename
+            if (! _.isString(filename)) {
                 filename = 'carto-sql-copyto.dmp';
-                var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
-                res.setHeader("Content-Disposition", contentDisposition);
             }
+            var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
+            res.setHeader("Content-Disposition", contentDisposition);
             res.setHeader("Content-Type", "application/octet-stream");
             pgstream.pipe(res);
         });
