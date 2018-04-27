@@ -114,7 +114,11 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
             pgstream.on('error', next);
             pgstream.on('end', cb);
             if (_.isString(filename)) {
-                var contentDisposition = "attachment; filename*=UTF-8''" + encodeURIComponent(filename);
+                var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
+                res.setHeader("Content-Disposition", contentDisposition);
+            } else {
+                filename = 'carto-sql-copyto.dmp';
+                var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
                 res.setHeader("Content-Disposition", contentDisposition);
             }
             res.setHeader("Content-Type", "application/octet-stream");
