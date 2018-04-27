@@ -16,11 +16,21 @@ The PostgreSQL `COPY` command is extremely fast, but requires very precise input
 
 If the `COPY` command and the target table do not match, the upload will fail.
 
-In addition, for a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
+"Copy from" copies data "from" your file, "to" CARTO. "Copy from" uses [multipart/form-data](https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work) to stream an upload file to the server. This avoids limitations around file size and any need for temporary storage: the data travels from your file straight into the database.
 
-* `cartodb_id`, a `serial` primary key 
-* `the_geom`, a geometry in the ESPG:4326 (aka long/lat) projection
-* `the_geom_webmercator`, a geometry in the ESPG:3857 (aka web mercator) projection
+* `api_key` provided in the request URL parameters.
+* `sql` provided either in the request URL parameters or in a multipart form variable.
+* `file` provided as a multipart form variable; this is the actual file content, not a filename.
+
+Composing a multipart form data upload is moderately complicated, so almost all developers will use a tool or scripting language to upload data to CARTO via "copy from". 
+
+### Example
+
+For a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
+
+* `cartodb_id`, a `serial` primary key
+* `the_geom`, a `geometry` in the ESPG:4326 projection (aka long/lat)
+* `the_geom_webmercator`, a `geometry` in the ESPG:3857 projection (aka web mercator)
 
 Creating a new CARTO table with all the right triggers and columns can is tricky, so here is an example:
 
@@ -36,14 +46,14 @@ Creating a new CARTO table with all the right triggers and columns can is tricky
     -- adds the required triggers and indexes
     SELECT CDB_CartodbfyTable('upload_example');
     
-Now you are read to upload your file. Suppose you have a CSV file like this:
+Now you are ready to upload your file. Suppose you have a CSV file like this:
 
     the_geom,name,age
     SRID=4326;POINT(-126 54),North West,89
     SRID=4326;POINT(-96 34),South East,99
     SRID=4326;POINT(-6 -25),Souther Easter,124
 
-The `COPY` command to upload this file needs to specify the file format (CSV), the fact that there is a header line before the actual data begins, and enumerate the columns that are in the file so they can be matched to the table columns.
+The `COPY` command to upload this file needs to specify the file format (CSV), the fact that there is a header line before the actual data begins, and to enumerate the columns that are in the file so they can be matched to the table columns.
 
     COPY upload_example (the_geom, name, age) 
     FROM STDIN WITH (FORMAT csv, HEADER true)
@@ -54,7 +64,7 @@ To actually run upload, you will need a tool or script that can generate a `mult
 
 ### CURL Example
 
-The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from the commandline, and supports multi-part file upload, so it can feed the `copyfrom` end point.
+The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from the command-line, and supports multi-part file upload, so it can feed the `copyfrom` end point.
 
 Assuming that you have already created the table, and that the CSV file is named "upload_example.csv":
 
@@ -104,6 +114,8 @@ A failed upload will return with status code 400 and a larger JSON with the Post
         at SBMH.emit (events.js:201:7)"}
     
 ## Copy To
+
+"Copy to" copies data "to" your desired output file, "from" CARTO.
 
 Using the `copyto` end point to extract data bypasses the usual JSON formatting applied by the SQL API, so it can dump more data, faster. However, it has the restriction that it will only output in a handful of formats:
 
