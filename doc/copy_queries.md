@@ -132,11 +132,25 @@ Using the `copyto` end point to extract data bypasses the usual JSON formatting 
 
 ### CURL Example
 
+The SQL to start a "copy to" can specify
+
+* a table to read,
+* a table and subset of columns to read, or
+* an arbitrary SQL query to execute and read.
+
+For our example, we'll read back just the three columns we originally loaded:
+
+    COPY upload_example TO stdout WITH (FORMAT csv, HEADER true)
+    
+The SQL needs to be URL-encoded before being embedded in the CURL command, so the final result looks like this:
+
     curl \
         --output upload_example_dl.csv \
         "http://{username}.carto.com/api/v2/copyto?sql=COPY+upload_example+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
+
+The Python to "copy to" is very simple, because the HTTP call is a simple get. The only complexity in this example is at the end, where the result is streamed back block-by-block, to avoid pulling the entire download into memory before writing to file.
 
     import requests
     import re
@@ -148,7 +162,7 @@ Using the `copyto` end point to extract data bypasses the usual JSON formatting 
 
     # request the download, specifying desired file name
     url = "http://%s.carto.com/api/v2/copyto" % username    
-    r = requests.get(url, params={'api_key':api_key, 'sql':sql, 'filename':download_file})
+    r = requests.get(url, params={'api_key':api_key, 'sql':sql, 'filename':download_file}, stream=True)
     r.raise_for_status()
 
     # read save file name from response headers
