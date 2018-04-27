@@ -122,7 +122,7 @@ Using the `copyto` end point to extract data bypasses the usual JSON formatting 
 
     curl \
         --output upload_example_dl.csv \
-        "http://{username}.carto.com/api/v2/copyfrom?sql=COPY+upload_example+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
+        "http://{username}.carto.com/api/v2/copyto?sql=COPY+upload_example+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
 
