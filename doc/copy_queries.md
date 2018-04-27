@@ -14,7 +14,7 @@ The PostgreSQL `COPY` command is extremely fast, but requires very precise input
 * A `COPY` command that describes the table and columns of the upload file, and the format of the file.
 * An upload file that exactly matches the `COPY` command.
 
-If the `COPY` command and the target table do not match, the upload will fail.
+If the `COPY` command, the supplied file, and the target table do not all match, the upload will fail.
 
 "Copy from" copies data "from" your file, "to" CARTO. "Copy from" uses [multipart/form-data](https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work) to stream an upload file to the server. This avoids limitations around file size and any need for temporary storage: the data travels from your file straight into the database.
 
