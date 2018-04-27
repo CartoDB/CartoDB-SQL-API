@@ -1,21 +1,15 @@
-var _ = require('underscore');
-var PgErrorHandler = require('../postgresql/error_handler');
+const errorHandlerFactory = require('../services/error_handler_factory');
 
-module.exports = function error () {
-    return function errorMiddleware (err, req, res, next) {
-        var pgErrorHandler = new PgErrorHandler(err);
-
-        var msg = {
-            error: [pgErrorHandler.getMessage()]
-        };
-
-        _.defaults(msg, pgErrorHandler.getFields());
+module.exports = function error() {
+    return function errorMiddleware(err, req, res, next) {
+        const errorHandler = errorHandlerFactory(err);
+        let errorResponse = errorHandler.getResponse();
 
         if (global.settings.environment === 'development') {
-            msg.stack = err.stack;
+            errorResponse.stack = err.stack;
         }
 
-        if (global.settings.environment !== 'test'){
+        if (global.settings.environment !== 'test') {
             // TODO: email this Exception report
             console.error("EXCEPTION REPORT: " + err.stack);
         }
@@ -23,19 +17,19 @@ module.exports = function error () {
         // Force inline content disposition
         res.header("Content-Disposition", 'inline');
 
-        if (req && req.profiler ) {
-          req.profiler.done('finish');
-          res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        if (req && req.profiler) {
+            req.profiler.done('finish');
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
 
-        setErrorHeader(msg, pgErrorHandler.getStatus(), res);
+        setErrorHeader(errorHandler, res);
 
         res.header('Content-Type', 'application/json; charset=utf-8');
-        res.status(getStatusError(pgErrorHandler, req));
+        res.status(getStatusError(errorHandler, req));
         if (req.query && req.query.callback) {
-            res.jsonp(msg);
+            res.jsonp(errorResponse);
         } else {
-            res.json(msg);
+            res.json(errorResponse);
         }
 
         if (req && req.profiler) {
@@ -46,9 +40,8 @@ module.exports = function error () {
     };
 };
 
-function getStatusError(pgErrorHandler, req) {
-
-    var statusError = pgErrorHandler.getStatus();
+function getStatusError(errorHandler, req) {
+    let statusError = errorHandler.http_status;
 
     // JSONP has to return 200 status error
     if (req && req.query && req.query.callback) {
@@ -58,12 +51,14 @@ function getStatusError(pgErrorHandler, req) {
     return statusError;
 }
 
-function setErrorHeader(err, statusCode, res) {
-    let errorsLog = Object.assign({}, err);
-
-    errorsLog.statusCode = statusCode || 200;
-    errorsLog.message = errorsLog.error[0];
-    delete errorsLog.error;
+function setErrorHeader(errorHandler, res) {
+    const errorsLog = {
+        context: errorHandler.context,
+        detail: errorHandler.detail,
+        hint: errorHandler.hint,
+        statusCode: errorHandler.http_status,
+        message: errorHandler.message
+    };
 
     res.set('X-SQLAPI-Errors', stringifyForLogs(errorsLog));
 }
@@ -76,7 +71,7 @@ function setErrorHeader(err, statusCode, res) {
  */
 function stringifyForLogs(object) {
     Object.keys(object).map(key => {
-        if(typeof object[key] === 'string') {
+        if (typeof object[key] === 'string') {
             object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
         } else if (typeof object[key] === 'object') {
             stringifyForLogs(object[key]);

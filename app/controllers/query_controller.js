@@ -5,6 +5,7 @@ var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
+const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 
 var formats = require('../models/formats');
@@ -161,15 +162,10 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 }
 
                 checkAborted('setHeaders');
-                if (!authenticated && !!affectedTables) {
-                    for ( var i = 0; i < affectedTables.tables.length; ++i ) {
-                        var t = affectedTables.tables[i];
-                        if ( t.table_name.match(/\bpg_/) ) {
-                            var e = new SyntaxError("system tables are forbidden");
-                            e.http_status = 403;
-                            throw(e);
-                        }
-                    }
+                if(!pgEntitiesAccessValidator.validate(affectedTables, authenticated)) {
+                    const syntaxError = new SyntaxError("system tables are forbidden");
+                    syntaxError.http_status = 403;
+                    throw(syntaxError);
                 }
 
                 var FormatClass = formats[format];
