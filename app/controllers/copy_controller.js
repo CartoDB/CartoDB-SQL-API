@@ -138,7 +138,7 @@ CopyController.prototype.handleCopyFrom = function (req, res) {
     // The storage engine writes the rowCount into req when it's 
     // finished. Hopefully any errors just propogate up.
     
-    // curl --form sql="COPY foo FROM STDOUT" http://cdb.localhost.lan:8080/api/v2/copyfrom --form file=@copyfrom.txt 
+    // curl --form sql="COPY foo FROM STDOUT" --form file=@copyfrom.txt http://cdb.localhost.lan:8080/api/v2/copyfrom 
 
 
     if (typeof req.file === "undefined") {
