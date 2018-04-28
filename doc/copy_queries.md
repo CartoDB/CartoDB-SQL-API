@@ -140,13 +140,13 @@ The SQL to start a "copy to" can specify
 
 For our example, we'll read back just the three columns we originally loaded:
 
-    COPY upload_example TO stdout WITH (FORMAT csv, HEADER true)
+    COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)
     
 The SQL needs to be URL-encoded before being embedded in the CURL command, so the final result looks like this:
 
     curl \
         --output upload_example_dl.csv \
-        "http://{username}.carto.com/api/v2/copyto?sql=COPY+upload_example+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
+        "http://{username}.carto.com/api/v2/copyto?sql=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
 
