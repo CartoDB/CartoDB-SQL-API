@@ -48,6 +48,10 @@ assert.response = function(server, req, res, callback) {
             requestParams.body = req.body || req.data;
         }
 
+        if (req.formData) {
+            requestParams.formData = req.formData;
+        }
+
         debug('Request params', requestParams);
         request(requestParams, function assert$response$requestHandler(error, response, body) {
             debug('Request response', error);
