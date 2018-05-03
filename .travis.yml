@@ -5,7 +5,7 @@ jobs:
         - docker
       language: generic
       before_install: docker pull cartoimages/engine-xenial-pg101
-      script: docker run -v `pwd`:/srv cartoimages/engine-xenial-pg101 bash test/run_tests_docker.sh
+      script: npm run docker-test
     - dist: precise
       addons:
         apt:
