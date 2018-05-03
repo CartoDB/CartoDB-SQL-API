@@ -1,10 +1,11 @@
 require('../helper');
 
 const fs = require('fs');
+const querystring = require('querystring');
 const server = require('../../app/server')();
 const assert = require('../support/assert');
 
-describe.only('copy-endpoints', function() {
+describe('copy-endpoints', function() {
     it('should works with copyfrom endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom",
@@ -22,4 +23,23 @@ describe.only('copy-endpoints', function() {
             done();
         });
     });
+
+    it('should works with copyto endpoint', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyto?" + querystring.stringify({
+                sql: 'COPY copy_test TO STDOUT',
+                filename: '/tmp/output.dmp'
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.strictEqual(
+                res.body, 
+                '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
+            );
+            done();
+        });
+    });
+
 });
