@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('underscore');
-var CachedQueryTables = require('../services/cached-query-tables');
 
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
@@ -36,11 +35,9 @@ var upload = multer({ storage: multerpgcopy() });
 // var uploadLimits = { fileSize: 1024*1024*1024, fields: 10, files: 1 };
 // var upload = multer({ storage: multer.diskStorage({}), limits: uploadLimits });
 
-function CopyController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService) {
     this.metadataBackend = metadataBackend;
-    this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
-    this.queryTables = new CachedQueryTables(tableCache);
     this.userLimitsService = userLimitsService;
 }
 
