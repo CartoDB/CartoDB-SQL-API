@@ -1,8 +1,7 @@
 require('../helper');
 
-var server = require('../../app/server')();
-var assert = require('../support/assert');
-var querystring = require('querystring');
+const server = require('../../app/server')();
+const assert = require('../support/assert');
 
 describe('query-multipart', function() {
     it('multipart form select', function(done){
