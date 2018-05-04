@@ -24,6 +24,67 @@ describe('copy-endpoints', function() {
         });
     });
 
+    it('should fail with copyfrom endpoint and unexisting table', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyfrom",
+            formData: {
+                sql: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
+                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+            },
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'POST'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.deepEqual(
+                JSON.parse(res.body), 
+                {
+                    error:['relation \"unexisting_table\" does not exist']
+                }
+            );
+            done();
+        });
+    });
+
+    it('should fail with copyfrom endpoint and without csv', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyfrom",
+            formData: {
+                sql: "COPY copy_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
+            },
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'POST'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.deepEqual(
+                JSON.parse(res.body), 
+                {
+                    error:['no rows copied']
+                }
+            );
+            done();
+        });
+    });
+
+    it('should fail with copyfrom endpoint and without sql', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyfrom",
+            formData: {
+                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+            },
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'POST'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.deepEqual(
+                JSON.parse(res.body), 
+                {
+                    error:["Parameter 'sql' is missing, must be in URL or first field in POST"]
+                }
+            );
+            done();
+        });
+    });
+
     it('should works with copyto endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyto?" + querystring.stringify({
