@@ -25,14 +25,14 @@ PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb)
     
     // Only accept SQL that starts with 'COPY'
     if (!sql.toUpperCase().startsWith("COPY ")) {
-        cb(new Error("SQL must start with COPY"));
+        return cb(new Error("SQL must start with COPY"));
     }    
 
     // We expect the an earlier middleware to have 
     // set this by the time we are called via multer,
     // so this should never happen
     if (!req.userDbParams) {
-        cb(new Error("req.userDbParams is not set"));
+        return cb(new Error("Something was wrong"));
     }
 
     var copyFromStream = copyFrom(sql);
