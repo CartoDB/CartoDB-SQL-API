@@ -2,7 +2,6 @@
 // https://github.com/expressjs/multer/blob/master/StorageEngine.md
 // for the contract. 
 
-var _ = require('underscore');
 var fs = require('fs');
 var copyFrom = require('pg-copy-streams').from;
 var PSQL = require('cartodb-psql');
@@ -11,27 +10,17 @@ function PgCopyCustomStorage (opts) {
     this.opts = opts || {};
 }
 
-// Pick the URL or the body SQL query, prefering the body query
-// if both are filled in (???)
-function getSqlParam(req) {
-    var b_sql = req.body.sql;
-    b_sql = (b_sql === "" || _.isUndefined(b_sql)) ? null : b_sql;
-    var q_sql = req.query.sql;
-    q_sql = (q_sql === "" || _.isUndefined(q_sql)) ? null : q_sql;
-    return b_sql || q_sql;
-}
-
 PgCopyCustomStorage.prototype._handleFile = function _handleFile (req, file, cb) {
 
     // Hopefully the body-parser has extracted the 'sql' parameter
     // or the user has provided it on the URL line.
     // Otherwise, this will be a short trip, as we won't be able
     // to the pg-copy-streams SQL command
-    var sql = getSqlParam(req);
+    var sql = req.body.sql || req.query.sql;
   
     // Ensure SQL parameter is not missing
-    if (!_.isString(sql)) {
-        cb(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
+    if (!sql) {
+        return cb(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
     }
     
     // Only accept SQL that starts with 'COPY'
