@@ -32,7 +32,7 @@ For a table to be readable by CARTO, it must have a minimum of three columns wit
 * `the_geom`, a `geometry` in the ESPG:4326 projection (aka long/lat)
 * `the_geom_webmercator`, a `geometry` in the ESPG:3857 projection (aka web mercator)
 
-Creating a new CARTO table with all the right triggers and columns can is tricky, so here is an example:
+Creating a new CARTO table with all the right triggers and columns can be tricky, so here is an example:
 
     -- create the table using the *required* columns and a 
     -- couple more
