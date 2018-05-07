@@ -3,6 +3,9 @@
 ## 2.0.1
 Released 2018-mm-dd
 
+New features:
+- CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
+
 
 ## 2.0.0
 Released 2018-03-22
