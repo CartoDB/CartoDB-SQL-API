@@ -1,7 +1,5 @@
 'use strict';
 
-var _ = require('underscore');
-
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -49,6 +47,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             this.handleCopyTo.bind(this),
+            this.responseCopyTo.bind(this),
             errorMiddleware()
         ];
     };
@@ -58,13 +57,9 @@ CopyController.prototype.route = function (app) {
 };
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
+    const { sql } = req.query;
 
-    var sql = req.query.sql;
-    var filename = req.query.filename;
-    sql = (sql === "" || _.isUndefined(sql)) ? null : sql;
-
-    // Ensure SQL parameter is not missing
-    if (!_.isString(sql)) {
+    if (!sql) {
         throw new Error("Parameter 'sql' is missing");
     }
 
@@ -76,19 +71,18 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
     try {
         // Open pgsql COPY pipe and stream out to HTTP response
         var pg = new PSQL(res.locals.userDbParams);
-        pg.connect(function (err, client, cb) {
-            var copyToStream = copyTo(sql);
-            var pgstream = client.query(copyToStream);
+        pg.connect(function (err, client) {
+            if (err) {
+                return next(err);
+            }
+
+            let copyToStream = copyTo(sql);
+            const pgstream = client.query(copyToStream);
+
             res.on('error', next);
             pgstream.on('error', next);
-            pgstream.on('end', cb);
-            // User did not provide a preferred download filename
-            if (!_.isString(filename)) {
-                filename = 'carto-sql-copyto.dmp';
-            }
-            var contentDisposition = "attachment; filename=" + encodeURIComponent(filename);
-            res.setHeader("Content-Disposition", contentDisposition);
-            res.setHeader("Content-Type", "application/octet-stream");
+            pgstream.on('end', next);
+            
             pgstream.pipe(res);
         });
     } catch (err) {
@@ -97,16 +91,27 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 
 };
 
+CopyController.prototype.responseCopyTo = function (req, res) {
+    let { filename } = req.query;
+    
+    if (!filename) {
+        filename = 'carto-sql-copyto.dmp';
+    }
+
+    res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.send();
+};
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
     const busboy = new Busboy({ headers: req.headers });
     let sql = req.query.sql;
     let files = 0;
-    
+
     busboy.on('field', function (fieldname, val) {
         if (fieldname === 'sql') {
             sql = val;
-            
+
             // Only accept SQL that starts with 'COPY'
             if (!sql.toUpperCase().startsWith("COPY ")) {
                 return next(new Error("SQL must start with COPY"));
@@ -120,24 +125,24 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
         if (!sql) {
             return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
         }
-        
+
         try {
             const start_time = Date.now();
-            
+
             // Connect and run the COPY
             const pg = new PSQL(res.locals.userDbParams);
-            pg.connect(function(err, client) {
+            pg.connect(function (err, client) {
                 if (err) {
                     return next(err);
                 }
-    
+
                 let copyFromStream = copyFrom(sql);
                 const pgstream = client.query(copyFromStream);
                 pgstream.on('error', next);
                 pgstream.on('end', function () {
                     var end_time = Date.now();
                     res.body = {
-                        time: (end_time - start_time)/1000,
+                        time: (end_time - start_time) / 1000,
                         total_rows: copyFromStream.rowCount
                     };
 
@@ -146,14 +151,14 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
 
                 file.pipe(pgstream);
             });
-    
+
         } catch (err) {
             next(err);
         }
     });
 
     busboy.on('finish', () => {
-        if(files !== 1) {
+        if (files !== 1) {
             return next(new Error("The file is missing"));
         }
     });
