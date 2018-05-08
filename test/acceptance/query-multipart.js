@@ -4,7 +4,7 @@ const server = require('../../app/server')();
 const assert = require('../support/assert');
 
 describe('query-multipart', function() {
-    it('multipart form select', function(done){
+    it('make query from a multipart form', function(done){
         assert.response(server, {
             url: '/api/v1/sql',
             formData: {
