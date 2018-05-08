@@ -18,9 +18,9 @@
   ],
   "dependencies": {
     "basic-auth": "^2.0.0",
-    "body-parser":  "~1.18.2",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
+    "busboy": "^0.2.14",
     "cartodb-psql": "0.10.1",
     "cartodb-query-tables": "0.2.0",
     "cartodb-redis": "1.0.0",
