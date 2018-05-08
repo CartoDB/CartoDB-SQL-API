@@ -11,7 +11,7 @@
  */
 
 var qs = require('qs');
-var multer = require('multer');
+const Busboy = require('busboy');
 
 /**
  * Extract the mime type from the given request's
@@ -141,5 +141,26 @@ exports.parse['application/json'] = function(req, options, fn){
     });
 };
 
-var multipartMiddleware = multer({ limits: { fieldSize: Infinity } });
-exports.parse['multipart/form-data'] = multipartMiddleware.none();
+
+exports.parse['multipart/form-data'] = function(req, options, fn){
+    if (req.method === 'POST') {
+        req.setEncoding('utf8');
+
+        const busboy = new Busboy({ 
+            headers: req.headers,
+            limits: {
+                files: 0
+            }
+        });
+
+        busboy.on('field', function(fieldname, val) {
+            req.body[fieldname] = val;
+        });
+
+        busboy.on('finish', function() {
+            fn();
+        });
+
+        req.pipe(busboy);
+    }
+};
