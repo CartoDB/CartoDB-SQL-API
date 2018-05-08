@@ -104,9 +104,16 @@ CopyController.prototype.responseCopyTo = function (req, res) {
 };
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
-    const busboy = new Busboy({ headers: req.headers });
     let sql = req.query.sql;
     let files = 0;
+
+    const busboy = new Busboy({ 
+        headers: req.headers,
+        limits: {
+            fieldSize: Infinity,
+            files: 1
+        }
+    });
 
     busboy.on('field', function (fieldname, val) {
         if (fieldname === 'sql') {
