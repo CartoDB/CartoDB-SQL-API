@@ -218,11 +218,20 @@ INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('scoped_table_1'::re
 GRANT SELECT ON CDB_TableMetadata TO :TESTUSER;
 GRANT SELECT ON CDB_TableMetadata TO test_cartodb_user_2;
 
-DROP TABLE IF EXISTS copy_test;
-CREATE TABLE copy_test (
+DROP TABLE IF EXISTS copy_endpoints_test;
+CREATE TABLE copy_endpoints_test (
     id integer,
     name text,
     age integer default 10
 );
-GRANT ALL ON TABLE copy_test TO :TESTUSER;
-GRANT ALL ON TABLE copy_test TO :PUBLICUSER;
+GRANT ALL ON TABLE copy_endpoints_test TO :TESTUSER;
+GRANT ALL ON TABLE copy_endpoints_test TO :PUBLICUSER;
+
+DROP TABLE IF EXISTS copy_endpoints_test2;
+CREATE TABLE copy_endpoints_test2 (
+    id integer,
+    name text,
+    age integer default 10
+);
+GRANT ALL ON TABLE copy_endpoints_test2 TO :TESTUSER;
+GRANT ALL ON TABLE copy_endpoints_test2 TO :PUBLICUSER;
