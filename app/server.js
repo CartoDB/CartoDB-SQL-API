@@ -139,7 +139,7 @@ function App(statsClient) {
     
     const userLimitsServiceOptions = {
         limits: {
-            rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
+            rateLimitsEnabled: (global.settings.ratelimits && global.settings.ratelimits.rateLimitsEnabled) || false
         }
     };
     const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
