@@ -10,9 +10,9 @@ const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const Busboy = require('busboy');
 
-var PSQL = require('cartodb-psql');
-var copyTo = require('pg-copy-streams').to;
-var copyFrom = require('pg-copy-streams').from;
+const PSQL = require('cartodb-psql');
+const copyTo = require('pg-copy-streams').to;
+const copyFrom = require('pg-copy-streams').from;
 
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService) {
@@ -70,7 +70,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 
     try {
         // Open pgsql COPY pipe and stream out to HTTP response
-        var pg = new PSQL(res.locals.userDbParams);
+        const pg = new PSQL(res.locals.userDbParams);
         pg.connect(function (err, client) {
             if (err) {
                 return next(err);
@@ -140,7 +140,7 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
                 const pgstream = client.query(copyFromStream);
                 pgstream.on('error', next);
                 pgstream.on('end', function () {
-                    var end_time = Date.now();
+                    const end_time = Date.now();
                     res.body = {
                         time: (end_time - start_time) / 1000,
                         total_rows: copyFromStream.rowCount
