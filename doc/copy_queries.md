@@ -95,7 +95,7 @@ The [Requests](http://docs.python-requests.org/en/master/user/quickstart/) libra
 
     url = "http://%s.carto.com/api/v2/sql/copyfrom" % username    
     with open(upload_file, 'rb') as f:
-        r = requests.post(url, params={'api_key':api_key, 'sql':sql}, data=f)
+        r = requests.post(url, params={'api_key':api_key, 'sql':sql}, data=f, stream=True)
 		
         if r.status_code != 200:
             print r.text
