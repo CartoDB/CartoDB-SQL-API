@@ -70,8 +70,17 @@ Assuming that you have already created the table, and that the CSV file is named
 
     curl -X POST \
 	    --data-binary @upload_example.csv \
+		-H "Content-Type: application/octet-stream" \
 		"http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
-		
+
+To upload a larger file, using compression for a faster transfer, first compress the file, and then upload it with the content encoding set:
+
+    curl -X POST  \
+		-H "Content-Encoding: gzip" \
+		-H "Content-Type: application/octet-stream"   \
+		--data-binary @upload_example.csv.gz \
+		"http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+
 
 ### Python Example
 
@@ -139,6 +148,7 @@ The SQL needs to be URL-encoded before being embedded in the CURL command, so th
 
     curl \
         --output upload_example_dl.csv \
+		--compressed \
         "http://{username}.carto.com/api/v2/sql/copyto?sql=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
