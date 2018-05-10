@@ -104,13 +104,7 @@ A successful upload will return with status code 200, and a small JSON with info
 
 A failed upload will return with status code 400 and a larger JSON with the PostgreSQL error string, and a stack trace from the SQL API.
 
-    {"error":["Unexpected field"],
-     "stack":"Error: Unexpected field
-        at makeError (/repos/CartoDB-SQL-API/node_modules/multer/lib/make-error.js:12:13)
-        at wrappedFileFilter (/repos/CartoDB-SQL-API/node_modules/multer/index.js:39:19)
-        ...
-        at emitMany (events.js:127:13)
-        at SBMH.emit (events.js:201:7)"}
+    {"error":["Unexpected field"]}
     
 ## Copy To
 
