@@ -1,3 +1,14 @@
+const DEFAULT_RATE_LIMITS_OPTIONS = {
+    rateLimitsEnabled: false,
+    endpoints: {
+        query: false,
+        query_format: false,
+        job_create: false,
+        job_get: false,
+        job_delete: false
+    }
+};
+
 /**
  * UserLimits
  * @param {cartodb-redis} metadataBackend 
@@ -9,6 +20,13 @@ class UserLimits {
         this.options = options;
 
         this.preprareRateLimit();
+    }
+
+    static configure() {
+        // default rate limits
+        if(!global.settings.ratelimits) {
+            global.settings.ratelimits = DEFAULT_RATE_LIMITS_OPTIONS;
+        }
     }
 
     preprareRateLimit() {

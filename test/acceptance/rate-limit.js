@@ -72,10 +72,6 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
 
 describe('rate limit', function() {
     before(function() {
-        if (!global.settings.ratelimits) {
-            global.settings.ratelimits = {};
-            global.settings.ratelimits.endpoints = {};
-        }
         global.settings.ratelimits.rateLimitsEnabled = true;
         global.settings.ratelimits.endpoints.query = true;
         
@@ -89,10 +85,6 @@ describe('rate limit', function() {
     });
 
     after(function() {
-        if (!global.settings.ratelimits) {
-            global.settings.ratelimits = {};
-            global.settings.ratelimits.endpoints = {};
-        }
         global.settings.ratelimits.rateLimitsEnabled = false;
         global.settings.ratelimits.endpoints.query = false;
 

@@ -51,10 +51,8 @@ function rateLimit(userLimits, endpointGroup = null) {
 }
 
 function isRateLimitEnabled(endpointGroup) {
-    return global.settings.ratelimits &&
-        global.settings.ratelimits.rateLimitsEnabled &&
+    return global.settings.ratelimits.rateLimitsEnabled &&
         endpointGroup &&
-        global.settings.ratelimits.endpoints &&
         global.settings.ratelimits.endpoints[endpointGroup];
 }
 
