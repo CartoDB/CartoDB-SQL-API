@@ -68,7 +68,7 @@ The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from
 
 Assuming that you have already created the table, and that the CSV file is named "upload_example.csv":
 
-    curl --X POST \
+    curl -X POST \
 	    --data-binary @upload_example.csv \
 		"http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 		
