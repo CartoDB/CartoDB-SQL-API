@@ -79,7 +79,7 @@ To upload a larger file, using compression for a faster transfer, first compress
     curl -X POST  \
         -H "Content-Encoding: gzip" \
         -H "Transfer-Encoding: chunked" \
-        -H "Content-Type: application/octet-stream"   \
+        -H "Content-Type: application/octet-stream" \
         --data-binary @upload_example.csv.gz \
         "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
