@@ -8,7 +8,6 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-// const Busboy = require('busboy');
 
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
@@ -109,12 +108,6 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
     // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin+with+(format+csv,header+false)"
 
     // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin"
-
-
-    // curl -X POST --data-binary @test.csv -G --data-urlencode "sql=COPY FOO (i, t) FROM stdin" --data-urlencode "api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961" "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom"
-
-    // curl -X POST -G --data-urlencode "sql=COPY FOO (i, t) FROM stdin" --data-urlencode "api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961" "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom"
-
     
     try {
         const start_time = Date.now();
