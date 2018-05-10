@@ -8,7 +8,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const Busboy = require('busboy');
+// const Busboy = require('busboy');
 
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
@@ -105,74 +105,48 @@ CopyController.prototype.responseCopyTo = function (req, res) {
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
     let sql = req.query.sql;
-    let files = 0;
+        
+    // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin+with+(format+csv,header+false)"
 
-    const busboy = new Busboy({ 
-        headers: req.headers,
-        limits: {
-            fieldSize: Infinity,
-            files: 1
-        }
-    });
+    // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin"
 
-    busboy.on('field', function (fieldname, val) {
-        if (fieldname === 'sql') {
-            sql = val;
 
-            // Only accept SQL that starts with 'COPY'
-            if (!sql.toUpperCase().startsWith("COPY ")) {
-                return next(new Error("SQL must start with COPY"));
+    // curl -X POST --data-binary @test.csv -G --data-urlencode "sql=COPY FOO (i, t) FROM stdin" --data-urlencode "api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961" "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom"
+
+    // curl -X POST -G --data-urlencode "sql=COPY FOO (i, t) FROM stdin" --data-urlencode "api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961" "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom"
+
+    
+    try {
+        const start_time = Date.now();
+
+        // Connect and run the COPY
+        const pg = new PSQL(res.locals.userDbParams);
+        pg.connect(function (err, client) {
+            if (err) {
+                return next(err);
             }
-        }
-    });
 
-    busboy.on('file', function (fieldname, file) {
-        files++;
+            let copyFromStream = copyFrom(sql);
+            const pgstream = client.query(copyFromStream);
+            pgstream.on('error', next);
+            pgstream.on('end', function () {
+                const end_time = Date.now();
+                res.body = {
+                    time: (end_time - start_time) / 1000,
+                    total_rows: copyFromStream.rowCount
+                };
 
-        if (!sql) {
-            return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
-        }
-
-        try {
-            const start_time = Date.now();
-
-            // Connect and run the COPY
-            const pg = new PSQL(res.locals.userDbParams);
-            pg.connect(function (err, client) {
-                if (err) {
-                    return next(err);
-                }
-
-                let copyFromStream = copyFrom(sql);
-                const pgstream = client.query(copyFromStream);
-                pgstream.on('error', next);
-                pgstream.on('end', function () {
-                    const end_time = Date.now();
-                    res.body = {
-                        time: (end_time - start_time) / 1000,
-                        total_rows: copyFromStream.rowCount
-                    };
-
-                    return next();
-                });
-
-                file.pipe(pgstream);
+                return next();
             });
 
-        } catch (err) {
-            next(err);
-        }
-    });
+            // req is a readable stream (cool!)
+            req.pipe(pgstream);
+        });
 
-    busboy.on('finish', () => {
-        if (files !== 1) {
-            return next(new Error("The file is missing"));
-        }
-    });
+    } catch (err) {
+        next(err);
+    }
 
-    busboy.on('error', next);
-
-    req.pipe(busboy);
 };
 
 CopyController.prototype.responseCopyFrom = function (req, res, next) {

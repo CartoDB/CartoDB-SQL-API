@@ -8,29 +8,10 @@ const assert = require('../support/assert');
 describe('copy-endpoints', function() {
     it('should works with copyfrom endpoint', function(done){
         assert.response(server, {
-            url: "/api/v1/sql/copyfrom",
-            formData: {
-                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
-                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-            },
-            headers: {host: 'vizzuality.cartodb.com'},
-            method: 'POST'
-        },{}, function(err, res) {
-            assert.ifError(err);
-            const response = JSON.parse(res.body);
-            assert.equal(!!response.time, true);
-            assert.strictEqual(response.total_rows, 6);
-            done();
-        });
-    });
-    
-    it('should works with copyfrom endpoint and SQL in querystring', function(done){
-        const sql = "COPY copy_endpoints_test2 (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)";
-        assert.response(server, {
-            url: `/api/v1/sql/copyfrom?sql=${sql}`,
-            formData: {
-                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-            },
+            url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+            data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'POST'
         },{}, function(err, res) {
@@ -44,11 +25,11 @@ describe('copy-endpoints', function() {
 
     it('should fail with copyfrom endpoint and unexisting table', function(done){
         assert.response(server, {
-            url: "/api/v1/sql/copyfrom",
-            formData: {
-                sql: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
-                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-            },
+            url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                sql: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+            
+            data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'POST'
         },{}, function(err, res) {
@@ -65,10 +46,9 @@ describe('copy-endpoints', function() {
 
     it('should fail with copyfrom endpoint and without csv', function(done){
         assert.response(server, {
-            url: "/api/v1/sql/copyfrom",
-            formData: {
-                sql: "COPY copy_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
-            },
+            url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                sql: "COPY copy_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'POST'
         },{}, function(err, res) {
@@ -85,10 +65,10 @@ describe('copy-endpoints', function() {
 
     it('should fail with copyfrom endpoint and without sql', function(done){
         assert.response(server, {
-            url: "/api/v1/sql/copyfrom",
-            formData: {
-                file: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-            },
+            url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                sql: "COPY copy_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+            data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),            
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'POST'
         },{}, function(err, res) {
