@@ -47,7 +47,6 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             this.handleCopyTo.bind(this),
-            this.responseCopyTo.bind(this),
             errorMiddleware()
         ];
     };
@@ -57,7 +56,9 @@ CopyController.prototype.route = function (app) {
 };
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
-    const { sql } = req.query;
+    const { sql, filename = 'carto-sql-copyto.dmp' } = req.query;
+
+    console.log('request headers', req.headers)
 
     if (!sql) {
         throw new Error("Parameter 'sql' is missing");
@@ -83,24 +84,15 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
             pgstream.on('error', next);
             pgstream.on('end', next);
 
+            res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
+            res.setHeader("Content-Type", "application/octet-stream");
+
             pgstream.pipe(res);
         });
     } catch (err) {
         next(err);
     }
 
-};
-
-CopyController.prototype.responseCopyTo = function (req, res) {
-    let { filename } = req.query;
-
-    if (!filename) {
-        filename = 'carto-sql-copyto.dmp';
-    }
-
-    res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.send();
 };
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
