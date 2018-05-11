@@ -12,6 +12,7 @@ var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
+const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -35,6 +36,7 @@ QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
     const queryMiddlewares = endpointGroup => {
         return [
+            bodyParserMiddleware(),
             initializeProfilerMiddleware('query'),
             userMiddleware(),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),

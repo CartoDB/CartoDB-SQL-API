@@ -15,7 +15,6 @@
 //
 
 var express = require('express');
-var bodyParser = require('./middlewares/body-parser');
 var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
 var TableCacheFactory = require('./utils/table_cache_factory');
@@ -128,7 +127,6 @@ function App(statsClient) {
       });
     }
 
-    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
@@ -167,8 +165,6 @@ function App(statsClient) {
     var copyController = new CopyController(
         metadataBackend, 
         userDatabaseService, 
-        tableCache, 
-        statsClient, 
         userLimitsService
     );
     copyController.route(app);
