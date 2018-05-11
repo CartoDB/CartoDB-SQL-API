@@ -24,9 +24,7 @@ class UserLimits {
 
     static configure() {
         // default rate limits
-        if(!global.settings.ratelimits) {
-            global.settings.ratelimits = DEFAULT_RATE_LIMITS_OPTIONS;
-        }
+        global.settings.ratelimits = Object.assign({}, DEFAULT_RATE_LIMITS_OPTIONS, global.settings.ratelimits);
     }
 
     preprareRateLimit() {
