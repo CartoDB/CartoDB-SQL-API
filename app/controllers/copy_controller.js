@@ -103,12 +103,19 @@ CopyController.prototype.responseCopyTo = function (req, res) {
 };
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
-    let sql = req.query.sql;
-        
-    // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin+with+(format+csv,header+false)"
+    const { sql } = req.query;
 
-    // curl -vv -X POST --data-binary @test.csv "http://cdb.localhost.lan:8080/api/v2/sql/copyfrom?api_key=5b7056ebaa4bae42c0e99283785f0fd63e36e961&sql=copy+foo+(i,t)+from+stdin"
+    if (!sql) {	
+        return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
+    }
+
+    // Only accept SQL that starts with 'COPY'
+    if (!sql.toUpperCase().startsWith("COPY ")) {
+        return next(new Error("SQL must start with COPY"));
+    }
     
+    req.setEncoding('utf8');
+
     try {
         const start_time = Date.now();
 
@@ -132,7 +139,6 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
                 return next();
             });
 
-            // req is a readable stream (cool!)
             req.pipe(pgstream);
         });
 
