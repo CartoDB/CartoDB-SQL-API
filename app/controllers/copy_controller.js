@@ -8,8 +8,8 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const Busboy = require('busboy');
 
+const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
@@ -47,7 +47,6 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             this.handleCopyTo.bind(this),
-            this.responseCopyTo.bind(this),
             errorMiddleware()
         ];
     };
@@ -58,6 +57,7 @@ CopyController.prototype.route = function (app) {
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
     const { sql } = req.query;
+    const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
     if (!sql) {
         throw new Error("Parameter 'sql' is missing");
@@ -82,7 +82,10 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
             res.on('error', next);
             pgstream.on('error', next);
             pgstream.on('end', next);
-            
+
+            res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
+            res.setHeader("Content-Type", "application/octet-stream");
+
             pgstream.pipe(res);
         });
     } catch (err) {
@@ -91,88 +94,52 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 
 };
 
-CopyController.prototype.responseCopyTo = function (req, res) {
-    let { filename } = req.query;
-    
-    if (!filename) {
-        filename = 'carto-sql-copyto.dmp';
+CopyController.prototype.handleCopyFrom = function (req, res, next) {
+    const { sql } = req.query;
+
+    if (!sql) {
+        return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
     }
 
-    res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.send();
-};
+    // Only accept SQL that starts with 'COPY'
+    if (!sql.toUpperCase().startsWith("COPY ")) {
+        return next(new Error("SQL must start with COPY"));
+    }
 
-CopyController.prototype.handleCopyFrom = function (req, res, next) {
-    let sql = req.query.sql;
-    let files = 0;
+    try {
+        const start_time = Date.now();
 
-    const busboy = new Busboy({ 
-        headers: req.headers,
-        limits: {
-            fieldSize: Infinity,
-            files: 1
-        }
-    });
-
-    busboy.on('field', function (fieldname, val) {
-        if (fieldname === 'sql') {
-            sql = val;
-
-            // Only accept SQL that starts with 'COPY'
-            if (!sql.toUpperCase().startsWith("COPY ")) {
-                return next(new Error("SQL must start with COPY"));
+        // Connect and run the COPY
+        const pg = new PSQL(res.locals.userDbParams);
+        pg.connect(function (err, client) {
+            if (err) {
+                return next(err);
             }
-        }
-    });
 
-    busboy.on('file', function (fieldname, file) {
-        files++;
+            let copyFromStream = copyFrom(sql);
+            const pgstream = client.query(copyFromStream);
+            pgstream.on('error', next);
+            pgstream.on('end', function () {
+                const end_time = Date.now();
+                res.body = {
+                    time: (end_time - start_time) / 1000,
+                    total_rows: copyFromStream.rowCount
+                };
 
-        if (!sql) {
-            return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
-        }
-
-        try {
-            const start_time = Date.now();
-
-            // Connect and run the COPY
-            const pg = new PSQL(res.locals.userDbParams);
-            pg.connect(function (err, client) {
-                if (err) {
-                    return next(err);
-                }
-
-                let copyFromStream = copyFrom(sql);
-                const pgstream = client.query(copyFromStream);
-                pgstream.on('error', next);
-                pgstream.on('end', function () {
-                    const end_time = Date.now();
-                    res.body = {
-                        time: (end_time - start_time) / 1000,
-                        total_rows: copyFromStream.rowCount
-                    };
-
-                    return next();
-                });
-
-                file.pipe(pgstream);
+                return next();
             });
 
-        } catch (err) {
-            next(err);
-        }
-    });
+            if (req.get('content-encoding') === 'gzip') {
+                req.pipe(zlib.createGunzip()).pipe(pgstream);
+            } else {
+                req.pipe(pgstream);
+            }
+        });
 
-    busboy.on('finish', () => {
-        if (files !== 1) {
-            return next(new Error("The file is missing"));
-        }
-    });
+    } catch (err) {
+        next(err);
+    }
 
-    busboy.on('error', next);
-
-    req.pipe(busboy);
 };
 
 CopyController.prototype.responseCopyFrom = function (req, res, next) {

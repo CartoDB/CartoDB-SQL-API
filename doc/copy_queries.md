@@ -4,8 +4,8 @@ Copy queries allow you to use the [PostgreSQL copy command](https://www.postgres
 
 The support for copy is split across two API end points:
 
-* `http://{username}.carto.com/api/v2/copyfrom` for uploading data to CARTO
-* `http://{username}.carto.com/api/v2/copyto` for exporting data out of CARTO
+* `http://{username}.carto.com/api/v2/sql/copyfrom` for uploading data to CARTO
+* `http://{username}.carto.com/api/v2/sql/copyto` for exporting data out of CARTO
 
 ## Copy From
 
@@ -68,12 +68,21 @@ The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from
 
 Assuming that you have already created the table, and that the CSV file is named "upload_example.csv":
 
-    curl \
-      --form sql="COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)" \
-      --form file=@upload_example.csv \
-      http://{username}.carto.com/api/v2/copyfrom?api_key={api_key}
+    curl -X POST \
+        --data-binary @upload_example.csv \
+        -H "Transfer-Encoding: chunked" \
+        -H "Content-Type: application/octet-stream" \
+        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
-**Important:** When supplying the "sql" parameter as a form field, it must come **before** the "file" parameter, or the upload will fail. Alternatively, you can supply the "sql" parameter on the URL line.
+To upload a larger file, using compression for a faster transfer, first compress the file, and then upload it with the content encoding set:
+
+    curl -X POST  \
+        -H "Content-Encoding: gzip" \
+        -H "Transfer-Encoding: chunked" \
+        -H "Content-Type: application/octet-stream" \
+        --data-binary @upload_example.csv.gz \
+        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+
 
 ### Python Example
 
@@ -86,9 +95,10 @@ The [Requests](http://docs.python-requests.org/en/master/user/quickstart/) libra
     upload_file = 'upload_example.csv'
     sql = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
-    url = "http://%s.carto.com/api/v2/copyfrom" % username    
+    url = "http://%s.carto.com/api/v2/sql/copyfrom" % username    
     with open(upload_file, 'rb') as f:
-        r = requests.post(url, params={'api_key':api_key, 'sql':sql}, files={'file': f})
+        r = requests.post(url, params={'api_key':api_key, 'sql':sql}, data=f, stream=True)
+
         if r.status_code != 200:
             print r.text
         else:
@@ -105,13 +115,7 @@ A successful upload will return with status code 200, and a small JSON with info
 
 A failed upload will return with status code 400 and a larger JSON with the PostgreSQL error string, and a stack trace from the SQL API.
 
-    {"error":["Unexpected field"],
-     "stack":"Error: Unexpected field
-        at makeError (/repos/CartoDB-SQL-API/node_modules/multer/lib/make-error.js:12:13)
-        at wrappedFileFilter (/repos/CartoDB-SQL-API/node_modules/multer/index.js:39:19)
-        ...
-        at emitMany (events.js:127:13)
-        at SBMH.emit (events.js:201:7)"}
+    {"error":["Unexpected field"]}
     
 ## Copy To
 
@@ -146,7 +150,8 @@ The SQL needs to be URL-encoded before being embedded in the CURL command, so th
 
     curl \
         --output upload_example_dl.csv \
-        "http://{username}.carto.com/api/v2/copyto?sql=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
+		--compressed \
+        "http://{username}.carto.com/api/v2/sql/copyto?sql=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
 
@@ -161,7 +166,7 @@ The Python to "copy to" is very simple, because the HTTP call is a simple get. T
     sql = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
     # request the download, specifying desired file name
-    url = "http://%s.carto.com/api/v2/copyto" % username    
+    url = "http://%s.carto.com/api/v2/sql/copyto" % username    
     r = requests.get(url, params={'api_key':api_key, 'sql':sql, 'filename':download_file}, stream=True)
     r.raise_for_status()
 
