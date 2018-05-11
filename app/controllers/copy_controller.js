@@ -9,6 +9,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 
+const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
@@ -81,7 +82,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
             res.on('error', next);
             pgstream.on('error', next);
             pgstream.on('end', next);
-            
+
             pgstream.pipe(res);
         });
     } catch (err) {
@@ -92,7 +93,7 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 
 CopyController.prototype.responseCopyTo = function (req, res) {
     let { filename } = req.query;
-    
+
     if (!filename) {
         filename = 'carto-sql-copyto.dmp';
     }
@@ -105,7 +106,7 @@ CopyController.prototype.responseCopyTo = function (req, res) {
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
     const { sql } = req.query;
 
-    if (!sql) {	
+    if (!sql) {
         return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
     }
 
@@ -113,8 +114,6 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
     if (!sql.toUpperCase().startsWith("COPY ")) {
         return next(new Error("SQL must start with COPY"));
     }
-    
-    req.setEncoding('utf8');
 
     try {
         const start_time = Date.now();
@@ -139,7 +138,11 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
                 return next();
             });
 
-            req.pipe(pgstream);
+            if (req.get('content-encoding') === 'gzip') {
+                req.pipe(zlib.createGunzip()).pipe(pgstream);
+            } else {
+                req.pipe(pgstream);
+            }
         });
 
     } catch (err) {

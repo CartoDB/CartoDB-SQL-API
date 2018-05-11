@@ -98,4 +98,25 @@ describe('copy-endpoints', function() {
         });
     });
 
+    it('should work with copyfrom and gzip', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
+                gzip: true
+            }),
+            data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv.gz'),
+            headers: {
+                host: 'vizzuality.cartodb.com', 
+                'content-encoding': 'gzip'
+            },
+            method: 'POST'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            const response = JSON.parse(res.body);
+            assert.equal(!!response.time, true);
+            assert.strictEqual(response.total_rows, 6);
+            done();
+        });
+    });
+
 });
