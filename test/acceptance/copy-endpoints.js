@@ -101,8 +101,7 @@ describe('copy-endpoints', function() {
     it('should work with copyfrom and gzip', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
-                gzip: true
+                sql: "COPY copy_endpoints_test2 (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
             }),
             data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv.gz'),
             headers: {
