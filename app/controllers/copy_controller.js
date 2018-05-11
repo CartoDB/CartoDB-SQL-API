@@ -58,8 +58,6 @@ CopyController.prototype.route = function (app) {
 CopyController.prototype.handleCopyTo = function (req, res, next) {
     const { sql, filename = 'carto-sql-copyto.dmp' } = req.query;
 
-    console.log('request headers', req.headers)
-
     if (!sql) {
         throw new Error("Parameter 'sql' is missing");
     }
