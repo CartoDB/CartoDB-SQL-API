@@ -18,33 +18,18 @@ describe('Auth API', function () {
         });
     });
 
-    // TODO: this is obviously a really dangerous sceneario, but in order to not break
-    // some uses cases (i.e: new carto.js examples) and keep backwards compatiblity we will keep it during some time.
-    // It should be fixed as soon as possible
-    it('should get result from query using a wrong API key', function (done) {
-        this.testClient = new TestClient({ apiKey: 'wrong' });
+    it('should fail when using a wrong API key', function (done) {
+        this.testClient = new TestClient({ apiKey: 'THIS_API_KEY_DOES_NOT_EXIST' });
 
-        this.testClient.getResult(publicSQL, (err, result) => {
-            assert.ifError(err);
-            assert.equal(result.length, 6);
-            done();
-        });
-    });
-
-    // TODO: this is obviously a really dangerous sceneario, but in order to not break
-    // some uses cases (i.e: new carto.js examples) and keep backwards compatiblity we will keep it during some time.
-    // It should be fixed as soon as possible
-    it('should fail while fetching data (private dataset) and using a wrong API key', function (done) {
-        this.testClient = new TestClient({ apiKey: 'wrong' });
         const expectedResponse = {
             response: {
-                status: 403
+                status: 401
             }
         };
 
-        this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
+        this.testClient.getResult(publicSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'permission denied for relation private_table');
+            assert.equal(result.error, 'Unauthorized');
             done();
         });
     });
@@ -103,60 +88,6 @@ describe('Auth API', function () {
             assert.ifError(err);
             assert.equal(result.error, 'permission denied for relation scoped_table_1');
             done();
-        });
-    });
-
-    describe('Fallback', function () {
-        it('should get result from query using master apikey (fallback) and a granted dataset', function (done) {
-            this.testClient = new TestClient({ apiKey: '4321', host: 'cartofante.cartodb.com' });
-            this.testClient.getResult(scopedSQL, (err, result) => {
-                assert.ifError(err);
-                assert.equal(result.length, 4);
-                done();
-            });
-        });
-
-        it('should fail while getting result from query using metadata and scoped dataset', function (done) {
-            this.testClient = new TestClient({ host: 'cartofante.cartodb.com' });
-
-            const expectedResponse = {
-                response: {
-                    status: 403
-                },
-                anonymous: true
-            };
-
-            this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
-                assert.ifError(err);
-                assert.equal(result.error, 'permission denied for relation private_table');
-                done();
-            });
-        });
-
-        it('should insert and delete values on scoped datase using the master apikey', function (done) {
-            this.testClient = new TestClient({ apiKey: 4321, host: 'cartofante.cartodb.com' });
-
-            const insertSql = "INSERT INTO scoped_table_1(name) VALUES('wadus1')";
-
-            this.testClient.getResult(insertSql, (err, rows, body) => {
-                assert.ifError(err);
-
-                assert.ok(body.hasOwnProperty('time'));
-                assert.equal(body.total_rows, 1);
-                assert.equal(rows.length, 0);
-
-                const deleteSql = "DELETE FROM scoped_table_1 WHERE name = 'wadus1'";
-
-                this.testClient.getResult(deleteSql, (err, rows, body) => {
-                    assert.ifError(err);
-
-                    assert.ok(body.hasOwnProperty('time'));
-                    assert.equal(body.total_rows, 1);
-                    assert.equal(rows.length, 0);
-
-                    done();
-                });
-            });
         });
     });
 
@@ -267,34 +198,19 @@ describe('Auth API', function () {
             });
         });
 
-        // TODO: this is obviously a really dangerous sceneario, but in order to not break
-        // some uses cases (i.e: new carto.js examples) and to keep backwards compatiblity
-        // we will keep it during some time. It should be fixed as soon as possible
-        it('should get result from query using a wrong API key and quering to public dataset', function (done) {
-            this.testClient = new TestClient({ authorization: 'vizzuality:wrong' });
+        it('should fail when querying using a wrong API key', function (done) {
+            this.testClient = new TestClient({ authorization: 'vizzuality:THIS_API_KEY_DOES_NOT_EXIST' });
 
-            this.testClient.getResult(publicSQL, { anonymous: true }, (err, result) => {
-                assert.ifError(err);
-                assert.equal(result.length, 6);
-                done();
-            });
-        });
-
-        // TODO: this is obviously a really dangerous sceneario, but in order to not break
-        // some uses cases (i.e: new carto.js examples) and to keep backwards compatiblity
-        // we will keep it during some time. It should be fixed as soon as possible
-        it('should fail while fetching data (private dataset) and using a wrong API key', function (done) {
-            this.testClient = new TestClient({ authorization: 'vizzuality:wrong' });
             const expectedResponse = {
                 response: {
-                    status: 403
+                    status: 401
                 },
                 anonymous: true
             };
 
-            this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
+            this.testClient.getResult(publicSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.error, 'permission denied for relation private_table');
+                assert.equal(result.error, 'Unauthorized');
                 done();
             });
         });
