@@ -14,6 +14,10 @@ function errorUserNotFoundMessageTemplate (user) {
     return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
 }
 
+function usernameMatches(basicAuthUsername, requestUsername) {
+    return !(basicAuthUsername && (basicAuthUsername !== requestUsername));
+}
+
 ApikeyAuth.prototype.verifyCredentials = function (callback) {
     this.metadataBackend.getApikey(this.username, this.apikey, (err, apikey) => {
         if (err) {
@@ -22,8 +26,17 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
 
             return callback(err);
         }
-
+        
         if (isApiKeyFound(apikey)) {
+            if (!usernameMatches(apikey.user, this.username)) {
+                const error = new Error('Forbidden');
+                error.type = 'auth';
+                error.subtype = 'api-key-username-mismatch';
+                error.http_status = 403;
+
+                return callback(error);
+            }
+            
             if (!apikey.grantsSql) {
                 const forbiddenError = new Error('forbidden');
                 forbiddenError.http_status = 403;
@@ -32,19 +45,14 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
             }
 
             return callback(null, verifyRequest(this.apikey, this.apikey));
-        }
+        }  else {
+            const error = new Error('Unauthorized');
+            error.type = 'auth';
+            error.subtype = 'api-key-not-found';
+            error.http_status = 401;
 
-        // Auth API Fallback
-        this.metadataBackend.getAllUserDBParams(this.username, (err, dbParams) => {
-            if (err) {
-                err.http_status = 404;
-                err.message = errorUserNotFoundMessageTemplate(this.username);
-
-                return callback(err);
-            }
-
-            callback(null, verifyRequest(this.apikey, dbParams.apikey));
-        });
+            return callback(error);  
+        }      
     });
 };
 
