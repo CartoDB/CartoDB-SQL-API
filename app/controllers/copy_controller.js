@@ -156,14 +156,14 @@ CopyController.prototype.responseCopyFrom = function (req, res, next) {
 
     if (req.profiler) {
         const copyFromMetrics = {
-            time: res.body.time, //seconds
             size: res.locals.copyFromSize, //bytes
+            time: res.body.time, //seconds
             total_rows: res.body.total_rows, 
             gzip: req.get('content-encoding') === 'gzip'
         };
 
         req.profiler.add({ copyFrom: copyFromMetrics });
-        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());+
+        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
     }
 
     res.send(res.body);
