@@ -26,15 +26,15 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
 
             return callback(err);
         }
-        
+
         if (isApiKeyFound(apikey)) {
             if (!usernameMatches(apikey.user, this.username)) {
-                const error = new Error('Forbidden');
-                error.type = 'auth';
-                error.subtype = 'api-key-username-mismatch';
-                error.http_status = 403;
+                const usernameError = new Error('Forbidden');
+                usernameError.type = 'auth';
+                usernameError.subtype = 'api-key-username-mismatch';
+                usernameError.http_status = 403;
 
-                return callback(error);
+                return callback(usernameError);
             }
             
             if (!apikey.grantsSql) {
@@ -46,12 +46,12 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
 
             return callback(null, verifyRequest(this.apikey, this.apikey));
         }  else {
-            const error = new Error('Unauthorized');
-            error.type = 'auth';
-            error.subtype = 'api-key-not-found';
-            error.http_status = 401;
+            const apiKeyNotFoundError = new Error('Unauthorized');
+            apiKeyNotFoundError.type = 'auth';
+            apiKeyNotFoundError.subtype = 'api-key-not-found';
+            apiKeyNotFoundError.http_status = 401;
 
-            return callback(error);  
+            return callback(apiKeyNotFoundError);  
         }      
     });
 };
