@@ -66,6 +66,19 @@ function App(statsClient) {
     // Set default configuration
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
     global.settings.bufferedRows = global.settings.bufferedRows || 1000;
+    global.settings.ratelimits = Object.assign(
+        {
+            rateLimitsEnabled: false,
+            endpoints: {
+                query: false,
+                query_format: false,
+                job_create: false,
+                job_get: false,
+                job_delete: false
+            }
+        }, 
+        global.settings.ratelimits
+    );
 
     var tableCache = new TableCacheFactory().build(global.settings);
 

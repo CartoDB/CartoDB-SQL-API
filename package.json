@@ -55,7 +55,9 @@
   "scripts": {
     "test": "make test-all",
     "test:unit": "mocha test/unit/**/*.js",
-    "test:unit:watch": "npm run test:unit -- -w"
+    "test:unit:watch": "npm run test:unit -- -w",
+    "docker-test": "docker run -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash test/run_tests_docker.sh && docker ps --filter status=dead --filter status=exited -aq | xargs -r docker rm -v",
+    "docker-bash": "docker run  -it -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash"
   },
   "engines": {
     "node": ">=0.8 <0.11",
