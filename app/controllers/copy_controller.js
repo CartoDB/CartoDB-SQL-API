@@ -106,6 +106,8 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
         return next(new Error("SQL must start with COPY"));
     }
 
+    res.locals.copyFromSize = 0;
+
     try {
         const start_time = Date.now();
 
@@ -130,9 +132,14 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
             });
 
             if (req.get('content-encoding') === 'gzip') {
-                req.pipe(zlib.createGunzip()).pipe(pgstream);
+                req
+                    .pipe(zlib.createGunzip())
+                    .on('data', data => res.locals.copyFromSize += data.length)
+                    .pipe(pgstream);
             } else {
-                req.pipe(pgstream);
+                req
+                    .on('data', data => res.locals.copyFromSize += data.length)
+                    .pipe(pgstream);
             }
         });
 
@@ -145,6 +152,18 @@ CopyController.prototype.handleCopyFrom = function (req, res, next) {
 CopyController.prototype.responseCopyFrom = function (req, res, next) {
     if (!res.body || !res.body.total_rows) {
         return next(new Error("No rows copied"));
+    }
+
+    if (req.profiler) {
+        const copyFromMetrics = {
+            time: res.body.time, //seconds
+            size: res.locals.copyFromSize, //bytes
+            total_rows: res.body.total_rows, 
+            gzip: req.get('content-encoding') === 'gzip'
+        };
+
+        req.profiler.add({ copyFrom: copyFromMetrics });
+        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());+
     }
 
     res.send(res.body);
