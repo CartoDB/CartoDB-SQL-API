@@ -8,6 +8,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
@@ -157,6 +158,7 @@ CopyController.prototype.responseCopyFrom = function (req, res, next) {
     if (req.profiler) {
         const copyFromMetrics = {
             size: res.locals.copyFromSize, //bytes
+            format: getFormatFromCopyQuery(req.query.sql),
             time: res.body.time, //seconds
             total_rows: res.body.total_rows, 
             gzip: req.get('content-encoding') === 'gzip'
