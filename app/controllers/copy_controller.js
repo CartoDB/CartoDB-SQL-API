@@ -56,11 +56,11 @@ CopyController.prototype.route = function (app) {
 };
 
 CopyController.prototype.handleCopyTo = function (req, res, next) {
-    const { sql } = req.query;
+    const { q: sql } = req.query;
     const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
     if (!sql) {
-        throw new Error("Parameter 'sql' is missing");
+        throw new Error("Parameter 'q' is missing");
     }
 
     // Only accept SQL that starts with 'COPY'
@@ -95,10 +95,10 @@ CopyController.prototype.handleCopyTo = function (req, res, next) {
 };
 
 CopyController.prototype.handleCopyFrom = function (req, res, next) {
-    const { sql } = req.query;
+    const { q: sql } = req.query;
 
     if (!sql) {
-        return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
+        return next(new Error("Parameter 'q' is missing, must be in URL or first field in POST"));
     }
 
     // Only accept SQL that starts with 'COPY'
