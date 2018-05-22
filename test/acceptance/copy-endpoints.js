@@ -32,16 +32,6 @@ describe('copy-endpoints', function() {
             assert.equal(!!response.time, true);
             assert.strictEqual(response.total_rows, 6);
 
-            assert.ok(res.headers['x-sqlapi-profiler']);
-            const headers = JSON.parse(res.headers['x-sqlapi-profiler']);
-            assert.ok(headers.copyFrom);
-            const metrics = headers.copyFrom;
-            assert.equal(metrics.size, 57);
-            assert.equal(metrics.format, 'CSV');
-            assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
-            assert.equal(metrics.gzip, false);
-
             done();
         });
     });
@@ -96,7 +86,7 @@ describe('copy-endpoints', function() {
             assert.deepEqual(
                 JSON.parse(res.body), 
                 {
-                    error:["Parameter 'q' is missing, must be in URL or first field in POST"]
+                    error:["SQL is missing"]
                 }
             );
             done();
@@ -125,6 +115,25 @@ describe('copy-endpoints', function() {
         });
     });
 
+    it('should fail with copyto endpoint and without sql', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyto?" + querystring.stringify({
+                filename: '/tmp/output.dmp'
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.deepEqual(
+                JSON.parse(res.body), 
+                {
+                    error:["SQL is missing"]
+                }
+            );
+            done();
+        });
+    });
+
     it('should work with copyfrom and gzip', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
@@ -141,16 +150,6 @@ describe('copy-endpoints', function() {
             const response = JSON.parse(res.body);
             assert.equal(!!response.time, true);
             assert.strictEqual(response.total_rows, 6);
-
-            assert.ok(res.headers['x-sqlapi-profiler']);
-            const headers = JSON.parse(res.headers['x-sqlapi-profiler']);
-            assert.ok(headers.copyFrom);
-            const metrics = headers.copyFrom;
-            assert.equal(metrics.size, 57);
-            assert.equal(metrics.format, 'CSV');
-            assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
-            assert.equal(metrics.gzip, true);
 
             done();
         });
