@@ -178,7 +178,8 @@ function App(statsClient) {
     var copyController = new CopyController(
         metadataBackend, 
         userDatabaseService, 
-        userLimitsService
+        userLimitsService,
+        statsClient
     );
     copyController.route(app);
     

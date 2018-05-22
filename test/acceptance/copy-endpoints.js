@@ -2,10 +2,22 @@ require('../helper');
 
 const fs = require('fs');
 const querystring = require('querystring');
-const server = require('../../app/server')();
 const assert = require('../support/assert');
+const os = require('os');
 
-describe('copy-endpoints', function() {
+const StatsClient = require('../../app/stats/client');
+if (global.settings.statsd) {
+    // Perform keyword substitution in statsd
+    if (global.settings.statsd.prefix) {
+        const hostToken = os.hostname().split('.').reverse().join('.');
+        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, hostToken);
+    }
+}
+const statsClient = StatsClient.getInstance(global.settings.statsd);
+const server = require('../../app/server')(statsClient);
+
+
+describe.only('copy-endpoints', function() {
     it('should work with copyfrom endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
@@ -105,6 +117,10 @@ describe('copy-endpoints', function() {
                 res.body, 
                 '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
             );
+
+            assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
+            assert.equal(res.headers['content-type'], 'application/octet-stream');
+
             done();
         });
     });
