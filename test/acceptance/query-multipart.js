@@ -15,7 +15,7 @@ describe('query-multipart', function() {
         },{}, function(err, res) {
             assert.ifError(err);
             const response = JSON.parse(res.body);
-            assert.equal(!!response.time, true);
+            assert.equal(typeof(response.time) !== 'undefined', true);
             assert.strictEqual(response.total_rows, 1);
             assert.deepStrictEqual(response.rows, [{n:2}]);
             done();
