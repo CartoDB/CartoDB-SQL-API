@@ -20,7 +20,6 @@
     "basic-auth": "^2.0.0",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
-    "busboy": "^0.2.14",
     "cartodb-psql": "0.10.1",
     "cartodb-query-tables": "0.2.0",
     "cartodb-redis": "1.0.0",
@@ -28,6 +27,7 @@
     "express": "~4.13.3",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
+    "multer": "~1.2.0",	
     "node-statsd": "~0.0.7",
     "node-uuid": "^1.4.7",
     "oauth-client": "0.3.0",
@@ -55,7 +55,9 @@
   "scripts": {
     "test": "make test-all",
     "test:unit": "mocha test/unit/**/*.js",
-    "test:unit:watch": "npm run test:unit -- -w"
+    "test:unit:watch": "npm run test:unit -- -w",
+    "docker-test": "docker run -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash test/run_tests_docker.sh && docker ps --filter status=dead --filter status=exited -aq | xargs -r docker rm -v",
+    "docker-bash": "docker run  -it -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash"
   },
   "engines": {
     "node": ">=0.8 <0.11",

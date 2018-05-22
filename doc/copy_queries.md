@@ -16,13 +16,13 @@ The PostgreSQL `COPY` command is extremely fast, but requires very precise input
 
 If the `COPY` command, the supplied file, and the target table do not all match, the upload will fail.
 
-"Copy from" copies data "from" your file, "to" CARTO. "Copy from" uses [multipart/form-data](https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work) to stream an upload file to the server. This avoids limitations around file size and any need for temporary storage: the data travels from your file straight into the database.
+"Copy from" copies data "from" your file, "to" CARTO. "Copy from" uses chunked encoding (`Transfer-Encoding: chunked`) to stream an upload file to the server. This avoids limitations around file size and any need for temporary storage: the data travels from your file straight into the database.
 
 * `api_key` provided in the request URL parameters.
-* `sql` provided either in the request URL parameters or in a multipart form variable.
-* `file` provided as a multipart form variable; this is the actual file content, not a filename.
+* `q` the copy SQL provided either in the request URL parameters.
+* the actual copy file content, as the body of the POST.
 
-Composing a multipart form data upload is moderately complicated, so almost all developers will use a tool or scripting language to upload data to CARTO via "copy from".
+Composing a chunked POST is moderately complicated, so most developers will use a tool or scripting language to upload data to CARTO via "copy from". 
 
 ### Example
 
@@ -60,19 +60,19 @@ The `COPY` command to upload this file needs to specify the file format (CSV), t
 
 The `FROM STDIN` option tells the database that the input will come from a data stream, and the SQL API will read our uploaded file and use it to feed the stream.
 
-To actually run upload, you will need a tool or script that can generate a `multipart/form-data` POST, so here are a few examples in different languages.
+To actually run upload, you will need a tool or script that can generate a chunked POST, so here are a few examples in different languages.
 
 ### CURL Example
 
-The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from the command-line, and supports multi-part file upload, so it can feed the `copyfrom` end point.
+The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from the command-line, and supports chunked POST upload, so it can feed the `copyfrom` end point.
 
 Assuming that you have already created the table, and that the CSV file is named "upload_example.csv":
 
     curl -X POST \
-        --data-binary @upload_example.csv \
         -H "Transfer-Encoding: chunked" \
         -H "Content-Type: application/octet-stream" \
-        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+        --data-binary @upload_example.csv \
+        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
 To upload a larger file, using compression for a faster transfer, first compress the file, and then upload it with the content encoding set:
 
@@ -81,7 +81,7 @@ To upload a larger file, using compression for a faster transfer, first compress
         -H "Transfer-Encoding: chunked" \
         -H "Content-Type: application/octet-stream" \
         --data-binary @upload_example.csv.gz \
-        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&sql=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
 
 ### Python Example
@@ -94,11 +94,11 @@ import requests
 api_key = {api_key}
 username = {api_key}
 upload_file = 'upload_example.csv'
-sql = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
+q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
 url = "http://%s.carto.com/api/v2/sql/copyfrom" % username
 with open(upload_file, 'rb') as f:
-    r = requests.post(url, params={'api_key': api_key, 'sql': sql}, data=f, stream=True)
+    r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
 
     if r.status_code != 200:
         print(r.text)
@@ -131,7 +131,7 @@ Using the `copyto` end point to extract data bypasses the usual JSON formatting 
 
 "Copy to" is a simple HTTP GET end point, so any tool or language can be easily used to download data, supplying the following parameters in the URL:
 
-* `sql`, the "COPY" command to extract the data.
+* `q`, the "COPY" command to extract the data.
 * `filename`, the filename to put in the "Content-disposition" HTTP header. Useful for tools that automatically save the download to a file name.
 * `api_key`, your API key for reading non-public tables.
 
@@ -153,12 +153,13 @@ The SQL needs to be URL-encoded before being embedded in the CURL command, so th
     curl \
         --output upload_example_dl.csv \
 		--compressed \
-        "http://{username}.carto.com/api/v2/sql/copyto?sql=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
+        "http://{username}.carto.com/api/v2/sql/copyto?q=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
 
 The Python to "copy to" is very simple, because the HTTP call is a simple get. The only complexity in this example is at the end, where the result is streamed back block-by-block, to avoid pulling the entire download into memory before writing to file.
 
+<<<<<<< HEAD
 ```python
 import requests
 import re
@@ -166,11 +167,11 @@ import re
 api_key = {api_key}
 username = {api_key}
 download_file = 'upload_example_dl.csv'
-sql = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
+q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
 # request the download, specifying desired file name
 url = "http://%s.carto.com/api/v2/sql/copyto" % username
-r = requests.get(url, params={'api_key': api_key, 'sql': sql, 'filename': download_file}, stream=True)
+r = requests.get(url, params={'api_key': api_key, 'q': q, 'filename': download_file}, stream=True)
 r.raise_for_status()
 
 # read save file name from response headers
@@ -185,3 +186,4 @@ if len(savefilename) > 0:
 else:
     print("Error: could not find read file name from headers")
 ```
+

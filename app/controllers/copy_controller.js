@@ -8,6 +8,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
@@ -15,10 +16,11 @@ const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
 
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
+    this.statsClient = statsClient;
 }
 
 CopyController.prototype.route = function (app) {
@@ -32,8 +34,9 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
-            this.handleCopyFrom.bind(this),
-            this.responseCopyFrom.bind(this),
+            validateCopyQuery(),
+            handleCopyFrom(),
+            responseCopyFrom(this.statsClient),
             errorMiddleware()
         ];
     };
@@ -46,7 +49,8 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
-            this.handleCopyTo.bind(this),
+            validateCopyQuery(),
+            handleCopyTo(this.statsClient),
             errorMiddleware()
         ];
     };
@@ -55,99 +59,133 @@ CopyController.prototype.route = function (app) {
     app.get(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
 };
 
-CopyController.prototype.handleCopyTo = function (req, res, next) {
-    const { sql } = req.query;
-    const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
-    if (!sql) {
-        throw new Error("Parameter 'sql' is missing");
-    }
+function handleCopyTo (statsClient) {
+    return function handleCopyToMiddleware (req, res, next) {
+        const sql = req.query.q;
+        const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
-    // Only accept SQL that starts with 'COPY'
-    if (!sql.toUpperCase().startsWith("COPY ")) {
-        throw new Error("SQL must start with COPY");
-    }
+        let metrics = {
+            size: 0,
+            time: null,
+            format: getFormatFromCopyQuery(sql),
+            total_rows: null
+        };
 
-    try {
-        // Open pgsql COPY pipe and stream out to HTTP response
-        const pg = new PSQL(res.locals.userDbParams);
-        pg.connect(function (err, client) {
-            if (err) {
-                return next(err);
-            }
+        res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
+        res.header("Content-Type", "application/octet-stream");
 
-            let copyToStream = copyTo(sql);
-            const pgstream = client.query(copyToStream);
+        try {
+            const startTime = Date.now();
 
-            res.on('error', next);
-            pgstream.on('error', next);
-            pgstream.on('end', next);
+            // Open pgsql COPY pipe and stream out to HTTP response
+            const pg = new PSQL(res.locals.userDbParams);
+            pg.connect(function (err, client) {
+                if (err) {
+                    return next(err);
+                }
 
-            res.setHeader("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
-            res.setHeader("Content-Type", "application/octet-stream");
+                const copyToStream = copyTo(sql);
+                const pgstream = client.query(copyToStream);
+                pgstream
+                    .on('error', next)
+                    .on('data', data => metrics.size += data.length)
+                    .on('end', () => {
+                        metrics.time = (Date.now() - startTime) / 1000;
+                        metrics.total_rows = copyToStream.rowCount;
+                        statsClient.set('copyTo', JSON.stringify(metrics));
+                    })
+                    .pipe(res);
+            });
+        } catch (err) {
+            next(err);
+        }
+    };
+}
 
-            pgstream.pipe(res);
-        });
-    } catch (err) {
-        next(err);
-    }
+function handleCopyFrom () {
+    return function handleCopyFromMiddleware (req, res, next) {
+        const sql = req.query.q;
 
-};
+        res.locals.copyFromSize = 0;
 
-CopyController.prototype.handleCopyFrom = function (req, res, next) {
-    const { sql } = req.query;
+        try {
+            const startTime = Date.now();
 
-    if (!sql) {
-        return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
-    }
+            // Connect and run the COPY
+            const pg = new PSQL(res.locals.userDbParams);
+            pg.connect(function (err, client) {
+                if (err) {
+                    return next(err);
+                }
 
-    // Only accept SQL that starts with 'COPY'
-    if (!sql.toUpperCase().startsWith("COPY ")) {
-        return next(new Error("SQL must start with COPY"));
-    }
+                let copyFromStream = copyFrom(sql);
+                const pgstream = client.query(copyFromStream);
+                pgstream
+                    .on('error', next)
+                    .on('end', function () {
+                        res.body = {
+                            time: (Date.now() - startTime) / 1000,
+                            total_rows: copyFromStream.rowCount
+                        };
 
-    try {
-        const start_time = Date.now();
+                        return next();
+                    });
 
-        // Connect and run the COPY
-        const pg = new PSQL(res.locals.userDbParams);
-        pg.connect(function (err, client) {
-            if (err) {
-                return next(err);
-            }
-
-            let copyFromStream = copyFrom(sql);
-            const pgstream = client.query(copyFromStream);
-            pgstream.on('error', next);
-            pgstream.on('end', function () {
-                const end_time = Date.now();
-                res.body = {
-                    time: (end_time - start_time) / 1000,
-                    total_rows: copyFromStream.rowCount
-                };
-
-                return next();
+                if (req.get('content-encoding') === 'gzip') {
+                    req
+                        .pipe(zlib.createGunzip())
+                        .on('data', data => res.locals.copyFromSize += data.length)
+                        .pipe(pgstream);
+                } else {
+                    req
+                        .on('data', data => res.locals.copyFromSize += data.length)
+                        .pipe(pgstream);
+                }
             });
 
-            if (req.get('content-encoding') === 'gzip') {
-                req.pipe(zlib.createGunzip()).pipe(pgstream);
-            } else {
-                req.pipe(pgstream);
-            }
-        });
+        } catch (err) {
+            next(err);
+        }
+    };
+}
 
-    } catch (err) {
-        next(err);
-    }
+function responseCopyFrom (statsClient) {
+    return function responseCopyFromMiddleware (req, res, next) {
+        if (!res.body || !res.body.total_rows) {
+            return next(new Error("No rows copied"));
+        }
 
-};
+        const metrics = {
+            size: res.locals.copyFromSize, //bytes
+            format: getFormatFromCopyQuery(req.query.q),
+            time: res.body.time, //seconds
+            total_rows: res.body.total_rows, 
+            gzip: req.get('content-encoding') === 'gzip'
+        };
 
-CopyController.prototype.responseCopyFrom = function (req, res, next) {
-    if (!res.body || !res.body.total_rows) {
-        return next(new Error("No rows copied"));
-    }
+        statsClient.set('copyFrom', JSON.stringify(metrics));
+        
+        res.send(res.body);
+    };
+}
 
-    res.send(res.body);
-};
+function validateCopyQuery () {
+    return function validateCopyQueryMiddleware (req, res, next) {
+        const sql = req.query.q;
+
+        if (!sql) {
+            next(new Error("SQL is missing"));
+        }
+
+        // Only accept SQL that starts with 'COPY'
+        if (!sql.toUpperCase().startsWith("COPY ")) {
+            next(new Error("SQL must start with COPY"));
+        }
+
+        next();
+    };
+}
+
 
 module.exports = CopyController;
