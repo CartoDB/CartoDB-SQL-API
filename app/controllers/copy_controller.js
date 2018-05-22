@@ -81,7 +81,7 @@ function handleCopyTo (statsClient) {
         res.header("Content-Type", "application/octet-stream");
 
         try {
-            const start_time = Date.now();
+            const startTime = Date.now();
 
             // Open pgsql COPY pipe and stream out to HTTP response
             const pg = new PSQL(res.locals.userDbParams);
@@ -90,12 +90,13 @@ function handleCopyTo (statsClient) {
                     return next(err);
                 }
 
-                const pgstream = client.query(copyTo(sql));
+                const copyToStream = copyTo(sql);
+                const pgstream = client.query(copyToStream);
                 pgstream
                     .on('error', next)
                     .on('data', data => metrics.size += data.length)
                     .on('end', () => {
-                        metrics.time = (Date.now() - start_time) / 1000;
+                        metrics.time = (Date.now() - startTime) / 1000;
                         statsClient.set('copyTo', JSON.stringify(metrics));
                     })
                     .pipe(res);
@@ -122,7 +123,7 @@ function handleCopyFrom () {
         res.locals.copyFromSize = 0;
 
         try {
-            const start_time = Date.now();
+            const startTime = Date.now();
 
             // Connect and run the COPY
             const pg = new PSQL(res.locals.userDbParams);
@@ -133,16 +134,16 @@ function handleCopyFrom () {
 
                 let copyFromStream = copyFrom(sql);
                 const pgstream = client.query(copyFromStream);
-                pgstream.on('error', next);
-                pgstream.on('end', function () {
-                    const end_time = Date.now();
-                    res.body = {
-                        time: (end_time - start_time) / 1000,
-                        total_rows: copyFromStream.rowCount
-                    };
+                pgstream
+                    .on('error', next)
+                    .on('end', function () {
+                        res.body = {
+                            time: (Date.now() - startTime) / 1000,
+                            total_rows: copyFromStream.rowCount
+                        };
 
-                    return next();
-                });
+                        return next();
+                    });
 
                 if (req.get('content-encoding') === 'gzip') {
                     req
