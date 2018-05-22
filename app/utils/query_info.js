@@ -10,10 +10,10 @@ module.exports = {
             return false;
         }
        
-        const regex = /(\bFORMAT\s+)(\w+)/;
+        const regex = /\bFORMAT\s+(\w+)/;
         const result = regex.exec(copyQuery);
-        if (result && result.length >= 3 && COPY_FORMATS.includes(result[2])) {
-            format = result[2];
+        if (result && result.length === 2 && COPY_FORMATS.includes(result[1])) {
+            format = result[1];
         }
 
         return format;
