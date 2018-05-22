@@ -36,7 +36,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(),
-            responseCopyFrom(),
+            responseCopyFrom(this.statsClient),
             errorMiddleware()
         ];
     };
@@ -149,25 +149,22 @@ function handleCopyFrom () {
     };
 }
 
-function responseCopyFrom () {
+function responseCopyFrom (statsClient) {
     return function responseCopyFromMiddleware (req, res, next) {
         if (!res.body || !res.body.total_rows) {
             return next(new Error("No rows copied"));
         }
 
-        if (req.profiler) {
-            const copyFromMetrics = {
-                size: res.locals.copyFromSize, //bytes
-                format: getFormatFromCopyQuery(req.query.q),
-                time: res.body.time, //seconds
-                total_rows: res.body.total_rows, 
-                gzip: req.get('content-encoding') === 'gzip'
-            };
+        const metrics = {
+            size: res.locals.copyFromSize, //bytes
+            format: getFormatFromCopyQuery(req.query.q),
+            time: res.body.time, //seconds
+            total_rows: res.body.total_rows, 
+            gzip: req.get('content-encoding') === 'gzip'
+        };
 
-            req.profiler.add({ copyFrom: copyFromMetrics });
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-        }
-
+        statsClient.set('copyFrom', JSON.stringify(metrics));
+        
         res.send(res.body);
     };
 }
@@ -184,7 +181,7 @@ function validateCopyQuery () {
         if (!sql.toUpperCase().startsWith("COPY ")) {
             next(new Error("SQL must start with COPY"));
         }
-        
+
         next();
     };
 }
