@@ -34,7 +34,7 @@ For a table to be readable by CARTO, it must have a minimum of three columns wit
 
 Creating a new CARTO table with all the right triggers and columns can be tricky, so here is an example:
 
-    -- create the table using the *required* columns and a 
+    -- create the table using the *required* columns and a
     -- couple more
     CREATE TABLE upload_example (
         the_geom geometry,
@@ -45,7 +45,7 @@ Creating a new CARTO table with all the right triggers and columns can be tricky
     -- adds the 'cartodb_id' and 'the_geom_webmercator'
     -- adds the required triggers and indexes
     SELECT CDB_CartodbfyTable('upload_example');
-    
+
 Now you are ready to upload your file. Suppose you have a CSV file like this:
 
     the_geom,name,age
@@ -55,7 +55,7 @@ Now you are ready to upload your file. Suppose you have a CSV file like this:
 
 The `COPY` command to upload this file needs to specify the file format (CSV), the fact that there is a header line before the actual data begins, and to enumerate the columns that are in the file so they can be matched to the table columns.
 
-    COPY upload_example (the_geom, name, age) 
+    COPY upload_example (the_geom, name, age)
     FROM STDIN WITH (FORMAT csv, HEADER true)
 
 The `FROM STDIN` option tells the database that the input will come from a data stream, and the SQL API will read our uploaded file and use it to feed the stream.
@@ -86,24 +86,26 @@ To upload a larger file, using compression for a faster transfer, first compress
 
 ### Python Example
 
-The [Requests](http://docs.python-requests.org/en/master/user/quickstart/) library for HTTP makes doing a file upload relatively terse. 
+The [Requests](http://docs.python-requests.org/en/master/user/quickstart/) library for HTTP makes doing a file upload relatively terse.
 
-    import requests
+```python
+import requests
 
-    api_key = {api_key}
-    username = {api_key}
-    upload_file = 'upload_example.csv'
-    q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
+api_key = {api_key}
+username = {api_key}
+upload_file = 'upload_example.csv'
+q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
-    url = "http://%s.carto.com/api/v2/sql/copyfrom" % username    
-    with open(upload_file, 'rb') as f:
-        r = requests.post(url, params={'api_key':api_key, 'q':q}, data=f, stream=True)
+url = "http://%s.carto.com/api/v2/sql/copyfrom" % username
+with open(upload_file, 'rb') as f:
+    r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
 
-        if r.status_code != 200:
-            print r.text
-        else:
-            status = r.json()
-            print "Success: %s rows imported" % status['total_rows']
+    if r.status_code != 200:
+        print(r.text)
+    else:
+        status = r.json()
+        print("Success: %s rows imported" % status['total_rows'])
+```
 
 A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly.
 
@@ -116,7 +118,7 @@ A successful upload will return with status code 200, and a small JSON with info
 A failed upload will return with status code 400 and a larger JSON with the PostgreSQL error string, and a stack trace from the SQL API.
 
     {"error":["Unexpected field"]}
-    
+
 ## Copy To
 
 "Copy to" copies data "to" your desired output file, "from" CARTO.
@@ -145,7 +147,7 @@ The SQL to start a "copy to" can specify
 For our example, we'll read back just the three columns we originally loaded:
 
     COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)
-    
+
 The SQL needs to be URL-encoded before being embedded in the CURL command, so the final result looks like this:
 
     curl \
@@ -157,28 +159,31 @@ The SQL needs to be URL-encoded before being embedded in the CURL command, so th
 
 The Python to "copy to" is very simple, because the HTTP call is a simple get. The only complexity in this example is at the end, where the result is streamed back block-by-block, to avoid pulling the entire download into memory before writing to file.
 
-    import requests
-    import re
+<<<<<<< HEAD
+```python
+import requests
+import re
 
-    api_key = {api_key}
-    username = {api_key}
-    download_file = 'upload_example_dl.csv'
-    q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
+api_key = {api_key}
+username = {api_key}
+download_file = 'upload_example_dl.csv'
+q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
-    # request the download, specifying desired file name
-    url = "http://%s.carto.com/api/v2/sql/copyto" % username    
-    r = requests.get(url, params={'api_key':api_key, 'q':q, 'filename':download_file}, stream=True)
-    r.raise_for_status()
+# request the download, specifying desired file name
+url = "http://%s.carto.com/api/v2/sql/copyto" % username
+r = requests.get(url, params={'api_key': api_key, 'q': q, 'filename': download_file}, stream=True)
+r.raise_for_status()
 
-    # read save file name from response headers
-    d = r.headers['content-disposition']
-    savefilename = re.findall("filename=(.+)", d)
+# read save file name from response headers
+d = r.headers['content-disposition']
+savefilename = re.findall("filename=(.+)", d)
 
-    if len(savefilename) > 0:
-        with open(savefilename[0], 'wb') as handle:
-            for block in r.iter_content(1024):
-                handle.write(block)        
-        print "Downloaded to: %s" % savefilename
-    else:
-        print "Error: could not find read file name from headers"
+if len(savefilename) > 0:
+    with open(savefilename[0], 'wb') as handle:
+        for block in r.iter_content(1024):
+            handle.write(block)
+    print("Downloaded to: %s" % savefilename)
+else:
+    print("Error: could not find read file name from headers")
+```
 
