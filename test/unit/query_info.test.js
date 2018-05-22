@@ -2,8 +2,8 @@ const assert = require('assert');
 const queryInfo = require('../../app/utils/query_info');
 
 describe('query info', function () {
-    describe('copy format', function() {
-        describe('csv', function() {
+    describe('copy format', function () {
+        describe('csv', function () {
             const validQueries = [
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT  CSV, DELIMITER ',', HEADER true)",
@@ -42,6 +42,20 @@ describe('query info', function () {
                 it(query, function() {
                     const result = queryInfo.getFormatFromCopyQuery(query);
                     assert.equal(result, 'BINARY');
+                });
+            });
+        });
+
+        describe('should fail', function() {
+            const validQueries = [
+                "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT ERROR)",
+                "SELECT * from copy_endpoints_test"
+            ];
+
+            validQueries.forEach(query => {
+                it(query, function() {
+                    const result = queryInfo.getFormatFromCopyQuery(query);
+                    assert.strictEqual(result, false);
                 });
             });
         });
