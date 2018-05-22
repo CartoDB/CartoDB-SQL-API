@@ -159,7 +159,6 @@ The SQL needs to be URL-encoded before being embedded in the CURL command, so th
 
 The Python to "copy to" is very simple, because the HTTP call is a simple get. The only complexity in this example is at the end, where the result is streamed back block-by-block, to avoid pulling the entire download into memory before writing to file.
 
-<<<<<<< HEAD
 ```python
 import requests
 import re
