@@ -75,7 +75,7 @@ describe('copy-endpoints', function() {
         });
     });
 
-    it('should fail with copyfrom endpoint and without sql', function(done){
+    it('should fail with copyfrom endpoint and without q', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom",
             data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),            

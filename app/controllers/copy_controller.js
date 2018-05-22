@@ -59,6 +59,7 @@ CopyController.prototype.route = function (app) {
     app.get(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
 };
 
+
 function handleCopyTo (statsClient) {
     return function handleCopyToMiddleware (req, res, next) {
         const sql = req.query.q;
@@ -185,5 +186,6 @@ function validateCopyQuery () {
         next();
     };
 }
+
 
 module.exports = CopyController;
