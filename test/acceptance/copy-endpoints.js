@@ -21,7 +21,7 @@ describe('copy-endpoints', function() {
     it('should work with copyfrom endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
             }),
             data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
             headers: {host: 'vizzuality.cartodb.com'},
@@ -49,7 +49,7 @@ describe('copy-endpoints', function() {
     it('should fail with copyfrom endpoint and unexisting table', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                sql: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                q: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
             }),
             data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
             headers: {host: 'vizzuality.cartodb.com'},
@@ -69,7 +69,7 @@ describe('copy-endpoints', function() {
     it('should fail with copyfrom endpoint and without csv', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                sql: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
             }),
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'POST'
@@ -96,7 +96,7 @@ describe('copy-endpoints', function() {
             assert.deepEqual(
                 JSON.parse(res.body), 
                 {
-                    error:["Parameter 'sql' is missing, must be in URL or first field in POST"]
+                    error:["SQL is missing"]
                 }
             );
             done();
@@ -106,7 +106,7 @@ describe('copy-endpoints', function() {
     it('should work with copyto endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyto?" + querystring.stringify({
-                sql: 'COPY copy_endpoints_test TO STDOUT',
+                q: 'COPY copy_endpoints_test TO STDOUT',
                 filename: '/tmp/output.dmp'
             }),
             headers: {host: 'vizzuality.cartodb.com'},
@@ -128,7 +128,7 @@ describe('copy-endpoints', function() {
     it('should work with copyfrom and gzip', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                sql: "COPY copy_endpoints_test2 (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                q: "COPY copy_endpoints_test2 (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
             }),
             data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv.gz'),
             headers: {

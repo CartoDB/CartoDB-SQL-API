@@ -34,6 +34,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
+            validateCopyQuery(),
             handleCopyFrom(),
             responseCopyFrom(),
             errorMiddleware()
@@ -48,6 +49,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
+            validateCopyQuery(),
             handleCopyTo(this.statsClient),
             errorMiddleware()
         ];
@@ -59,22 +61,13 @@ CopyController.prototype.route = function (app) {
 
 function handleCopyTo (statsClient) {
     return function handleCopyToMiddleware (req, res, next) {
-        const { sql } = req.query;
+        const sql = req.query.q;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
-
-        if (!sql) {
-            throw new Error("Parameter 'sql' is missing");
-        }
-
-        // Only accept SQL that starts with 'COPY'
-        if (!sql.toUpperCase().startsWith("COPY ")) {
-            throw new Error("SQL must start with COPY");
-        }
 
         let metrics = {
             size: 0,
             time: null,
-            format: getFormatFromCopyQuery(req.query.sql),
+            format: getFormatFromCopyQuery(sql),
             total_rows: null
         };
 
@@ -111,16 +104,7 @@ function handleCopyTo (statsClient) {
 
 function handleCopyFrom () {
     return function handleCopyFromMiddleware (req, res, next) {
-        const { sql } = req.query;
-
-        if (!sql) {
-            return next(new Error("Parameter 'sql' is missing, must be in URL or first field in POST"));
-        }
-
-        // Only accept SQL that starts with 'COPY'
-        if (!sql.toUpperCase().startsWith("COPY ")) {
-            return next(new Error("SQL must start with COPY"));
-        }
+        const sql = req.query.q;
 
         res.locals.copyFromSize = 0;
 
@@ -174,7 +158,7 @@ function responseCopyFrom () {
         if (req.profiler) {
             const copyFromMetrics = {
                 size: res.locals.copyFromSize, //bytes
-                format: getFormatFromCopyQuery(req.query.sql),
+                format: getFormatFromCopyQuery(req.query.q),
                 time: res.body.time, //seconds
                 total_rows: res.body.total_rows, 
                 gzip: req.get('content-encoding') === 'gzip'
@@ -185,6 +169,23 @@ function responseCopyFrom () {
         }
 
         res.send(res.body);
+    };
+}
+
+function validateCopyQuery () {
+    return function validateCopyQueryMiddleware (req, res, next) {
+        const sql = req.query.q;
+
+        if (!sql) {
+            next(new Error("SQL is missing"));
+        }
+
+        // Only accept SQL that starts with 'COPY'
+        if (!sql.toUpperCase().startsWith("COPY ")) {
+            next(new Error("SQL must start with COPY"));
+        }
+        
+        next();
     };
 }
 
