@@ -36,7 +36,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(),
-            responseCopyFrom(),
+            responseCopyFrom(this.statsClient),
             errorMiddleware()
         ];
     };
