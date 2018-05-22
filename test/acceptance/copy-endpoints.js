@@ -32,16 +32,6 @@ describe('copy-endpoints', function() {
             assert.equal(!!response.time, true);
             assert.strictEqual(response.total_rows, 6);
 
-            assert.ok(res.headers['x-sqlapi-profiler']);
-            const headers = JSON.parse(res.headers['x-sqlapi-profiler']);
-            assert.ok(headers.copyFrom);
-            const metrics = headers.copyFrom;
-            assert.equal(metrics.size, 57);
-            assert.equal(metrics.format, 'CSV');
-            assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
-            assert.equal(metrics.gzip, false);
-
             done();
         });
     });
@@ -160,16 +150,6 @@ describe('copy-endpoints', function() {
             const response = JSON.parse(res.body);
             assert.equal(!!response.time, true);
             assert.strictEqual(response.total_rows, 6);
-
-            assert.ok(res.headers['x-sqlapi-profiler']);
-            const headers = JSON.parse(res.headers['x-sqlapi-profiler']);
-            assert.ok(headers.copyFrom);
-            const metrics = headers.copyFrom;
-            assert.equal(metrics.size, 57);
-            assert.equal(metrics.format, 'CSV');
-            assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
-            assert.equal(metrics.gzip, true);
 
             done();
         });
