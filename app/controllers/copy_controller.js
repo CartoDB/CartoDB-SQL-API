@@ -74,7 +74,8 @@ function handleCopyTo (statsClient) {
         let metrics = {
             size: 0,
             time: null,
-            format: getFormatFromCopyQuery(req.query.sql)
+            format: getFormatFromCopyQuery(req.query.sql),
+            total_rows: null
         };
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
@@ -97,6 +98,7 @@ function handleCopyTo (statsClient) {
                     .on('data', data => metrics.size += data.length)
                     .on('end', () => {
                         metrics.time = (Date.now() - startTime) / 1000;
+                        metrics.total_rows = copyToStream.rowCount;
                         statsClient.set('copyTo', JSON.stringify(metrics));
                     })
                     .pipe(res);
