@@ -125,6 +125,25 @@ describe('copy-endpoints', function() {
         });
     });
 
+    it('should fail with copyto endpoint and without sql', function(done){
+        assert.response(server, {
+            url: "/api/v1/sql/copyto?" + querystring.stringify({
+                filename: '/tmp/output.dmp'
+            }),
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },{}, function(err, res) {
+            assert.ifError(err);
+            assert.deepEqual(
+                JSON.parse(res.body), 
+                {
+                    error:["SQL is missing"]
+                }
+            );
+            done();
+        });
+    });
+
     it('should work with copyfrom and gzip', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
