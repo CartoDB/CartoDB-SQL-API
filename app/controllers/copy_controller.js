@@ -9,6 +9,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const { getFormatFromCopyQuery } = require('../utils/query_info');
+const BunyanLogger = require('../services/bunyanLogger');
 
 const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
@@ -21,6 +22,8 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
+
+    this.logger = new BunyanLogger(global.settings.dataIngestionFilename, 'data-ingestion');
 }
 
 CopyController.prototype.route = function (app) {
@@ -36,7 +39,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(),
-            responseCopyFrom(),
+            responseCopyFrom(this.logger),
             errorMiddleware()
         ];
     };
@@ -50,7 +53,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyTo(this.statsClient),
+            handleCopyTo(this.logger),
             errorMiddleware()
         ];
     };
@@ -60,12 +63,13 @@ CopyController.prototype.route = function (app) {
 };
 
 
-function handleCopyTo (statsClient) {
+function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
         const sql = req.query.q;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
         let metrics = {
+            type: 'copyto',
             size: 0,
             time: null,
             format: getFormatFromCopyQuery(sql),
@@ -93,7 +97,7 @@ function handleCopyTo (statsClient) {
                     .on('end', () => {
                         metrics.time = (Date.now() - startTime) / 1000;
                         metrics.total_rows = copyToStream.rowCount;
-                        statsClient.set('copyTo', JSON.stringify(metrics));
+                        logger.info(metrics);
                     })
                     .pipe(res);
             });
@@ -150,23 +154,27 @@ function handleCopyFrom () {
     };
 }
 
-function responseCopyFrom () {
+function responseCopyFrom (logger) {
     return function responseCopyFromMiddleware (req, res, next) {
         if (!res.body || !res.body.total_rows) {
             return next(new Error("No rows copied"));
         }
 
-        if (req.profiler) {
-            const metrics = {
-                size: res.locals.copyFromSize, //bytes
-                format: getFormatFromCopyQuery(req.query.q),
-                time: res.body.time, //seconds
-                total_rows: res.body.total_rows, 
-                gzip: req.get('content-encoding') === 'gzip'
-            };
+        const metrics = {
+            type: 'copyfrom',
+            size: res.locals.copyFromSize, //bytes
+            format: getFormatFromCopyQuery(req.query.q),
+            time: res.body.time, //seconds
+            total_rows: res.body.total_rows, 
+            gzip: req.get('content-encoding') === 'gzip'
+        };
+        
+        logger.info(metrics);
 
+        // TODO: remove when data-ingestion log works
+        if (req.profiler) {
             req.profiler.add({ copyFrom: metrics });	
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
         }
         
         res.send(res.body);
