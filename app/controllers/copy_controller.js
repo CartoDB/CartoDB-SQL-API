@@ -36,7 +36,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(),
-            responseCopyFrom(this.statsClient),
+            responseCopyFrom(),
             errorMiddleware()
         ];
     };
@@ -150,21 +150,24 @@ function handleCopyFrom () {
     };
 }
 
-function responseCopyFrom (statsClient) {
+function responseCopyFrom () {
     return function responseCopyFromMiddleware (req, res, next) {
         if (!res.body || !res.body.total_rows) {
             return next(new Error("No rows copied"));
         }
 
-        const metrics = {
-            size: res.locals.copyFromSize, //bytes
-            format: getFormatFromCopyQuery(req.query.q),
-            time: res.body.time, //seconds
-            total_rows: res.body.total_rows, 
-            gzip: req.get('content-encoding') === 'gzip'
-        };
+        if (req.profiler) {
+            const metrics = {
+                size: res.locals.copyFromSize, //bytes
+                format: getFormatFromCopyQuery(req.query.q),
+                time: res.body.time, //seconds
+                total_rows: res.body.total_rows, 
+                gzip: req.get('content-encoding') === 'gzip'
+            };
 
-        statsClient.set('copyFrom', JSON.stringify(metrics));
+            req.profiler.add({ copyFrom: metrics });	
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+        }
         
         res.send(res.body);
     };
