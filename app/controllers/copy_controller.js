@@ -23,7 +23,7 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
 
-    this.logger = new BunyanLogger(global.settings.dataIngestionFilename, 'data-ingestion');
+    this.logger = new BunyanLogger(global.settings.dataIngestionLogPath, 'data-ingestion');
 }
 
 CopyController.prototype.route = function (app) {
