@@ -176,3 +176,86 @@ describe('copy-endpoints', function() {
     });
 
 });
+
+
+describe('copy-endpoints timeout', function() {
+    it('should fail with copyfrom and timeout', function(done){
+        assert.response(server, {
+            url: '/api/v1/sql?q=set statement_timeout = 10',
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },
+        function(err, res) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            },
+            {
+                status: 429,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            },
+            function(err, res) {
+                assert.ifError(err);
+                assert.deepEqual(JSON.parse(res.body), {
+                    error: [
+                        'You are over platform\'s limits. Please contact us to know more details'
+                    ],
+                    context: 'limit',
+                    detail: 'datasource'
+                });
+    
+                
+                assert.response(server, {
+                    url: "/api/v1/sql?q=set statement_timeout = 2000",
+                    headers: {host: 'vizzuality.cartodb.com'},
+                    method: 'GET'
+                },
+                function(err, res) {
+                    done();
+                });
+            });
+        });
+    });
+
+    it('should fail with copyto and timeout', function(done){
+        assert.response(server, {
+            url: '/api/v1/sql?q=set statement_timeout = 1',
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },
+        function(err, res) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY populated_places_simple_reduced TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            },{}, function(err, res) {
+                assert.ifError(err);
+                // assert.deepEqual(JSON.parse(res.body), {
+                //     error: [
+                //         'You are over platform\'s limits. Please contact us to know more details'
+                //     ],
+                //     context: 'limit',
+                //     detail: 'datasource'
+                // });
+                console.log(res.body);
+    
+                
+                assert.response(server, {
+                    url: "/api/v1/sql?q=set statement_timeout = 2000",
+                    headers: {host: 'vizzuality.cartodb.com'},
+                    method: 'GET'
+                },
+                function(err, res) {
+                    done();
+                });
+            });
+        });
+    });
+})
