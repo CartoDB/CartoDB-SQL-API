@@ -10,6 +10,7 @@ const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const { getFormatFromCopyQuery } = require('../utils/query_info');
 const BunyanLogger = require('../services/bunyanLogger');
+const errorHandlerFactory = require('../services/error_handler_factory');
 
 const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
@@ -92,7 +93,12 @@ function handleCopyTo (logger) {
                 const copyToStream = copyTo(sql);
                 const pgstream = client.query(copyToStream);
                 pgstream
-                    .on('error', next)
+                    .on('error', err => {
+                        pgstream.unpipe(res);
+                        const errorHandler = errorHandlerFactory(err);
+                        res.write(JSON.stringify(errorHandler.getResponse()));
+                        res.end();
+                    })
                     .on('data', data => metrics.size += data.length)
                     .on('end', () => {
                         metrics.time = (Date.now() - startTime) / 1000;

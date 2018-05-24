@@ -185,7 +185,8 @@ describe('copy-endpoints timeout', function() {
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
         },
-        function(err, res) {
+        function(err) {
+            assert.ifError(err);
             assert.response(server, {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
@@ -214,20 +215,19 @@ describe('copy-endpoints timeout', function() {
                     headers: {host: 'vizzuality.cartodb.com'},
                     method: 'GET'
                 },
-                function(err, res) {
-                    done();
-                });
+                done);
             });
         });
     });
 
     it('should fail with copyto and timeout', function(done){
         assert.response(server, {
-            url: '/api/v1/sql?q=set statement_timeout = 1',
+            url: '/api/v1/sql?q=set statement_timeout = 20',
             headers: {host: 'vizzuality.cartodb.com'},
             method: 'GET'
         },
-        function(err, res) {
+        function(err) {
+            assert.ifError(err);
             assert.response(server, {
                 url: "/api/v1/sql/copyto?" + querystring.stringify({
                     q: 'COPY populated_places_simple_reduced TO STDOUT',
@@ -237,25 +237,21 @@ describe('copy-endpoints timeout', function() {
                 method: 'GET'
             },{}, function(err, res) {
                 assert.ifError(err);
-                // assert.deepEqual(JSON.parse(res.body), {
-                //     error: [
-                //         'You are over platform\'s limits. Please contact us to know more details'
-                //     ],
-                //     context: 'limit',
-                //     detail: 'datasource'
-                // });
-                console.log(res.body);
-    
+                const error = {
+                    error:["You are over platform's limits. Please contact us to know more details"],
+                    context:"limit",
+                    detail:"datasource"
+                };
+                const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
+                assert.deepEqual(JSON.parse(expectedError), error);
                 
                 assert.response(server, {
                     url: "/api/v1/sql?q=set statement_timeout = 2000",
                     headers: {host: 'vizzuality.cartodb.com'},
                     method: 'GET'
                 },
-                function(err, res) {
-                    done();
-                });
+                done);
             });
         });
     });
-})
+});
