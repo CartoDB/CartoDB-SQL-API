@@ -136,7 +136,7 @@ function handleCopyFrom () {
                         req.unpipe(pgstream);
                         return next(err);
                     })
-                    .on('end', function () {                        
+                    .on('end', function () {
                         res.body = {
                             time: (Date.now() - startTime) / 1000,
                             total_rows: copyFromStream.rowCount
@@ -145,37 +145,27 @@ function handleCopyFrom () {
                         return next();
                     });
 
+                let request = req;
                 if (req.get('content-encoding') === 'gzip') {
-                    req
-                        .pipe(zlib.createGunzip())
-                        .on('error', err => {
-                            req.unpipe(pgstream);
-                            pgstream.end();
-                            return next(err);
-                        })
-                        .on('close', err => {
-                            req.unpipe(pgstream);
-                            pgstream.end();
-                            return next(new Error('Connection closed by client'));
-                        })
-                        .on('data', data => res.locals.copyFromSize += data.length)
-                        .pipe(pgstream);
-                } else {
-                    req
-                        .on('error', err => {
-                            req.unpipe(pgstream);
-                            pgstream.end();
-                            return next(err);
-                        })
-                        .on('close', err => {
-                            req.unpipe(pgstream);
-                            // pgstream.write(Buffer.from([0x66]))
-                            pgstream.end();
-                            return next(new Error('Connection closed by client'));
-                        })
-                        .on('data', data => res.locals.copyFromSize += data.length)
-                        .pipe(pgstream);
+                    request = req.pipe(zlib.createGunzip());
                 }
+
+                request
+                    .on('error', err => {
+                        req.unpipe(pgstream);
+                        pgstream.end();
+                        return next(err);
+                    })
+                    .on('close', () => {
+                        if (!request.ended) {
+                            req.unpipe(pgstream);
+                            pgstream.end();
+                            return next(new Error('Connection closed by client'));
+                        }
+                    })
+                    .on('data', data => res.locals.copyFromSize += data.length)
+                    .on('end', () => request.ended = true)
+                    .pipe(pgstream);
             });
 
         } catch (err) {
