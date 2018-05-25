@@ -132,8 +132,11 @@ function handleCopyFrom () {
                 let copyFromStream = copyFrom(sql);
                 const pgstream = client.query(copyFromStream);
                 pgstream
-                    .on('error', next)
-                    .on('end', function () {
+                    .on('error', err => {
+                        req.unpipe(pgstream);
+                        return next(err);
+                    })
+                    .on('end', function () {                        
                         res.body = {
                             time: (Date.now() - startTime) / 1000,
                             total_rows: copyFromStream.rowCount
@@ -145,10 +148,31 @@ function handleCopyFrom () {
                 if (req.get('content-encoding') === 'gzip') {
                     req
                         .pipe(zlib.createGunzip())
+                        .on('error', err => {
+                            req.unpipe(pgstream);
+                            pgstream.end();
+                            return next(err);
+                        })
+                        .on('close', err => {
+                            req.unpipe(pgstream);
+                            pgstream.end();
+                            return next(new Error('Connection closed by client'));
+                        })
                         .on('data', data => res.locals.copyFromSize += data.length)
                         .pipe(pgstream);
                 } else {
                     req
+                        .on('error', err => {
+                            req.unpipe(pgstream);
+                            pgstream.end();
+                            return next(err);
+                        })
+                        .on('close', err => {
+                            req.unpipe(pgstream);
+                            // pgstream.write(Buffer.from([0x66]))
+                            pgstream.end();
+                            return next(new Error('Connection closed by client'));
+                        })
                         .on('data', data => res.locals.copyFromSize += data.length)
                         .pipe(pgstream);
                 }
