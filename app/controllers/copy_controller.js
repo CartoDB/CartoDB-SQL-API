@@ -10,7 +10,7 @@ const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const BunyanLogger = require('../services/bunyanLogger');
 const errorHandlerFactory = require('../services/error_handler_factory');
-const copyCommand = require('../services/copy_command');
+const streamCopy = require('../services/stream_copy');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
     this.metadataBackend = metadataBackend;
@@ -66,16 +66,16 @@ function handleCopyTo (logger) {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        copyCommand.streamCopyTo(
+        streamCopy.to(
             res, 
             req.query.q, 
             res.locals.userDbParams, 
+            logger,
             function(err, metrics) {
                 if (err) {
                     return next(err);
                 }
                 
-                logger.info(metrics);
                 // this is a especial endpoint
                 // the data from postgres is streamed to response directly
             }
@@ -85,29 +85,34 @@ function handleCopyTo (logger) {
 
 function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
-        copyCommand.streamCopyFrom(
+        streamCopy.from(
             req, 
             req.query.q, 
             res.locals.userDbParams, 
             req.get('content-encoding') === 'gzip', 
-            function(err, result, metrics) {
+            logger,
+            function(err, response) {  // TODO: remove when data-ingestion log works: {time, rows}
                 if (err) {
                     return next(err);
                 } 
 
-                if (!result || !result.total_rows) {
+                // TODO: remove when data-ingestion log works
+                const { time, rows, type, format, gzip, size } = response; 
+
+                if (!time || !rows) {
                     return next(new Error("No rows copied"));
                 }
-                
-                logger.info(metrics);
 
                 // TODO: remove when data-ingestion log works
                 if (req.profiler) {
-                    req.profiler.add({ copyFrom: metrics });	
+                    req.profiler.add({copyFrom: { type, format, gzip, size, rows, time }});
                     res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
                 }
-
-                res.send(result);
+                
+                res.send({
+                    time,
+                    total_rows: rows
+                });
             }
         )
     };

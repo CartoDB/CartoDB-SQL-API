@@ -17,7 +17,7 @@ const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../app/server')(statsClient);
 
 
-describe('copy-endpoints', function() {
+describe.only('copy-endpoints', function() {
     it('should work with copyfrom endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
@@ -39,7 +39,7 @@ describe('copy-endpoints', function() {
             assert.equal(metrics.size, 57);
             assert.equal(metrics.format, 'CSV');
             assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
+            assert.equal(metrics.rows, response.total_rows);
             assert.equal(metrics.gzip, false);
 
             done();
@@ -168,7 +168,7 @@ describe('copy-endpoints', function() {
             assert.equal(metrics.size, 57);
             assert.equal(metrics.format, 'CSV');
             assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
+            assert.equal(metrics.rows, response.total_rows);
             assert.equal(metrics.gzip, true);
             
             done();

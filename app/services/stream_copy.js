@@ -2,19 +2,11 @@ const zlib = require('zlib');
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
-const { getFormatFromCopyQuery } = require('../utils/query_info');
+const StreamCopyMetrics = require('./stream_copy_metrics');
 
 module.exports = {
-    streamCopyTo (res, sql, userDbParams, cb) {
-        let metrics = {
-            type: 'copyto',
-            size: 0, //bytes
-            time: null, //seconds
-            format: getFormatFromCopyQuery(sql),
-            total_rows: null
-        };
-
-        const startTime = Date.now();
+    to (res, sql, userDbParams, logger, cb) {
+        let metrics = new StreamCopyMetrics(logger, 'copyto', sql)
 
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {
@@ -29,27 +21,17 @@ module.exports = {
                     pgstream.unpipe(res);
                     return cb(err);
                 })
-                .on('data', data => metrics.size += data.length)
+                .on('data', data => metrics.addSize(data.length))
                 .on('end', () => {
-                    metrics.time = (Date.now() - startTime) / 1000;
-                    metrics.total_rows = copyToStream.rowCount;
+                    metrics.end(copyToStream.rowCount);
                     return cb(null, metrics);
                 })
                 .pipe(res);
         });
     },
 
-    streamCopyFrom (req, sql, userDbParams, isGziped, cb) {
-        let metrics = {
-            type: 'copyfrom',
-            size: 0, //bytes
-            time: null, //seconds
-            format: getFormatFromCopyQuery(sql),
-            total_rows: null, 
-            gzip: isGziped
-        }
-
-        const startTime = Date.now();
+    from (req, sql, userDbParams, gzip, logger, cb) {
+        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, gzip)
         
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {
@@ -65,22 +47,13 @@ module.exports = {
                     return cb(err);
                 })
                 .on('end', function () {
-                    metrics.time = (Date.now() - startTime) / 1000;
-                    metrics.total_rows = copyFromStream.rowCount;
-
-                    return cb(
-                        null, 
-                        {
-                            time: metrics.time,
-                            total_rows: copyFromStream.rowCount
-                        },
-                        metrics
-                    );
+                    metrics.end(copyFromStream.rowCount);
+                    return cb(null, metrics);
                 });
 
             let requestEnded = false;
 
-            if (isGziped) {
+            if (gzip) {
                 req = req.pipe(zlib.createGunzip());
             }
 
@@ -103,3 +76,4 @@ module.exports = {
         });
     }
 }
+
