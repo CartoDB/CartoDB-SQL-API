@@ -71,7 +71,7 @@ function handleCopyTo (logger) {
             req.query.q, 
             res.locals.userDbParams, 
             logger,
-            function(err, metrics) {
+            function(err) {
                 if (err) {
                     return next(err);
                 }
@@ -91,13 +91,13 @@ function handleCopyFrom (logger) {
             res.locals.userDbParams, 
             req.get('content-encoding') === 'gzip', 
             logger,
-            function(err, response) {  // TODO: remove when data-ingestion log works: {time, rows}
+            function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
                 if (err) {
                     return next(err);
                 } 
 
                 // TODO: remove when data-ingestion log works
-                const { time, rows, type, format, gzip, size } = response; 
+                const { time, rows, type, format, gzip, size } = metrics; 
 
                 if (!time || !rows) {
                     return next(new Error("No rows copied"));
@@ -114,7 +114,7 @@ function handleCopyFrom (logger) {
                     total_rows: rows
                 });
             }
-        )
+        );
     };
 }
 

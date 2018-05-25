@@ -11,8 +11,8 @@ module.exports = class StreamCopyMetrics {
         this.rows = 0;
 
         this.startTime = Date.now();
-        this.endTime;
-        this.time;
+        this.endTime = null;
+        this.time = null;
     }
 
     addSize (size) {
@@ -33,4 +33,4 @@ module.exports = class StreamCopyMetrics {
             time: this.time
         });
     }
-}
+};

@@ -6,7 +6,7 @@ const StreamCopyMetrics = require('./stream_copy_metrics');
 
 module.exports = {
     to (res, sql, userDbParams, logger, cb) {
-        let metrics = new StreamCopyMetrics(logger, 'copyto', sql)
+        let metrics = new StreamCopyMetrics(logger, 'copyto', sql);
 
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {
@@ -31,7 +31,7 @@ module.exports = {
     },
 
     from (req, sql, userDbParams, gzip, logger, cb) {
-        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, gzip)
+        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, gzip);
         
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {
@@ -75,5 +75,4 @@ module.exports = {
                 .pipe(pgstream);
         });
     }
-}
-
+};
