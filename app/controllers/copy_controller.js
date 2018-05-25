@@ -8,15 +8,9 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const { getFormatFromCopyQuery } = require('../utils/query_info');
 const BunyanLogger = require('../services/bunyanLogger');
 const errorHandlerFactory = require('../services/error_handler_factory');
-
-const zlib = require('zlib');
-const PSQL = require('cartodb-psql');
-const copyTo = require('pg-copy-streams').to;
-const copyFrom = require('pg-copy-streams').from;
-
+const streamCopy = require('../services/stream_copy');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
     this.metadataBackend = metadataBackend;
@@ -39,8 +33,8 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyFrom(),
-            responseCopyFrom(this.logger),
+            handleCopyFrom(this.logger),
+            errorHandler(),
             errorMiddleware()
         ];
     };
@@ -55,6 +49,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyTo(this.logger),
+            errorHandler(),
             errorMiddleware()
         ];
     };
@@ -66,126 +61,60 @@ CopyController.prototype.route = function (app) {
 
 function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
-        const sql = req.query.q;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
-
-        let metrics = {
-            type: 'copyto',
-            size: 0,
-            time: null,
-            format: getFormatFromCopyQuery(sql),
-            total_rows: null
-        };
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        const startTime = Date.now();
-
-        const pg = new PSQL(res.locals.userDbParams);
-        pg.connect(function (err, client) {
-            if (err) {
-                return next(err);
+        streamCopy.to(
+            res, 
+            req.query.q, 
+            res.locals.userDbParams, 
+            logger,
+            function(err) {
+                if (err) {
+                    return next(err);
+                }
+                
+                // this is a especial endpoint
+                // the data from postgres is streamed to response directly
             }
-
-            const copyToStream = copyTo(sql);
-            const pgstream = client.query(copyToStream);
-            pgstream
-                .on('error', err => {
-                    pgstream.unpipe(res);
-                    const errorHandler = errorHandlerFactory(err);
-                    res.write(JSON.stringify(errorHandler.getResponse()));
-                    res.end();
-                })
-                .on('data', data => metrics.size += data.length)
-                .on('end', () => {
-                    metrics.time = (Date.now() - startTime) / 1000;
-                    metrics.total_rows = copyToStream.rowCount;
-                    logger.info(metrics);
-                })
-                .pipe(res);
-        });
+        );
     };
 }
 
-function handleCopyFrom () {
+function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
-        const sql = req.query.q;
-        res.locals.copyFromSize = 0;
-        
-        const startTime = Date.now();
-
-        const pg = new PSQL(res.locals.userDbParams);
-        pg.connect(function (err, client) {
-            if (err) {
-                return next(err);
-            }
-
-            let copyFromStream = copyFrom(sql);
-            const pgstream = client.query(copyFromStream);
-            pgstream
-                .on('error', err => {
-                    req.unpipe(pgstream);
+        streamCopy.from(
+            req, 
+            req.query.q, 
+            res.locals.userDbParams, 
+            req.get('content-encoding') === 'gzip', 
+            logger,
+            function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
+                if (err) {
                     return next(err);
-                })
-                .on('end', function () {
-                    res.body = {
-                        time: (Date.now() - startTime) / 1000,
-                        total_rows: copyFromStream.rowCount
-                    };
+                } 
 
-                    return next();
+                // TODO: remove when data-ingestion log works
+                const { time, rows, type, format, gzip, size } = metrics; 
+
+                if (!time || !rows) {
+                    return next(new Error("No rows copied"));
+                }
+
+                // TODO: remove when data-ingestion log works
+                if (req.profiler) {
+                    req.profiler.add({copyFrom: { type, format, gzip, size, rows, time }});
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
+                }
+                
+                res.send({
+                    time,
+                    total_rows: rows
                 });
-
-            let request = req;
-            if (req.get('content-encoding') === 'gzip') {
-                request = req.pipe(zlib.createGunzip());
             }
-
-            request
-                .on('error', err => {
-                    req.unpipe(pgstream);
-                    pgstream.end();
-                    return next(err);
-                })
-                .on('close', () => {
-                    if (!request.ended) {
-                        req.unpipe(pgstream);
-                        pgstream.end();
-                        return next(new Error('Connection closed by client'));
-                    }
-                })
-                .on('data', data => res.locals.copyFromSize += data.length)
-                .on('end', () => request.ended = true)
-                .pipe(pgstream);
-        });
-    };
-}
-
-function responseCopyFrom (logger) {
-    return function responseCopyFromMiddleware (req, res, next) {
-        if (!res.body || !res.body.total_rows) {
-            return next(new Error("No rows copied"));
-        }
-
-        const metrics = {
-            type: 'copyfrom',
-            size: res.locals.copyFromSize, //bytes
-            format: getFormatFromCopyQuery(req.query.q),
-            time: res.body.time, //seconds
-            total_rows: res.body.total_rows, 
-            gzip: req.get('content-encoding') === 'gzip'
-        };
-        
-        logger.info(metrics);
-
-        // TODO: remove when data-ingestion log works
-        if (req.profiler) {
-            req.profiler.add({ copyFrom: metrics });	
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
-        }
-        
-        res.send(res.body);
+        );
     };
 }
 
@@ -206,5 +135,16 @@ function validateCopyQuery () {
     };
 }
 
+function errorHandler () {
+    return function errorHandlerMiddleware (err, req, res, next) {
+        if (res.headersSent) {
+            const errorHandler = errorHandlerFactory(err);
+            res.write(JSON.stringify(errorHandler.getResponse()));
+            res.end();
+        } else {
+            return next(err);
+        }
+    };
+}
 
 module.exports = CopyController;

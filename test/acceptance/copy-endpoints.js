@@ -39,7 +39,7 @@ describe('copy-endpoints', function() {
             assert.equal(metrics.size, 57);
             assert.equal(metrics.format, 'CSV');
             assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
+            assert.equal(metrics.rows, response.total_rows);
             assert.equal(metrics.gzip, false);
 
             done();
@@ -168,7 +168,7 @@ describe('copy-endpoints', function() {
             assert.equal(metrics.size, 57);
             assert.equal(metrics.format, 'CSV');
             assert.equal(metrics.time, response.time);
-            assert.equal(metrics.total_rows, response.total_rows);
+            assert.equal(metrics.rows, response.total_rows);
             assert.equal(metrics.gzip, true);
             
             done();
