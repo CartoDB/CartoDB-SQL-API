@@ -35,6 +35,7 @@ CopyController.prototype.route = function (app) {
             validateCopyQuery(),
             handleCopyFrom(this.logger),
             responseCopyFrom(),
+            errorHandler(),
             errorMiddleware()
         ];
     };
@@ -49,6 +50,7 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyTo(this.logger),
+            errorHandler(),
             errorMiddleware()
         ];
     };
@@ -70,50 +72,42 @@ function handleCopyTo (logger) {
             req.query.q, 
             res.locals.userDbParams, 
             function(err, metrics) {
-            if (err) {
-                if (res.headersSent) {
-                    const errorHandler = errorHandlerFactory(err);
-                    res.write(JSON.stringify(errorHandler.getResponse()));
-                    res.end();
-                } else {
+                if (err) {
                     return next(err);
                 }
-            } else {
+                
                 logger.info(metrics);
+                // this is a especial endpoint
+                // the data from postgres is streamed to response directly
+                // next() no needed
             }
-        });
+        );
     };
 }
 
-function streamCopyFrom (logger) {
+function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
-        copyCommand.pgCopyFrom(
+        copyCommand.streamCopyFrom(
             req, 
             req.query.q, 
             res.locals.userDbParams, 
             req.get('content-encoding') === 'gzip', 
             function(err, result, metrics) {
                 if (err) {
-                    if (res.headersSent) {
-                        const errorHandler = errorHandlerFactory(err);
-                        res.write(JSON.stringify(errorHandler.getResponse()));
-                        res.end();
-                    } else {
-                        return next(err);
-                    }
-                } else {
-                    logger.info(metrics);
+                    return next(err);
+                } 
 
-                    // TODO: remove when data-ingestion log works
-                    if (req.profiler) {
-                        req.profiler.add({ copyFrom: metrics });	
-                        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
-                    }
+                logger.info(metrics);
 
-                    res.body = result;
-
-                    next();
+                // TODO: remove when data-ingestion log works
+                if (req.profiler) {
+                    req.profiler.add({ copyFrom: metrics });	
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
                 }
+
+                res.body = result;
+
+                next();
             }
         )
     };
@@ -143,6 +137,18 @@ function validateCopyQuery () {
         }
 
         next();
+    };
+}
+
+function errorHandler () {
+    return function errorHandlerMiddleware (err, req, res, next) {
+        if (res.headersSent) {
+            const errorHandler = errorHandlerFactory(err);
+            res.write(JSON.stringify(errorHandler.getResponse()));
+            res.end();
+        } else {
+            return next(err);
+        }
     };
 }
 
