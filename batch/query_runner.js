@@ -18,13 +18,12 @@ QueryRunner.prototype.run = function (job_id, sql, user, timeout, dbparams, call
         return this._run(dbparams, job_id, sql, timeout, callback);
     }
 
-    this.userDatabaseMetadataService.getUserMetadata(user, (err, userDBParams) => {
-        if (err) {
-            return callback(err);
-        }
+    const dbConfigurationError = new Error('Batch Job DB misconfiguration');
+    dbConfigurationError.type = 'batch-job';
+    dbConfigurationError.subtype = 'job-db-conf-error';
+    dbConfigurationError.http_status = 400;
 
-        this._run(userDBParams, job_id, sql, timeout, callback);
-    });
+    return callback(dbConfigurationError);  
 };
 
 QueryRunner.prototype._run = function (dbparams, job_id, sql, timeout, callback) {
