@@ -137,26 +137,27 @@ function handleCopyFrom () {
                     return next();
                 });
 
-            let request = req;
+            let requestEnded = false;
+
             if (req.get('content-encoding') === 'gzip') {
-                request = req.pipe(zlib.createGunzip());
+                req = req.pipe(zlib.createGunzip());
             }
 
-            request
+            req
                 .on('error', err => {
                     req.unpipe(pgstream);
                     pgstream.end();
                     return next(err);
                 })
                 .on('close', () => {
-                    if (!request.ended) {
+                    if (!requestEnded) {
                         req.unpipe(pgstream);
                         pgstream.end();
                         return next(new Error('Connection closed by client'));
                     }
                 })
                 .on('data', data => res.locals.copyFromSize += data.length)
-                .on('end', () => request.ended = true)
+                .on('end', () => requestEnded = true)
                 .pipe(pgstream);
         });
     };
