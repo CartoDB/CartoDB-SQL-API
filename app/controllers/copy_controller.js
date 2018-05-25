@@ -34,7 +34,6 @@ CopyController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(this.logger),
-            responseCopyFrom(),
             errorHandler(),
             errorMiddleware()
         ];
@@ -79,7 +78,6 @@ function handleCopyTo (logger) {
                 logger.info(metrics);
                 // this is a especial endpoint
                 // the data from postgres is streamed to response directly
-                // next() no needed
             }
         );
     };
@@ -97,6 +95,10 @@ function handleCopyFrom (logger) {
                     return next(err);
                 } 
 
+                if (!result || !result.total_rows) {
+                    return next(new Error("No rows copied"));
+                }
+                
                 logger.info(metrics);
 
                 // TODO: remove when data-ingestion log works
@@ -105,21 +107,9 @@ function handleCopyFrom (logger) {
                     res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
                 }
 
-                res.body = result;
-
-                next();
+                res.send(result);
             }
         )
-    };
-}
-
-function responseCopyFrom () {
-    return function responseCopyFromMiddleware (req, res, next) {
-        if (!res.body || !res.body.total_rows) {
-            return next(new Error("No rows copied"));
-        }
-        
-        res.send(res.body);
     };
 }
 
