@@ -82,7 +82,6 @@ function handleCopyTo (logger) {
 
         const startTime = Date.now();
 
-        // Open pgsql COPY pipe and stream out to HTTP response
         const pg = new PSQL(res.locals.userDbParams);
         pg.connect(function (err, client) {
             if (err) {
@@ -112,8 +111,9 @@ function handleCopyTo (logger) {
 function handleCopyFrom () {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
-        const startTime = Date.now();
         res.locals.copyFromSize = 0;
+        
+        const startTime = Date.now();
 
         const pg = new PSQL(res.locals.userDbParams);
         pg.connect(function (err, client) {
