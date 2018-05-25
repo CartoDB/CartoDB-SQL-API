@@ -80,97 +80,85 @@ function handleCopyTo (logger) {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        try {
-            const startTime = Date.now();
+        const startTime = Date.now();
 
-            // Open pgsql COPY pipe and stream out to HTTP response
-            const pg = new PSQL(res.locals.userDbParams);
-            pg.connect(function (err, client) {
-                if (err) {
-                    return next(err);
-                }
+        // Open pgsql COPY pipe and stream out to HTTP response
+        const pg = new PSQL(res.locals.userDbParams);
+        pg.connect(function (err, client) {
+            if (err) {
+                return next(err);
+            }
 
-                const copyToStream = copyTo(sql);
-                const pgstream = client.query(copyToStream);
-                pgstream
-                    .on('error', err => {
-                        pgstream.unpipe(res);
-                        const errorHandler = errorHandlerFactory(err);
-                        res.write(JSON.stringify(errorHandler.getResponse()));
-                        res.end();
-                    })
-                    .on('data', data => metrics.size += data.length)
-                    .on('end', () => {
-                        metrics.time = (Date.now() - startTime) / 1000;
-                        metrics.total_rows = copyToStream.rowCount;
-                        logger.info(metrics);
-                    })
-                    .pipe(res);
-            });
-        } catch (err) {
-            next(err);
-        }
+            const copyToStream = copyTo(sql);
+            const pgstream = client.query(copyToStream);
+            pgstream
+                .on('error', err => {
+                    pgstream.unpipe(res);
+                    const errorHandler = errorHandlerFactory(err);
+                    res.write(JSON.stringify(errorHandler.getResponse()));
+                    res.end();
+                })
+                .on('data', data => metrics.size += data.length)
+                .on('end', () => {
+                    metrics.time = (Date.now() - startTime) / 1000;
+                    metrics.total_rows = copyToStream.rowCount;
+                    logger.info(metrics);
+                })
+                .pipe(res);
+        });
     };
 }
 
 function handleCopyFrom () {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
-
+        const startTime = Date.now();
         res.locals.copyFromSize = 0;
 
-        try {
-            const startTime = Date.now();
+        const pg = new PSQL(res.locals.userDbParams);
+        pg.connect(function (err, client) {
+            if (err) {
+                return next(err);
+            }
 
-            // Connect and run the COPY
-            const pg = new PSQL(res.locals.userDbParams);
-            pg.connect(function (err, client) {
-                if (err) {
+            let copyFromStream = copyFrom(sql);
+            const pgstream = client.query(copyFromStream);
+            pgstream
+                .on('error', err => {
+                    req.unpipe(pgstream);
                     return next(err);
-                }
+                })
+                .on('end', function () {
+                    res.body = {
+                        time: (Date.now() - startTime) / 1000,
+                        total_rows: copyFromStream.rowCount
+                    };
 
-                let copyFromStream = copyFrom(sql);
-                const pgstream = client.query(copyFromStream);
-                pgstream
-                    .on('error', err => {
-                        req.unpipe(pgstream);
-                        return next(err);
-                    })
-                    .on('end', function () {
-                        res.body = {
-                            time: (Date.now() - startTime) / 1000,
-                            total_rows: copyFromStream.rowCount
-                        };
+                    return next();
+                });
 
-                        return next();
-                    });
+            let request = req;
+            if (req.get('content-encoding') === 'gzip') {
+                request = req.pipe(zlib.createGunzip());
+            }
 
-                let request = req;
-                if (req.get('content-encoding') === 'gzip') {
-                    request = req.pipe(zlib.createGunzip());
-                }
-
-                request
-                    .on('error', err => {
+            request
+                .on('error', err => {
+                    req.unpipe(pgstream);
+                    pgstream.end();
+                    return next(err);
+                })
+                .on('close', () => {
+                    if (!request.ended) {
                         req.unpipe(pgstream);
                         pgstream.end();
-                        return next(err);
-                    })
-                    .on('close', () => {
-                        if (!request.ended) {
-                            req.unpipe(pgstream);
-                            pgstream.end();
-                            return next(new Error('Connection closed by client'));
-                        }
-                    })
-                    .on('data', data => res.locals.copyFromSize += data.length)
-                    .on('end', () => request.ended = true)
-                    .pipe(pgstream);
-            });
-
-        } catch (err) {
-            next(err);
-        }
+                        return next(new Error('Connection closed by client'));
+                    }
+                })
+                .on('data', data => res.locals.copyFromSize += data.length)
+                .on('end', () => request.ended = true)
+                .pipe(pgstream);
+        });
     };
 }
 
