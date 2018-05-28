@@ -20,7 +20,7 @@
     "basic-auth": "^2.0.0",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
-    "cartodb-psql": "0.10.1",
+    "cartodb-psql": "cartodb/node-cartodb-psql#6c9a1f422a8bea140fcbc7c7a23f40bec5886886",
     "cartodb-query-tables": "0.2.0",
     "cartodb-redis": "1.0.0",
     "debug": "2.2.0",
