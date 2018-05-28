@@ -58,13 +58,6 @@ function getCredentialsFromRequest (req) {
         }
     }
 
-    // Fallback to Default Public Api Key
-    if ( ! apiKeyTokenFound(credentials)) {
-        credentials = {
-            apiKeyToken: 'default_public'
-        };
-    }
-
     return credentials;
 }
 
