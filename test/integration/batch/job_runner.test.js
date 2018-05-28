@@ -35,7 +35,11 @@ var HOST = 'localhost';
 var JOB = {
     user: USER,
     query: QUERY,
-    host: HOST
+    host: HOST,
+    dbname: 'cartodb_test_user_1_db',
+    dbuser: 'test_cartodb_user_1',
+    port: 5432,
+    pass: 'test_cartodb_user_1_pass',
 };
 
 describe('job runner', function() {
