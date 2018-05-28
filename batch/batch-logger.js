@@ -1,6 +1,6 @@
 'use strict';
 
-const BunyanLogger = require('../app/services/bunyanLogger');
+const BunyanLogger = require('../app/services/bunyan_logger');
 
 class BatchLogger extends BunyanLogger {
     constructor (path, name) {

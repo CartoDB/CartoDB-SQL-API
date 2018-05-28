@@ -8,7 +8,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const BunyanLogger = require('../services/bunyanLogger');
+const BunyanLogger = require('../services/bunyan_logger');
 const errorHandlerFactory = require('../services/error_handler_factory');
 const streamCopy = require('../services/stream_copy');
 
