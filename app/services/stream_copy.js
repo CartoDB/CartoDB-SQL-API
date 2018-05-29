@@ -44,7 +44,7 @@ module.exports = {
             pgstream
                 .on('error', err => {
                     req.unpipe(pgstream);
-                    return cb(err);
+                    return cb(err); 
                 })
                 .on('end', function () {
                     metrics.end(copyFromStream.rowCount);
@@ -52,10 +52,6 @@ module.exports = {
                 });
 
             let requestEnded = false;
-
-            if (gzip) {
-                req = req.pipe(zlib.createGunzip());
-            }
 
             req
                 .on('error', err => {
@@ -71,8 +67,13 @@ module.exports = {
                     }
                 })
                 .on('data', data => metrics.size += data.length)
-                .on('end', () => requestEnded = true)
-                .pipe(pgstream);
+                .on('end', () => requestEnded = true);
+
+            if (gzip) {
+                req.pipe(zlib.createGunzip()).pipe(pgstream);
+            } else {
+                req.pipe(pgstream);
+            }
         });
     }
 };
