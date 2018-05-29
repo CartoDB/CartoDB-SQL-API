@@ -112,7 +112,7 @@ function handleCopyFrom () {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
         res.locals.copyFromSize = 0;
-        
+
         const startTime = Date.now();
 
         const pg = new PSQL(res.locals.userDbParams);
@@ -125,7 +125,7 @@ function handleCopyFrom () {
             const pgstream = client.query(copyFromStream);
             pgstream
                 .on('error', err => {
-                    req.unpipe(pgstream);
+                    console.error("in .on('error')");
                     return next(err);
                 })
                 .on('end', function () {
@@ -151,8 +151,18 @@ function handleCopyFrom () {
                 })
                 .on('close', () => {
                     if (!requestEnded) {
-                        req.unpipe(pgstream);
-                        pgstream.end();
+                        console.error("client closed connection! timber!");
+
+                        const { Client } = require('pg')
+
+                        const runningClient = client;
+                        const cancelingClient = new Client(runningClient.connectionParameters);
+                        const connection = cancelingClient.connection;
+                        connection.connect(runningClient.port, runningClient.host)
+                        connection.on('connect', () => {
+                            connection.cancel(runningClient.processID, runningClient.secretKey);
+                        });
+
                         return next(new Error('Connection closed by client'));
                     }
                 })
@@ -174,18 +184,18 @@ function responseCopyFrom (logger) {
             size: res.locals.copyFromSize, //bytes
             format: getFormatFromCopyQuery(req.query.q),
             time: res.body.time, //seconds
-            total_rows: res.body.total_rows, 
+            total_rows: res.body.total_rows,
             gzip: req.get('content-encoding') === 'gzip'
         };
-        
+
         logger.info(metrics);
 
         // TODO: remove when data-ingestion log works
         if (req.profiler) {
-            req.profiler.add({ copyFrom: metrics });	
-            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
+            req.profiler.add({ copyFrom: metrics });
+            res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
         }
-        
+
         res.send(res.body);
     };
 }
