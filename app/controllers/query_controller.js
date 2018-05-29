@@ -36,7 +36,7 @@ QueryController.prototype.route = function (app) {
     const queryMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('query'),
-            userMiddleware(),
+            userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),

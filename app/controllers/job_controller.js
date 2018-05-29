@@ -55,7 +55,7 @@ function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService
 
         return [
             initializeProfilerMiddleware('job'),
-            userMiddleware(),
+            userMiddleware(metadataBackend),
             rateLimitsMiddleware(userLimitsService, endpointGroup),
             authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
             connectionParamsMiddleware(userDatabaseService),
