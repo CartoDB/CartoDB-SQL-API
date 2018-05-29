@@ -165,7 +165,7 @@ describe('copy-endpoints', function() {
             const headers = JSON.parse(res.headers['x-sqlapi-profiler']);
             assert.ok(headers.copyFrom);
             const metrics = headers.copyFrom;
-            assert.equal(metrics.size, 57);
+            assert.equal(metrics.size, 96);
             assert.equal(metrics.format, 'CSV');
             assert.equal(metrics.time, response.time);
             assert.equal(metrics.rows, response.total_rows);
