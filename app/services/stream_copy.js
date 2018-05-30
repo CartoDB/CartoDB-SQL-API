@@ -61,8 +61,9 @@ module.exports = {
                 })
                 .on('close', () => {
                     if (!requestEnded) {
+                        const connection = client.connection;
+                        connection.sendCopyFail();
                         req.unpipe(pgstream);
-                        pgstream.end();
                         return cb(new Error('Connection closed by client'));
                     }
                 })
