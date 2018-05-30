@@ -21,7 +21,7 @@ var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+var jobCanceller = new JobCanceller();
 
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
@@ -29,7 +29,12 @@ var HOST = 'localhost';
 var JOB = {
     user: USER,
     query: QUERY,
-    host: HOST
+    host: HOST,
+    dbname: 'cartodb_test_user_1_db',
+    dbuser: 'test_cartodb_user_1',
+    port: 5432,
+    pass: 'test_cartodb_user_1_pass',
+
 };
 
 function createWadusDataJob() {
@@ -50,6 +55,7 @@ function runQueryHelper(job, callback) {
             return callback(err);
         }
 
+        //TODO use job db conf
         userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
             if (err) {
                 return callback(err);

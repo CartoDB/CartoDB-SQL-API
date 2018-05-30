@@ -65,12 +65,16 @@ function createWadusJob(query) {
     return JobFactory.create(JSON.parse(JSON.stringify({
         user: USER,
         query: query,
-        host: HOST
+        host: HOST,
+        dbname: 'cartodb_test_user_1_db',
+        dbuser: 'test_cartodb_user_1',
+        port: 5432,
+        pass: 'test_cartodb_user_1_pass',
     })));
 }
 
 describe('job canceller', function() {
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
 
     after(function (done) {
         redisUtils.clean('batch:*', done);

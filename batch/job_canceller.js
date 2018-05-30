@@ -9,13 +9,17 @@ function JobCanceller(userDatabaseMetadataService) {
 module.exports = JobCanceller;
 
 JobCanceller.prototype.cancel = function (job, callback) {
-    this.userDatabaseMetadataService.getUserMetadata(job.data.user, function (err, userDatabaseMetadata) {
-        if (err) {
-            return callback(err);
-        }
 
-        doCancel(job.data.job_id, userDatabaseMetadata, callback);
-    });
+    const dbConfiguration = {
+        host: job.data.host,
+        port: job.data.port,
+        dbname: job.data.dbname,
+        user: job.data.dbuser,
+        pass: job.data.pass,
+        authenticated: true
+    };
+
+    doCancel(job.data.job_id, dbConfiguration, callback);
 };
 
 function doCancel(job_id, userDatabaseMetadata, callback) {

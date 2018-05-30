@@ -30,8 +30,6 @@ var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
 var JobService = require('../batch/job_service');
 
-var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
-
 var cors = require('./middlewares/cors');
 
 var GenericController = require('./controllers/generic_controller');
@@ -147,8 +145,7 @@ function App(statsClient) {
     var jobPublisher = new JobPublisher(redisPool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller);
 
     var genericController = new GenericController();
