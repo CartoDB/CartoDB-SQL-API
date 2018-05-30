@@ -2,8 +2,7 @@
 
 var PSQL = require('cartodb-psql');
 
-function JobCanceller(userDatabaseMetadataService) {
-    this.userDatabaseMetadataService = userDatabaseMetadataService;
+function JobCanceller() {
 }
 
 module.exports = JobCanceller;
