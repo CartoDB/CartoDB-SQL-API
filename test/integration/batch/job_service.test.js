@@ -55,7 +55,7 @@ function runQueryHelper(job, callback) {
             return callback(err);
         }
 
-        //TODO use job db conf
+        //TODO AUTH use job db conf
         userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
             if (err) {
                 return callback(err);

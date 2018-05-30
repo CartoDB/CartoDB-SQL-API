@@ -23,7 +23,7 @@ const Validator = {
             if (global.settings.validatePGEntitiesAccess) {
                 hardValidationResult = this.hardValidation(affectedTables.tables);
             }
-
+//TODO AUTH only default public?
             if (!authenticated) {
                 softValidationResult = this.softValidation(affectedTables.tables);
             }

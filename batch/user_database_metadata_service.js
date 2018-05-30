@@ -18,6 +18,7 @@ UserDatabaseMetadataService.prototype.getUserMetadata = function (username, call
     });
 };
 
+//TODO AUTH is (all of) this necessary?
 UserDatabaseMetadataService.prototype.parseMetadataToDatabase = function (userDatabaseMetadata) {
     var dbParams = userDatabaseMetadata;
 
