@@ -37,7 +37,11 @@ describe('batch module', function() {
         var data = {
             user: username,
             query: sql,
-            host: dbInstance
+            host: dbInstance,
+            dbname: 'cartodb_test_user_1_db',
+            dbuser: 'test_cartodb_user_1',
+            port: 5432,
+            pass: 'test_cartodb_user_1_pass',
         };
 
         jobService.create(data, function (err, job) {
@@ -60,7 +64,6 @@ describe('batch module', function() {
                     if (err) {
                         done(err);
                     }
-
                     assert.equal(job.status, 'running');
 
                     self.batch.drain(function () {
