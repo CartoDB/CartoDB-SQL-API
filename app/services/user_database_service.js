@@ -1,5 +1,3 @@
-const _ = require('underscore');
-
 function isApiKeyFound(apikey) {
     return apikey.type !== null &&
         apikey.user !== null &&
