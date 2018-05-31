@@ -62,7 +62,7 @@ module.exports = {
                 .on('close', () => {
                     if (!requestEnded) {
                         const connection = client.connection;
-                        connection.sendCopyFail();
+                        connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                         req.unpipe(pgstream);
                         return cb(new Error('Connection closed by client'));
                     }
