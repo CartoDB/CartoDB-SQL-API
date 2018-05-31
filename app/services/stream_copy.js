@@ -14,6 +14,21 @@ module.exports = {
                 return cb(err);
             }
 
+            let responseEnded = false;
+
+            res
+                .on('error', err => {
+                    pgstream.unpipe(res);
+                    return cb(err);
+                })
+                .on('close', () => {
+                    if (!responseEnded) {
+
+                        return cb(new Error('Connection closed by client'));
+                    }
+                })
+                .on('end', () => responseEnded = true);
+
             const copyToStream = copyTo(sql);
             const pgstream = client.query(copyToStream);
             pgstream
