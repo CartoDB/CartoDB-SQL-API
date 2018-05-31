@@ -3,6 +3,7 @@ const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
 const StreamCopyMetrics = require('./stream_copy_metrics');
+const { Client } = require('pg');
 
 module.exports = {
     to (res, sql, userDbParams, logger, cb) {
@@ -23,6 +24,15 @@ module.exports = {
                 })
                 .on('close', () => {
                     if (!responseEnded) {
+                        // Cancel the running COPY TO query.
+                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                        const runningClient = client;
+                        const cancelingClient = new Client(runningClient.connectionParameters);
+                        const connection = cancelingClient.connection;
+                        connection.connect(runningClient.port, runningClient.host);
+                        connection.on('connect', () => {
+                            connection.cancel(runningClient.processID, runningClient.secretKey);
+                        });
 
                         return cb(new Error('Connection closed by client'));
                     }
