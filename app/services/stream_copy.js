@@ -10,7 +10,7 @@ module.exports = {
         let metrics = new StreamCopyMetrics(logger, 'copyto', sql);
 
         const pg = new PSQL(userDbParams);
-        pg.connect(function (err, client) {
+        pg.connect(function (err, client, done) {
             if (err) {
                 return cb(err);
             }
@@ -20,6 +20,7 @@ module.exports = {
             res
                 .on('error', err => {
                     pgstream.unpipe(res);
+                    done();
                     return cb(err);
                 })
                 .on('close', () => {
@@ -29,11 +30,11 @@ module.exports = {
                         const runningClient = client;
                         const cancelingClient = new Client(runningClient.connectionParameters);
                         const connection = cancelingClient.connection;
-                        connection.connect(runningClient.port, runningClient.host);
                         connection.on('connect', () => {
                             connection.cancel(runningClient.processID, runningClient.secretKey);
+                            done();
                         });
-
+                        connection.connect(runningClient.port, runningClient.host);
                         return cb(new Error('Connection closed by client'));
                     }
                 })
@@ -44,11 +45,13 @@ module.exports = {
             pgstream
                 .on('error', err => {
                     pgstream.unpipe(res);
+                    done();
                     return cb(err);
                 })
                 .on('data', data => metrics.addSize(data.length))
                 .on('end', () => {
                     metrics.end(copyToStream.rowCount);
+                    done();
                     return cb(null, metrics);
                 })
                 .pipe(res);
@@ -59,7 +62,7 @@ module.exports = {
         let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, gzip);
         
         const pg = new PSQL(userDbParams);
-        pg.connect(function (err, client) {
+        pg.connect(function (err, client, done) {
             if (err) {
                 return cb(err);
             }
@@ -69,10 +72,12 @@ module.exports = {
             pgstream
                 .on('error', err => {
                     req.unpipe(pgstream);
+                    done();
                     return cb(err); 
                 })
                 .on('end', function () {
                     metrics.end(copyFromStream.rowCount);
+                    done();
                     return cb(null, metrics);
                 });
 
@@ -82,6 +87,7 @@ module.exports = {
                 .on('error', err => {
                     req.unpipe(pgstream);
                     pgstream.end();
+                    done();
                     return cb(err);
                 })
                 .on('close', () => {
@@ -89,6 +95,7 @@ module.exports = {
                         const connection = client.connection;
                         connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                         req.unpipe(pgstream);
+                        done();
                         return cb(new Error('Connection closed by client'));
                     }
                 })
