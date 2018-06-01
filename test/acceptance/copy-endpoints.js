@@ -178,7 +178,7 @@ describe('copy-endpoints', function() {
 });
 
 
-describe('copy-endpoints timeout', function() {
+describe('copy-endpoints timeout', function() {       
     it('should fail with copyfrom and timeout', function(done){
         assert.response(server, {
             url: '/api/v1/sql?q=set statement_timeout = 10',
@@ -252,6 +252,66 @@ describe('copy-endpoints timeout', function() {
                 },
                 done);
             });
+        });
+    });
+});
+
+
+describe('copy-endpoints db connections', function() {
+    before(function() {
+        this.db_pool_size = global.settings.db_pool_size;
+        global.settings.db_pool_size = 1;
+    });
+
+    after(function() {
+        global.settings.db_pool_size = this.db_pool_size;
+    });
+
+    it('copyfrom', function(done) {
+        const query = "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)";
+        function doCopyFrom() {
+            return new Promise(resolve => {
+                assert.response(server, {
+                    url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                        q: query
+                    }),
+                    data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                    headers: {host: 'vizzuality.cartodb.com'},
+                    method: 'POST'
+                },{}, function(err, res) {
+                    assert.ifError(err);
+                    const response = JSON.parse(res.body);
+                    assert.ok(response.time);
+                    resolve();
+                });
+            });
+        }
+
+        Promise.all([doCopyFrom(), doCopyFrom(), doCopyFrom()]).then(function() {
+            done();
+        });
+    });
+
+    it('copyto', function(done) {
+        function doCopyTo() {
+            return new Promise(resolve => {
+                assert.response(server, {
+                    url: "/api/v1/sql/copyto?" + querystring.stringify({
+                        q: 'COPY copy_endpoints_test TO STDOUT',
+                        filename: '/tmp/output.dmp'
+                    }),
+                    headers: {host: 'vizzuality.cartodb.com'},
+                    method: 'GET'
+                },{}, function(err, res) {
+                    assert.ifError(err);
+                    assert.ok(res.body);
+                    resolve();
+                });
+            });
+        }
+
+        Promise.all([doCopyTo(), doCopyTo(), doCopyTo()]).then(function() {
+            done();
         });
     });
 });
