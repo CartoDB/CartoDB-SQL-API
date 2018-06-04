@@ -37,7 +37,7 @@ module.exports = {
 
                         const err = new Error('Connection closed by client');
                         pgstream.unpipe(res);
-                        // see https://node-postgres.com/api/pool#release-err-error-
+                        // see https://node-postgres.com/api/pool#releasecallback
                         done(err);
                         return cb(err);
                     }
@@ -48,7 +48,7 @@ module.exports = {
                 .on('error', err => {
                     if (!connectionClosedByClient) {
                         pgstream.unpipe(res);
-                        done();
+                        done(err);
                         return cb(err);
                     }
                 })
