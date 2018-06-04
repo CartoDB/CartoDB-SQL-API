@@ -5,8 +5,8 @@ const copyFrom = require('pg-copy-streams').from;
 const StreamCopyMetrics = require('./stream_copy_metrics');
 
 module.exports = {
-    to (res, sql, userDbParams, logger, cb) {
-        let metrics = new StreamCopyMetrics(logger, 'copyto', sql);
+    to (res, sql, userDbParams, user, logger, cb) {
+        let metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
 
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {
@@ -30,8 +30,8 @@ module.exports = {
         });
     },
 
-    from (req, sql, userDbParams, gzip, logger, cb) {
-        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, gzip);
+    from (req, sql, userDbParams, user, gzip, logger, cb) {
+        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
         
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client) {

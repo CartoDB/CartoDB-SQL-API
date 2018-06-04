@@ -10,7 +10,7 @@ module.exports = {
             return false;
         }
         
-        if(copyQuery.includes(' WITH ') && copyQuery.includes('FORMAT ')) {
+        if(copyQuery.includes(' WITH') && copyQuery.includes('FORMAT ')) {
             const regex = /\bFORMAT\s+(\w+)/;
             const result = regex.exec(copyQuery);
     

@@ -69,7 +69,8 @@ function handleCopyTo (logger) {
         streamCopy.to(
             res, 
             req.query.q, 
-            res.locals.userDbParams, 
+            res.locals.userDbParams,
+            res.locals.user,
             logger,
             function(err) {
                 if (err) {
@@ -89,6 +90,7 @@ function handleCopyFrom (logger) {
             req, 
             req.query.q, 
             res.locals.userDbParams, 
+            res.locals.user,
             req.get('content-encoding') === 'gzip', 
             logger,
             function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}

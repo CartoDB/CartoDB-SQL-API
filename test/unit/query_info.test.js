@@ -9,6 +9,7 @@ describe('query info', function () {
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT  CSV, DELIMITER ',', HEADER true)",
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV , DELIMITER ',', HEADER true)",
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV)",
+                "COPY copy_endpoints_test FROM STDIN WITH(FORMAT csv,HEADER true)"
             ];
 
             validQueries.forEach(query => {
