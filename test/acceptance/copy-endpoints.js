@@ -4,6 +4,7 @@ const fs = require('fs');
 const querystring = require('querystring');
 const assert = require('../support/assert');
 const os = require('os');
+const { Client } = require('pg');
 
 const StatsClient = require('../../app/stats/client');
 if (global.settings.statsd) {
@@ -18,6 +19,20 @@ const server = require('../../app/server')(statsClient);
 
 
 describe('copy-endpoints', function() {
+    before(function(done) {
+        const client = new Client({
+            user: 'postgres',
+            host: 'localhost',
+            database: 'cartodb_test_user_1_db',
+            port: 5432,
+        });
+        client.connect();
+        client.query('TRUNCATE copy_endpoints_test', (err/*, res */) => {
+            client.end();
+            done(err);
+        });
+    });
+
     it('should work with copyfrom endpoint', function(done){
         assert.response(server, {
             url: "/api/v1/sql/copyfrom?" + querystring.stringify({
