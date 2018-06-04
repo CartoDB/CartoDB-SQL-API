@@ -16,6 +16,9 @@ module.exports = {
             }
 
             let responseEnded = false;
+            let connectionClosedByClient = false;
+            const copyToStream = copyTo(sql);
+            const pgstream = client.query(copyToStream);
 
             res
                 .on('error', err => {
@@ -25,28 +28,26 @@ module.exports = {
                 })
                 .on('close', () => {
                     if (!responseEnded) {
-                        // Cancel the running COPY TO query.
+                        connectionClosedByClient = true;
+                        // Cancel the running COPY TO query
                         // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
                         const runningClient = client;
                         const cancelingClient = new Client(runningClient.connectionParameters);
-                        const connection = cancelingClient.connection;
-                        connection.on('connect', () => {
-                            connection.cancel(runningClient.processID, runningClient.secretKey);
-                            done();
-                        });
-                        connection.connect(runningClient.port, runningClient.host);
-                        return cb(new Error('Connection closed by client'));
+                        cancelingClient.cancel(runningClient, pgstream);
+                        pgstream.unpipe(res);
+                        done(new Error('Connection closed by client'));
+                        return cb(err);
                     }
                 })
                 .on('end', () => responseEnded = true);
 
-            const copyToStream = copyTo(sql);
-            const pgstream = client.query(copyToStream);
             pgstream
                 .on('error', err => {
-                    pgstream.unpipe(res);
-                    done();
-                    return cb(err);
+                    if (!connectionClosedByClient) {
+                        pgstream.unpipe(res);
+                        done(new Error('Connection closed by client'));
+                        return cb(err);
+                    }
                 })
                 .on('data', data => metrics.addSize(data.length))
                 .on('end', () => {
