@@ -1,36 +1,61 @@
 const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 module.exports = class StreamCopyMetrics {
-    constructor(logger, type, sql, gzip = null) {
+    constructor(logger, type, sql, user, gzip = null) {
         this.logger = logger;
 
-        this.type =  type;
+        this.type = type;
         this.format = getFormatFromCopyQuery(sql);
         this.gzip = gzip;
+        this.username = user;
         this.size = 0;
         this.rows = 0;
 
-        this.startTime = Date.now();
+        this.startTime = new Date();
         this.endTime = null;
         this.time = null;
+
+        this.error = null;
     }
 
-    addSize (size) {
+    addSize(size) {
         this.size += size;
     }
 
-    end (rows = null) {
-        this.rows = rows;
-        this.endTime = Date.now();
-        this.time = (this.endTime - this.startTime) / 1000;
+    end(rows = null, error = null) {
+        if (Number.isInteger(rows)) {
+            this.rows = rows;
+        }
 
-        this.logger.info({
+        if (error instanceof Error) {
+            this.error = error;
+        }
+
+        this.endTime = new Date();
+        this.time = (this.endTime.getTime() - this.startTime.getTime()) / 1000;
+
+        this._log({
+            timestamp: this.startTime.toISOString(),
+            errorMessage: this.error ? this.error.message : null
+        })
+    }
+
+    _log({timestamp, errorMessage = null}) {
+        let logData = {
             type: this.type,
             format: this.format,
-            gzip: this.gzip,
             size: this.size,
             rows: this.rows,
-            time: this.time
-        });
+            gzip: this.gzip,
+            username: this.username,
+            time: this.time,
+            timestamp
+        };
+
+        if (errorMessage) {
+            logData.error = errorMessage;
+        }
+
+        this.logger.info(logData);
     }
 };
