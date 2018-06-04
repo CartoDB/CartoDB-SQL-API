@@ -18,9 +18,12 @@ If the `COPY` command, the supplied file, and the target table do not all match,
 
 "Copy from" copies data "from" your file, "to" CARTO. "Copy from" uses chunked encoding (`Transfer-Encoding: chunked`) to stream an upload file to the server. This avoids limitations around file size and any need for temporary storage: the data travels from your file straight into the database.
 
-* `api_key` provided in the request URL parameters.
-* `q` the copy SQL provided either in the request URL parameters.
-* the actual copy file content, as the body of the POST.
+Parameter | Description
+--- | ---
+`api_key` | a write-enabled key
+`q` | the `COPY` command to load the data
+
+**The actual COPY file content must be sent as the body of the POST request.**
 
 Composing a chunked POST is moderately complicated, so most developers will use a tool or scripting language to upload data to CARTO via "copy from". 
 
@@ -129,11 +132,13 @@ Using the `copyto` end point to extract data bypasses the usual JSON formatting 
 * [CSV](https://www.postgresql.org/docs/10/static/sql-copy.html#id-1.9.3.52.9.3), and
 * PgSQL [binary format](https://www.postgresql.org/docs/10/static/sql-copy.html#id-1.9.3.52.9.4).
 
-"Copy to" is a simple HTTP GET end point, so any tool or language can be easily used to download data, supplying the following parameters in the URL:
+"Copy to" is a simple HTTP GET end point, so any tool or language can be easily used to download data, supplying the following parameters in the URL.
 
-* `q`, the "COPY" command to extract the data.
-* `filename`, the filename to put in the "Content-disposition" HTTP header. Useful for tools that automatically save the download to a file name.
-* `api_key`, your API key for reading non-public tables.
+Parameter | Description
+--- | ---
+`api_key` | your API key for reading non-public tables
+`q` | the `COPY` command to extract the data
+`filename` | filename to put in the "Content-disposition" HTTP header, useful for tools that automatically save the download to a file name
 
 
 ### CURL Example
