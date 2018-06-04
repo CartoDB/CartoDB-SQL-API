@@ -12,3 +12,5 @@ test/test.log
 test/acceptance/oauth/venv/*
 coverage/
 npm-debug.log
+log/*.log
+yarn.lock
