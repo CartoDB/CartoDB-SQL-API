@@ -17,6 +17,7 @@ module.exports = {
             if (result && result.length === 2) {
                 if (COPY_FORMATS.includes(result[1])) {
                     format = result[1];
+                    format = format.toUpperCase();
                 } else {
                     format = false;
                 }
