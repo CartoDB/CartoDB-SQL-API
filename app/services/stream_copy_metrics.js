@@ -34,13 +34,13 @@ module.exports = class StreamCopyMetrics {
         this.endTime = new Date();
         this.time = (this.endTime.getTime() - this.startTime.getTime()) / 1000;
 
-        this._log({
-            timestamp: this.startTime.toISOString(),
-            errorMessage: this.error ? this.error.message : null
-        })
+        this._log(
+            this.startTime.toISOString(),
+            this.error ? this.error.message : null
+        );
     }
 
-    _log({timestamp, errorMessage = null}) {
+    _log(timestamp, errorMessage = null) {
         let logData = {
             type: this.type,
             format: this.format,
