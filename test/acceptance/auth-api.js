@@ -92,8 +92,8 @@ describe('Auth API', function () {
     });
 
     describe('Batch API', function () {
-        it('should create a job with regular api key and get it done', function (done) {
-            this.testClient = new BatchTestClient({ apiKey: 'regular1' });
+        it('should create a job with master api key and get it done', function (done) {
+            this.testClient = new BatchTestClient({ apiKey: '1234' });
 
             this.testClient.createJob({ query: scopedSQL }, (err, jobResult) => {
                 if (err) {
@@ -115,21 +115,42 @@ describe('Auth API', function () {
         it('should create a job with regular api key and get it failed', function (done) {
             this.testClient = new BatchTestClient({ apiKey: 'regular1' });
 
-            this.testClient.createJob({ query: privateSQL }, (err, jobResult) => {
+            this.testClient.createJob({ query: privateSQL }, { response: 403 }, (err, response) => {
                 if (err) {
                     return done(err);
                 }
 
-                jobResult.getStatus(function (err, job) {
-                    if (err) {
-                        return done(err);
-                    }
+                const body = JSON.parse(response.body);
+                assert.equal(body.error, 'permission denied');
+                done();
+            });
+        });
 
-                    assert.equal(job.status, JobStatus.FAILED);
-                    assert.equal(job.failed_reason, 'permission denied for relation private_table');
+        it('should create a job with default public api key and get it failed', function (done) {
+            this.testClient = new BatchTestClient({ apiKey: 'default_public' });
 
-                    done();
-                });
+            this.testClient.createJob({ query: publicSQL }, { response: 403 }, (err, response) => {
+                if (err) {
+                    return done(err);
+                }
+
+                const body = JSON.parse(response.body);
+                assert.equal(body.error, 'permission denied');
+                done();
+            });
+        });
+
+        it('should create a job with fallback default public api key and get it failed', function (done) {
+            this.testClient = new BatchTestClient();
+
+            this.testClient.createJob({ query: publicSQL }, { response: 403, anonymous: true }, (err, response) => {
+                if (err) {
+                    return done(err);
+                }
+
+                const body = JSON.parse(response.body);
+                assert.equal(body.error, 'permission denied');
+                done();
             });
         });
 
@@ -216,44 +237,31 @@ describe('Auth API', function () {
         });
 
         describe('Batch API', function () {
-            it('should create a job with regular api key and get it done', function (done) {
-                this.testClient = new BatchTestClient({ authorization: 'vizzuality:regular1' });
+            it('should create a job with regular api key and get it failed', function (done) {
+                this.testClient = new BatchTestClient({ authorization: 'vizzuality:regular1', response: 403 });
 
-                this.testClient.createJob({ query: scopedSQL }, { anonymous: true }, (err, jobResult) => {
+                this.testClient.createJob({ query: scopedSQL }, { anonymous: true }, (err, response) => {
                     if (err) {
                         return done(err);
                     }
 
-                    jobResult.getStatus(function (err, job) {
-                        if (err) {
-                            return done(err);
-                        }
-
-                        assert.equal(job.status, JobStatus.DONE);
-
-                        done();
-                    });
+                    const body = JSON.parse(response.body);
+                    assert.equal(body.error, 'permission denied');
+                    done();
                 });
             });
 
-            it('should create a job with regular api key and get it failed', function (done) {
-                this.testClient = new BatchTestClient({ authorization: 'vizzuality:regular1' });
+            it('should create a job with default api key and get it failed', function (done) {
+                this.testClient = new BatchTestClient({ authorization: 'vizzuality:default_public', response: 403 });
 
-                this.testClient.createJob({ query: privateSQL }, { anonymous: true }, (err, jobResult) => {
+                this.testClient.createJob({ query: privateSQL }, { anonymous: true }, (err, response) => {
                     if (err) {
                         return done(err);
                     }
 
-                    jobResult.getStatus(function (err, job) {
-                        if (err) {
-                            return done(err);
-                        }
-
-                        assert.equal(job.status, JobStatus.FAILED);
-                        assert.equal(job.failed_reason, 'permission denied for relation private_table');
-
-                        done();
-                    });
+                    const body = JSON.parse(response.body);
+                    assert.equal(body.error, 'permission denied');
+                    done();
                 });
             });
 

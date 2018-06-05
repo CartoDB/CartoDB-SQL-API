@@ -74,7 +74,7 @@ function runQueryHelper(job, callback) {
     });
 }
 
-describe.only('job service', function() {
+describe('job service', function() {
     var jobService = new JobService(jobBackend, jobCanceller);
 
     after(function (done) {
