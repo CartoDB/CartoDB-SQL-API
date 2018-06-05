@@ -40,7 +40,7 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
                 return callback(forbiddenError);
             }
 
-            return callback(null, verifyRequest(this.apikey, this.apikey));
+            return callback(null, getAuthorizationLevel(apikey));
         }  else {
             const apiKeyNotFoundError = new Error('Unauthorized');
             apiKeyNotFoundError.type = 'auth';
@@ -60,8 +60,8 @@ ApikeyAuth.prototype.getCredentials = function () {
     return this.apikeyToken;
 };
 
-function verifyRequest(apikey, requiredApikey) {
-    return (apikey === requiredApikey && apikey !== 'default_public');
+function getAuthorizationLevel(apikey) {
+    return apikey.type;
 }
 
 function isApiKeyFound(apikey) {

@@ -30,8 +30,8 @@ UserDatabaseMetadataService.prototype.parseMetadataToDatabase = function (userDa
     dbopts.dbname = dbParams.dbname;
     dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
 
-    // batch is secure so it's going to be authenticated by default
-    dbopts.authenticated = true;
+    // batch is secure so it's going to be master by default
+    dbopts.authorizationLevel = 'master';
     dbopts.user = _.template(global.settings.db_user, { user_id: dbParams.dbuser });
 
     dbopts.pass = _.template(global.settings.db_user_pass, {

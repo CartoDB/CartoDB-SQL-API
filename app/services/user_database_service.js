@@ -13,8 +13,8 @@ function errorUserNotFoundMessageTemplate (user) {
     return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
 }
 
-function isOauthAuthorization({ apikeyToken, authenticated }) {
-    return authenticated && !apikeyToken;
+function isOauthAuthorization({ apikeyToken, authorizationLevel }) {
+    return (authorizationLevel === 'master') && !apikeyToken;
 }
 
 /**
@@ -27,7 +27,7 @@ function isOauthAuthorization({ apikeyToken, authenticated }) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authenticated, callback) {
+UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authorizationLevel, callback) {
     this.metadataBackend.getAllUserDBParams(username, (err, dbParams) => {
         if (err) {
             err.http_status = 404;
@@ -66,7 +66,7 @@ UserDatabaseService.prototype.getConnectionParams = function (username, apikeyTo
             },
                 commonDBConfiguration);
 
-            if (isOauthAuthorization({apikeyToken,authenticated})) {
+            if (isOauthAuthorization({ apikeyToken, authorizationLevel})) {
                 callback(null, masterDBConfiguration, masterDBConfiguration);
             }
 

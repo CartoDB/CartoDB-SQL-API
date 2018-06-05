@@ -15,7 +15,7 @@ JobCanceller.prototype.cancel = function (job, callback) {
         dbname: job.data.dbname,
         user: job.data.dbuser,
         pass: job.data.pass,
-        authenticated: true
+        authorizationLevel: 'master'
     };
 
     doCancel(job.data.job_id, dbConfiguration, callback);

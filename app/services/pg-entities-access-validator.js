@@ -15,7 +15,7 @@ const FORBIDDEN_ENTITIES = {
 };
 
 const Validator = {
-    validate(affectedTables, authenticated) {
+    validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
         let softValidationResult = true;
 
@@ -23,8 +23,8 @@ const Validator = {
             if (global.settings.validatePGEntitiesAccess) {
                 hardValidationResult = this.hardValidation(affectedTables.tables);
             }
-//TODO AUTH only default public?
-            if (!authenticated) {
+
+            if (authorizationLevel !== 'master') {
                 softValidationResult = this.softValidation(affectedTables.tables);
             }
         }
