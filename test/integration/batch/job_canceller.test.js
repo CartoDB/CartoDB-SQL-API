@@ -19,7 +19,6 @@ var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
-var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 
 var USER = 'vizzuality';
@@ -30,7 +29,6 @@ var HOST = 'localhost';
 // in order to test query cancelation/draining
 function runQueryHelper(job, callback) {
     var job_id = job.job_id;
-    var user = job.user;
     var sql = job.query;
 
     job.status = jobStatus.RUNNING;
@@ -40,22 +38,24 @@ function runQueryHelper(job, callback) {
             return callback(err);
         }
 
-        userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
+        const dbConfiguration = {
+            host: job.host,
+            port: job.port,
+            dbname: job.dbname,
+            user: job.dbuser,
+            pass: job.pass,
+        };
+
+        const pg = new PSQL(dbConfiguration);
+
+        sql = '/* ' + job_id + ' */ ' + sql;
+
+        pg.eventedQuery(sql, function (err, query) {
             if (err) {
                 return callback(err);
             }
 
-            var pg = new PSQL(userDatabaseMetadata);
-
-            sql = '/* ' + job_id + ' */ ' + sql;
-
-            pg.eventedQuery(sql, function (err, query) {
-                if (err) {
-                    return callback(err);
-                }
-
-                callback(null, query);
-            });
+            callback(null, query);
         });
     });
 }

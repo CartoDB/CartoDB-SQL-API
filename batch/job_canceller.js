@@ -15,14 +15,13 @@ JobCanceller.prototype.cancel = function (job, callback) {
         dbname: job.data.dbname,
         user: job.data.dbuser,
         pass: job.data.pass,
-        authorizationLevel: 'master'
     };
 
     doCancel(job.data.job_id, dbConfiguration, callback);
 };
 
-function doCancel(job_id, userDatabaseMetadata, callback) {
-    var pg = new PSQL(userDatabaseMetadata);
+function doCancel(job_id, dbConfiguration, callback) {
+    var pg = new PSQL(dbConfiguration);
 
     getQueryPID(pg, job_id, function (err, pid) {
         if (err) {
