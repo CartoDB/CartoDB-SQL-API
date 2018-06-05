@@ -1,11 +1,11 @@
 /**
  * this module allows to auth user using an pregenerated api key
  */
-function ApikeyAuth(req, metadataBackend, username, apikey) {
+function ApikeyAuth(req, metadataBackend, username, apikeyToken) {
     this.req = req;
     this.metadataBackend = metadataBackend;
     this.username = username;
-    this.apikey = apikey;
+    this.apikeyToken = apikeyToken;
 }
 
 module.exports = ApikeyAuth;
@@ -15,7 +15,7 @@ function usernameMatches(basicAuthUsername, requestUsername) {
 }
 
 ApikeyAuth.prototype.verifyCredentials = function (callback) {
-    this.metadataBackend.getApikey(this.username, this.apikey, (err, apikey) => {
+    this.metadataBackend.getApikey(this.username, this.apikeyToken, (err, apikey) => {
         if (err) {
             err.http_status = 500;
             err.message = 'Unexpected error fetching from Redis';
@@ -53,11 +53,11 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
 };
 
 ApikeyAuth.prototype.hasCredentials = function () {
-    return !!this.apikey;
+    return !!this.apikeyToken;
 };
 
 ApikeyAuth.prototype.getCredentials = function () {
-    return this.apikey;
+    return this.apikeyToken;
 };
 
 function verifyRequest(apikey, requiredApikey) {
