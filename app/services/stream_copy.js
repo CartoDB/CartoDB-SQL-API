@@ -112,9 +112,9 @@ module.exports = {
                 })
                 .on('data', data => {
                     if (gzip) {
-                        metrics.addGzipSize(data.length)
+                        metrics.addGzipSize(data.length);
                     } else {
-                        metrics.addSize(data.length)
+                        metrics.addSize(data.length);
                     }
                 })
                 .on('end', () => requestEnded = true);
