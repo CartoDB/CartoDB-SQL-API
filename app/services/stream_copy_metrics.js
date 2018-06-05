@@ -9,6 +9,7 @@ module.exports = class StreamCopyMetrics {
         this.gzip = gzip;
         this.username = user;
         this.size = 0;
+        this.gzipSize = 0;
         this.rows = 0;
 
         this.startTime = new Date();
@@ -24,11 +25,15 @@ module.exports = class StreamCopyMetrics {
         this.size += size;
     }
 
+    addGzipSize(size) {
+        this.gzipSize += size;
+    }
+
     end(rows = null, error = null) {
         if (this.ended) {
             return;
         }
-        
+
         this.ended = true;
 
         if (Number.isInteger(rows)) {
@@ -44,11 +49,12 @@ module.exports = class StreamCopyMetrics {
 
         this._log(
             this.startTime.toISOString(),
+            this.gzip && this.gzipSize ? this.gzipSize : null,
             this.error ? this.error.message : null
         );
     }
 
-    _log(timestamp, errorMessage = null) {
+    _log(timestamp, gzipSize = null, errorMessage = null) {
         let logData = {
             type: this.type,
             format: this.format,
@@ -59,6 +65,10 @@ module.exports = class StreamCopyMetrics {
             time: this.time,
             timestamp
         };
+
+        if (gzipSize) {
+            logData.gzipSize = gzipSize;
+        }
 
         if (errorMessage) {
             logData.error = errorMessage;
