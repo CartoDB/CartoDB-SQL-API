@@ -16,6 +16,8 @@ module.exports = class StreamCopyMetrics {
         this.time = null;
 
         this.error = null;
+
+        this.ended = false;
     }
 
     addSize(size) {
@@ -23,6 +25,12 @@ module.exports = class StreamCopyMetrics {
     }
 
     end(rows = null, error = null) {
+        if (this.ended) {
+            return;
+        }
+        
+        this.ended = true;
+
         if (Number.isInteger(rows)) {
             this.rows = rows;
         }
