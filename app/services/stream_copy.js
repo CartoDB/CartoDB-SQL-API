@@ -22,6 +22,7 @@ module.exports = {
 
             res
                 .on('error', err => {
+                    metrics.end(null, err);
                     pgstream.unpipe(res);
                     done();
                     return cb(err);
@@ -36,6 +37,7 @@ module.exports = {
                         cancelingClient.cancel(runningClient, pgstream);
 
                         const err = new Error('Connection closed by client');
+                        metrics.end(null, err);
                         pgstream.unpipe(res);
                         // see https://node-postgres.com/api/pool#releasecallback
                         done(err);
@@ -47,6 +49,7 @@ module.exports = {
             pgstream
                 .on('error', err => {
                     if (!connectionClosedByClient) {
+                        metrics.end(null, err);
                         pgstream.unpipe(res);
                         done(err);
                         return cb(err);
@@ -75,6 +78,7 @@ module.exports = {
             const pgstream = client.query(copyFromStream);
             pgstream
                 .on('error', err => {
+                    metrics.end(null, err);
                     req.unpipe(pgstream);
                     done();
                     return cb(err); 
@@ -89,6 +93,7 @@ module.exports = {
 
             req
                 .on('error', err => {
+                    metrics.end(null, err);
                     req.unpipe(pgstream);
                     pgstream.end();
                     done();
@@ -96,11 +101,13 @@ module.exports = {
                 })
                 .on('close', () => {
                     if (!requestEnded) {
+                        const err = new Error('Connection closed by client');
+                        metrics.end(null, err);
                         const connection = client.connection;
                         connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                         req.unpipe(pgstream);
                         done();
-                        return cb(new Error('Connection closed by client'));
+                        return cb(err);
                     }
                 })
                 .on('data', data => metrics.size += data.length)
