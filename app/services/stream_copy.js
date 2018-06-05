@@ -110,11 +110,20 @@ module.exports = {
                         return cb(err);
                     }
                 })
-                .on('data', data => metrics.size += data.length)
+                .on('data', data => {
+                    if (gzip) {
+                        metrics.addGzipSize(data.length)
+                    } else {
+                        metrics.addSize(data.length)
+                    }
+                })
                 .on('end', () => requestEnded = true);
 
             if (gzip) {
-                req.pipe(zlib.createGunzip()).pipe(pgstream);
+                req
+                    .pipe(zlib.createGunzip())
+                    .on('data', data => metrics.addSize(data.length))
+                    .pipe(pgstream);
             } else {
                 req.pipe(pgstream);
             }
