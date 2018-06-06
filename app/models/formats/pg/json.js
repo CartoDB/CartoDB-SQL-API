@@ -41,7 +41,13 @@ JsonFormat.prototype.formatResultFields = function(flds) {
         tname += '[]';
       }
     }
-    nfields[f.name] = { type: tname };
+    var rv = { type: tname, pgtype: cname };
+
+    if ( cname.match(/geometry|geography/) ) {
+        var typmodInfo = this.client.typeModInfo(f.dataTypeModifier);
+        _.extend(rv, typmodInfo);
+    }
+    nfields[f.name] = rv
   }
   return nfields;
 };
