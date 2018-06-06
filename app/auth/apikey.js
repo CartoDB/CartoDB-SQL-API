@@ -18,7 +18,7 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
     this.metadataBackend.getApikey(this.username, this.apikeyToken, (err, apikey) => {
         if (err) {
             err.http_status = 500;
-            err.message = 'Unexpected error fetching from Redis';
+            err.message = 'Unexpected error';
 
             return callback(err);
         }

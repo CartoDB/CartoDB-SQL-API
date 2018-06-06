@@ -19,9 +19,6 @@ QueryRunner.prototype.run = function (job_id, sql, user, timeout, dbparams, call
     }
 
     const dbConfigurationError = new Error('Batch Job DB misconfiguration');
-    dbConfigurationError.type = 'batch-job';
-    dbConfigurationError.subtype = 'job-db-conf-error';
-    dbConfigurationError.http_status = 400;
 
     return callback(dbConfigurationError);  
 };
