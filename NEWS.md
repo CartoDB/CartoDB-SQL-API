@@ -7,6 +7,9 @@ New features:
 - CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
 - Making version 2.0.0 configuration parameters backwards compatible
 
+Announcements:
+- Upgrades express to 4.15.2
+- Upgrades request to 2.81.0 
 
 ## 2.0.0
 Released 2018-03-22
