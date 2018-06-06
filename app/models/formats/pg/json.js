@@ -44,8 +44,8 @@ JsonFormat.prototype.formatResultFields = function(flds) {
     var rv = { type: tname, pgtype: cname };
 
     if ( cname.match(/geometry|geography/) ) {
-        var typmodInfo = this.client.typeModInfo(f.dataTypeModifier);
-        _.extend(rv, typmodInfo);
+      var typmodInfo = this.client.typeModInfo(f.dataTypeModifier);
+      _.extend(rv, typmodInfo);
     }
     nfields[f.name] = rv
   }
