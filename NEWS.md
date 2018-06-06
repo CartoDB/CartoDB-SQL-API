@@ -8,8 +8,8 @@ New features:
 - Making version 2.0.0 configuration parameters backwards compatible
 
 Announcements:
-- Upgrades express to 4.15.5
-- Upgrades request to 2.81.0 
+- Upgrades express to 4.16.3
+- Upgrades request to 2.87.0 
 
 ## 2.0.0
 Released 2018-03-22
