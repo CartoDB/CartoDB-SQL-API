@@ -6,10 +6,8 @@ module.exports = function user(metadataBackend) {
     return function userMiddleware (req, res, next) {
         res.locals.user = getUserNameFromRequest(req, cdbRequest);
 
-        checkUserExists(metadataBackend, res.locals.user, function(userExists) {
-            if (userExists) {
-                return next();
-            } else {
+        checkUserExists(metadataBackend, res.locals.user, function(err, userExists) {
+            if (err || !userExists) {
                 const error = new Error('Unauthorized');
                 error.type = 'auth';
                 error.subtype = 'user-not-found';
@@ -17,6 +15,8 @@ module.exports = function user(metadataBackend) {
                 error.message = errorUserNotFoundMessageTemplate(res.locals.user);
                 next(error);
             }
+
+            return next();
         });
     };
 };
@@ -27,7 +27,7 @@ function getUserNameFromRequest(req, cdbRequest) {
 
 function checkUserExists(metadataBackend, userName, callback) {
     metadataBackend.getUserId(userName, function(err) {
-        callback(!err);
+        callback(err, !err);
     });
 }
 
