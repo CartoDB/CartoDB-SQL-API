@@ -8,7 +8,7 @@ New features:
  * Making version 2.0.0 configuration parameters backwards compatible
 
 Announcements:
- * Updated carto-psql to 0.11.0
+ * Updated carto-psql to 0.12.0
 
 
 ## 2.0.0
