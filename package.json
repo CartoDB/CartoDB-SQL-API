@@ -24,7 +24,7 @@
     "cartodb-query-tables": "0.2.0",
     "cartodb-redis": "1.0.0",
     "debug": "2.2.0",
-    "express": "4.15.2",
+    "express": "4.15.5",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
     "multer": "~1.2.0",
