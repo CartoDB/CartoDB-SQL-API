@@ -5,16 +5,16 @@ To make things easier for developers, we provide client libraries for different 
 **Note:** These libraries are externally developed and maintained. Use caution when using libraries in different languages, as some of these resources may be out-of-date.
 
 - **R**  
-  To help more researchers use CARTO to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-r)
+  To help more researchers use CARTO to drive their geospatial data, we have released the R client library. [Fork it on GitHub!](https://github.com/CartoDB/cartodb-r)
 
 - **NODE.js**  
-  This demo app authenticates with your CARTO and shows how to perform read and write queries using the SQL API. [Fork it on GitHub!](https://github.com/Vizzuality/cartodb-nodejs)
+  This demo app authenticates with your CARTO and shows how to perform read and write queries using the SQL API. [Fork it on GitHub!](https://github.com/CartoDB/cartodb-nodejs)
 
 - **PHP**  
   The PHP library provides a wrapper around the SQL API to get PHP objects straight from SQL calls to CARTO. [Fork it on GitHub!](https://github.com/Vizzuality/cartodbclient-php)
 
 - **PYTHON**  
-  Provides API Key access to SQL API. [Fork it on GitHub!](https://github.com/vizzuality/cartodb-python)
+  Provides API Key access to SQL API. [Fork it on GitHub!](https://github.com/CartoDB/carto-python)
 
 - **JAVA**  
   Very basic example of how to access CARTO SQL API. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
