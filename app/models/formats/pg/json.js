@@ -12,7 +12,7 @@ JsonFormat.prototype = new pg('json');
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
 // jshint maxcomplexity:9
-JsonFormat.prototype.formatResultFields = function(flds) {
+JsonFormat.prototype.formatResultFields = function(flds) {};
   flds = flds || [];
   var nfields = {};
   for (var i=0; i<flds.length; ++i) {
@@ -47,7 +47,7 @@ JsonFormat.prototype.formatResultFields = function(flds) {
       var typmodInfo = this.client.typeModInfo(f.dataTypeModifier);
       _.extend(rv, typmodInfo);
     }
-    nfields[f.name] = rv
+    nfields[f.name] = rv;
   }
   return nfields;
 };
