@@ -8,9 +8,8 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const Logger = require('../services/logger');
 const errorHandlerFactory = require('../services/error_handler_factory');
-const streamCopy = require('../services/stream_copy');
+const StreamCopy = require('../services/stream_copy');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
     this.metadataBackend = metadataBackend;
@@ -18,7 +17,7 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
 
-    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    this.streamCopy = new StreamCopy();
 }
 
 CopyController.prototype.route = function (app) {
@@ -33,7 +32,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyFrom(this.logger),
+            handleCopyFrom(this.streamCopy),
             errorHandler(),
             errorMiddleware()
         ];
@@ -48,7 +47,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyTo(this.logger),
+            handleCopyTo(this.streamCopy),
             errorHandler(),
             errorMiddleware()
         ];
@@ -59,7 +58,7 @@ CopyController.prototype.route = function (app) {
 };
 
 
-function handleCopyTo (logger) {
+function handleCopyTo (streamCopy) {
     return function handleCopyToMiddleware (req, res, next) {
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
@@ -71,7 +70,6 @@ function handleCopyTo (logger) {
             req.query.q, 
             res.locals.userDbParams,
             res.locals.user,
-            logger,
             function(err) {
                 if (err) {
                     return next(err);
@@ -84,7 +82,7 @@ function handleCopyTo (logger) {
     };
 }
 
-function handleCopyFrom (logger) {
+function handleCopyFrom (streamCopy) {
     return function handleCopyFromMiddleware (req, res, next) {
         streamCopy.from(
             req, 
@@ -92,7 +90,6 @@ function handleCopyFrom (logger) {
             res.locals.userDbParams, 
             res.locals.user,
             req.get('content-encoding') === 'gzip', 
-            logger,
             function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
                 if (err) {
                     return next(err);
