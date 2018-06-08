@@ -90,22 +90,14 @@ function handleCopyFrom (streamCopy) {
             res.locals.userDbParams, 
             res.locals.user,
             req.get('content-encoding') === 'gzip', 
-            function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
+            function(err, metrics) {
                 if (err) {
                     return next(err);
                 } 
 
-                // TODO: remove when data-ingestion log works
-                const { time, rows, type, format, gzip, size } = metrics; 
-
+                const { time, rows } = metrics;
                 if (!time || !rows) {
                     return next(new Error("No rows copied"));
-                }
-
-                // TODO: remove when data-ingestion log works
-                if (req.profiler) {
-                    req.profiler.add({copyFrom: { type, format, gzip, size, rows, time }});
-                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
                 }
                 
                 res.send({
