@@ -2,7 +2,7 @@
 
 const bunyan = require('bunyan');
 
-class BunyanLogger {
+class Logger {
     constructor (path, name) {
         const stream = {
             level: process.env.NODE_ENV === 'test' ? 'fatal' : 'info'
@@ -30,4 +30,4 @@ class BunyanLogger {
     }
 }
  
-module.exports = BunyanLogger;
+module.exports = Logger;

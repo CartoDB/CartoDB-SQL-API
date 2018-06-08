@@ -8,7 +8,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const BunyanLogger = require('../services/bunyan_logger');
+const Logger = require('../services/logger');
 const errorHandlerFactory = require('../services/error_handler_factory');
 const streamCopy = require('../services/stream_copy');
 
@@ -18,7 +18,7 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
 
-    this.logger = new BunyanLogger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
 }
 
 CopyController.prototype.route = function (app) {
