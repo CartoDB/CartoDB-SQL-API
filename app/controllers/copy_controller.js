@@ -9,7 +9,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
-const StreamCopy = require('../services/stream_copy');
+const streamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const Logger = require('../services/logger');
 const { Client } = require('pg');
@@ -23,8 +23,6 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
-
-    this.streamCopy = new StreamCopy();
 }
 
 CopyController.prototype.route = function (app) {
@@ -39,7 +37,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyFrom(this.streamCopy),
+            handleCopyFrom(),
             errorHandler(),
             errorMiddleware()
         ];
@@ -54,7 +52,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyTo(this.streamCopy),
+            handleCopyTo(),
             errorHandler(),
             errorMiddleware()
         ];
@@ -65,7 +63,7 @@ CopyController.prototype.route = function (app) {
 };
 
 
-function handleCopyTo (streamCopy) {
+function handleCopyTo () {
     return function handleCopyToMiddleware (req, res, next) {
         const sql = req.query.q;
         const { userDbParams, user } = res.locals;
@@ -135,7 +133,7 @@ function handleCopyTo (streamCopy) {
     };
 }
 
-function handleCopyFrom (streamCopy) {
+function handleCopyFrom () {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
         const { userDbParams, user } = res.locals;
@@ -145,45 +143,24 @@ function handleCopyFrom (streamCopy) {
         let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
 
 
-        const pg = new PSQL(userDbParams);
-        pg.connect(function (err, client, done) {
+        streamCopy.from(sql, userDbParams, function (err, pgstream, client, done) {
             if (err) {
+                if (pgstream) {
+                    req.unpipe(pgstream);
+                }
+
+                metrics.end(null, err);
                 next(err);
             }
 
-            let copyFromStream = copyFrom(sql);
-            const pgstream = client.query(copyFromStream);
-            pgstream
-                .on('error', err => {
-                    metrics.end(null, err);
-                    req.unpipe(pgstream);
-                    done();
-                    next(err);
-                })
-                .on('end', function () {
-                    metrics.end(copyFromStream.rowCount);
-
-                    done();
-
-                    const { time, rows } = metrics;
-                    if (!time || !rows) {
-                        return next(new Error("No rows copied"));
-                    }
-                    
-                    res.send({
-                        time,
-                        total_rows: rows
-                    });
-                });
-
             let requestEnded = false;
-
             req
                 .on('error', err => {
                     metrics.end(null, err);
                     req.unpipe(pgstream);
                     pgstream.end();
                     done();
+
                     next(err);
                 })
                 .on('close', () => {
@@ -215,6 +192,19 @@ function handleCopyFrom (streamCopy) {
             } else {
                 req.pipe(pgstream);
             }
+
+        }, function(err, rows) {
+            metrics.end(rows);
+
+            const { time } = metrics;
+            if (!time || !rows) {
+                return next(new Error("No rows copied"));
+            }
+            
+            res.send({
+                time,
+                total_rows: rows
+            });
         });
     };
 }

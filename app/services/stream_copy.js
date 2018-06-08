@@ -6,16 +6,32 @@ const StreamCopyMetrics = require('./stream_copy_metrics');
 const { Client } = require('pg');
 const Logger = require('./logger');
 
-module.exports = class StreamCopy {
-    constructor() {
-        this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
-    }
-
-    to(res, sql, userDbParams, user, cb) {
+module.exports = {
+    to() {
         
-    }
+    },
 
-    from(req, sql, userDbParams, user, gzip, cb) {
-        
+    from(sql, userDbParams, cb, next) {
+        const pg = new PSQL(userDbParams);
+        pg.connect(function (err, client, done) {
+            if (err) {
+                cb(err);
+            }
+
+            let copyFromStream = copyFrom(sql);
+            const pgstream = client.query(copyFromStream);
+
+            pgstream
+                .on('error', err => {
+                    done();
+                    cb(err, pgstream);
+                })
+                .on('end', function () {
+                    done();
+                    next(null, copyFromStream.rowCount);
+                });
+
+            cb(null, pgstream, client, done)
+        });
     }
 };
