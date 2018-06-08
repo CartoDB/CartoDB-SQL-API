@@ -73,54 +73,59 @@ function handleCopyTo (logger) {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        streamCopy.to(sql, userDbParams, function (err, pgstream, client, done) {
-            if (err) {
-                return next(err);
-            }
-
-            let responseEnded = false;
-            let connectionClosedByClient = false;    
-
-            res
-                .on('error', err => {
-                    metrics.end(null, err);
-                    pgstream.unpipe(res);
-                    done();
+        streamCopy.to(
+            sql, 
+            userDbParams, 
+            function (err, pgstream, client, done) {
+                if (err) {
                     return next(err);
-                })
-                .on('close', () => {
-                    if (!responseEnded) {
-                        connectionClosedByClient = true;
-                        // Cancel the running COPY TO query
-                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                        const runningClient = client;
-                        const cancelingClient = new Client(runningClient.connectionParameters);
-                        cancelingClient.cancel(runningClient, pgstream);
+                }
 
-                        const err = new Error('Connection closed by client');
+                let responseEnded = false;
+                let connectionClosedByClient = false;    
+
+                res
+                    .on('error', err => {
                         metrics.end(null, err);
                         pgstream.unpipe(res);
-                        // see https://node-postgres.com/api/pool#releasecallback
-                        done(err);
+                        done();
                         return next(err);
-                    }
-                })
-                .on('end', () => responseEnded = true);
+                    })
+                    .on('close', () => {
+                        if (!responseEnded) {
+                            connectionClosedByClient = true;
+                            // Cancel the running COPY TO query
+                            // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                            const runningClient = client;
+                            const cancelingClient = new Client(runningClient.connectionParameters);
+                            cancelingClient.cancel(runningClient, pgstream);
 
-            pgstream
-                .on('error', err => {
-                    if (!connectionClosedByClient) {
-                        metrics.end(null, err);
-                        pgstream.unpipe(res);
-                        done(err);
-                        return next(err);
-                    }
-                })
-                .on('data', data => metrics.addSize(data.length))
-                .pipe(res);
-        }, function (err, rows) {
-            metrics.end(rows);
-        });
+                            const err = new Error('Connection closed by client');
+                            metrics.end(null, err);
+                            pgstream.unpipe(res);
+                            // see https://node-postgres.com/api/pool#releasecallback
+                            done(err);
+                            return next(err);
+                        }
+                    })
+                    .on('end', () => responseEnded = true);
+
+                pgstream
+                    .on('error', err => {
+                        if (!connectionClosedByClient) {
+                            metrics.end(null, err);
+                            pgstream.unpipe(res);
+                            done(err);
+                            return next(err);
+                        }
+                    })
+                    .on('data', data => metrics.addSize(data.length))
+                    .pipe(res);
+            }, 
+            function (err, rows) {
+                metrics.end(rows);
+            }
+        );
     };
 }
 
@@ -132,69 +137,74 @@ function handleCopyFrom (logger) {
 
         let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
 
-        streamCopy.from(sql, userDbParams, function (err, pgstream, client, done) {
-            if (err) {
-                if (pgstream) {
-                    req.unpipe(pgstream);
+        streamCopy.from(
+            sql, 
+            userDbParams, 
+            function (err, pgstream, client, done) {
+                if (err) {
+                    if (pgstream) {
+                        req.unpipe(pgstream);
+                    }
+
+                    metrics.end(null, err);
+                    next(err);
                 }
 
-                metrics.end(null, err);
-                next(err);
-            }
-
-            let requestEnded = false;
-            req
-                .on('error', err => {
-                    metrics.end(null, err);
-                    req.unpipe(pgstream);
-                    pgstream.end();
-                    done();
-
-                    next(err);
-                })
-                .on('close', () => {
-                    if (!requestEnded) {
-                        const err = new Error('Connection closed by client');
-                        metrics.end(null, err);
-                        const connection = client.connection;
-                        connection.sendCopyFail('CARTO SQL API: Connection closed by client');
-                        req.unpipe(pgstream);
-                        done();
-                        next(err);
-                    }
-                })
-                .on('data', data => {
-                    if (gzip) {
-                        metrics.addGzipSize(data.length);
-                    } else {
-                        metrics.addSize(data.length);
-                    }
-                })
-                .on('end', () => requestEnded = true);
-
-
-            if (gzip) {
+                let requestEnded = false;
                 req
-                    .pipe(zlib.createGunzip())
-                    .on('data', data => metrics.addSize(data.length))
-                    .pipe(pgstream);
-            } else {
-                req.pipe(pgstream);
-            }
+                    .on('error', err => {
+                        metrics.end(null, err);
+                        req.unpipe(pgstream);
+                        pgstream.end();
+                        done();
 
-        }, function(err, rows) {
-            metrics.end(rows);
+                        next(err);
+                    })
+                    .on('close', () => {
+                        if (!requestEnded) {
+                            const err = new Error('Connection closed by client');
+                            metrics.end(null, err);
+                            const connection = client.connection;
+                            connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                            req.unpipe(pgstream);
+                            done();
+                            next(err);
+                        }
+                    })
+                    .on('data', data => {
+                        if (gzip) {
+                            metrics.addGzipSize(data.length);
+                        } else {
+                            metrics.addSize(data.length);
+                        }
+                    })
+                    .on('end', () => requestEnded = true);
 
-            const { time } = metrics;
-            if (!time || !rows) {
-                return next(new Error("No rows copied"));
+
+                if (gzip) {
+                    req
+                        .pipe(zlib.createGunzip())
+                        .on('data', data => metrics.addSize(data.length))
+                        .pipe(pgstream);
+                } else {
+                    req.pipe(pgstream);
+                }
+
+            }, 
+            function(err, rows) {
+                metrics.end(rows);
+
+                const { time } = metrics;
+                if (!time || !rows) {
+                    return next(new Error("No rows copied"));
+                }
+                
+                res.send({
+                    time,
+                    total_rows: rows
+                });
             }
-            
-            res.send({
-                time,
-                total_rows: rows
-            });
-        });
+        );
     };
 }
 
