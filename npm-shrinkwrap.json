@@ -3,9 +3,9 @@
   "version": "2.0.1",
   "dependencies": {
     "@carto/fqdn-sync": {
-      "version": "0.2.1",
-      "from": "@carto/fqdn-sync@0.2.1",
-      "resolved": "https://registry.npmjs.org/@carto/fqdn-sync/-/fqdn-sync-0.2.1.tgz"
+      "version": "0.2.2",
+      "from": "@carto/fqdn-sync@0.2.2",
+      "resolved": "https://registry.npmjs.org/@carto/fqdn-sync/-/fqdn-sync-0.2.2.tgz"
     },
     "accepts": {
       "version": "1.2.13",
