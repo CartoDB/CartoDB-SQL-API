@@ -36,7 +36,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyFrom(this.logger,
+            handleCopyFrom(this.logger),
             errorHandler(),
             errorMiddleware()
         ];
