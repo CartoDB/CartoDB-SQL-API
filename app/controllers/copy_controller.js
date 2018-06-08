@@ -75,8 +75,7 @@ function handleCopyTo () {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        const pg = new PSQL(userDbParams);
-        pg.connect(function (err, client, done) {
+        streamCopy.to(sql, userDbParams, function (err, pgstream, client, done) {
             if (err) {
                 return next(err);
             }
@@ -84,8 +83,6 @@ function handleCopyTo () {
             let responseEnded = false;
             let connectionClosedByClient = false;
             
-            const copyToStream = copyTo(sql);
-            const pgstream = client.query(copyToStream);
 
             res
                 .on('error', err => {
@@ -123,12 +120,9 @@ function handleCopyTo () {
                     }
                 })
                 .on('data', data => metrics.addSize(data.length))
-                .on('end', () => {
-                    metrics.end(copyToStream.rowCount);
-                    done();
-                    return next(null, metrics);
-                })
                 .pipe(res);
+        }, function (err, rows) {
+            metrics.end(rows);
         });
     };
 }
