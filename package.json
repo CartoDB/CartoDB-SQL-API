@@ -17,6 +17,7 @@
     "Sandro Santilli <strk@vizzuality.com>"
   ],
   "dependencies": {
+    "@carto/fqdn-sync": "0.2.2",
     "basic-auth": "^2.0.0",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
