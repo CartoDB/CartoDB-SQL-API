@@ -14,15 +14,14 @@ const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const Logger = require('../services/logger');
 const { Client } = require('pg');
 const zlib = require('zlib');
-const PSQL = require('cartodb-psql');
-const copyTo = require('pg-copy-streams').to;
-const copyFrom = require('pg-copy-streams').from;
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
+
+    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
 }
 
 CopyController.prototype.route = function (app) {
@@ -37,7 +36,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyFrom(),
+            handleCopyFrom(this.logger,
             errorHandler(),
             errorMiddleware()
         ];
@@ -52,7 +51,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
-            handleCopyTo(),
+            handleCopyTo(this.logger),
             errorHandler(),
             errorMiddleware()
         ];
@@ -63,13 +62,12 @@ CopyController.prototype.route = function (app) {
 };
 
 
-function handleCopyTo () {
+function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
         const sql = req.query.q;
         const { userDbParams, user } = res.locals;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
-        const logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
         let metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
@@ -81,8 +79,7 @@ function handleCopyTo () {
             }
 
             let responseEnded = false;
-            let connectionClosedByClient = false;
-            
+            let connectionClosedByClient = false;    
 
             res
                 .on('error', err => {
@@ -127,15 +124,13 @@ function handleCopyTo () {
     };
 }
 
-function handleCopyFrom () {
+function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
         const { userDbParams, user } = res.locals;
         const gzip = req.get('content-encoding') === 'gzip';
 
-        const logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
         let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
-
 
         streamCopy.from(sql, userDbParams, function (err, pgstream, client, done) {
             if (err) {
