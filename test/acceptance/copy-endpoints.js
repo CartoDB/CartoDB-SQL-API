@@ -330,3 +330,56 @@ describe('copy-endpoints db connections', function() {
         });
     });
 });
+
+describe('copy-endpoints client disconnection', function() {
+    before(function() {
+        this.db_pool_size = global.settings.db_pool_size;
+        global.settings.db_pool_size = 1;
+    });
+
+    after(function() {
+        global.settings.db_pool_size = this.db_pool_size;
+    });
+
+    it('copy to returns the connection to the pool if the client disconnects', function(done) {
+        const request = require('request');
+        const port = 5555;
+        const host = '127.0.0.1';
+
+        var listen = function() {
+            var listener = server.listen(port, host);
+            listener.on('listening', onServerListening);
+        };
+
+        var onServerListening = function() {
+            const requestParams = {
+                url: 'http://' + host + ':' + port + '/api/v1/sql/copyto?' + querystring.stringify({
+                    q: 'COPY populated_places_simple_reduced TO STDOUT',
+                }),
+                headers: { host: 'vizzuality.cartodb.com' },
+                method: 'GET',
+                timeout: 1
+            };
+            request(requestParams, function(err, response, body) {
+                // we're expecting a timeout error
+                assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
+
+                // check now that we can perform a regular query, cause the connection should be back to the pool
+                request({
+                    url: 'http://' + host + ':' + port + '/api/v1/sql?' + querystring.stringify({
+                        q: 'SELECT 1',
+                    }),
+                    headers: { host: 'vizzuality.cartodb.com' },
+                    method: 'GET',
+                    timeout: 5000
+                }, function(err, response, body) {
+                    assert.ifError(err);
+                    assert(response.statusCode == 200);
+                    done();
+                });
+            });
+        }
+
+        listen();
+    });
+});
