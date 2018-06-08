@@ -9,6 +9,7 @@ New features:
 
 Announcements:
  * Updated carto-psql to 0.12.0
+ * [Test] Update sqlite3 to 4.0.0
 
 
 ## 2.0.0
