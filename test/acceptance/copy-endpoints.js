@@ -332,7 +332,8 @@ describe('copy-endpoints db connections', function() {
 });
 
 describe('copy-endpoints client disconnection', function() {
-    // Give it enough time to connect and issue the query but not too much so as to disconnect in the middle of the query
+    // Give it enough time to connect and issue the query
+    // but not too much so as to disconnect in the middle of the query.
     const client_disconnect_timeout = 10;
 
     before(function() {
