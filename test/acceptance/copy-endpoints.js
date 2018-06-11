@@ -334,11 +334,14 @@ describe('copy-endpoints db connections', function() {
 describe('copy-endpoints client disconnection', function() {
     before(function() {
         this.db_pool_size = global.settings.db_pool_size;
+        this.node_socket_timeout = global.settings.node_socket_timeout;
         global.settings.db_pool_size = 1;
+        global.settings.node_socket_timeout = 100;
     });
 
     after(function() {
         global.settings.db_pool_size = this.db_pool_size;
+        global.settings.node_socket_timeout = this.node_socket_timeout;
     });
 
     it('copy to returns the connection to the pool if the client disconnects', function(done) {
