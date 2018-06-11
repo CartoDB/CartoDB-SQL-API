@@ -853,8 +853,8 @@
     },
     "pg-copy-streams": {
       "version": "1.2.0",
-      "from": "pg-copy-streams@>=1.2.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/pg-copy-streams/-/pg-copy-streams-1.2.0.tgz"
+      "from": "cartodb/node-pg-copy-streams#v1.2.0-carto.1",
+      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#d7e5c1383ff9b43890f2c37bc38cfed1afc2523f"
     },
     "pg-int8": {
       "version": "1.0.1",
