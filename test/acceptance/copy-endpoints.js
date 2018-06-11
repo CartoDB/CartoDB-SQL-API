@@ -334,19 +334,16 @@ describe('copy-endpoints db connections', function() {
 describe('copy-endpoints client disconnection', function() {
     before(function() {
         this.db_pool_size = global.settings.db_pool_size;
-        this.node_socket_timeout = global.settings.node_socket_timeout;
         global.settings.db_pool_size = 1;
-        global.settings.node_socket_timeout = 100;
     });
 
     after(function() {
         global.settings.db_pool_size = this.db_pool_size;
-        global.settings.node_socket_timeout = this.node_socket_timeout;
     });
 
     it('copy to returns the connection to the pool if the client disconnects', function(done) {
 
-        var assertCanReuseConnection = function () {
+        var assertCanReuseConnection = function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
                     q: 'SELECT 1',
@@ -366,11 +363,11 @@ describe('copy-endpoints client disconnection', function() {
             }),
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET',
-            timeout: 1
+            timeout: 5
         }, {}, function(err, res) {
             // we're expecting a timeout error
             assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
-            assertCanReuseConnection();
+            assertCanReuseConnection(done);
         });
     });
 });
