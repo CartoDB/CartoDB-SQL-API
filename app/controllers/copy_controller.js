@@ -68,7 +68,7 @@ function handleCopyTo (logger) {
         const { userDbParams, user } = res.locals;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
-        let metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
+        const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
@@ -135,7 +135,7 @@ function handleCopyFrom (logger) {
         const { userDbParams, user } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
 
-        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
+        const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.from(
             sql, 
