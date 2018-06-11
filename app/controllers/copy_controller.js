@@ -216,7 +216,6 @@ function validateCopyQuery () {
             return next(new Error("SQL is missing"));
         }
 
-        // Only accept SQL that starts with 'COPY'
         if (!sql.toUpperCase().startsWith("COPY ")) {
             return next(new Error("SQL must start with COPY"));
         }
