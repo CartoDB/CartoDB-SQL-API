@@ -133,9 +133,9 @@ function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
         const { userDbParams, user } = res.locals;
-        const gzip = req.get('content-encoding') === 'gzip';
+        const isGzip = req.get('content-encoding') === 'gzip';
 
-        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
+        let metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.from(
             sql, 
@@ -172,7 +172,7 @@ function handleCopyFrom (logger) {
                         }
                     })
                     .on('data', data => {
-                        if (gzip) {
+                        if (isGzip) {
                             metrics.addGzipSize(data.length);
                         } else {
                             metrics.addSize(data.length);
@@ -181,7 +181,7 @@ function handleCopyFrom (logger) {
                     .on('end', () => requestEnded = true);
 
 
-                if (gzip) {
+                if (isGzip) {
                     req
                         .pipe(zlib.createGunzip())
                         .on('data', data => metrics.addSize(data.length))

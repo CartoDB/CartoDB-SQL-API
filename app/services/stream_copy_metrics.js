@@ -1,12 +1,12 @@
 const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 module.exports = class StreamCopyMetrics {
-    constructor(logger, type, sql, user, gzip = null) {
+    constructor(logger, type, sql, user, isGzip = null) {
         this.logger = logger;
 
         this.type = type;
         this.format = getFormatFromCopyQuery(sql);
-        this.gzip = gzip;
+        this.isGzip = isGzip;
         this.username = user;
         this.size = 0;
         this.gzipSize = 0;
@@ -49,7 +49,7 @@ module.exports = class StreamCopyMetrics {
 
         this._log(
             this.startTime.toISOString(),
-            this.gzip && this.gzipSize ? this.gzipSize : null,
+            this.isGzip && this.gzipSize ? this.gzipSize : null,
             this.error ? this.error.message : null
         );
     }
@@ -60,7 +60,7 @@ module.exports = class StreamCopyMetrics {
             format: this.format,
             size: this.size,
             rows: this.rows,
-            gzip: this.gzip,
+            gzip: this.isGzip,
             username: this.username,
             time: this.time,
             timestamp
