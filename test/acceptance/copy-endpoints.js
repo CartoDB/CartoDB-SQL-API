@@ -359,13 +359,14 @@ describe('copy-endpoints client disconnection', function() {
 
         assert.response(server, {
             url: '/api/v1/sql/copyto?' + querystring.stringify({
-                q: 'COPY populated_places_simple_reduced TO STDOUT',
+                q: 'COPY (SELECT * FROM generate_series(1, 100000)) TO STDOUT',
             }),
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET',
-            timeout: 5
+            timeout: 10
         }, {}, function(err, res) {
             // we're expecting a timeout error
+            assert.ok(err);
             assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
             assertCanReuseConnection(done);
         });
