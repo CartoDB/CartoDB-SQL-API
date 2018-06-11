@@ -34,13 +34,15 @@ function QueryController(metadataBackend, userDatabaseService, tableCache, stats
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
+    const forceToBeMaster = false;
+
     const queryMiddlewares = endpointGroup => {
         return [
             bodyParserMiddleware(),
             initializeProfilerMiddleware('query'),
-            userMiddleware(),
+            userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
-            authorizationMiddleware(this.metadataBackend),
+            authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             this.handleQuery.bind(this),
@@ -70,7 +72,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
 
-    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
 
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
@@ -145,7 +147,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
 
                 var pg = new PSQL(authDbParams);
 
-                var skipCache = authenticated;
+                var skipCache = authorizationLevel === 'master';
 
                 self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
                     if (err) {
@@ -164,7 +166,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 }
 
                 checkAborted('setHeaders');
-                if(!pgEntitiesAccessValidator.validate(affectedTables, authenticated)) {
+                if(!pgEntitiesAccessValidator.validate(affectedTables, authorizationLevel)) {
                     const syntaxError = new SyntaxError("system tables are forbidden");
                     syntaxError.http_status = 403;
                     throw(syntaxError);

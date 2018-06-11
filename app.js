@@ -11,7 +11,7 @@
 */
 var fs = require('fs');
 var path = require('path');
-var os = require('os');
+const fqdn = require('@carto/fqdn-sync');
 
 var argv = require('yargs')
     .usage('Usage: $0 <environment> [options]')
@@ -46,7 +46,7 @@ if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
   process.exit(1);
 }
 
-global.settings.api_hostname = require('os').hostname().split('.')[0];
+global.settings.api_hostname = fqdn.hostname();
 
 global.log4js = require('log4js');
 var log4jsConfig = {
@@ -85,8 +85,7 @@ var StatsClient = require('./app/stats/client');
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
-        var hostToken = os.hostname().split('.').reverse().join('.');
-        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, hostToken);
+        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, fqdn.reverse());
     }
 }
 var statsClient = StatsClient.getInstance(global.settings.statsd);

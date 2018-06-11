@@ -2,6 +2,11 @@
   "name": "cartodb_sql_api",
   "version": "2.0.1",
   "dependencies": {
+    "@carto/fqdn-sync": {
+      "version": "0.2.2",
+      "from": "@carto/fqdn-sync@0.2.2",
+      "resolved": "https://registry.npmjs.org/@carto/fqdn-sync/-/fqdn-sync-0.2.2.tgz"
+    },
     "accepts": {
       "version": "1.2.13",
       "from": "accepts@>=1.2.12 <1.3.0",
@@ -175,9 +180,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "1.0.0",
-      "from": "cartodb-redis@1.0.0",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-1.0.0.tgz"
+      "version": "1.0.1",
+      "from": "git://github.com/CartoDB/node-cartodb-redis.git#remove-auth-fallback",
+      "resolved": "git://github.com/CartoDB/node-cartodb-redis.git#c25114a149ad3522e0e5d6850dca45e67332f98f"
     },
     "caseless": {
       "version": "0.11.0",
