@@ -142,7 +142,8 @@ var oAuth = (function(){
         }, false);
       },
       function finishValidation(err, hasValidSignature) {
-        return callback(err, hasValidSignature || null);
+        const authorizationLevel = hasValidSignature ? 'master' : null;
+        return callback(err, authorizationLevel);
       }
     );
   };

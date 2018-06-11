@@ -1,5 +1,3 @@
-const _ = require('underscore');
-
 function isApiKeyFound(apikey) {
     return apikey.type !== null &&
         apikey.user !== null &&
@@ -15,6 +13,10 @@ function errorUserNotFoundMessageTemplate (user) {
     return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
 }
 
+function isOauthAuthorization({ apikeyToken, authorizationLevel }) {
+    return (authorizationLevel === 'master') && !apikeyToken;
+}
+
 /**
  * Callback is invoked with `dbParams` and `authDbParams`.
  * `dbParams` depends on AuthApi verification so it might return a public user with just SELECT permission, where
@@ -25,7 +27,7 @@ function errorUserNotFoundMessageTemplate (user) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authenticated, callback) {
+UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authorizationLevel, callback) {
     this.metadataBackend.getAllUserDBParams(username, (err, dbParams) => {
         if (err) {
             err.http_status = 404;
@@ -34,37 +36,14 @@ UserDatabaseService.prototype.getConnectionParams = function (username, apikeyTo
             return callback(err);
         }
 
-        const dbopts = {
+        const commonDBConfiguration = {
             port: global.settings.db_port,
-            pass: global.settings.db_pubuser_pass
+            host: dbParams.dbhost,
+            dbname: dbParams.dbname,
         };
 
-        dbopts.host = dbParams.dbhost;
-        dbopts.dbname = dbParams.dbname;
-        dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-        const user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-        let pass = null;
-
-        if (global.settings.hasOwnProperty('db_user_pass')) {
-            pass = _.template(global.settings.db_user_pass, {
-                user_id: dbParams.dbuser,
-                user_password: dbParams.dbpass
-            });
-        }
-
-        if (authenticated) {
-            dbopts.user = user;
-            dbopts.pass = pass;
-        }
-
-        let authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
-
-        if (!apikeyToken) {
-            return callback(null, dbopts, authDbOpts);
-        }
-
-        this.metadataBackend.getApikey(username, apikeyToken, (err, apikey) => {
+        this.metadataBackend.getMasterApikey(username, (err, masterApikey) => {
+            
             if (err) {
                 err.http_status = 404;
                 err.message = errorUserNotFoundMessageTemplate(username);
@@ -72,16 +51,53 @@ UserDatabaseService.prototype.getConnectionParams = function (username, apikeyTo
                 return callback(err);
             }
 
-            if (!isApiKeyFound(apikey)) {
-                return callback(null, dbopts, authDbOpts);
+            if (!isApiKeyFound(masterApikey)) {
+                const apiKeyNotFoundError = new Error('Unauthorized');
+                apiKeyNotFoundError.type = 'auth';
+                apiKeyNotFoundError.subtype = 'api-key-not-found';
+                apiKeyNotFoundError.http_status = 401;
+
+                return callback(apiKeyNotFoundError);
             }
 
-            dbopts.user = apikey.databaseRole;
-            dbopts.pass = apikey.databasePassword;
+            const masterDBConfiguration = Object.assign({
+                user: masterApikey.databaseRole,
+                pass: masterApikey.databasePassword
+            },
+                commonDBConfiguration);
 
-            authDbOpts = _.defaults({ user: user, pass: pass }, dbopts);
+            if (isOauthAuthorization({ apikeyToken, authorizationLevel})) {
+                callback(null, masterDBConfiguration, masterDBConfiguration);
+            }
 
-            callback(null, dbopts, authDbOpts);
+            // Default Api key fallback
+            apikeyToken = apikeyToken || 'default_public';
+
+            this.metadataBackend.getApikey(username, apikeyToken, (err, apikey) => {
+                if (err) {
+                    err.http_status = 404;
+                    err.message = errorUserNotFoundMessageTemplate(username);
+
+                    return callback(err);
+                }
+
+                if (!isApiKeyFound(apikey)) {
+                    const apiKeyNotFoundError = new Error('Unauthorized');
+                    apiKeyNotFoundError.type = 'auth';
+                    apiKeyNotFoundError.subtype = 'api-key-not-found';
+                    apiKeyNotFoundError.http_status = 401;
+
+                    return callback(apiKeyNotFoundError);
+                }
+
+                const DBConfiguration = Object.assign({
+                    user: apikey.databaseRole,
+                    pass: apikey.databasePassword
+                },
+                    commonDBConfiguration);
+
+                callback(null, DBConfiguration, masterDBConfiguration);
+            });
         });
     });
 };

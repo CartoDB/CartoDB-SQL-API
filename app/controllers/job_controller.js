@@ -51,13 +51,13 @@ JobController.prototype.route = function (app) {
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     return function jobMiddlewares (action, jobMiddleware, endpointGroup) {
-        const forceToBeAuthenticated = true;
+        const forceToBeMaster = true;
 
         return [
             initializeProfilerMiddleware('job'),
-            userMiddleware(),
+            userMiddleware(metadataBackend),
             rateLimitsMiddleware(userLimitsService, endpointGroup),
-            authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
+            authorizationMiddleware(metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),
             setServedByDBHostHeader(),

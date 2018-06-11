@@ -188,7 +188,7 @@ HMSET api_keys:vizzuality:default_public \
   user "vizzuality" \
   type "default" \
   grants_sql "true" \
-  database_role "test_windshaft_publicuser" \
+  database_role "testpublicuser" \
   database_password "public"
 EOF
 
@@ -230,7 +230,7 @@ HMSET api_keys:cartodb250user:default_public \
   user "cartodb250user" \
   type "default" \
   grants_sql "true" \
-  database_role "test_windshaft_publicuser" \
+  database_role "testpublicuser" \
   database_password "public"
 EOF
 

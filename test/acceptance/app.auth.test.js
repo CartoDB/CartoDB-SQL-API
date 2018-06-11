@@ -7,6 +7,16 @@ describe('app.auth', function() {
 
     var scenarios = [
         {
+            desc: 'no api key should fallback to default api key',
+            url: "/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4",
+            statusCode: 200
+        },
+        {
+            desc: 'invalid api key should return 401',
+            url: "/api/v1/sql?api_key=THIS_API_KEY_NOT_EXIST&q=SELECT%20*%20FROM%20untitle_table_4",
+            statusCode: 401
+        },
+        {
             desc: 'valid api key should allow insert in protected tables',
             url: "/api/v1/sql?api_key=1234&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('app_auth_test1')",
             statusCode: 200
@@ -18,13 +28,8 @@ describe('app.auth', function() {
         },
         {
             desc: 'invalid api key should NOT allow insert in protected tables',
-            url: "/api/v1/sql?api_key=RAMBO&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 403
-        },
-        {
-            desc: 'invalid api key (old redis location) should NOT allow insert in protected tables',
-            url: "/api/v1/sql?api_key=1235&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('RAMBO')",
-            statusCode: 403
+            url: "/api/v1/sql?api_key=THIS_API_KEY_NOT_EXIST&q=INSERT%20INTO%20private_table%20(name)%20VALUES%20('R')",
+            statusCode: 401
         },
         {
             desc: 'no api key should NOT allow insert in protected tables',

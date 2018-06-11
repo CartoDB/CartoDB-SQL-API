@@ -23,7 +23,7 @@ var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
 var jobBackend = new JobBackend(metadataBackend, jobQueue);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+var jobCanceller = new JobCanceller();
 var jobService = new JobService(jobBackend, jobCanceller);
 var queryRunner = new QueryRunner(userDatabaseMetadataService);
 var StatsD = require('node-statsd').StatsD;
@@ -35,7 +35,11 @@ var HOST = 'localhost';
 var JOB = {
     user: USER,
     query: QUERY,
-    host: HOST
+    host: HOST,
+    dbname: 'cartodb_test_user_1_db',
+    dbuser: 'test_cartodb_user_1',
+    port: 5432,
+    pass: 'test_cartodb_user_1_pass',
 };
 
 describe('job runner', function() {
