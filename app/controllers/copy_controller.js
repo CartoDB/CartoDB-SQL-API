@@ -147,7 +147,7 @@ function handleCopyFrom (logger) {
                     }
 
                     metrics.end(null, err);
-                    next(err);
+                    return next(err);
                 }
 
                 let requestEnded = false;
