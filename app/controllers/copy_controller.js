@@ -30,7 +30,7 @@ CopyController.prototype.route = function (app) {
     const copyFromMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyfrom'),
-            userMiddleware(),
+            userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
@@ -45,7 +45,7 @@ CopyController.prototype.route = function (app) {
     const copyToMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyto'),
-            userMiddleware(),
+            userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),

@@ -1,14 +1,16 @@
 # Changelog
 
-## 2.0.1
+## 2.1.0
 Released 2018-mm-dd
 
 New features:
  * CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
  * Making version 2.0.0 configuration parameters backwards compatible
+ * New endpoint for COPY commands
 
 Announcements:
  * Updated carto-psql to 0.12.0
+ * [Test] Update sqlite3 to 4.0.0
 
 
 ## 2.0.0

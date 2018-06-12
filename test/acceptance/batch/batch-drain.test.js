@@ -7,7 +7,6 @@ var JobPublisher = require('../../../batch/pubsub/job-publisher');
 var JobQueue = require('../../../batch/job_queue');
 var JobBackend = require('../../../batch/job_backend');
 var JobService = require('../../../batch/job_service');
-var UserDatabaseMetadataService = require('../../../batch/user_database_metadata_service');
 var JobCanceller = require('../../../batch/job_canceller');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
@@ -18,8 +17,7 @@ describe('batch module', function() {
     var jobPublisher = new JobPublisher(pool);
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller);
 
     before(function (done) {
@@ -37,7 +35,11 @@ describe('batch module', function() {
         var data = {
             user: username,
             query: sql,
-            host: dbInstance
+            host: dbInstance,
+            dbname: 'cartodb_test_user_1_db',
+            dbuser: 'test_cartodb_user_1',
+            port: 5432,
+            pass: 'test_cartodb_user_1_pass',
         };
 
         jobService.create(data, function (err, job) {
@@ -60,7 +62,6 @@ describe('batch module', function() {
                     if (err) {
                         done(err);
                     }
-
                     assert.equal(job.status, 'running');
 
                     self.batch.drain(function () {

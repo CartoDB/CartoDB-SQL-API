@@ -308,3 +308,66 @@ describe('copy-endpoints db connections', function() {
         });
     });
 });
+
+describe('copy-endpoints client disconnection', function() {
+    // Give it enough time to connect and issue the query
+    // but not too much so as to disconnect in the middle of the query.
+    const client_disconnect_timeout = 10;
+
+    before(function() {
+        this.db_pool_size = global.settings.db_pool_size;
+        global.settings.db_pool_size = 1;
+    });
+
+    after(function() {
+        global.settings.db_pool_size = this.db_pool_size;
+    });
+
+    var assertCanReuseConnection = function (done) {
+        assert.response(server, {
+            url: '/api/v1/sql?' + querystring.stringify({
+                q: 'SELECT 1',
+            }),
+            headers: { host: 'vizzuality.cartodb.com' },
+            method: 'GET'
+        }, {}, function(err, res) {
+            assert.ifError(err);
+            assert.ok(res.statusCode === 200);
+            done();
+        });
+    };
+
+    it('COPY TO returns the connection to the pool if the client disconnects', function(done) {
+        assert.response(server, {
+            url: '/api/v1/sql/copyto?' + querystring.stringify({
+                q: 'COPY (SELECT * FROM generate_series(1, 100000)) TO STDOUT',
+            }),
+            headers: { host: 'vizzuality.cartodb.com' },
+            method: 'GET',
+            timeout: client_disconnect_timeout
+        }, {}, function(err) {
+            // we're expecting a timeout error
+            assert.ok(err);
+            assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
+            assertCanReuseConnection(done);
+        });
+    });
+
+    it('COPY FROM returns the connection to the pool if the client disconnects', function(done) {
+        assert.response(server, {
+            url: '/api/v1/sql/copyfrom?' + querystring.stringify({
+                q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
+            }),
+            headers: { host: 'vizzuality.cartodb.com' },
+            method: 'POST',
+            data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+            timeout: client_disconnect_timeout
+        }, {}, function(err) {
+            // we're expecting a timeout error
+            assert.ok(err);
+            assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
+            assertCanReuseConnection(done);
+        });
+    });
+
+});
