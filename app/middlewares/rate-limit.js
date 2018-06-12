@@ -5,7 +5,9 @@ const RATE_LIMIT_ENDPOINTS_GROUPS = {
     QUERY_FORMAT: 'query_format',
     JOB_CREATE: 'job_create',
     JOB_GET: 'job_get',
-    JOB_DELETE: 'job_delete'
+    JOB_DELETE: 'job_delete',
+    COPY_FROM: 'copy_from',
+    COPY_TO: 'copy_to'
 };
 
 

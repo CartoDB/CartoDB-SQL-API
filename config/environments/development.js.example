@@ -122,3 +122,4 @@ module.exports.ratelimits = {
 }
 
 module.exports.validatePGEntitiesAccess = false;
+module.exports.dataIngestionLogPath = 'logs/data-ingestion.log';

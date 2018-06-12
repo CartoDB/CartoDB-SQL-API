@@ -180,9 +180,9 @@
       "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
     },
     "cartodb-redis": {
-      "version": "1.0.0",
-      "from": "cartodb-redis@1.0.0",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-1.0.0.tgz"
+      "version": "1.0.1",
+      "from": "git://github.com/CartoDB/node-cartodb-redis.git#remove-auth-fallback",
+      "resolved": "git://github.com/CartoDB/node-cartodb-redis.git#c25114a149ad3522e0e5d6850dca45e67332f98f"
     },
     "caseless": {
       "version": "0.11.0",
@@ -850,6 +850,11 @@
       "version": "0.1.3",
       "from": "pg-connection-string@0.1.3",
       "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
+    },
+    "pg-copy-streams": {
+      "version": "1.2.0",
+      "from": "cartodb/node-pg-copy-streams#v1.2.0-carto.1",
+      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#d7e5c1383ff9b43890f2c37bc38cfed1afc2523f"
     },
     "pg-int8": {
       "version": "1.0.1",

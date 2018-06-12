@@ -15,7 +15,6 @@
 //
 
 var express = require('express');
-var bodyParser = require('./middlewares/body-parser');
 var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
 var TableCacheFactory = require('./utils/table_cache_factory');
@@ -34,6 +33,7 @@ var cors = require('./middlewares/cors');
 
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
+var CopyController = require('./controllers/copy_controller');
 var JobController = require('./controllers/job_controller');
 var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
@@ -138,7 +138,6 @@ function App(statsClient) {
       });
     }
 
-    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
@@ -173,6 +172,13 @@ function App(statsClient) {
     );
     queryController.route(app);
 
+    var copyController = new CopyController(
+        metadataBackend, 
+        userDatabaseService, 
+        userLimitsService
+    );
+    copyController.route(app);
+    
     var jobController = new JobController(
         metadataBackend, 
         userDatabaseService, 

@@ -1,5 +1,6 @@
 const util = require('util');
 
+const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -30,21 +31,25 @@ JobController.prototype.route = function (app) {
 
     app.get(
         `${base_url}/jobs-wip`, 
+        bodyParserMiddleware(),
         listWorkInProgressJobs(this.jobService), 
         sendResponse(), 
         errorMiddleware()
     );
     app.post(
         `${base_url}/sql/job`, 
+        bodyParserMiddleware(),
         checkBodyPayloadSize(), 
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
     app.get(
         `${base_url}/sql/job/:job_id`, 
+        bodyParserMiddleware(),
         jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
     );
     app.delete(
         `${base_url}/sql/job/:job_id`, 
+        bodyParserMiddleware(),
         jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
     );
 };
