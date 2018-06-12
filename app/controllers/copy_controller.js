@@ -45,7 +45,7 @@ CopyController.prototype.route = function (app) {
     const copyToMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyto'),
-            userMiddleware(this.metadataBackend),
+            userMiddleware(this.metadataBackend),            
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
@@ -73,6 +73,10 @@ function handleCopyTo (logger) {
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
+
+        streamCopy.on('copy-to-end', rows => {
+            metrics.end(rows);
+        });
 
         streamCopy.to(
             function (err, pgstream, client, done) {
@@ -117,9 +121,6 @@ function handleCopyTo (logger) {
                 pgstream     
                     .on('data', data => metrics.addSize(data.length))
                     .pipe(res);
-            }, 
-            function (err, rows) {
-                metrics.end(rows);
             }
         );
     };
@@ -133,6 +134,20 @@ function handleCopyFrom (logger) {
 
         const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
+
+        streamCopy.on('copy-from-end', rows => {
+            metrics.end(rows);
+
+            const { time } = metrics;
+            if (!time || !rows) {
+                return next(new Error("No rows copied"));
+            }
+            
+            res.send({
+                time,
+                total_rows: rows
+            });
+        });
 
         streamCopy.from(
             function (err, pgstream, client, done) {

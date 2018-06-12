@@ -1,15 +1,18 @@
+const EventEmitter = require('events');
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
 
-module.exports = class StreamCopy {
+module.exports = class StreamCopy extends EventEmitter {
     constructor (sql, userDbParams) {
+        super();
+
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
         this.connectionClosedByClient = false;
     }
 
-    to(cb, next) {
+    to(cb) {
         this.pg.connect((err, client, done)  => {
             if (err) {
                 cb(err);
@@ -17,7 +20,7 @@ module.exports = class StreamCopy {
 
             const copyToStream = copyTo(this.sql);
             const pgstream = client.query(copyToStream);
-
+            
             pgstream
                 .on('error', err => {
                     if (!this.connectionClosedByClient) {
@@ -27,14 +30,14 @@ module.exports = class StreamCopy {
                 })
                 .on('end', () => {
                     done();
-                    return next(null, copyToStream.rowCount);
+                    this.emit('copy-to-end', copyToStream.rowCount);
                 });
 
             cb(null, pgstream, client, done);
         });
     }
 
-    from(cb, next) {
+    from(cb) {
         this.pg.connect((err, client, done) => {
             if (err) {
                 cb(err);
@@ -49,9 +52,9 @@ module.exports = class StreamCopy {
                     cb(err, pgstream);
                     
                 })
-                .on('end', function () {
+                .on('end', () => {
                     done();
-                    next(null, copyFromStream.rowCount);
+                    this.emit('copy-from-end', copyFromStream.rowCount);
                 });
 
             cb(null, pgstream, client, done);
