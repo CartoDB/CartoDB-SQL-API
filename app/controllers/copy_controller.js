@@ -9,7 +9,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
-const streamCopy = require('../services/stream_copy');
+const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const Logger = require('../services/logger');
 const { Client } = require('pg');
@@ -68,14 +68,13 @@ function handleCopyTo (logger) {
         const { userDbParams, user } = res.locals;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
+        const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
         streamCopy.to(
-            sql, 
-            userDbParams, 
             function (err, pgstream, client, done) {
                 if (err) {
                     return next(err);
@@ -135,11 +134,10 @@ function handleCopyFrom (logger) {
         const { userDbParams, user } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
 
+        const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.from(
-            sql, 
-            userDbParams, 
             function (err, pgstream, client, done) {
                 if (err) {
                     if (pgstream) {
