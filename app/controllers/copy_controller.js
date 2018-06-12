@@ -199,20 +199,6 @@ function handleCopyFrom (logger) {
                 } else {
                     req.pipe(pgstream);
                 }
-
-            }, 
-            function(err, rows) {
-                metrics.end(rows);
-
-                const { time } = metrics;
-                if (!time || !rows) {
-                    return next(new Error("No rows copied"));
-                }
-                
-                res.send({
-                    time,
-                    total_rows: rows
-                });
             }
         );
     };
