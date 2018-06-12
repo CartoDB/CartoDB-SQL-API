@@ -18,7 +18,7 @@ const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../app/server')(statsClient);
 
 
-describe.only('copy-endpoints', function() {
+describe('copy-endpoints', function() {
     describe('copy-endpoints', function() {
         before(function(done) {
             const client = new Client({
