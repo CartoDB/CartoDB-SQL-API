@@ -77,11 +77,15 @@ function handleCopyTo (logger) {
         streamCopy.to(
             function (err, pgstream, client, done) {
                 if (err) {
+                    if (pgstream) {
+                        pgstream.unpipe(res);
+                    }
+
+                    metrics.end(null, err);
                     return next(err);
                 }
 
                 let responseEnded = false;
-                let connectionClosedByClient = false;    
 
                 res
                     .on('error', err => {
@@ -92,7 +96,8 @@ function handleCopyTo (logger) {
                     })
                     .on('close', () => {
                         if (!responseEnded) {
-                            connectionClosedByClient = true;
+                            streamCopy.setConnectionClosedByClient(true);
+
                             // Cancel the running COPY TO query
                             // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
                             const runningClient = client;
@@ -109,15 +114,7 @@ function handleCopyTo (logger) {
                     })
                     .on('end', () => responseEnded = true);
 
-                pgstream
-                    .on('error', err => {
-                        if (!connectionClosedByClient) {
-                            metrics.end(null, err);
-                            pgstream.unpipe(res);
-                            done(err);
-                            return next(err);
-                        }
-                    })
+                pgstream     
                     .on('data', data => metrics.addSize(data.length))
                     .pipe(res);
             }, 

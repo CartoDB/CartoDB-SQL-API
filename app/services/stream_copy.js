@@ -6,6 +6,7 @@ module.exports = class StreamCopy {
     constructor (sql, userDbParams) {
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
+        this.connectionClosedByClient = false;
     }
 
     to(cb, next) {
@@ -18,9 +19,15 @@ module.exports = class StreamCopy {
             const pgstream = client.query(copyToStream);
 
             pgstream
+                .on('error', err => {
+                    if (!this.connectionClosedByClient) {
+                        done(err);
+                        cb(err, pgstream);
+                    }
+                })
                 .on('end', () => {
                     done();
-                    next(null, copyToStream.rowCount);
+                    return next(null, copyToStream.rowCount);
                 });
 
             cb(null, pgstream, client, done);
@@ -49,5 +56,9 @@ module.exports = class StreamCopy {
 
             cb(null, pgstream, client, done);
         });
+    }
+
+    setConnectionClosedByClient(connectionClosedByClient) {
+        this.connectionClosedByClient = connectionClosedByClient;
     }
 };
