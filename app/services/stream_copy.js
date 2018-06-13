@@ -19,12 +19,8 @@ module.exports = class StreamCopy {
             const pgstream = client.query(copyToStream);
 
             pgstream
-                .on('error', err => {
-                    done(err);
-                })
-                .on('end', () => {
-                    done();
-                });
+                .on('end', () => done())
+                .on('error', err => done(err));
 
             cb(null, pgstream, copyToStream, client, done);
         });
@@ -40,12 +36,8 @@ module.exports = class StreamCopy {
             const pgstream = client.query(copyFromStream);
 
             pgstream
-                .on('error', err => {
-                    done(err);
-                })
-                .on('end', () => {
-                    done();
-                });
+                .on('end', () => done())
+                .on('error', err => done(err));
 
             cb(null, pgstream, copyFromStream, client, done);
         });
