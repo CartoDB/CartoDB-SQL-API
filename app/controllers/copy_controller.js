@@ -135,22 +135,8 @@ function handleCopyFrom (logger) {
         const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
-        streamCopy.on('copy-from-end', rows => {
-            metrics.end(rows);
-
-            const { time } = metrics;
-            if (!time || !rows) {
-                return next(new Error("No rows copied"));
-            }
-
-            res.send({
-                time,
-                total_rows: rows
-            });
-        });
-
         streamCopy.from(
-            function (err, pgstream, client, done) {
+            function (err, pgstream, copyFromStream, client, done) {
                 if (err) {
                     return next(err);
                 }
@@ -190,6 +176,21 @@ function handleCopyFrom (logger) {
                     req.unpipe(pgstream);
 
                     return next(err);
+                });
+
+                pgstream.on('end', () => {
+                    metrics.end(copyFromStream.rowCount);
+
+                    const { time, rows } = metrics;
+
+                    if (!time || !rows) {
+                        return next(new Error("No rows copied"));
+                    }
+
+                    res.send({
+                        time,
+                        total_rows: rows
+                    });
                 });
 
                 if (isGzip) {
