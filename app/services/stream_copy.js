@@ -25,7 +25,6 @@ module.exports = class StreamCopy extends EventEmitter {
                 .on('error', err => {
                     if (!this.connectionClosedByClient) {
                         done(err);
-                        cb(err, pgstream);
                     }
                 })
                 .on('end', () => {
@@ -49,8 +48,6 @@ module.exports = class StreamCopy extends EventEmitter {
             pgstream
                 .on('error', err => {
                     done();
-                    cb(err, pgstream);
-
                 })
                 .on('end', () => {
                     done();
