@@ -15,12 +15,12 @@ module.exports = class StreamCopy extends EventEmitter {
     to(cb) {
         this.pg.connect((err, client, done)  => {
             if (err) {
-                cb(err);
+                return cb(err);
             }
 
             const copyToStream = copyTo(this.sql);
             const pgstream = client.query(copyToStream);
-            
+
             pgstream
                 .on('error', err => {
                     if (!this.connectionClosedByClient) {
@@ -40,7 +40,7 @@ module.exports = class StreamCopy extends EventEmitter {
     from(cb) {
         this.pg.connect((err, client, done) => {
             if (err) {
-                cb(err);
+                return cb(err);
             }
 
             const copyFromStream = copyFrom(this.sql);
@@ -50,7 +50,7 @@ module.exports = class StreamCopy extends EventEmitter {
                 .on('error', err => {
                     done();
                     cb(err, pgstream);
-                    
+
                 })
                 .on('end', () => {
                     done();
