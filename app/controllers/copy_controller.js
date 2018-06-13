@@ -180,6 +180,12 @@ function handleCopyFrom (logger) {
                     })
                     .on('end', () => requestEnded = true);
 
+                pgstream.on('error', (err) => {
+                    metrics.end(null, err);
+                    req.unpipe(pgstream);
+
+                    return next(err);
+                });
 
                 if (isGzip) {
                     req
