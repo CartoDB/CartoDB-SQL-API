@@ -113,6 +113,13 @@ function handleCopyTo (logger) {
                     })
                     .on('end', () => responseEnded = true);
 
+                pgstream.on('error', (err) => {
+                    metrics.end(null, err);
+                    pgstream.unpipe(res);
+
+                    return next(err);
+                });
+
                 pgstream
                     .on('data', data => metrics.addSize(data.length))
                     .pipe(res);
