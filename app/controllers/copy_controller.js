@@ -74,12 +74,8 @@ function handleCopyTo (logger) {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        streamCopy.on('copy-to-end', rows => {
-            metrics.end(rows);
-        });
-
         streamCopy.to(
-            function (err, pgstream, client, done) {
+            function (err, pgstream, copyToStream, client, done) {
                 if (err) {
                     return next(err);
                 }
@@ -119,6 +115,8 @@ function handleCopyTo (logger) {
 
                     return next(err);
                 });
+
+                pgstream.on('end', () => metrics.end(copyToStream.rowCount));
 
                 pgstream
                     .on('data', data => metrics.addSize(data.length))

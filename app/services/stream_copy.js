@@ -29,10 +29,9 @@ module.exports = class StreamCopy extends EventEmitter {
                 })
                 .on('end', () => {
                     done();
-                    this.emit('copy-to-end', copyToStream.rowCount);
                 });
 
-            cb(null, pgstream, client, done);
+            cb(null, pgstream, copyToStream, client, done);
         });
     }
 
