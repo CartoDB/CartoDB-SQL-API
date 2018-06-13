@@ -45,7 +45,7 @@ CopyController.prototype.route = function (app) {
     const copyToMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyto'),
-            userMiddleware(this.metadataBackend),            
+            userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
@@ -81,11 +81,6 @@ function handleCopyTo (logger) {
         streamCopy.to(
             function (err, pgstream, client, done) {
                 if (err) {
-                    if (pgstream) {
-                        pgstream.unpipe(res);
-                    }
-
-                    metrics.end(null, err);
                     return next(err);
                 }
 
@@ -118,7 +113,7 @@ function handleCopyTo (logger) {
                     })
                     .on('end', () => responseEnded = true);
 
-                pgstream     
+                pgstream
                     .on('data', data => metrics.addSize(data.length))
                     .pipe(res);
             }
@@ -142,7 +137,7 @@ function handleCopyFrom (logger) {
             if (!time || !rows) {
                 return next(new Error("No rows copied"));
             }
-            
+
             res.send({
                 time,
                 total_rows: rows
@@ -152,11 +147,6 @@ function handleCopyFrom (logger) {
         streamCopy.from(
             function (err, pgstream, client, done) {
                 if (err) {
-                    if (pgstream) {
-                        req.unpipe(pgstream);
-                    }
-
-                    metrics.end(null, err);
                     return next(err);
                 }
 
