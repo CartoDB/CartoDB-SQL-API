@@ -80,34 +80,29 @@ function handleCopyTo (logger) {
                     return next(err);
                 }
 
-                let responseEnded = false;
+                req.on('close', () => {
+                    // Cancel the running COPY TO query
+                    // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                    const runningClient = client;
+                    const cancelingClient = new Client(runningClient.connectionParameters);
+                    cancelingClient.cancel(runningClient, pgstream);
 
-                res
-                    .on('error', err => {
-                        metrics.end(null, err);
-                        pgstream.unpipe(res);
-                        done();
-                        return next(err);
-                    })
-                    .on('close', () => {
-                        if (!responseEnded) {
-                            streamCopy.setConnectionClosedByClient(true);
+                    const err = new Error('Connection closed by client');
+                    metrics.end(null, err);
+                    pgstream.unpipe(res);
+                    // see https://node-postgres.com/api/pool#releasecallback
+                    done(err);
 
-                            // Cancel the running COPY TO query
-                            // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                            const runningClient = client;
-                            const cancelingClient = new Client(runningClient.connectionParameters);
-                            cancelingClient.cancel(runningClient, pgstream);
+                    return next(err);
+                });
 
-                            const err = new Error('Connection closed by client');
-                            metrics.end(null, err);
-                            pgstream.unpipe(res);
-                            // see https://node-postgres.com/api/pool#releasecallback
-                            done(err);
-                            return next(err);
-                        }
-                    })
-                    .on('end', () => responseEnded = true);
+                res.on('error', err => {
+                    metrics.end(null, err);
+                    pgstream.unpipe(res);
+                    done();
+
+                    return next(err);
+                });
 
                 pgstream.on('error', (err) => {
                     metrics.end(null, err);
@@ -141,7 +136,6 @@ function handleCopyFrom (logger) {
                     return next(err);
                 }
 
-                let requestEnded = false;
                 req
                     .on('error', err => {
                         metrics.end(null, err);
@@ -152,15 +146,13 @@ function handleCopyFrom (logger) {
                         next(err);
                     })
                     .on('close', () => {
-                        if (!requestEnded) {
-                            const err = new Error('Connection closed by client');
-                            metrics.end(null, err);
-                            const connection = client.connection;
-                            connection.sendCopyFail('CARTO SQL API: Connection closed by client');
-                            req.unpipe(pgstream);
-                            done();
-                            next(err);
-                        }
+                        const err = new Error('Connection closed by client');
+                        metrics.end(null, err);
+                        const connection = client.connection;
+                        connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                        req.unpipe(pgstream);
+                        done();
+                        next(err);
                     })
                     .on('data', data => {
                         if (isGzip) {
@@ -168,8 +160,7 @@ function handleCopyFrom (logger) {
                         } else {
                             metrics.addSize(data.length);
                         }
-                    })
-                    .on('end', () => requestEnded = true);
+                    });
 
                 pgstream.on('error', (err) => {
                     metrics.end(null, err);

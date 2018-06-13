@@ -20,9 +20,7 @@ module.exports = class StreamCopy {
 
             pgstream
                 .on('error', err => {
-                    if (!this.connectionClosedByClient) {
-                        done(err);
-                    }
+                    done(err);
                 })
                 .on('end', () => {
                     done();
@@ -51,9 +49,5 @@ module.exports = class StreamCopy {
 
             cb(null, pgstream, copyFromStream, client, done);
         });
-    }
-
-    setConnectionClosedByClient(connectionClosedByClient) {
-        this.connectionClosedByClient = connectionClosedByClient;
     }
 };
