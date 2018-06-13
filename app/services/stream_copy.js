@@ -47,7 +47,7 @@ module.exports = class StreamCopy extends EventEmitter {
 
             pgstream
                 .on('error', err => {
-                    done();
+                    done(err);
                 })
                 .on('end', () => {
                     done();
