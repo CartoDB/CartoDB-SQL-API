@@ -96,26 +96,23 @@ function handleCopyTo (logger) {
                     return next(err);
                 });
 
-                res.on('error', err => {
-                    metrics.end(null, err);
-                    pgstream.unpipe(res);
-                    done();
-
-                    return next(err);
-                });
-
-                pgstream.on('error', (err) => {
-                    metrics.end(null, err);
-                    pgstream.unpipe(res);
-
-                    return next(err);
-                });
-
-                pgstream.on('end', () => metrics.end(copyToStream.rowCount));
-
                 pgstream
                     .on('data', data => metrics.addSize(data.length))
-                    .pipe(res);
+                    .on('error', (err) => {
+                        metrics.end(null, err);
+                        pgstream.unpipe(res);
+
+                        return next(err);
+                    })
+                    .on('end', () => metrics.end(copyToStream.rowCount))
+                    .pipe(res)
+                    .on('error', err => {
+                        metrics.end(null, err);
+                        pgstream.unpipe(res);
+                        done();
+
+                        return next(err);
+                    });
             }
         );
     };
