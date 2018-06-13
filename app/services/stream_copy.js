@@ -1,12 +1,9 @@
-const EventEmitter = require('events');
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
 
-module.exports = class StreamCopy extends EventEmitter {
+module.exports = class StreamCopy {
     constructor (sql, userDbParams) {
-        super();
-
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
         this.connectionClosedByClient = false;
