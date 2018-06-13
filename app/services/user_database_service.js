@@ -67,7 +67,7 @@ UserDatabaseService.prototype.getConnectionParams = function (username, apikeyTo
                 commonDBConfiguration);
 
             if (isOauthAuthorization({ apikeyToken, authorizationLevel})) {
-                callback(null, masterDBConfiguration, masterDBConfiguration);
+                return callback(null, masterDBConfiguration, masterDBConfiguration);
             }
 
             // Default Api key fallback
