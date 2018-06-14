@@ -65,8 +65,8 @@ module.exports = {
         });
     },
 
-    from (req, sql, userDbParams, user, gzip, logger, cb) {
-        const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, gzip);
+    from (req, sql, userDbParams, user, isGzip, logger, cb) {
+        const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
         
         const pg = new PSQL(userDbParams);
         pg.connect(function (err, client, done) {
@@ -111,7 +111,7 @@ module.exports = {
                     }
                 })
                 .on('data', data => {
-                    if (gzip) {
+                    if (isGzip) {
                         metrics.addGzipSize(data.length);
                     } else {
                         metrics.addSize(data.length);
@@ -119,7 +119,7 @@ module.exports = {
                 })
                 .on('end', () => requestEnded = true);
 
-            if (gzip) {
+            if (isGzip) {
                 req
                     .pipe(zlib.createGunzip())
                     .on('data', data => metrics.addSize(data.length))
