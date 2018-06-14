@@ -93,24 +93,16 @@ function handleCopyFrom (logger) {
             res.locals.user,
             req.get('content-encoding') === 'gzip', 
             logger,
-            function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
+            function(err, metrics) { 
                 if (err) {
                     return next(err);
                 } 
 
-                // TODO: remove when data-ingestion log works
-                const { time, rows, type, format, gzip, size } = metrics; 
-
-                if (!time || !rows) {
+                const { time, rows } = metrics;
+                if (!rows) {
                     return next(new Error("No rows copied"));
                 }
 
-                // TODO: remove when data-ingestion log works
-                if (req.profiler) {
-                    req.profiler.add({copyFrom: { type, format, gzip, size, rows, time }});
-                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
-                }
-                
                 res.send({
                     time,
                     total_rows: rows
