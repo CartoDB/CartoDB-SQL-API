@@ -117,12 +117,12 @@ function validateCopyQuery () {
         const sql = req.query.q;
 
         if (!sql) {
-            next(new Error("SQL is missing"));
+            return next(new Error("SQL is missing"));
         }
 
         // Only accept SQL that starts with 'COPY'
         if (!sql.toUpperCase().startsWith("COPY ")) {
-            next(new Error("SQL must start with COPY"));
+            return next(new Error("SQL must start with COPY"));
         }
 
         next();
