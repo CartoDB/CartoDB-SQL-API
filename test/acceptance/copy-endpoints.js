@@ -360,7 +360,11 @@ describe('copy-endpoints', function() {
                 const req = request(options);
 
                 req.once('data', () => req.abort());
-                req.on('end', () => assertCanReuseConnection(done));
+                req.on('response', response => {
+                    response.on('end', () => {
+                        assertCanReuseConnection(done)
+                    });
+                });
             });
         });
     
