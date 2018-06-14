@@ -132,6 +132,7 @@ function validateCopyQuery () {
 function errorHandler () {
     return function errorHandlerMiddleware (err, req, res, next) {
         if (res.headersSent) {
+            console.error("EXCEPTION REPORT: " + err.stack);
             const errorHandler = errorHandlerFactory(err);
             res.write(JSON.stringify(errorHandler.getResponse()));
             res.end();
