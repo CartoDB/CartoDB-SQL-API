@@ -5,6 +5,7 @@ const querystring = require('querystring');
 const assert = require('../support/assert');
 const os = require('os');
 const { Client } = require('pg');
+const request = require('request');
 
 const StatsClient = require('../../app/stats/client');
 if (global.settings.statsd) {
@@ -314,7 +315,7 @@ describe('copy-endpoints', function() {
     describe('client disconnection', function() {
         // Give it enough time to connect and issue the query
         // but not too much so as to disconnect in the middle of the query.
-        const client_disconnect_timeout = 10;
+        const CLIENT_DISCONNECT_TIMEOUT = 10;
     
         before(function() {
             this.db_pool_size = global.settings.db_pool_size;
@@ -340,35 +341,53 @@ describe('copy-endpoints', function() {
         };
     
         it('COPY TO returns the connection to the pool if the client disconnects', function(done) {
-            assert.response(server, {
-                url: '/api/v1/sql/copyto?' + querystring.stringify({
-                    q: 'COPY (SELECT * FROM generate_series(1, 100000)) TO STDOUT',
-                }),
-                headers: { host: 'vizzuality.cartodb.com' },
-                method: 'GET',
-                timeout: client_disconnect_timeout
-            }, {}, function(err) {
-                // we're expecting a timeout error
-                assert.ok(err);
-                assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
-                assertCanReuseConnection(done);
+            const listener = server.listen(0, '127.0.0.1');
+
+            listener.on('error', done);
+            listener.on('listening', function onServerListening () {
+
+                const { address, port } = listener.address();
+                const query = querystring.stringify({
+                    q: `COPY (SELECT * FROM generate_series(1, 1000)) TO STDOUT`
+                });
+
+                const options = {
+                    url: `http://${address}:${port}/api/v1/sql/copyto?${query}`,
+                    headers: { host: 'vizzuality.cartodb.com' },
+                    method: 'GET'
+                };
+
+                const req = request(options);
+
+                req.once('data', () => req.abort());
+                req.on('end', () => assertCanReuseConnection(done));
             });
         });
     
         it('COPY FROM returns the connection to the pool if the client disconnects', function(done) {
-            assert.response(server, {
-                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
-                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
-                }),
-                headers: { host: 'vizzuality.cartodb.com' },
-                method: 'POST',
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                timeout: client_disconnect_timeout
-            }, {}, function(err) {
-                // we're expecting a timeout error
-                assert.ok(err);
-                assert.ok(err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT');
-                assertCanReuseConnection(done);
+            const listener = server.listen(0, '127.0.0.1');
+
+            listener.on('error', done);
+            listener.on('listening', function onServerListening () {
+
+                const { address, port } = listener.address();
+                const query = querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                });
+
+                const options = {
+                    url: `http://${address}:${port}/api/v1/sql/copyfrom?${query}`,
+                    headers: { host: 'vizzuality.cartodb.com' },
+                    method: 'POST',
+                    data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv')
+                };
+
+                const req = request(options);
+
+                setTimeout(() => {
+                    req.abort();
+                    done();
+                }, CLIENT_DISCONNECT_TIMEOUT);
             });
         });
     
