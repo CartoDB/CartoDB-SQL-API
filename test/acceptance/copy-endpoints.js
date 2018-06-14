@@ -45,7 +45,6 @@ describe('copy-endpoints', function() {
             },{}, function(err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
-                console.log(response);
                 assert.equal(!!response.time, true);
                 assert.strictEqual(response.total_rows, 6);    
                 done();
