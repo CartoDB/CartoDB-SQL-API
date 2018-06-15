@@ -62,7 +62,7 @@ module.exports = class StreamCopyMetrics {
             size: this.size,
             rows: this.rows,
             gzip: this.isGzip,
-            username: this.username,
+            'cdb-user': this.username,
             time: this.time,
             timestamp
         };
