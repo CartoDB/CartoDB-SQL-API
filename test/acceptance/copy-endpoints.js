@@ -362,7 +362,7 @@ describe('copy-endpoints', function() {
                 req.once('data', () => req.abort());
                 req.on('response', response => {
                     response.on('end', () => {
-                        assertCanReuseConnection(done)
+                        assertCanReuseConnection(done);
                     });
                 });
             });
