@@ -8,17 +8,15 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const Logger = require('../services/logger');
 const errorHandlerFactory = require('../services/error_handler_factory');
 const streamCopy = require('../services/stream_copy');
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient, logger) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
     this.statsClient = statsClient;
-
-    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    this.logger = logger;
 }
 
 CopyController.prototype.route = function (app) {
