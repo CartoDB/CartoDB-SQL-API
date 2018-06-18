@@ -43,7 +43,7 @@ function countInsertedRows (host, port, callback) {
     }, 1000);
 }
 
-describe.only('Cancel "copy to" commands', function () {
+describe('Cancel "copy to" commands', function () {
 
     beforeEach(function (done) {
         this.listener = server.listen(0, '127.0.0.1');
