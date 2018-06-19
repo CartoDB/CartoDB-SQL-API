@@ -102,9 +102,9 @@ function handleCopyFrom (logger) {
                 }
 
                 // TODO: remove when data-ingestion log works
-                if (req.profiler) {	
-                    req.profiler.add({copyFrom: { type, format, gzip: isGzip, size, rows, time }});	
-                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    	
+                if (req.profiler) {
+                    req.profiler.add({copyFrom: { type, format, gzip: isGzip, size, rows, time }});
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
                 }
 
                 res.send({
