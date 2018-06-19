@@ -28,6 +28,7 @@ var JobQueue = require('../batch/job_queue');
 var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
 var JobService = require('../batch/job_service');
+const Logger = require('./services/logger');
 
 var cors = require('./middlewares/cors');
 
@@ -154,6 +155,9 @@ function App(statsClient) {
     };
     const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
 
+    const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    app.dataIngestionLogger = dataIngestionLogger;
+
     var jobPublisher = new JobPublisher(redisPool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
@@ -175,7 +179,8 @@ function App(statsClient) {
     var copyController = new CopyController(
         metadataBackend, 
         userDatabaseService, 
-        userLimitsService
+        userLimitsService,
+        dataIngestionLogger
     );
     copyController.route(app);
     

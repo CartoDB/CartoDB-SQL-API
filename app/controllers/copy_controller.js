@@ -8,17 +8,14 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const Logger = require('../services/logger');
 const errorHandlerFactory = require('../services/error_handler_factory');
 const streamCopy = require('../services/stream_copy');
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
-    this.statsClient = statsClient;
-
-    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    this.logger = logger;
 }
 
 CopyController.prototype.route = function (app) {
@@ -93,24 +90,23 @@ function handleCopyFrom (logger) {
             res.locals.user,
             req.get('content-encoding') === 'gzip', 
             logger,
-            function(err, metrics) {  // TODO: remove when data-ingestion log works: {time, rows}
+            function(err, metrics) {
                 if (err) {
                     return next(err);
-                } 
-
-                // TODO: remove when data-ingestion log works
-                const { time, rows, type, format, gzip, size } = metrics; 
-
-                if (!time || !rows) {
+                }
+                
+                // TODO: change when data-ingestion log works: const { time, rows } = metrics;
+                const { time, rows, type, format, isGzip, size } = metrics; 
+                if (!rows) {
                     return next(new Error("No rows copied"));
                 }
 
                 // TODO: remove when data-ingestion log works
                 if (req.profiler) {
-                    req.profiler.add({copyFrom: { type, format, gzip, size, rows, time }});
-                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());    
+                    req.profiler.add({copyFrom: { type, format, gzip: isGzip, size, rows, time }});
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
                 }
-                
+
                 res.send({
                     time,
                     total_rows: rows
@@ -125,12 +121,12 @@ function validateCopyQuery () {
         const sql = req.query.q;
 
         if (!sql) {
-            next(new Error("SQL is missing"));
+            return next(new Error("SQL is missing"));
         }
 
         // Only accept SQL that starts with 'COPY'
         if (!sql.toUpperCase().startsWith("COPY ")) {
-            next(new Error("SQL must start with COPY"));
+            return next(new Error("SQL must start with COPY"));
         }
 
         next();
@@ -140,6 +136,7 @@ function validateCopyQuery () {
 function errorHandler () {
     return function errorHandlerMiddleware (err, req, res, next) {
         if (res.headersSent) {
+            console.error("EXCEPTION REPORT: " + err.stack);
             const errorHandler = errorHandlerFactory(err);
             res.write(JSON.stringify(errorHandler.getResponse()));
             res.end();
