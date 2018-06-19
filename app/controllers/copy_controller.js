@@ -11,11 +11,10 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const streamCopy = require('../services/stream_copy');
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient, logger) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
-    this.statsClient = statsClient;
     this.logger = logger;
 }
 
