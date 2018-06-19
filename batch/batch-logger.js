@@ -11,9 +11,6 @@ class BatchLogger extends Logger {
         return job.log(this.logger);
     }
 
-    reopenFileStreams () {
-        this.logger.reopenFileStreams();
-    }
 }
 
 module.exports = BatchLogger;
