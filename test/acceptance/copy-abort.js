@@ -42,7 +42,7 @@ function countInsertedRows (host, port, callback) {
             const result = JSON.parse(body);
             callback(null, result);
         });
-    }, 1000);
+    }, 100);
 }
 
 describe('Cancel "copy to" commands', function () {

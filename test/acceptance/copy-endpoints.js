@@ -343,7 +343,7 @@ describe('copy-endpoints', function() {
     describe('client disconnection', function() {
         // Give it enough time to connect and issue the query
         // but not too much so as to disconnect in the middle of the query.
-        const CLIENT_DISCONNECT_TIMEOUT = 10;
+        const CLIENT_DISCONNECT_TIMEOUT = 100;
 
         before(function() {
             this.db_pool_size = global.settings.db_pool_size;
