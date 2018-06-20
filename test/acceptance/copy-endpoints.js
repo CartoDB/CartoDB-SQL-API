@@ -32,7 +32,7 @@ describe.only('copy-endpoints', function() {
 
     after(function() {
         this.client.end();
-    });
+    })
 
     afterEach(function (done) {
         this.client.query('TRUNCATE copy_endpoints_test', err => {
