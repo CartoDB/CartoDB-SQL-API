@@ -32,7 +32,7 @@ describe.only('copy-endpoints', function() {
 
     after(function() {
         this.client.end();
-    })
+    });
 
     afterEach(function (done) {
         this.client.query('TRUNCATE copy_endpoints_test', err => {
@@ -117,23 +117,34 @@ describe.only('copy-endpoints', function() {
 
         it('should work with copyto endpoint', function(done){
             assert.response(server, {
-                url: "/api/v1/sql/copyto?" + querystring.stringify({
-                    q: 'COPY copy_endpoints_test TO STDOUT',
-                    filename: '/tmp/output.dmp'
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
                 headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
-            },{}, function(err, res) {
+                method: 'POST'
+            },{}, function(err) {
                 assert.ifError(err);
-                assert.strictEqual(
-                    res.body,
-                    '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
-                );
 
-                assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
-                assert.equal(res.headers['content-type'], 'application/octet-stream');
+                assert.response(server, {
+                    url: "/api/v1/sql/copyto?" + querystring.stringify({
+                        q: 'COPY copy_endpoints_test TO STDOUT',
+                        filename: '/tmp/output.dmp'
+                    }),
+                    headers: {host: 'vizzuality.cartodb.com'},
+                    method: 'GET'
+                },{}, function(err, res) {
+                    assert.ifError(err);
+                    assert.strictEqual(
+                        res.body,
+                        '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
+                    );
 
-                done();
+                    assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
+                    assert.equal(res.headers['content-type'], 'application/octet-stream');
+
+                    done();
+                });
             });
         });
 
@@ -312,8 +323,19 @@ describe.only('copy-endpoints', function() {
                 });
             }
 
-            Promise.all([doCopyTo(), doCopyTo(), doCopyTo()]).then(function() {
-                done();
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            },{}, function(err) {
+                assert.ifError(err);
+
+                Promise.all([doCopyTo(), doCopyTo(), doCopyTo()]).then(function() {
+                    done();
+                });
             });
         });
     });
