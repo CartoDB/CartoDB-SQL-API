@@ -19,7 +19,7 @@ const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../app/server')(statsClient);
 
 
-describe.only('copy-endpoints', function() {
+describe('copy-endpoints', function() {
     before(function() {
         this.client = new Client({
             user: 'postgres',
@@ -32,7 +32,7 @@ describe.only('copy-endpoints', function() {
 
     after(function() {
         this.client.end();
-    })
+    });
 
     afterEach(function (done) {
         this.client.query('TRUNCATE copy_endpoints_test', err => {
@@ -354,16 +354,18 @@ describe.only('copy-endpoints', function() {
             global.settings.db_pool_size = this.db_pool_size;
         });
 
-        var assertCanReuseConnection = function (done) {
+        const assertCanReuseCanceledConnection = function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
-                    q: 'SELECT 1',
+                    q: 'SELECT count(*) FROM copy_endpoints_test',
                 }),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, {}, function(err, res) {
                 assert.ifError(err);
                 assert.ok(res.statusCode === 200);
+                const result = JSON.parse(res.body);
+                assert.strictEqual(result.rows[0].count, 0);
                 done();
             });
         };
@@ -390,7 +392,7 @@ describe.only('copy-endpoints', function() {
                 req.once('data', () => req.abort());
                 req.on('response', response => {
                     response.on('end', () => {
-                        assertCanReuseConnection(done);
+                        assertCanReuseCanceledConnection(done);
                     });
                 });
             });
@@ -418,7 +420,7 @@ describe.only('copy-endpoints', function() {
 
                 setTimeout(() => {
                     req.abort();
-                    done();
+                    assertCanReuseCanceledConnection(done);
                 }, CLIENT_DISCONNECT_TIMEOUT);
             });
         });
