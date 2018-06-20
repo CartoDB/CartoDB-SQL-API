@@ -226,12 +226,3 @@ CREATE TABLE copy_endpoints_test (
 );
 GRANT ALL ON TABLE copy_endpoints_test TO :TESTUSER;
 GRANT ALL ON TABLE copy_endpoints_test TO :PUBLICUSER;
-
-DROP TABLE IF EXISTS copy_endpoints_test2;
-CREATE TABLE copy_endpoints_test2 (
-    id integer,
-    name text,
-    age integer default 10
-);
-GRANT ALL ON TABLE copy_endpoints_test2 TO :TESTUSER;
-GRANT ALL ON TABLE copy_endpoints_test2 TO :PUBLICUSER;
