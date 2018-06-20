@@ -89,13 +89,13 @@ describe('Cancel "copy to" commands', function () {
 
         const dropTable = querystring.stringify({ q: dropTableQuery, api_key: 1234 });
 
-        const createTableOptions = {
+        const dropTableOptions = {
             url: `http://${host}:${port}/api/v1/sql?${dropTable}`,
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         };
 
-        request(createTableOptions, function (err, res) {
+        request(dropTableOptions, function (err, res) {
             if (err) {
                 return done(err);
             }
