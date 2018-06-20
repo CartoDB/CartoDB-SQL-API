@@ -354,6 +354,20 @@ describe('copy-endpoints', function() {
             global.settings.db_pool_size = this.db_pool_size;
         });
 
+        const assertCanReuseConnection = function (done) {
+            assert.response(server, {
+                url: '/api/v1/sql?' + querystring.stringify({
+                    q: 'SELECT 1',
+                }),
+                headers: { host: 'vizzuality.cartodb.com' },
+                method: 'GET'
+            }, {}, function(err, res) {
+                assert.ifError(err);
+                assert.ok(res.statusCode === 200);
+                done();
+            });
+        };
+
         const assertCanReuseCanceledConnection = function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
@@ -392,7 +406,7 @@ describe('copy-endpoints', function() {
                 req.once('data', () => req.abort());
                 req.on('response', response => {
                     response.on('end', () => {
-                        assertCanReuseCanceledConnection(done);
+                        assertCanReuseConnection(done);
                     });
                 });
             });
