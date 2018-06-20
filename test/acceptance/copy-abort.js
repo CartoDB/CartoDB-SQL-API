@@ -8,7 +8,11 @@ const assert = require('assert');
 const copyQuery = `COPY (
     INSERT INTO copy_to_test
     SELECT updated_at
-    FROM generate_series('1984-06-14 01:00:00'::timestamp, '2018-06-14 01:00:00'::timestamp, '1 hour'::interval) updated_at
+    FROM generate_series(
+        '1984-06-14 01:00:00'::timestamp,
+        '2018-06-14 01:00:00'::timestamp,
+        '1 hour'::interval
+    ) updated_at
     RETURNING updated_at
 ) TO STDOUT`;
 
@@ -35,9 +39,7 @@ function countInsertedRows (host, port, callback) {
             }
 
             assert.equal(res.statusCode, 200);
-
-            const result = JSON.parse(body)
-
+            const result = JSON.parse(body);
             callback(null, result);
         });
     }, 1000);
