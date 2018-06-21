@@ -11,7 +11,6 @@ module.exports = class StreamCopy {
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
         this.connectionClosedByClient = false;
-
         this.stream = null;
     }
 
@@ -23,45 +22,30 @@ module.exports = class StreamCopy {
         return ACTION_FROM;
     }
 
-    to(cb) {
+    getStream(action, cb) {
         this.pg.connect((err, client, done) => {
             if (err) {
                 return cb(err);
             }
 
-            this.stream = copyTo(this.sql);
+            let streamMaker = action === ACTION_TO ? copyTo : copyFrom;
+            this.stream = streamMaker(this.sql);
             const pgstream = client.query(this.stream);
 
             pgstream
                 .on('end', () => done())
                 .on('error', err => done(err))
                 .on('cancelQuery', err => {
-                    // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                    const cancelingClient = new Client(client.connectionParameters);
-                    cancelingClient.cancel(client, pgstream);
+                    if(action === ACTION_TO) {
+                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                        const cancelingClient = new Client(client.connectionParameters);
+                        cancelingClient.cancel(client, pgstream);
 
-                    // see https://node-postgres.com/api/pool#releasecallback
-                    done(err);
-                });
-
-            cb(null, pgstream);
-        });
-    }
-
-    from(cb) {
-        this.pg.connect((err, client, done) => {
-            if (err) {
-                return cb(err);
-            }
-
-            this.stream = copyFrom(this.sql);
-            const pgstream = client.query(this.stream);
-
-            pgstream
-                .on('end', () => done())
-                .on('error', err => done(err))
-                .on('cancelQuery', () => {
-                    client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                        // see https://node-postgres.com/api/pool#releasecallback
+                        done(err);
+                    } else if (action === ACTION_FROM) {
+                        client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                    }
                 });
 
             cb(null, pgstream);
