@@ -12,8 +12,8 @@ module.exports = class StreamCopy {
         this.sql = sql;
         this.connectionClosedByClient = false;
 
-        this.copyToStream;
-        this.copyFromStream;
+        this.copyToStream = null;
+        this.copyFromStream = null;
     }
 
     static get ACTION_TO() {
@@ -61,7 +61,7 @@ module.exports = class StreamCopy {
             pgstream
                 .on('end', () => done())
                 .on('error', err => done(err))
-                .on('cancelQuery', err => {
+                .on('cancelQuery', () => {
                     client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                 });
 
