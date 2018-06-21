@@ -1,6 +1,7 @@
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
+const { Client } = require('pg');
 
 module.exports = class StreamCopy {
     constructor (sql, userDbParams) {
@@ -20,9 +21,17 @@ module.exports = class StreamCopy {
 
             pgstream
                 .on('end', () => done())
-                .on('error', err => done(err));
+                .on('error', err => done(err))
+                .on('cancelQuery', err => {
+                    // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                    const cancelingClient = new Client(client.connectionParameters);
+                    cancelingClient.cancel(client, pgstream);
 
-            cb(null, pgstream, copyToStream, client, done);
+                    // see https://node-postgres.com/api/pool#releasecallback
+                    done(err);
+                });
+
+            cb(null, pgstream, copyToStream, done);
         });
     }
 

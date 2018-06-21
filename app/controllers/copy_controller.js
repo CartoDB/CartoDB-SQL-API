@@ -71,7 +71,7 @@ function handleCopyTo (logger) {
         res.header("Content-Type", "application/octet-stream");
 
         streamCopy.to(
-            function (err, pgstream, copyToStream, client, done) {
+            function (err, pgstream, copyToStream, done) {
                 if (err) {
                     return next(err);
                 }
