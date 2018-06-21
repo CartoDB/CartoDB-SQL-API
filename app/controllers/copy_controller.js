@@ -118,7 +118,7 @@ function handleCopyFrom (logger) {
                     .on('error', err => {
                         metrics.end(null, err);
                         req.unpipe(pgstream);
-                        pgstream.end();
+                        // pgstream.end();
                         done();
 
                         next(err);
