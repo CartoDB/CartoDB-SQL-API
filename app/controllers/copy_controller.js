@@ -89,17 +89,10 @@ function handleCopyTo (logger) {
                     .on('close', () => {
                         const err = new Error('Connection closed by client');
                         pgstream.emit('cancelQuery', err);
-
-                        metrics.end(null, err);
-                        pgstream.unpipe();
-
-                        return next(err);
+                        pgstream.emit('error', err);
                     })
                     .on('error', err => {
-                        metrics.end(null, err);
-                        pgstream.unpipe();
-
-                        return next(err);
+                        pgstream.emit('error', err);
                     });
             }
         );
