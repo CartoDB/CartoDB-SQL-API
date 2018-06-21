@@ -70,8 +70,7 @@ function handleCopyTo (logger) {
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
 
-        streamCopy.to(
-            function (err, pgstream) {
+        streamCopy.getPGStream(StreamCopy.ACTION_TO, function (err, pgstream) {
                 if (err) {
                     return next(err);
                 }
@@ -108,8 +107,7 @@ function handleCopyFrom (logger) {
         const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
-        streamCopy.from(
-            function (err, pgstream) {
+        streamCopy.getPGStream(StreamCopy.ACTION_FROM, function (err, pgstream) {
                 if (err) {
                     return next(err);
                 }
