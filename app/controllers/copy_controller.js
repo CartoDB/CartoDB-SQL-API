@@ -11,7 +11,6 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
-const Logger = require('../services/logger');
 const { Client } = require('pg');
 const zlib = require('zlib');
 
@@ -170,7 +169,7 @@ function handleCopyFrom (logger) {
 
                     const { time, rows } = metrics;
 
-                    if (!time || !rows) {
+                    if (!rows) {
                         return next(new Error("No rows copied"));
                     }
 
