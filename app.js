@@ -115,6 +115,10 @@ process.on('SIGHUP', function() {
     if (server.batch && server.batch.logger) {
         server.batch.logger.reopenFileStreams();
     }
+
+    if (server.dataIngestionLogger) {
+        server.dataIngestionLogger.reopenFileStreams();
+    }
 });
 
 process.on('SIGTERM', function () {

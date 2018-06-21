@@ -15,13 +15,11 @@ const Logger = require('../services/logger');
 const { Client } = require('pg');
 const zlib = require('zlib');
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService, statsClient) {
+function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
-    this.statsClient = statsClient;
-
-    this.logger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    this.logger = logger;
 }
 
 CopyController.prototype.route = function (app) {

@@ -16,6 +16,7 @@ module.exports = class StreamCopyMetrics {
         this.endTime = null;
         this.time = null;
 
+        this.success = true;
         this.error = null;
 
         this.ended = false;
@@ -61,7 +62,7 @@ module.exports = class StreamCopyMetrics {
             size: this.size,
             rows: this.rows,
             gzip: this.isGzip,
-            username: this.username,
+            'cdb-user': this.username,
             time: this.time,
             timestamp
         };
@@ -72,7 +73,10 @@ module.exports = class StreamCopyMetrics {
 
         if (errorMessage) {
             logData.error = errorMessage;
+            this.success = false;
         }
+
+        logData.success = this.success;
 
         this.logger.info(logData);
     }

@@ -28,6 +28,11 @@ class Logger {
     warn (log, message) {
         this.logger.warn(log, message);
     }
+
+    reopenFileStreams () {
+        console.log('Reloading log file', this.path);
+        this.logger.reopenFileStreams();
+    }
 }
  
 module.exports = Logger;
