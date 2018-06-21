@@ -109,7 +109,7 @@ function handleCopyFrom (logger) {
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.from(
-            function (err, pgstream, copyFromStream) {
+            function (err, pgstream) {
                 if (err) {
                     return next(err);
                 }
@@ -139,7 +139,7 @@ function handleCopyFrom (logger) {
                         return next(err);
                     })
                     .on('end', () => {
-                        metrics.end(copyFromStream.rowCount);
+                        metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_FROM) );
 
                         const { time, rows } = metrics;
 
