@@ -71,7 +71,7 @@ function handleCopyTo (logger) {
         res.header("Content-Type", "application/octet-stream");
 
         streamCopy.to(
-            function (err, pgstream, copyToStream, done) {
+            function (err, pgstream, copyToStream) {
                 if (err) {
                     return next(err);
                 }
@@ -80,7 +80,7 @@ function handleCopyTo (logger) {
                     .on('data', data => metrics.addSize(data.length))
                     .on('error', (err) => {
                         metrics.end(null, err);
-                        pgstream.unpipe(res);
+                        pgstream.unpipe();
 
                         return next(err);
                     })
@@ -91,14 +91,13 @@ function handleCopyTo (logger) {
                         pgstream.emit('cancelQuery', err);
 
                         metrics.end(null, err);
-                        pgstream.unpipe(res);
+                        pgstream.unpipe();
 
                         return next(err);
                     })
                     .on('error', err => {
                         metrics.end(null, err);
-                        pgstream.unpipe(res);
-                        done();
+                        pgstream.unpipe();
 
                         return next(err);
                     });

@@ -31,7 +31,7 @@ module.exports = class StreamCopy {
                     done(err);
                 });
 
-            cb(null, pgstream, copyToStream, done);
+            cb(null, pgstream, copyToStream);
         });
     }
 
