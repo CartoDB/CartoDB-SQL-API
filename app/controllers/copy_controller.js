@@ -77,22 +77,6 @@ function handleCopyTo (logger) {
                     return next(err);
                 }
 
-                req.on('close', () => {
-                    // Cancel the running COPY TO query
-                    // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                    const runningClient = client;
-                    const cancelingClient = new Client(runningClient.connectionParameters);
-                    cancelingClient.cancel(runningClient, pgstream);
-
-                    const err = new Error('Connection closed by client');
-                    metrics.end(null, err);
-                    pgstream.unpipe(res);
-                    // see https://node-postgres.com/api/pool#releasecallback
-                    done(err);
-
-                    return next(err);
-                });
-
                 pgstream
                     .on('data', data => metrics.addSize(data.length))
                     .on('error', (err) => {
@@ -103,6 +87,21 @@ function handleCopyTo (logger) {
                     })
                     .on('end', () => metrics.end(copyToStream.rowCount))
                     .pipe(res)
+                    .on('close', () => {
+                        // Cancel the running COPY TO query
+                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                        const runningClient = client;
+                        const cancelingClient = new Client(runningClient.connectionParameters);
+                        cancelingClient.cancel(runningClient, pgstream);
+
+                        const err = new Error('Connection closed by client');
+                        metrics.end(null, err);
+                        pgstream.unpipe(res);
+                        // see https://node-postgres.com/api/pool#releasecallback
+                        done(err);
+
+                        return next(err);
+                    })
                     .on('error', err => {
                         metrics.end(null, err);
                         pgstream.unpipe(res);
