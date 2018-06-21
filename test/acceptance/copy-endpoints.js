@@ -120,6 +120,7 @@ describe('copy-endpoints', function() {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
                 headers: {host: 'vizzuality.cartodb.com'},
                 method: 'POST'
             },{}, function(err) {
@@ -231,6 +232,7 @@ describe('copy-endpoints', function() {
                 });
             });
         });
+
         it('should fail with copyto and timeout', function(done){
             assert.response(server, {
                 url: '/api/v1/sql?q=set statement_timeout = 20',
@@ -438,4 +440,3 @@ describe('copy-endpoints', function() {
 
     });
 });
-
