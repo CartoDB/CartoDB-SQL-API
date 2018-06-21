@@ -4,20 +4,23 @@ const copyFrom = require('pg-copy-streams').from;
 const { Client } = require('pg');
 
 module.exports = class StreamCopy {
-    constructor (sql, userDbParams) {
+    constructor(sql, userDbParams) {
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
         this.connectionClosedByClient = false;
+
+        this.copyToStream;
+        this.copyFromStream;
     }
 
     to(cb) {
-        this.pg.connect((err, client, done)  => {
+        this.pg.connect((err, client, done) => {
             if (err) {
                 return cb(err);
             }
 
-            const copyToStream = copyTo(this.sql);
-            const pgstream = client.query(copyToStream);
+            this.copyToStream = copyTo(this.sql);
+            const pgstream = client.query(this.copyToStream);
 
             pgstream
                 .on('end', () => done())
@@ -31,7 +34,7 @@ module.exports = class StreamCopy {
                     done(err);
                 });
 
-            cb(null, pgstream, copyToStream);
+            cb(null, pgstream);
         });
     }
 
@@ -50,5 +53,13 @@ module.exports = class StreamCopy {
 
             cb(null, pgstream, copyFromStream, client, done);
         });
+    }
+
+    getResult() {
+        if (this.copyToStream) {
+            return this.copyToStream.rowCount;
+        } else if (this.copyFromStream) {
+            return this.copyFromStream.rowCount;
+        }
     }
 };

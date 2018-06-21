@@ -71,7 +71,7 @@ function handleCopyTo (logger) {
         res.header("Content-Type", "application/octet-stream");
 
         streamCopy.to(
-            function (err, pgstream, copyToStream) {
+            function (err, pgstream) {
                 if (err) {
                     return next(err);
                 }
@@ -84,7 +84,7 @@ function handleCopyTo (logger) {
 
                         return next(err);
                     })
-                    .on('end', () => metrics.end(copyToStream.rowCount))
+                    .on('end', () => metrics.end(streamCopy.getResult()))
                     .pipe(res)
                     .on('close', () => {
                         const err = new Error('Connection closed by client');
