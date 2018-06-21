@@ -10,7 +10,6 @@ module.exports = class StreamCopy {
     constructor(sql, userDbParams) {
         this.pg = new PSQL(userDbParams);
         this.sql = sql;
-        this.connectionClosedByClient = false;
         this.stream = null;
     }
 
@@ -22,7 +21,7 @@ module.exports = class StreamCopy {
         return ACTION_FROM;
     }
 
-    getStream(action, cb) {
+    getPGStream(action, cb) {
         this.pg.connect((err, client, done) => {
             if (err) {
                 return cb(err);
