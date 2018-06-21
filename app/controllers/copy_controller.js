@@ -114,6 +114,7 @@ function handleCopyFrom (logger) {
                 }
 
                 req
+                    .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
                     .on('error', err => {
                         metrics.end(null, err);
                         pgstream.emit('error', err);
@@ -122,9 +123,10 @@ function handleCopyFrom (logger) {
                         const err = new Error('Connection closed by client');
                         pgstream.emit('cancelQuery', err);
                         pgstream.emit('error', err);
-                    });
-
-                pgstream
+                    })
+                    .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
+                    .on('data', data => metrics.addSize(data.length))
+                    .pipe(pgstream)
                     .on('error', (err) => {
                         metrics.end(null, err);
                         req.unpipe(pgstream);
@@ -144,13 +146,6 @@ function handleCopyFrom (logger) {
                             total_rows: rows
                         });
                     });
-
-                const middleStream = isGzip ? zlib.createGunzip() : new PassThrough();
-                req
-                    .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
-                    .pipe(middleStream)
-                    .on('data', data => metrics.addSize(data.length))
-                    .pipe(pgstream);
             }
         );
     };
