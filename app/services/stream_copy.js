@@ -55,8 +55,8 @@ module.exports = class StreamCopy {
                 return cb(err);
             }
 
-            const copyFromStream = copyFrom(this.sql);
-            const pgstream = client.query(copyFromStream);
+            this.copyFromStream = copyFrom(this.sql);
+            const pgstream = client.query(this.copyFromStream);
 
             pgstream
                 .on('end', () => done())
