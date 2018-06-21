@@ -65,7 +65,7 @@ module.exports = class StreamCopy {
                     client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                 });
 
-            cb(null, pgstream, copyFromStream, done);
+            cb(null, pgstream, copyFromStream);
         });
     }
 

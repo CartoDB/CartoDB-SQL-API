@@ -109,7 +109,7 @@ function handleCopyFrom (logger) {
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.from(
-            function (err, pgstream, copyFromStream, done) {
+            function (err, pgstream, copyFromStream) {
                 if (err) {
                     return next(err);
                 }
