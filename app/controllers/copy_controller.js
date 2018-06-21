@@ -12,6 +12,7 @@ const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const zlib = require('zlib');
+const { PassThrough } = require('stream');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
@@ -121,13 +122,6 @@ function handleCopyFrom (logger) {
                         const err = new Error('Connection closed by client');
                         pgstream.emit('cancelQuery', err);
                         pgstream.emit('error', err);
-                    })
-                    .on('data', data => {
-                        if (isGzip) {
-                            metrics.addGzipSize(data.length);
-                        } else {
-                            metrics.addSize(data.length);
-                        }
                     });
 
                 pgstream
@@ -151,14 +145,12 @@ function handleCopyFrom (logger) {
                         });
                     });
 
-                if (isGzip) {
-                    req
-                        .pipe(zlib.createGunzip())
-                        .on('data', data => metrics.addSize(data.length))
-                        .pipe(pgstream);
-                } else {
-                    req.pipe(pgstream);
-                }
+                const middleStream = isGzip ? zlib.createGunzip() : new PassThrough();
+                req
+                    .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
+                    .pipe(middleStream)
+                    .on('data', data => metrics.addSize(data.length))
+                    .pipe(pgstream);
             }
         );
     };
