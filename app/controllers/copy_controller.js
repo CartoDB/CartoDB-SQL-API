@@ -80,11 +80,11 @@ function handleCopyTo (logger) {
                     .on('data', data => metrics.addSize(data.length))
                     .on('error', (err) => {
                         metrics.end(null, err);
-                        pgstream.unpipe();
+                        pgstream.unpipe(res);
 
                         return next(err);
                     })
-                    .on('end', () => metrics.end(streamCopy.getResult()))
+                    .on('end', () => metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_TO) ))
                     .pipe(res)
                     .on('close', () => {
                         const err = new Error('Connection closed by client');
@@ -125,9 +125,10 @@ function handleCopyFrom (logger) {
                     })
                     .on('close', () => {
                         const err = new Error('Connection closed by client');
+                        pgstream.emit('cancelQuery', err);
+
                         metrics.end(null, err);
-                        const connection = client.connection;
-                        connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+
                         req.unpipe(pgstream);
                         done();
                         next(err);

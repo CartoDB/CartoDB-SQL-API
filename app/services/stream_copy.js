@@ -3,6 +3,9 @@ const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;
 const { Client } = require('pg');
 
+const ACTION_TO = 'to';
+const ACTION_FROM = 'from';
+
 module.exports = class StreamCopy {
     constructor(sql, userDbParams) {
         this.pg = new PSQL(userDbParams);
@@ -11,6 +14,14 @@ module.exports = class StreamCopy {
 
         this.copyToStream;
         this.copyFromStream;
+    }
+
+    static get ACTION_TO() {
+        return ACTION_TO;
+    }
+
+    static get ACTION_FROM() {
+        return ACTION_FROM;
     }
 
     to(cb) {
@@ -49,16 +60,21 @@ module.exports = class StreamCopy {
 
             pgstream
                 .on('end', () => done())
-                .on('error', err => done(err));
+                .on('error', err => done(err))
+                .on('cancelQuery', err => {
+                    client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                });
 
             cb(null, pgstream, copyFromStream, client, done);
         });
     }
 
-    getResult() {
-        if (this.copyToStream) {
+    getRowCount(action = ACTION_TO) {
+        if (action === ACTION_TO && this.copyToStream) {
             return this.copyToStream.rowCount;
-        } else if (this.copyFromStream) {
+        }
+
+        if (action === ACTION_FROM && this.copyFromStream) {
             return this.copyFromStream.rowCount;
         }
     }
