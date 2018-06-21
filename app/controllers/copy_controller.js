@@ -11,7 +11,6 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
-const { Client } = require('pg');
 const zlib = require('zlib');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
@@ -88,17 +87,11 @@ function handleCopyTo (logger) {
                     .on('end', () => metrics.end(copyToStream.rowCount))
                     .pipe(res)
                     .on('close', () => {
-                        // Cancel the running COPY TO query
-                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                        const runningClient = client;
-                        const cancelingClient = new Client(runningClient.connectionParameters);
-                        cancelingClient.cancel(runningClient, pgstream);
-
                         const err = new Error('Connection closed by client');
+                        pgstream.emit('cancelQuery', err);
+
                         metrics.end(null, err);
                         pgstream.unpipe(res);
-                        // see https://node-postgres.com/api/pool#releasecallback
-                        done(err);
 
                         return next(err);
                     })
