@@ -12,8 +12,7 @@ module.exports = class StreamCopy {
         this.sql = sql;
         this.connectionClosedByClient = false;
 
-        this.copyToStream = null;
-        this.copyFromStream = null;
+        this.stream = null;
     }
 
     static get ACTION_TO() {
@@ -30,8 +29,8 @@ module.exports = class StreamCopy {
                 return cb(err);
             }
 
-            this.copyToStream = copyTo(this.sql);
-            const pgstream = client.query(this.copyToStream);
+            this.stream = copyTo(this.sql);
+            const pgstream = client.query(this.stream);
 
             pgstream
                 .on('end', () => done())
@@ -55,8 +54,8 @@ module.exports = class StreamCopy {
                 return cb(err);
             }
 
-            this.copyFromStream = copyFrom(this.sql);
-            const pgstream = client.query(this.copyFromStream);
+            this.stream = copyFrom(this.sql);
+            const pgstream = client.query(this.stream);
 
             pgstream
                 .on('end', () => done())
@@ -69,13 +68,7 @@ module.exports = class StreamCopy {
         });
     }
 
-    getRowCount(action = ACTION_TO) {
-        if (action === ACTION_TO && this.copyToStream) {
-            return this.copyToStream.rowCount;
-        }
-
-        if (action === ACTION_FROM && this.copyFromStream) {
-            return this.copyFromStream.rowCount;
-        }
+    getRowCount() {
+        return this.stream.rowCount;
     }
 };
