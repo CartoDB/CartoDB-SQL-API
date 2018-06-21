@@ -103,7 +103,6 @@ function handleCopyTo (logger) {
                     })
                     .on('end', () => metrics.end(copyToStream.rowCount))
                     .pipe(res)
-                    // TODO: I think this error handling is not necessary
                     .on('error', err => {
                         metrics.end(null, err);
                         pgstream.unpipe(res);
