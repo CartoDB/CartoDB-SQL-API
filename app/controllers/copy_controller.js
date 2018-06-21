@@ -141,27 +141,27 @@ function handleCopyFrom (logger) {
                         }
                     });
 
-                pgstream.on('error', (err) => {
-                    metrics.end(null, err);
-                    req.unpipe(pgstream);
+                pgstream
+                    .on('error', (err) => {
+                        metrics.end(null, err);
+                        req.unpipe(pgstream);
 
-                    return next(err);
-                });
+                        return next(err);
+                    })
+                    .on('end', () => {
+                        metrics.end(copyFromStream.rowCount);
 
-                pgstream.on('end', () => {
-                    metrics.end(copyFromStream.rowCount);
+                        const { time, rows } = metrics;
 
-                    const { time, rows } = metrics;
+                        if (!rows) {
+                            return next(new Error("No rows copied"));
+                        }
 
-                    if (!rows) {
-                        return next(new Error("No rows copied"));
-                    }
-
-                    res.send({
-                        time,
-                        total_rows: rows
+                        res.send({
+                            time,
+                            total_rows: rows
+                        });
                     });
-                });
 
                 if (isGzip) {
                     req
