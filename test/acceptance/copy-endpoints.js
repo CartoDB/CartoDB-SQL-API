@@ -257,6 +257,7 @@ describe('copy-endpoints', function() {
                     };
                     const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
                     assert.deepEqual(JSON.parse(expectedError), error);
+
                     assert.response(server, {
                         url: "/api/v1/sql?q=set statement_timeout = 2000",
                         headers: {host: 'vizzuality.cartodb.com'},
