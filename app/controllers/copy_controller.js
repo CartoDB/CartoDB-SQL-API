@@ -117,21 +117,12 @@ function handleCopyFrom (logger) {
                 req
                     .on('error', err => {
                         metrics.end(null, err);
-                        req.unpipe(pgstream);
-                        // pgstream.end();
-                        done();
-
-                        next(err);
+                        pgstream.emit('error', err);
                     })
                     .on('close', () => {
                         const err = new Error('Connection closed by client');
                         pgstream.emit('cancelQuery', err);
-
-                        metrics.end(null, err);
-
-                        req.unpipe(pgstream);
-                        done();
-                        next(err);
+                        pgstream.emit('error', err);
                     })
                     .on('data', data => {
                         if (isGzip) {
@@ -145,7 +136,6 @@ function handleCopyFrom (logger) {
                     .on('error', (err) => {
                         metrics.end(null, err);
                         req.unpipe(pgstream);
-
                         return next(err);
                     })
                     .on('end', () => {
