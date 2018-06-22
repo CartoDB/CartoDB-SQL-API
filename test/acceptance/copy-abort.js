@@ -46,6 +46,15 @@ function countInsertedRows (host, port, callback) {
 }
 
 describe('Cancel "copy to" commands', function () {
+    before(function() {
+        this.db_pool_size = global.settings.db_pool_size;
+        global.settings.db_pool_size = 1;
+    });
+
+    after(function() {
+        global.settings.db_pool_size = this.db_pool_size;
+    });
+
 
     beforeEach(function (done) {
         this.listener = server.listen(0, '127.0.0.1');
