@@ -41,13 +41,13 @@ JsonFormat.prototype.formatResultFields = function(flds) {
         tname += '[]';
       }
     }
-    var rv = { type: tname, pgtype: cname };
+    var jsonTypeInfo = { type: tname, postgres_type: cname };
 
     if ( cname.match(/geometry|geography/) ) {
       var typmodInfo = this.client.typeModInfo(f.dataTypeModifier);
-      _.extend(rv, typmodInfo);
+      _.extend(jsonTypeInfo, typmodInfo);
     }
-    nfields[f.name] = rv;
+    nfields[f.name] = jsonTypeInfo;
   }
   return nfields;
 };
