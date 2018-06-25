@@ -40,7 +40,7 @@ describe('stream-responses', function() {
                     assert.equal(parsedBody.rows.length, 2);
                     assert.deepEqual(parsedBody.fields, {
                         the_geom: { ndims: 4, postgres_type: "geometry", srid: -1, type: "geometry" },
-                        cdb_ratio: { pgtype: "int4", type: "number" }
+                        cdb_ratio: { postgres_type: "int4", type: "number" }
                     });
                     assert.deepEqual(parsedBody.error, ["division by zero"]);
                     done();
