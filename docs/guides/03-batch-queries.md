@@ -4,7 +4,7 @@ A Batch Query enables you to request queries with long-running CPU processing ti
 
 _Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API]({{ site.sqlapi_docs }}/guides/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
-**Note:** In order to use Batch Queries, you **must** be [authenticated]({{ site.sqlapi_docs }}/guides/authentication/) using API keys.
+**Note:** SQL API does not expose any endpoint to list Batch Queries (jobs). Thus, when creating a Batch Query (job), you must always save the ID from the response, as the main reference for any later operation.
 
 ### Authentication
 
@@ -148,6 +148,9 @@ request(options, function (error, response, body) {
   console.log(body);
 });
 ```
+
+**Note:** You must always save the `job_id` from the response for any later operation like reading or deleting a job. As mentioned above, SQL API does not expose any endpoint to list jobs.
+
 
 #### Read a Job
 
