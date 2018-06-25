@@ -15,7 +15,7 @@ const FORBIDDEN_ENTITIES = {
 };
 
 const Validator = {
-    validate(affectedTables, authenticated) {
+    validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
         let softValidationResult = true;
 
@@ -24,7 +24,7 @@ const Validator = {
                 hardValidationResult = this.hardValidation(affectedTables.tables);
             }
 
-            if (!authenticated) {
+            if (authorizationLevel !== 'master') {
                 softValidationResult = this.softValidation(affectedTables.tables);
             }
         }

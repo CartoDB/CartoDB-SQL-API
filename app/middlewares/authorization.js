@@ -1,7 +1,7 @@
 const AuthApi = require('../auth/auth_api');
 const basicAuth = require('basic-auth');
 
-module.exports = function authorization (metadataBackend, forceToBeAuthenticated = false) {
+module.exports = function authorization (metadataBackend, forceToBeMaster = false) {
     return function authorizationMiddleware (req, res, next) {
         const { user } = res.locals;
         const credentials = getCredentialsFromRequest(req);
@@ -19,7 +19,7 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
         const params = Object.assign({ metadataBackend }, res.locals, req.query, req.body);
         const authApi = new AuthApi(req, params);
 
-        authApi.verifyCredentials(function (err, authenticated) {
+        authApi.verifyCredentials(function (err, authorizationLevel) {
             if (req.profiler) {
                 req.profiler.done('authorization');
             }
@@ -28,9 +28,9 @@ module.exports = function authorization (metadataBackend, forceToBeAuthenticated
                 return next(err);
             }
 
-            res.locals.authenticated = authenticated;
+            res.locals.authorizationLevel = authorizationLevel;
 
-            if (forceToBeAuthenticated && !authenticated) {
+            if (forceToBeMaster && authorizationLevel !== 'master') {
                 return next(new Error('permission denied'));
             }
 

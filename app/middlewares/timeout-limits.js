@@ -1,6 +1,6 @@
 module.exports = function timeoutLimits (metadataBackend) {
     return function timeoutLimitsMiddleware (req, res, next) {
-        const { user, authenticated } = res.locals;
+        const { user, authorizationLevel } = res.locals;
 
         metadataBackend.getUserTimeoutRenderLimits(user, function (err, timeoutRenderLimit) {
             if (req.profiler) {
@@ -12,7 +12,7 @@ module.exports = function timeoutLimits (metadataBackend) {
             }
 
             const userLimits = {
-                timeout: authenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
+                timeout: (authorizationLevel === 'master') ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
             };
 
             res.locals.userLimits = userLimits;

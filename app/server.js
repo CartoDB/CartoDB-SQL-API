@@ -15,7 +15,6 @@
 //
 
 var express = require('express');
-var bodyParser = require('./middlewares/body-parser');
 var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
 var TableCacheFactory = require('./utils/table_cache_factory');
@@ -30,12 +29,11 @@ var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
 var JobService = require('../batch/job_service');
 
-var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
-
 var cors = require('./middlewares/cors');
 
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
+var CopyController = require('./controllers/copy_controller');
 var JobController = require('./controllers/job_controller');
 var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
@@ -140,7 +138,6 @@ function App(statsClient) {
       });
     }
 
-    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
@@ -160,8 +157,7 @@ function App(statsClient) {
     var jobPublisher = new JobPublisher(redisPool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller);
 
     var genericController = new GenericController();
@@ -176,6 +172,13 @@ function App(statsClient) {
     );
     queryController.route(app);
 
+    var copyController = new CopyController(
+        metadataBackend, 
+        userDatabaseService, 
+        userLimitsService
+    );
+    copyController.route(app);
+    
     var jobController = new JobController(
         metadataBackend, 
         userDatabaseService, 

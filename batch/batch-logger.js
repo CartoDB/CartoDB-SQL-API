@@ -1,29 +1,19 @@
 'use strict';
 
-var bunyan = require('bunyan');
+const Logger = require('../app/services/logger');
 
-function BatchLogger (path) {
-    var stream = {
-        level: process.env.NODE_ENV === 'test' ? 'fatal' : 'info'
-    };
-    if (path) {
-        stream.path = path;
-    } else {
-        stream.stream = process.stdout;
+class BatchLogger extends Logger {
+    constructor (path, name) {
+        super(path, name);
     }
-    this.path = path;
-    this.logger = bunyan.createLogger({
-        name: 'batch-queries',
-        streams: [stream]
-    });
+
+    log (job) {
+        return job.log(this.logger);
+    }
+
+    reopenFileStreams () {
+        this.logger.reopenFileStreams();
+    }
 }
 
 module.exports = BatchLogger;
-
-BatchLogger.prototype.log = function (job) {
-    return job.log(this.logger);
-};
-
-BatchLogger.prototype.reopenFileStreams = function () {
-    this.logger.reopenFileStreams();
-};

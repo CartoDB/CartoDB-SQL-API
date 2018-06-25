@@ -2,24 +2,26 @@
 
 var PSQL = require('cartodb-psql');
 
-function JobCanceller(userDatabaseMetadataService) {
-    this.userDatabaseMetadataService = userDatabaseMetadataService;
+function JobCanceller() {
 }
 
 module.exports = JobCanceller;
 
 JobCanceller.prototype.cancel = function (job, callback) {
-    this.userDatabaseMetadataService.getUserMetadata(job.data.user, function (err, userDatabaseMetadata) {
-        if (err) {
-            return callback(err);
-        }
 
-        doCancel(job.data.job_id, userDatabaseMetadata, callback);
-    });
+    const dbConfiguration = {
+        host: job.data.host,
+        port: job.data.port,
+        dbname: job.data.dbname,
+        user: job.data.dbuser,
+        pass: job.data.pass,
+    };
+
+    doCancel(job.data.job_id, dbConfiguration, callback);
 };
 
-function doCancel(job_id, userDatabaseMetadata, callback) {
-    var pg = new PSQL(userDatabaseMetadata);
+function doCancel(job_id, dbConfiguration, callback) {
+    var pg = new PSQL(dbConfiguration);
 
     getQueryPID(pg, job_id, function (err, pid) {
         if (err) {
