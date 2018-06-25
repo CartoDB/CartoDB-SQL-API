@@ -6,6 +6,7 @@ There are some tricks to consider when using the SQL API that might make your ap
 * Use PostGIS functions to simplify and filter out unneeded geometries when possible. One very handy function is, [ST_Simplify](http://www.postgis.org/docs/ST_Simplify.html)
 * Remember to build indexes that will speed up some of your more common queries. For details, see [Creating Indexes](#creating-indexes)
 * Use *cartodb_id* to retrieve specific rows of your data, this is the unique key column added to every CARTO table. For a sample use case, view the [_Faster data updates with CARTO](https://carto.com/blog/faster-data-updates-with-cartodb/) blogpost
+* Check if your polygons contain an excessive number of vertices, and subdivide them if they do. Learn how in this [Subdivide All the Things](https://carto.com/blog/subdivide-all-things/) blogpost.
 
 ### Creating Indexes
 
