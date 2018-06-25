@@ -7,6 +7,9 @@ Released 2018-mm-dd
 ## 2.1.0
 Released 2018-06-13
 
+Notice:
+- This release changes the way that authentication works internally. You'll need to run `bundle exec rake carto:api_key:create_default` in your development environment to keep working.
+
 New features:
  * CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
  * Making version 2.0.0 configuration parameters backwards compatible
