@@ -18,7 +18,8 @@ function isTimeoutError(err) {
 
 function createTimeoutError() {
     return new ErrorHandler({
-        message: 'You are over platform\'s limits. Please contact us to know more details',
+        message: `You are over platform\'s limits. Please contact us to know more details. 
+                  SQL query timeout expired error.`,
         context: 'limit',
         detail: 'datasource',
         http_status: 429
