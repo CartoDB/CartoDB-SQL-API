@@ -791,7 +791,8 @@ it('GET with callback must return 200 status error even if it is an error', func
                 var error = JSON.parse(res.body);
                 assert.deepEqual(error, {
                     error: [
-                        'You are over platform\'s limits. Please contact us to know more details'
+                        'You are over platform\'s limits. Please contact us to know more details. ' +
+                        'SQL query timeout expired error.'
                     ],
                     context: 'limit',
                     detail: 'datasource'
@@ -817,7 +818,8 @@ it('GET with callback must return 200 status error even if it is an error', func
                 var error = JSON.parse(res.body);
                 assert.deepEqual(error, {
                     error: [
-                        'You are over platform\'s limits. Please contact us to know more details'
+                        'You are over platform\'s limits. Please contact us to know more details. ' +
+                        'SQL query timeout expired error.'
                     ],
                     context: 'limit',
                     detail: 'datasource'

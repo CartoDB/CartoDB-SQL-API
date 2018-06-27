@@ -98,7 +98,8 @@ describe('timeout', function () {
 
                     assert.deepEqual(res, {
                         error: [
-                            'You are over platform\'s limits. Please contact us to know more details'
+                            'You are over platform\'s limits. Please contact us to know more details. ' +
+                            'SQL query timeout expired error.'
                         ],
                         context: 'limit',
                         detail: 'datasource'
@@ -180,7 +181,8 @@ describe('timeout', function () {
 
                     assert.deepEqual(res, {
                         error: [
-                            'You are over platform\'s limits. Please contact us to know more details'
+                            'You are over platform\'s limits. Please contact us to know more details. ' +
+                            'SQL query timeout expired error.'
                         ],
                         context: 'limit',
                         detail: 'datasource'
