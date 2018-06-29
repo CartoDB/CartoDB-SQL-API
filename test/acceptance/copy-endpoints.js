@@ -216,8 +216,8 @@ describe('copy-endpoints', function() {
                     assert.ifError(err);
                     assert.deepEqual(JSON.parse(res.body), {
                         error: [
-                            'You are over platform\'s limits. Please contact us to know more details. ' +
-                            'SQL query timeout expired error.'
+                            'You are over platform\'s limits: SQL query timeout error.' +
+                            ' Refactor your query before running again or contact CARTO support for more details.',
                         ],
                         context: 'limit',
                         detail: 'datasource'
@@ -252,8 +252,8 @@ describe('copy-endpoints', function() {
                 },{}, function(err, res) {
                     assert.ifError(err);
                     const error = {
-                        error: ['You are over platform\'s limits. Please contact us to know more details. ' +
-                                'SQL query timeout expired error.'],
+                        error: ['You are over platform\'s limits: SQL query timeout error.' +
+                            ' Refactor your query before running again or contact CARTO support for more details.',],
                         context:"limit",
                         detail:"datasource"
                     };

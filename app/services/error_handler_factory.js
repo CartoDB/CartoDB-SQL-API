@@ -18,8 +18,8 @@ function isTimeoutError(err) {
 
 function createTimeoutError() {
     return new ErrorHandler({
-        message: 'You are over platform\'s limits. Please contact us to know more details. ' +
-                 'SQL query timeout expired error.',
+        message: 'You are over platform\'s limits: SQL query timeout error.' +
+                 ' Refactor your query before running again or contact CARTO support for more details.',
         context: 'limit',
         detail: 'datasource',
         http_status: 429
