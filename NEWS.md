@@ -3,6 +3,8 @@
 ## 2.1.1
 Released 2018-mm-dd
 
+Announcements:
+  * Improve error message when the DB query is over the user's limits
 
 ## 2.1.0
 Released 2018-06-13
