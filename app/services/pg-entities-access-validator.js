@@ -21,18 +21,18 @@ module.exports = class Validator {
 
         if (!!affectedTables && affectedTables.tables) {
             if (global.settings.validatePGEntitiesAccess) {
-                hardValidationResult = this.hardValidation(affectedTables.tables);
+                hardValidationResult = this._hardValidation(affectedTables.tables);
             }
 
             if (authorizationLevel !== 'master') {
-                softValidationResult = this.softValidation(affectedTables.tables);
+                softValidationResult = this._softValidation(affectedTables.tables);
             }
         }
 
         return hardValidationResult && softValidationResult;
     }
 
-    hardValidation(tables) {
+    _hardValidation(tables) {
         for (let table of tables) {
             if (FORBIDDEN_ENTITIES[table.schema_name] && FORBIDDEN_ENTITIES[table.schema_name].length &&
                 (
@@ -47,7 +47,7 @@ module.exports = class Validator {
         return true;
     }
 
-    softValidation(tables) {
+    _softValidation(tables) {
         for (let table of tables) {
             if (table.table_name.match(/\bpg_/)) {
                 return false;

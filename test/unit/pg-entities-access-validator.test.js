@@ -153,23 +153,23 @@ describe('pg entities access validator with validatePGEntitiesAccess enabled', f
         );
     });
 
-    it('hardValidation function', function () {
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTables), true);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesCartodbOK), true);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesPublicOK), true);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesTopologyOK), true);
+    it('_hardValidation function', function () {
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTables), true);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesCartodbOK), true);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesPublicOK), true);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesTopologyOK), true);
 
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesCarto), false);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesCartodbKO), false);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesPgcatalog), false);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesInfo), false);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesPublicKO), false);
-        assert.strictEqual(pgEntitiesAccessValidator.hardValidation(fakeAffectedTablesTopologyKO), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesCarto), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesCartodbKO), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesPgcatalog), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesInfo), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesPublicKO), false);
+        assert.strictEqual(pgEntitiesAccessValidator._hardValidation(fakeAffectedTablesTopologyKO), false);
     });
 
-    it('softValidation function', function () {
-        assert.strictEqual(pgEntitiesAccessValidator.softValidation(fakeAffectedTablesCartodbKO), true);
-        assert.strictEqual(pgEntitiesAccessValidator.softValidation(fakeAffectedTablesPgcatalog), false);
+    it('_softValidation function', function () {
+        assert.strictEqual(pgEntitiesAccessValidator._softValidation(fakeAffectedTablesCartodbKO), true);
+        assert.strictEqual(pgEntitiesAccessValidator._softValidation(fakeAffectedTablesPgcatalog), false);
     });
 
 });
