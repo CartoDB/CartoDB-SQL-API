@@ -14,11 +14,18 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
+function isForbiddenTable (schema, table) {
+    return FORBIDDEN_ENTITIES[schema] && FORBIDDEN_ENTITIES[schema].includes(table);
+}
+
+function isForbiddenSchema (schema) {
+    return FORBIDDEN_ENTITIES[schema] && FORBIDDEN_ENTITIES[schema][0] === '*';
+}
+
 function isForbiddenEntity (entity) {
     const { schema_name: schema, table_name: table } = entity;
-    const forbiddenEntities = FORBIDDEN_ENTITIES[schema];
 
-    return forbiddenEntities && (forbiddenEntities[0] === '*' || forbiddenEntities.includes(table));
+    return isForbiddenSchema(schema) || isForbiddenTable(schema, table);
 }
 
 function isSystemEntity (entity) {
