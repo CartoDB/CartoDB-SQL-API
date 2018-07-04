@@ -14,6 +14,18 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
+function isForbiddenEntity (table) {
+    return FORBIDDEN_ENTITIES[table.schema_name] &&
+        FORBIDDEN_ENTITIES[table.schema_name].length && (
+            FORBIDDEN_ENTITIES[table.schema_name][0] === '*' ||
+            FORBIDDEN_ENTITIES[table.schema_name].includes(table.table_name)
+        );
+}
+
+function isSystemEntity (table) {
+    return table.table_name.match(/\bpg_/;
+}
+
 module.exports = class Validator {
     validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
@@ -34,12 +46,7 @@ module.exports = class Validator {
 
     _hardValidation(tables) {
         for (let table of tables) {
-            if (FORBIDDEN_ENTITIES[table.schema_name] && FORBIDDEN_ENTITIES[table.schema_name].length &&
-                (
-                    FORBIDDEN_ENTITIES[table.schema_name][0] === '*' ||
-                    FORBIDDEN_ENTITIES[table.schema_name].includes(table.table_name)
-                )
-            ) {
+            if (isForbiddenEntity(table)) {
                 return false;
             }
         }
@@ -49,7 +56,7 @@ module.exports = class Validator {
 
     _softValidation(tables) {
         for (let table of tables) {
-            if (table.table_name.match(/\bpg_/)) {
+            if (isSystemEntity(table)) {
                 return false;
             }
         }
