@@ -26,7 +26,7 @@ function isSystemEntity (entity) {
     return table.match(/\bpg_/);
 }
 
-module.exports = class Validator {
+module.exports = class PGEntitiesAccessValidator {
     validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
         let softValidationResult = true;
