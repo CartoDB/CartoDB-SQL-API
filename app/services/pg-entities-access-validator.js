@@ -18,11 +18,11 @@ function isForbiddenEntity (entity) {
     const { schema_name: schema, table_name: table } = entity;
     const forbiddenEntities = FORBIDDEN_ENTITIES[schema];
 
-    return forbiddenEntities && forbiddenEntities.length && (forbiddenEntities[0] === '*' || forbiddenEntities.includes(table));
+    return forbiddenEntities && (forbiddenEntities[0] === '*' || forbiddenEntities.includes(table));
 }
 
 function isSystemEntity (table) {
-    return table.table_name.match(/\bpg_/;
+    return table.table_name.match(/\bpg_/);
 }
 
 module.exports = class Validator {
