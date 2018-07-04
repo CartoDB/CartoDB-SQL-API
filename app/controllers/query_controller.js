@@ -5,7 +5,8 @@ var step = require('step');
 var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
-const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
+const PGEntitiesAccessValidator = require('../services/pg-entities-access-validator');
+const pgEntitiesAccessValidator = new PGEntitiesAccessValidator();
 var queryMayWrite = require('../utils/query_may_write');
 
 var formats = require('../models/formats');

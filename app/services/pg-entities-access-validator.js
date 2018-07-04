@@ -14,7 +14,7 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
-const Validator = {
+module.exports = class Validator {
     validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
         let softValidationResult = true;
@@ -30,7 +30,7 @@ const Validator = {
         }
 
         return hardValidationResult && softValidationResult;
-    },
+    }
 
     hardValidation(tables) {
         for (let table of tables) {
@@ -45,7 +45,7 @@ const Validator = {
         }
 
         return true;
-    },
+    }
 
     softValidation(tables) {
         for (let table of tables) {
@@ -56,6 +56,4 @@ const Validator = {
 
         return true;
     }
-}; 
-
-module.exports = Validator;
+};
