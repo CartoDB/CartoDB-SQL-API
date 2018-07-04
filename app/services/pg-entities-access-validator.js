@@ -21,8 +21,9 @@ function isForbiddenEntity (entity) {
     return forbiddenEntities && (forbiddenEntities[0] === '*' || forbiddenEntities.includes(table));
 }
 
-function isSystemEntity (table) {
-    return table.table_name.match(/\bpg_/);
+function isSystemEntity (entity) {
+    const { table_name: table } = entity;
+    return table.match(/\bpg_/);
 }
 
 module.exports = class Validator {
