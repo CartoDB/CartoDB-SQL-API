@@ -14,12 +14,11 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
-function isForbiddenEntity (table) {
-    return FORBIDDEN_ENTITIES[table.schema_name] &&
-        FORBIDDEN_ENTITIES[table.schema_name].length && (
-            FORBIDDEN_ENTITIES[table.schema_name][0] === '*' ||
-            FORBIDDEN_ENTITIES[table.schema_name].includes(table.table_name)
-        );
+function isForbiddenEntity (entity) {
+    const { schema_name: schema, table_name: table } = entity;
+    const forbiddenEntities = FORBIDDEN_ENTITIES[schema];
+
+    return forbiddenEntities && forbiddenEntities.length && (forbiddenEntities[0] === '*' || forbiddenEntities.includes(table));
 }
 
 function isSystemEntity (table) {
