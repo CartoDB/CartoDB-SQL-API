@@ -181,8 +181,8 @@
     },
     "cartodb-redis": {
       "version": "2.0.1",
-      "from": "cartodb/node-cartodb-redis#fix-rate-limit-endpoint-several-limits",
-      "resolved": "git://github.com/cartodb/node-cartodb-redis.git#94b058216cb6837d80aabe36406e4ca9b6023477"
+      "from": "cartodb-redis@2.0.1",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-2.0.1.tgz"
     },
     "caseless": {
       "version": "0.11.0",
@@ -730,7 +730,7 @@
     },
     "nan": {
       "version": "2.10.0",
-      "from": "nan@>=2.0.8 <3.0.0",
+      "from": "nan@>=2.3.4 <3.0.0",
       "resolved": "https://registry.npmjs.org/nan/-/nan-2.10.0.tgz"
     },
     "ncp": {
