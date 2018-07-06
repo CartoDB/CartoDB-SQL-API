@@ -8,7 +8,7 @@ info:
     CARTO, as if you were running SQL statements against a normal database.
 
 
-    You can execute single SQL statements or even a batch of long-running ones. 
+    You can execute single SQL statements or even a batch of long-running ones.
     Refer to the SQL API guide to learn more.
 
     # Authorization
@@ -48,8 +48,8 @@ paths:
     get:
       summary: Runs a single SQL statement
       description: |
-        Runs a single SQL statement: 
-        - SELECT, INSERT, UPDATE, DELETE, 
+        Runs a single SQL statement:
+        - SELECT, INSERT, UPDATE, DELETE,
         - CREATE TABLE, ALTER TABLE, DROP TABLE
         - CREATE INDEX
       tags:
@@ -95,9 +95,9 @@ paths:
     post:
       summary: Runs a single SQL statement.
       description: >
-        Runs a single SQL statement: 
+        Runs a single SQL statement:
 
-        - SELECT, INSERT, UPDATE, DELETE, 
+        - SELECT, INSERT, UPDATE, DELETE,
 
         - CREATE TABLE, ALTER TABLE, DROP TABLE
 
@@ -149,6 +149,105 @@ paths:
               "query": "SELECT count(*) FROM cities", \
               "filename": "number_of_cities.json" \
             }' "https://username.carto.com/api/v2/sql"
+
+  /sql/copyfrom:
+    post:
+      summary: Runs a copy command to ingest data
+      description: |
+        Runs a single COPY command:
+        - COPY mytable (col1, col2) FROM stdin WITH (FORMAT CSV)
+      tags:
+        - Single COPY command
+      operationId: postCopyFromStatement
+      parameters:
+        - in: query
+          name: q
+          description: COPY statement
+          schema:
+            $ref: '#/components/schemas/SQLStatementString'
+          required: true
+          example: COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)
+        - in: header
+          name: Transfer-Encoding
+          schema:
+            type: string
+            enum:
+              - chunked
+          required: true
+        - in: header
+          name: Content-Encoding
+          schema:
+            type: string
+            enum:
+              - gzip
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyFromStatement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl -X POST -H 'Content-Encoding: gzip' -H 'Transfer-Encoding: chunked' -H 'Content-Type: application/octet-stream' --data-binary @upload_example.csv.gz 'http://{username}.carto.com/api/v2/sql/copyfrom?q=COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)&api_key={api_key}'
+
+  /sql/copyto:
+    get:
+      summary: Runs a copy command to extract data
+      description: |
+        Runs a single COPY command:
+        - COPY mytable TO stdout WITH (FORMAT CSV)
+      tags:
+        - Single COPY command
+      operationId: getCopyToStatement
+      parameters:
+        - in: query
+          name: q
+          description: COPY statement
+          schema:
+            $ref: '#/components/schemas/SQLStatementString'
+          required: true
+        - in: query
+          name: filename
+          description: Sets the content-disposition file name header
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Text file formatted as described by the COPY statement
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl --output upload_example_dl.csv --compressed  "http://{username}.carto.com/api/v2/sql/copyto?q=COPY upload_example (the_geom,name,age) TO stdout WITH(FORMAT csv,HEADER true)&api_key={api_key}"
+
   /sql/job:
     post:
       summary: Create a Job
@@ -189,7 +288,7 @@ paths:
             curl -X POST -H "Content-Type: application/json" -d '{ \
               "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'", \
             }' "https://username.carto.com/api/v2/sql/job"
-              
+
   '/sql/job/{job_id}':
     parameters:
       - $ref: '#/components/parameters/jobId'
@@ -280,7 +379,7 @@ paths:
       description: >
         Canceles a Batch Queries Job based on it's ID. The Job doesn't get
         deleted, just it's status is set as _canceled_.
-                
+
         Only jobs whose status are _pending_ or _running_ can be canceled.
 
         * **pending**: the job will never be executed
@@ -320,6 +419,20 @@ paths:
             https://username.carto.com/api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 components:
   schemas:
+    CopyFromStatement:
+      type: object
+      properties:
+        time:
+          type: number
+          format: float
+          description: time in seconds it has taken to run the statement
+        total_rows:
+          type: number
+          format: integer
+          description: number of rows copied into the database
+      example:
+        time: 2.3
+        total_rows: 142012
     StatementResult:
       type: object
       properties:
