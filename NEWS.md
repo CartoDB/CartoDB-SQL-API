@@ -5,6 +5,8 @@ Released 2018-mm-dd
 
 Announcements:
   * Improve error message when the DB query is over the user's limits
+  * Updated cartodb-redis to 2.0.1
+
 
 ## 2.1.0
 Released 2018-06-13
