@@ -44,7 +44,8 @@ describe('error-handler-factory', function () {
         const error = new Error('statement timeout');
         const errorHandler = errorHandlerFactory(error);
         const expectedError = new ErrorHandler({
-            message: 'You are over platform\'s limits. Please contact us to know more details',
+            message: 'You are over platform\'s limits: SQL query timeout error.' +
+                ' Refactor your query before running again or contact CARTO support for more details.',
             context: 'limit',
             detail: 'datasource',
             http_status: 429

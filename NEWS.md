@@ -3,9 +3,14 @@
 ## 2.1.1
 Released 2018-mm-dd
 
+Announcements:
+  * Improve error message when the DB query is over the user's limits
 
 ## 2.1.0
 Released 2018-06-13
+
+Notice:
+- This release changes the way that authentication works internally. You'll need to run `bundle exec rake carto:api_key:create_default` in your development environment to keep working.
 
 New features:
  * CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
