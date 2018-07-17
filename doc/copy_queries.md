@@ -204,28 +204,20 @@ The Python to "copy to" is very simple, because the HTTP call is a simple get. T
 
 ```python
 import requests
-import re
 
 api_key = {api_key}
 username = {api_key}
-download_file = 'upload_example_dl.csv'
+download_filename = 'download_example.csv'
 q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
-# request the download, specifying desired file name
+# request the download
 url = "http://%s.carto.com/api/v2/sql/copyto" % username
-r = requests.get(url, params={'api_key': api_key, 'q': q, 'filename': download_file}, stream=True)
+r = requests.get(url, params={'api_key': api_key, 'q': q}, stream=True)
 r.raise_for_status()
 
-# read save file name from response headers
-d = r.headers['content-disposition']
-savefilename = re.findall("filename=(.+)", d)
-
-if len(savefilename) > 0:
-    with open(savefilename[0], 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
-    print("Downloaded to: %s" % savefilename)
-else:
-    print("Error: could not find read file name from headers")
+with open(download_filename, 'wb') as handle:
+    for block in r.iter_content(1024):
+        handle.write(block)
+print("Downloaded to: %s" % savefilename)
 ```
 
