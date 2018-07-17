@@ -112,6 +112,41 @@ with open(upload_file, 'rb') as f:
 
 A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly.
 
+### CSV files and column ordering
+
+When using the **CSV format, please note that [PostgreSQL ignores the header](https://www.postgresql.org/docs/10/static/sql-copy.html)**.
+
+> HEADER
+>
+> Specifies that the file contains a header line with the names of each column in the file. On output, the first line contains the column names from the table, and **on input, the first line is ignored**. This option is allowed only when using CSV format.
+
+If the ordering of the columns does not match the table definition, you must specify it as part of the query.
+
+For example, if your table is defined as:
+
+```sql
+CREATE TABLE upload_example (
+    the_geom geometry,
+    name text,
+    age integer
+);
+```
+
+but your CSV file has the following structure (note `name` and `age` columns are swapped):
+
+```csv
+#the_geom,age,name
+SRID=4326;POINT(-126 54),89,North West
+SRID=4326;POINT(-96 34),99,South East
+SRID=4326;POINT(-6 -25),124,Souther Easter
+```
+
+your query has to specify the correct ordering, regardless of the header in the CSV:
+
+```sql
+COPY upload_example (the_geom, age, name) FROM stdin WITH (FORMAT csv, HEADER true);
+```
+
 ### Response Format
 
 A successful upload will return with status code 200, and a small JSON with information about the upload.
