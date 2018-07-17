@@ -48,6 +48,9 @@ Creating a new CARTO table with all the right triggers and columns can be tricky
     -- adds the 'cartodb_id' and 'the_geom_webmercator'
     -- adds the required triggers and indexes
     SELECT CDB_CartodbfyTable('upload_example');
+    
+    -- Note that CDB_CartodbfyTable is called differently if you have an organization user
+    -- SELECT CDB_CartodbfyTable('your_org_username', 'upload_example');
 
 Now you are ready to upload your file. Suppose you have a CSV file like this:
 
