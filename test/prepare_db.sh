@@ -107,7 +107,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
       sed "s/:PUBLICPASS/${PUBLICPASS}/" |
       sed "s/:TESTUSER/${TESTUSER}/" |
       sed "s/:TESTPASS/${TESTPASS}/" |
-      PGOPTIONS='--client-min-messages=WARNING' psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
+      psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
   done
 
 fi
