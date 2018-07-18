@@ -146,7 +146,7 @@ paths:
         - lang: Curl
           source: |
             curl -X POST -H "Content-Type: application/json" -d '{ \
-              "query": "SELECT count(*) FROM cities", \
+              "q": "SELECT count(*) FROM cities", \
               "filename": "number_of_cities.json" \
             }' "https://username.carto.com/api/v2/sql"
 
