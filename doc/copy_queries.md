@@ -48,6 +48,9 @@ Creating a new CARTO table with all the right triggers and columns can be tricky
     -- adds the 'cartodb_id' and 'the_geom_webmercator'
     -- adds the required triggers and indexes
     SELECT CDB_CartodbfyTable('upload_example');
+    
+    -- Note that CDB_CartodbfyTable is called differently if you have an organization user
+    -- SELECT CDB_CartodbfyTable('your_org_username', 'upload_example');
 
 Now you are ready to upload your file. Suppose you have a CSV file like this:
 
@@ -112,6 +115,41 @@ with open(upload_file, 'rb') as f:
 
 A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly.
 
+### CSV files and column ordering
+
+When using the **CSV format, please note that [PostgreSQL ignores the header](https://www.postgresql.org/docs/10/static/sql-copy.html)**.
+
+> HEADER
+>
+> Specifies that the file contains a header line with the names of each column in the file. On output, the first line contains the column names from the table, and **on input, the first line is ignored**. This option is allowed only when using CSV format.
+
+If the ordering of the columns does not match the table definition, you must specify it as part of the query.
+
+For example, if your table is defined as:
+
+```sql
+CREATE TABLE upload_example (
+    the_geom geometry,
+    name text,
+    age integer
+);
+```
+
+but your CSV file has the following structure (note `name` and `age` columns are swapped):
+
+```csv
+#the_geom,age,name
+SRID=4326;POINT(-126 54),89,North West
+SRID=4326;POINT(-96 34),99,South East
+SRID=4326;POINT(-6 -25),124,Souther Easter
+```
+
+your query has to specify the correct ordering, regardless of the header in the CSV:
+
+```sql
+COPY upload_example (the_geom, age, name) FROM stdin WITH (FORMAT csv, HEADER true);
+```
+
 ### Response Format
 
 A successful upload will return with status code 200, and a small JSON with information about the upload.
@@ -166,28 +204,20 @@ The Python to "copy to" is very simple, because the HTTP call is a simple get. T
 
 ```python
 import requests
-import re
 
 api_key = {api_key}
 username = {api_key}
-download_file = 'upload_example_dl.csv'
+download_filename = 'download_example.csv'
 q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
-# request the download, specifying desired file name
+# request the download
 url = "http://%s.carto.com/api/v2/sql/copyto" % username
-r = requests.get(url, params={'api_key': api_key, 'q': q, 'filename': download_file}, stream=True)
+r = requests.get(url, params={'api_key': api_key, 'q': q}, stream=True)
 r.raise_for_status()
 
-# read save file name from response headers
-d = r.headers['content-disposition']
-savefilename = re.findall("filename=(.+)", d)
-
-if len(savefilename) > 0:
-    with open(savefilename[0], 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
-    print("Downloaded to: %s" % savefilename)
-else:
-    print("Error: could not find read file name from headers")
+with open(download_filename, 'wb') as handle:
+    for block in r.iter_content(1024):
+        handle.write(block)
+print("Downloaded to: %s" % savefilename)
 ```
 
