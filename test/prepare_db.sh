@@ -70,6 +70,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
   echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
+  echo "PAUSE; RESUME;" | psql -p 6432 pgbouncer # make sure there are no connections pgbouncer -> test_db
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
