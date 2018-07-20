@@ -4,7 +4,6 @@ const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
-const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
@@ -31,7 +30,6 @@ CopyController.prototype.route = function (app) {
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
-            timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyFrom(this.logger),
             errorHandler(),
@@ -46,7 +44,6 @@ CopyController.prototype.route = function (app) {
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
-            timeoutLimitsMiddleware(this.metadataBackend),
             validateCopyQuery(),
             handleCopyTo(this.logger),
             errorHandler(),
