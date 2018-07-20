@@ -33,29 +33,34 @@ module.exports = class StreamCopy {
                 return cb(err);
             }
 
-            client.query('SET statement_timeout=' + this.timeout);
+            client.query('SET statement_timeout=' + this.timeout, (err) => {
 
-            let streamMaker = action === ACTION_TO ? copyTo : copyFrom;
-            this.stream = streamMaker(this.sql);
-            const pgstream = client.query(this.stream);
+                if (err) {
+                    return cb(err);
+                }
 
-            pgstream
-                .on('end', () => done())
-                .on('error', err => done(err))
-                .on('cancelQuery', err => {
-                    if(action === ACTION_TO) {
-                        // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
-                        const cancelingClient = new Client(client.connectionParameters);
-                        cancelingClient.cancel(client, pgstream);
+                let streamMaker = action === ACTION_TO ? copyTo : copyFrom;
+                this.stream = streamMaker(this.sql);
+                const pgstream = client.query(this.stream);
 
-                        // see https://node-postgres.com/api/pool#releasecallback
-                        done(err);
-                    } else if (action === ACTION_FROM) {
-                        client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
-                    }
-                });
+                pgstream
+                    .on('end', () => done())
+                    .on('error', err => done(err))
+                    .on('cancelQuery', err => {
+                        if(action === ACTION_TO) {
+                            // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                            const cancelingClient = new Client(client.connectionParameters);
+                            cancelingClient.cancel(client, pgstream);
 
-            cb(null, pgstream);
+                            // see https://node-postgres.com/api/pool#releasecallback
+                            done(err);
+                        } else if (action === ACTION_FROM) {
+                            client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
+                        }
+                    });
+
+                cb(null, pgstream);
+            });
         });
     }
 
