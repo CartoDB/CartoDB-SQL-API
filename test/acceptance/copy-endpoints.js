@@ -191,6 +191,15 @@ describe('copy-endpoints', function() {
 
 
     describe('timeout', function() {
+        before('set a 10 ms timeout', function() {
+            this.previous_timeout = global.settings.copy_timeout;
+            global.settings.copy_timeout = 10;
+        });
+
+        after('restore previous timeout', function() {
+            global.settings.copy_timeout = this.previous_timeout;
+        });
+
         it('should fail with copyfrom and timeout', function(done){
             assert.response(server, {
                 url: '/api/v1/sql?q=set statement_timeout = 10',
