@@ -200,82 +200,53 @@ describe('copy-endpoints', function() {
             global.settings.copy_timeout = this.previous_timeout;
         });
 
-        it('should fail with copyfrom and timeout', function(done){
+        it('should fail with copyfrom and timeout', function(done) {
             assert.response(server, {
-                url: '/api/v1/sql?q=set statement_timeout = 10',
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
                 headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
+                method: 'POST'
             },
-            function(err) {
+            {
+                status: 429,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            },
+            function(err, res) {
                 assert.ifError(err);
-                assert.response(server, {
-                    url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                        q: `COPY copy_endpoints_test (id, name)
-                            FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
-                    }),
-                    data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                    headers: {host: 'vizzuality.cartodb.com'},
-                    method: 'POST'
-                },
-                {
-                    status: 429,
-                    headers: { 'Content-Type': 'application/json; charset=utf-8' }
-                },
-                function(err, res) {
-                    assert.ifError(err);
-                    assert.deepEqual(JSON.parse(res.body), {
-                        error: [
-                            'You are over platform\'s limits: SQL query timeout error.' +
+                assert.deepEqual(JSON.parse(res.body), {
+                    error: [
+                        'You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.',
-                        ],
-                        context: 'limit',
-                        detail: 'datasource'
-                    });
-
-
-                    assert.response(server, {
-                        url: "/api/v1/sql?q=set statement_timeout = 2000",
-                        headers: {host: 'vizzuality.cartodb.com'},
-                        method: 'GET'
-                    },
-                    done);
+                    ],
+                    context: 'limit',
+                    detail: 'datasource'
                 });
+                done();
             });
         });
 
         it('should fail with copyto and timeout', function(done){
             assert.response(server, {
-                url: '/api/v1/sql?q=set statement_timeout = 20',
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY populated_places_simple_reduced TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
                 headers: {host: 'vizzuality.cartodb.com'},
                 method: 'GET'
-            },
-            function(err) {
+            },{}, function(err, res) {
                 assert.ifError(err);
-                assert.response(server, {
-                    url: "/api/v1/sql/copyto?" + querystring.stringify({
-                        q: 'COPY populated_places_simple_reduced TO STDOUT',
-                        filename: '/tmp/output.dmp'
-                    }),
-                    headers: {host: 'vizzuality.cartodb.com'},
-                    method: 'GET'
-                },{}, function(err, res) {
-                    assert.ifError(err);
-                    const error = {
-                        error: ['You are over platform\'s limits: SQL query timeout error.' +
+                const error = {
+                    error: ['You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.',],
-                        context:"limit",
-                        detail:"datasource"
-                    };
-                    const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
-                    assert.deepEqual(JSON.parse(expectedError), error);
-
-                    assert.response(server, {
-                        url: "/api/v1/sql?q=set statement_timeout = 2000",
-                        headers: {host: 'vizzuality.cartodb.com'},
-                        method: 'GET'
-                    },
-                    done);
-                });
+                    context:"limit",
+                    detail:"datasource"
+                };
+                const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
+                assert.deepEqual(JSON.parse(expectedError), error);
+                done();
             });
         });
     });
