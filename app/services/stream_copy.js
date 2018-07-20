@@ -5,8 +5,10 @@ const { Client } = require('pg');
 
 const ACTION_TO = 'to';
 const ACTION_FROM = 'from';
+const DEFAULT_TIMEOUT = "'5h'";
 
 module.exports = class StreamCopy {
+
     constructor(sql, userDbParams) {
         const dbParams = Object.assign({}, userDbParams, {
             port: global.settings.db_batch_port || userDbParams.port
@@ -14,6 +16,7 @@ module.exports = class StreamCopy {
         this.pg = new PSQL(dbParams);
         this.sql = sql;
         this.stream = null;
+        this.timeout = global.settings.copy_timeout || DEFAULT_TIMEOUT;
     }
 
     static get ACTION_TO() {
@@ -29,6 +32,8 @@ module.exports = class StreamCopy {
             if (err) {
                 return cb(err);
             }
+
+            client.query('SET statement_timeout=' + this.timeout);
 
             let streamMaker = action === ACTION_TO ? copyTo : copyFrom;
             this.stream = streamMaker(this.sql);
