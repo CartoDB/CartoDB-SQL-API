@@ -423,7 +423,7 @@ describe('copy-endpoints', function() {
 
     });
 
-    describe('COPY timeouts: they can take longer than statement_timeout', function(done) {
+    describe('COPY timeouts: they can take longer than statement_timeout', function() {
         before('set a very small statement_timeout for regular queries', function(done) {
             assert.response(server, {
                 url: '/api/v1/sql?q=set statement_timeout = 1',
