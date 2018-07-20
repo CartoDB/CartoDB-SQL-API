@@ -460,7 +460,7 @@ describe('copy-endpoints', function() {
             });
         });
 
-        if('COPY TO can take longer than regular statement_timeout', function(done) {
+        it('COPY TO can take longer than regular statement_timeout', function(done) {
             assert.response(server, {
                 url: "/api/v1/sql/copyto?" + querystring.stringify({
                     q: 'COPY copy_endpoints_test TO STDOUT',
@@ -470,7 +470,7 @@ describe('copy-endpoints', function() {
                 method: 'GET'
             }, {}, function(err, res) {
                 assert.ifError(err);
-                assert.ok(res.body);
+                assert.ok(res.statusCode === 200);
                 done();
             });
         });
