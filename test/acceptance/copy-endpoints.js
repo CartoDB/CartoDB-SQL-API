@@ -422,4 +422,57 @@ describe('copy-endpoints', function() {
         });
 
     });
+
+    describe('COPY timeouts: they can take longer than statement_timeout', function(done) {
+        before('set a very small statement_timeout for regular queries', function(done) {
+            assert.response(server, {
+                url: '/api/v1/sql?q=set statement_timeout = 1',
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, done);
+        });
+
+        after('restore normal statement_timeout for regular queries', function(done) {
+            assert.response(server, {
+                url: '/api/v1/sql?q=set statement_timeout = 2000',
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, done);
+        });
+
+        it('COPY FROM can take longer than regular statement_timeout', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 200,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                assert.ifError(err);
+                const response = JSON.parse(res.body);
+                assert.strictEqual(response.total_rows, 6);
+                done();
+            });
+        });
+
+        if('COPY TO can take longer than regular statement_timeout', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY copy_endpoints_test TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, {}, function(err, res) {
+                assert.ifError(err);
+                assert.ok(res.body);
+                done();
+            });
+        });
+    });
 });
