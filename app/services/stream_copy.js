@@ -8,7 +8,10 @@ const ACTION_FROM = 'from';
 
 module.exports = class StreamCopy {
     constructor(sql, userDbParams) {
-        this.pg = new PSQL(userDbParams);
+        const dbParams = Object.assign({}, userDbParams, {
+            port: global.settings.db_batch_port || userDbParams.port
+        });
+        this.pg = new PSQL(dbParams);
         this.sql = sql;
         this.stream = null;
     }
