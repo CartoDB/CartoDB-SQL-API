@@ -475,4 +475,50 @@ describe('copy-endpoints', function() {
             });
         });
     });
+
+    describe('dbQuotaMiddleware', function() {
+        before('Set the remaining quota to 1 byte', function(done) {
+            // See the test/support/sql/quota_mock.sql
+            this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
+                              RETURNS bigint AS
+                              $$
+                              BEGIN
+                                RETURN 250 * 1024 * 1024 - 10;
+                              END;
+                              $$ LANGUAGE 'plpgsql' VOLATILE;
+                              `, err => done(err));
+        });
+
+        after('Restore the old quota', function(done) {
+            // See the test/support/sql/quota_mock.sql
+            this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
+                              RETURNS bigint AS
+                              $$
+                              BEGIN
+                                RETURN 200 * 1024 * 1024;
+                              END;
+                              $$ LANGUAGE 'plpgsql' VOLATILE;
+                              `, err => done(err));
+        });
+
+        it('COPY FROM fails with an error if DB quota is exhausted', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 400,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                const response = JSON.parse(res.body);
+                console.log(response);
+                assert.deepEqual(response, { error: ["DB Quota exceeded"] });
+                done();
+            });
+        });
+    });
 });
