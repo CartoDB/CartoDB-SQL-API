@@ -53,7 +53,7 @@ module.exports = class StreamCopy {
                             cancelingClient.cancel(client, pgstream);
 
                             // see https://node-postgres.com/api/pool#releasecallback
-                            done(err);
+                            return done(err);
                         } else if (action === ACTION_FROM) {
                             client.connection.sendCopyFail('CARTO SQL API: Connection closed by client');
                         }
