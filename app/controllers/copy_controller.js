@@ -100,7 +100,7 @@ function handleCopyTo (logger) {
 function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
         const sql = req.query.q;
-        const { userDbParams, user } = res.locals;
+        const { userDbParams, user, dbRemainingQuota } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
 
         const streamCopy = new StreamCopy(sql, userDbParams);
@@ -123,7 +123,12 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
-                .on('data', data => metrics.addSize(data.length))
+                .on('data', data => {
+                    metrics.addSize(data.length);
+                    if(metrics.size > dbRemainingQuota) {
+                        return next(new Error('DB Quota exceeded'));
+                    }
+                })
                 .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
