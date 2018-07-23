@@ -135,7 +135,9 @@ function handleCopyFrom (logger) {
                         return next(quotaError);
                     }
                     if((metrics.gzipSize || metrics.size) > copy_from_max_post_size) {
-                        const maxPostSizeError = new Error(`COPY FROM maximum POST size of ${copy_from_max_post_size_pretty} exceeded`);
+                        const maxPostSizeError = new Error(
+                            `COPY FROM maximum POST size of ${copy_from_max_post_size_pretty} exceeded`
+                        );
                         metrics.end(null, maxPostSizeError);
                         req.unpipe(pgstream);
                         return next(maxPostSizeError);
