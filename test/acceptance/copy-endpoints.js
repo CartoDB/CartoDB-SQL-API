@@ -483,7 +483,7 @@ describe('copy-endpoints', function() {
                               RETURNS bigint AS
                               $$
                               BEGIN
-                                RETURN 250 * 1024 * 1024 - 10;
+                                RETURN 250 * 1024 * 1024 - 1;
                               END;
                               $$ LANGUAGE 'plpgsql' VOLATILE;
                               `, err => done(err));
@@ -515,8 +515,22 @@ describe('copy-endpoints', function() {
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             }, function(err, res) {
                 const response = JSON.parse(res.body);
-                console.log(response);
                 assert.deepEqual(response, { error: ["DB Quota exceeded"] });
+                done();
+            });
+        });
+
+        it('COPY TO is not affected by remaining DB quota', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY copy_endpoints_test TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, {}, function(err, res) {
+                assert.ifError(err);
+                assert.ok(res.statusCode === 200);
                 done();
             });
         });
