@@ -6,6 +6,7 @@ const authorizationMiddleware = require('../middlewares/authorization');
 const connectionParamsMiddleware = require('../middlewares/connection-params');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
+const dbQuotaMiddleware = require('../middlewares/db-quota');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
@@ -31,6 +32,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             validateCopyQuery(),
+            dbQuotaMiddleware(),
             handleCopyFrom(this.logger),
             errorHandler(),
             errorMiddleware()
