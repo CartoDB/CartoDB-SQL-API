@@ -102,6 +102,8 @@ function handleCopyFrom (logger) {
         const sql = req.query.q;
         const { userDbParams, user, dbRemainingQuota } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
+        const copy_from_max_post_size = global.settings.copy_from_max_post_size || 1.99 * 1024 * 1024 * 1024; // 1.99 GB
+        const copy_from_max_post_size_pretty = global.settings.copy_from_max_post_size_pretty || '2 GB';
 
         const streamCopy = new StreamCopy(sql, userDbParams);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
@@ -125,10 +127,18 @@ function handleCopyFrom (logger) {
                 .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
                 .on('data', data => {
                     metrics.addSize(data.length);
+
                     if(metrics.size > dbRemainingQuota) {
-                        metrics.end(null, err);
+                        const quotaError = new Error('DB Quota exceeded');
+                        metrics.end(null, quotaError);
                         req.unpipe(pgstream);
-                        return next(new Error('DB Quota exceeded'));
+                        return next(quotaError);
+                    }
+                    if((metrics.gzipSize || metrics.size) > copy_from_max_post_size) {
+                        const maxPostSizeError = new Error(`COPY FROM maximum POST size of ${copy_from_max_post_size_pretty} exceeded`);
+                        metrics.end(null, maxPostSizeError);
+                        req.unpipe(pgstream);
+                        return next(maxPostSizeError);
                     }
                 })
                 .pipe(pgstream)
