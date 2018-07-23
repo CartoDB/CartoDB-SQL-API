@@ -1,5 +1,7 @@
 const PSQL = require('cartodb-psql');
 
+const remainingQuotaQuery = 'SELECT _CDB_UserQuotaInBytes() - CDB_UserDataSize(current_schema()) AS remaining_quota';
+
 module.exports = function dbQuota () {
     return function dbQuotaMiddleware (req, res, next) {
         const { userDbParams } = res.locals;
@@ -8,11 +10,12 @@ module.exports = function dbQuota () {
             if (err) {
                 return next(err);
             }
-            client.query('SELECT _CDB_UserQuotaInBytes() - CDB_UserDataSize(current_schema())', (err, res) => {
+            client.query(remainingQuotaQuery, (err, result) => {
                 if(err) {
                     return next(err);
                 }
-                console.warn(res);
+                const remainingQuota = result.rows[0].remaining_quota;
+                res.locals.dbRemainingQuota = remainingQuota;
                 done();
                 next();
             });
