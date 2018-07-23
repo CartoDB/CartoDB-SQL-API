@@ -535,4 +535,36 @@ describe('copy-endpoints', function() {
             });
         });
     });
+
+    describe('COPY FROM max POST size', function() {
+        before('Set a ridiculously small POST size limit', function() {
+            this.previous_max_post_size = global.settings.copy_from_max_post_size;
+            this.previous_max_post_size_pretty = global.settings.copy_from_max_post_size_pretty;
+            global.settings.copy_from_max_post_size = 10;
+            global.settings.copy_from_max_post_size_pretty = '10 bytes';
+        });
+        after('Restore the max POST size limit values', function() {
+            global.settings.copy_from_max_post_size = this.previous_max_post_size;
+            global.settings.copy_from_max_post_size_pretty = this.previous_max_post_size_pretty;
+        });
+
+        it('honors the max POST size limit', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 400,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                const response = JSON.parse(res.body);
+                assert.deepEqual(response, { error: ["COPY FROM maximum POST size of 10 bytes exceeded"] });
+                done();
+            });
+        });
+    });
 });
