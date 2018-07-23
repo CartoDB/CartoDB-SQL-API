@@ -126,6 +126,8 @@ function handleCopyFrom (logger) {
                 .on('data', data => {
                     metrics.addSize(data.length);
                     if(metrics.size > dbRemainingQuota) {
+                        metrics.end(null, err);
+                        req.unpipe(pgstream);
                         return next(new Error('DB Quota exceeded'));
                     }
                 })
