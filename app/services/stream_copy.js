@@ -39,7 +39,7 @@ module.exports = class StreamCopy {
                     return cb(err);
                 }
 
-                let streamMaker = action === ACTION_TO ? copyTo : copyFrom;
+                const streamMaker = action === ACTION_TO ? copyTo : copyFrom;
                 this.stream = streamMaker(this.sql);
                 const pgstream = client.query(this.stream);
 
