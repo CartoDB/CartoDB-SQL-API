@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2.2.0
-Released 2018-mm-dd
+Released 2018-07-25
 
 Announcements:
   * Improve error message when the DB query is over the user's limits
