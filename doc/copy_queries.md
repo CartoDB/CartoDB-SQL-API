@@ -221,3 +221,10 @@ with open(download_filename, 'wb') as handle:
 print("Downloaded to: %s" % savefilename)
 ```
 
+## Limits
+
+There's a **5 hours timeout** limit for the `/copyfrom` and `/copyto` endpoints. The idea behind is that, in practice, COPY operations should not be limited by your regular query timeout.
+
+Aside, you cannot exceed your **database quota** in `/copyfrom` operations. Trying to do so will result in a `DB Quota exceeded` error, and the `COPY FROM` transaction will be rolled back.
+
+The maximum payload size of a `/copyfrom` that can be made in a single `POST` request is **limited to 2 GB**. Any attempt exceeding that size will result in a `COPY FROM maximum POST size of 2 GB exceeded` error, and again the whole transaction will be rolled back.

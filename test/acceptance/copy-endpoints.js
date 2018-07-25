@@ -191,82 +191,62 @@ describe('copy-endpoints', function() {
 
 
     describe('timeout', function() {
-        it('should fail with copyfrom and timeout', function(done){
+        before('set a 10 ms timeout', function() {
+            this.previous_timeout = global.settings.copy_timeout;
+            global.settings.copy_timeout = 10;
+        });
+
+        after('restore previous timeout', function() {
+            global.settings.copy_timeout = this.previous_timeout;
+        });
+
+        it('should fail with copyfrom and timeout', function(done) {
             assert.response(server, {
-                url: '/api/v1/sql?q=set statement_timeout = 10',
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
                 headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
+                method: 'POST'
             },
-            function(err) {
+            {
+                status: 429,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            },
+            function(err, res) {
                 assert.ifError(err);
-                assert.response(server, {
-                    url: "/api/v1/sql/copyfrom?" + querystring.stringify({
-                        q: `COPY copy_endpoints_test (id, name)
-                            FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
-                    }),
-                    data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                    headers: {host: 'vizzuality.cartodb.com'},
-                    method: 'POST'
-                },
-                {
-                    status: 429,
-                    headers: { 'Content-Type': 'application/json; charset=utf-8' }
-                },
-                function(err, res) {
-                    assert.ifError(err);
-                    assert.deepEqual(JSON.parse(res.body), {
-                        error: [
-                            'You are over platform\'s limits: SQL query timeout error.' +
+                assert.deepEqual(JSON.parse(res.body), {
+                    error: [
+                        'You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.',
-                        ],
-                        context: 'limit',
-                        detail: 'datasource'
-                    });
-
-
-                    assert.response(server, {
-                        url: "/api/v1/sql?q=set statement_timeout = 2000",
-                        headers: {host: 'vizzuality.cartodb.com'},
-                        method: 'GET'
-                    },
-                    done);
+                    ],
+                    context: 'limit',
+                    detail: 'datasource'
                 });
+                done();
             });
         });
 
         it('should fail with copyto and timeout', function(done){
             assert.response(server, {
-                url: '/api/v1/sql?q=set statement_timeout = 20',
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY populated_places_simple_reduced TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
                 headers: {host: 'vizzuality.cartodb.com'},
                 method: 'GET'
-            },
-            function(err) {
+            },{}, function(err, res) {
                 assert.ifError(err);
-                assert.response(server, {
-                    url: "/api/v1/sql/copyto?" + querystring.stringify({
-                        q: 'COPY populated_places_simple_reduced TO STDOUT',
-                        filename: '/tmp/output.dmp'
-                    }),
-                    headers: {host: 'vizzuality.cartodb.com'},
-                    method: 'GET'
-                },{}, function(err, res) {
-                    assert.ifError(err);
-                    const error = {
-                        error: ['You are over platform\'s limits: SQL query timeout error.' +
+                const error = {
+                    error: ['You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.',],
-                        context:"limit",
-                        detail:"datasource"
-                    };
-                    const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
-                    assert.deepEqual(JSON.parse(expectedError), error);
-
-                    assert.response(server, {
-                        url: "/api/v1/sql?q=set statement_timeout = 2000",
-                        headers: {host: 'vizzuality.cartodb.com'},
-                        method: 'GET'
-                    },
-                    done);
-                });
+                    context:"limit",
+                    detail:"datasource"
+                };
+                const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
+                assert.deepEqual(JSON.parse(expectedError), error);
+                done();
             });
         });
     });
@@ -441,5 +421,150 @@ describe('copy-endpoints', function() {
             });
         });
 
+    });
+
+    describe('COPY timeouts: they can take longer than statement_timeout', function() {
+        before('set a very small statement_timeout for regular queries', function(done) {
+            assert.response(server, {
+                url: '/api/v1/sql?q=set statement_timeout = 10',
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, done);
+        });
+
+        after('restore normal statement_timeout for regular queries', function(done) {
+            assert.response(server, {
+                url: '/api/v1/sql?q=set statement_timeout = 2000',
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, done);
+        });
+
+        it('COPY FROM can take longer than regular statement_timeout', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 200,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                assert.ifError(err);
+                const response = JSON.parse(res.body);
+                assert.strictEqual(response.total_rows, 6);
+                done();
+            });
+        });
+
+        it('COPY TO can take longer than regular statement_timeout', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY copy_endpoints_test TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, {}, function(err, res) {
+                assert.ifError(err);
+                assert.ok(res.statusCode === 200);
+                done();
+            });
+        });
+    });
+
+    describe('dbQuotaMiddleware', function() {
+        before('Set the remaining quota to 1 byte', function(done) {
+            // See the test/support/sql/quota_mock.sql
+            this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
+                              RETURNS bigint AS
+                              $$
+                              BEGIN
+                                RETURN 250 * 1024 * 1024 - 1;
+                              END;
+                              $$ LANGUAGE 'plpgsql' VOLATILE;
+                              `, err => done(err));
+        });
+
+        after('Restore the old quota', function(done) {
+            // See the test/support/sql/quota_mock.sql
+            this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
+                              RETURNS bigint AS
+                              $$
+                              BEGIN
+                                RETURN 200 * 1024 * 1024;
+                              END;
+                              $$ LANGUAGE 'plpgsql' VOLATILE;
+                              `, err => done(err));
+        });
+
+        it('COPY FROM fails with an error if DB quota is exhausted', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 400,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                const response = JSON.parse(res.body);
+                assert.deepEqual(response, { error: ["DB Quota exceeded"] });
+                done();
+            });
+        });
+
+        it('COPY TO is not affected by remaining DB quota', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    q: 'COPY copy_endpoints_test TO STDOUT',
+                    filename: '/tmp/output.dmp'
+                }),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'GET'
+            }, {}, function(err, res) {
+                assert.ifError(err);
+                assert.ok(res.statusCode === 200);
+                done();
+            });
+        });
+    });
+
+    describe('COPY FROM max POST size', function() {
+        before('Set a ridiculously small POST size limit', function() {
+            this.previous_max_post_size = global.settings.copy_from_max_post_size;
+            this.previous_max_post_size_pretty = global.settings.copy_from_max_post_size_pretty;
+            global.settings.copy_from_max_post_size = 10;
+            global.settings.copy_from_max_post_size_pretty = '10 bytes';
+        });
+        after('Restore the max POST size limit values', function() {
+            global.settings.copy_from_max_post_size = this.previous_max_post_size;
+            global.settings.copy_from_max_post_size_pretty = this.previous_max_post_size_pretty;
+        });
+
+        it('honors the max POST size limit', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: `COPY copy_endpoints_test (id, name)
+                    FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {host: 'vizzuality.cartodb.com'},
+                method: 'POST'
+            }, {
+                status: 400,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            }, function(err, res) {
+                const response = JSON.parse(res.body);
+                assert.deepEqual(response, { error: ["COPY FROM maximum POST size of 10 bytes exceeded"] });
+                done();
+            });
+        });
     });
 });

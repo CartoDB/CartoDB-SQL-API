@@ -1,11 +1,15 @@
 # Changelog
 
-## 2.1.1
+## 2.2.0
 Released 2018-mm-dd
 
 Announcements:
   * Improve error message when the DB query is over the user's limits
   * Updated cartodb-redis to 2.0.1
+  * Modify the COPY query limits:
+      - Instead of the generic timeout, it now uses a 5h timeout.
+      - For COPY FROM, the limit is size-based, up to the remaining DB quota
+      - The largest COPY FROM that can be made in a single POST request is limited to 2GB
 
 
 ## 2.1.0
