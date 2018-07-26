@@ -102,7 +102,7 @@ function handleCopyFrom (logger) {
         const sql = req.query.q;
         const { userDbParams, user, dbRemainingQuota } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
-        const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 1.99 * 1024 * 1024 * 1024; // 1.99 GB
+        const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 2 * 1024 * 1024 * 1024; // 2 GB
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
 
         const streamCopy = new StreamCopy(sql, userDbParams);
