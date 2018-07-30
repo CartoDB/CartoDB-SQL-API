@@ -4,9 +4,13 @@ require('../../support/assert');
 
 var assert = require('assert');
 var querystring = require('querystring');
+const db_utils = require('../../support/db_utils');
 
 describe('timeout', function () {
     describe('export database', function () {
+        before(db_utils.resetPgBouncerConnections);
+        after(db_utils.resetPgBouncerConnections);
+
         const databaseTimeoutQuery = `
             select
                 ST_SetSRID(ST_Point(0, 0), 4326) as the_geom,
