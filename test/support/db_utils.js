@@ -22,7 +22,7 @@ module.exports.resetPgBouncerConnections = function (callback) {
         port: dbConfig.db_port
     });
 
-    // We just chain a PAUSE followed by a RESUME
+    // We just chain a PAUSE followed by a RESUME to reset internal pool connections of PgBouncer
     client.connect();
     client.query('PAUSE', (err, res) => {
         if (err) {
