@@ -24,13 +24,13 @@ module.exports.resetPgBouncerConnections = function (callback) {
 
     // We just chain a PAUSE followed by a RESUME to reset internal pool connections of PgBouncer
     client.connect();
-    client.query('PAUSE', (err, res) => {
+    client.query('PAUSE', err => {
         if (err) {
             return callback(err);
         }
-        client.query('RESUME', (err, res) => {
+        client.query('RESUME', err => {
             client.end();
             return callback(err);
         });
     });
-}
+};
