@@ -27,11 +27,10 @@ module.exports.resetPgBouncerConnections = function (callback) {
     client.query('PAUSE', (err, res) => {
         if (err) {
             return callback(err);
-        } else {
-            client.query('RESUME', (err, res) => {
-                client.end();
-                return callback(err);
-            });
         }
+        client.query('RESUME', (err, res) => {
+            client.end();
+            return callback(err);
+        });
     });
 }
