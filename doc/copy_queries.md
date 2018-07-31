@@ -29,7 +29,9 @@ Composing a chunked POST is moderately complicated, so most developers will use 
 
 ### Example
 
-For a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
+#### Table preparation
+
+First of all, you'll need to have **a table with the right schema** to copy your data into. For a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
 
 * `cartodb_id`, a `serial` primary key
 * `the_geom`, a `geometry` in the ESPG:4326 projection (aka long/lat)
@@ -37,20 +39,29 @@ For a table to be readable by CARTO, it must have a minimum of three columns wit
 
 Creating a new CARTO table with all the right triggers and columns can be tricky, so here is an example:
 
-    -- create the table using the *required* columns and a
-    -- couple more
-    CREATE TABLE upload_example (
-        the_geom geometry,
-        name text,
-        age integer
-    );
+```sql
+-- Create the table using the *required* columns and a couple more
+CREATE TABLE upload_example (
+    the_geom geometry,
+    name text,
+    age integer
+);
 
-    -- adds the 'cartodb_id' and 'the_geom_webmercator'
-    -- adds the required triggers and indexes
-    SELECT CDB_CartodbfyTable('upload_example');
-    
-    -- Note that CDB_CartodbfyTable is called differently if you have an organization user
-    -- SELECT CDB_CartodbfyTable('your_org_username', 'upload_example');
+-- adds the 'cartodb_id' and 'the_geom_webmercator'
+-- adds the required triggers and indexes
+SELECT CDB_CartodbfyTable(current_schema, 'upload_example');
+```
+
+you can get these queries executed directly through the SQL API this way, just by replacing the `{username}` and `{api_key}` by yours:
+
+```sh
+# Table creation
+curl -v "https://{user}.carto.com/api/v2/sql?api_key={api_key}&q=CREATE+TABLE+upload_example+(the_geom+geometry,name+text,age+integer)"
+
+# Cartodbfy table (optional, but allows for table registartion in Builder dashboard)
+curl -v "http://{user}.carto.com/api/v2/sql?api_key={api_key}&q=SELECT+CDB_CartodbfyTable(current_schema,'upload_example')"
+```
+
 
 Now you are ready to upload your file. Suppose you have a CSV file like this:
 
@@ -68,7 +79,7 @@ The `FROM STDIN` option tells the database that the input will come from a data 
 
 To actually run upload, you will need a tool or script that can generate a chunked POST, so here are a few examples in different languages.
 
-### CURL Example
+#### CURL Example
 
 The [curl](https://curl.haxx.se/) utility makes it easy to run web requests from the command-line, and supports chunked POST upload, so it can feed the `copyfrom` end point.
 
@@ -90,7 +101,7 @@ To upload a larger file, using compression for a faster transfer, first compress
         "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
 
-### Python Example
+#### Python Example
 
 The [Requests](http://docs.python-requests.org/en/master/user/quickstart/) library for HTTP makes doing a file upload relatively terse.
 
