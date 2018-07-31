@@ -4,8 +4,8 @@ Copy queries allow you to use the [PostgreSQL copy command](https://www.postgres
 
 The support for copy is split across two API end points:
 
-* `http://{username}.carto.com/api/v2/sql/copyfrom` for uploading data to CARTO
-* `http://{username}.carto.com/api/v2/sql/copyto` for exporting data out of CARTO
+* `https://{username}.carto.com/api/v2/sql/copyfrom` for uploading data to CARTO
+* `https://{username}.carto.com/api/v2/sql/copyto` for exporting data out of CARTO
 
 ## Copy From
 
@@ -89,7 +89,7 @@ Assuming that you have already created the table, and that the CSV file is named
         -H "Transfer-Encoding: chunked" \
         -H "Content-Type: application/octet-stream" \
         --data-binary @upload_example.csv \
-        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+        "https://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
 To upload a larger file, using compression for a faster transfer, first compress the file, and then upload it with the content encoding set:
 
@@ -98,7 +98,7 @@ To upload a larger file, using compression for a faster transfer, first compress
         -H "Transfer-Encoding: chunked" \
         -H "Content-Type: application/octet-stream" \
         --data-binary @upload_example.csv.gz \
-        "http://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
+        "https://{username}.carto.com/api/v2/sql/copyfrom?api_key={api_key}&q=COPY+upload_example+(the_geom,+name,+age)+FROM+STDIN+WITH+(FORMAT+csv,+HEADER+true)"
 
 
 #### Python Example
@@ -113,7 +113,7 @@ username = {api_key}
 upload_file = 'upload_example.csv'
 q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
-url = "http://%s.carto.com/api/v2/sql/copyfrom" % username
+url = "https://%s.carto.com/api/v2/sql/copyfrom" % username
 with open(upload_file, 'rb') as f:
     r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
 
