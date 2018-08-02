@@ -113,18 +113,26 @@ username = {api_key}
 upload_file = 'upload_example.csv'
 q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
+def read_in_chunks(file_object, chunk_size=8192):
+    while True:
+        data = file_object.read(chunk_size)
+        if not data:
+            break
+        yield data
+
 url = "https://%s.carto.com/api/v2/sql/copyfrom" % username
 with open(upload_file, 'rb') as f:
-    r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
-
-    if r.status_code != 200:
-        print(r.text)
-    else:
-        status = r.json()
-        print("Success: %s rows imported" % status['total_rows'])
+    resp = requests.post(url,
+                         params={'api_key': api_key, 'q': q},
+                         data=read_in_chunks(f),
+                         headers={'Content-Type': 'application/octet-stream'},
+                         stream=True)
+print("status: %d" % resp.status_code)
+data = resp.json()
+print(data)
 ```
 
-A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly.
+A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly. However, you will still need to make sure that the table schema (`CREATE TABLE`) is suitable for receiving the data from the `COPY` query.
 
 ### CSV files and column ordering
 
