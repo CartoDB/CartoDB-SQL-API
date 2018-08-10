@@ -203,7 +203,7 @@ describe('copy-endpoints', function() {
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:["Error while decompressing: incorrect header check"]
+                        error:["incorrect header check"]
                     }
                 );
                 done();

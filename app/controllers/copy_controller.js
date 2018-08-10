@@ -115,16 +115,16 @@ function handleCopyFrom (logger) {
 
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
-                .on('error', err => {
-                    metrics.end(null, err);
-                    pgstream.emit('error', err);
-                })
                 .on('close', () => {
                     const err = new Error('Connection closed by client');
                     pgstream.emit('cancelQuery', err);
                     pgstream.emit('error', err);
                 })
                 .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
+                .on('error', err => {
+                    metrics.end(null, err);
+                    pgstream.emit('error', err);
+                })
                 .on('data', data => {
                     metrics.addSize(data.length);
 
