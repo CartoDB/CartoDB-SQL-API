@@ -187,7 +187,7 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it.only('should return an error when gzip headers are not correct', function(done) {
+        it('should return an error when gzip headers are not correct', function(done) {
             assert.response(server, {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
