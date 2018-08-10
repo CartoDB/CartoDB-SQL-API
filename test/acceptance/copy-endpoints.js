@@ -187,6 +187,28 @@ describe('copy-endpoints', function() {
             });
         });
 
+        it('should return an error when gzip headers are not correct', function(done) {
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {
+                    host: 'vizzuality.cartodb.com',
+                    'content-encoding': 'gzip'
+                },
+                method: 'POST'
+            },{}, function(err, res) {
+                assert.ifError(err);
+                assert.deepEqual(
+                    JSON.parse(res.body),
+                    {
+                        error:["Error while decompressing: incorrect header check"]
+                    }
+                );
+                done();
+            });
+        });
     });
 
 
