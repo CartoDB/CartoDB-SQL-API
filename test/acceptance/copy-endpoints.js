@@ -187,7 +187,7 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should return an error when gzip headers are not correct', function(done) {
+        it.only('should return an error when gzip headers are not correct', function(done) {
             assert.response(server, {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
@@ -203,7 +203,7 @@ describe('copy-endpoints', function() {
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:["incorrect header check"]
+                        error:["Error while gunzipping: incorrect header check"]
                     }
                 );
                 done();
