@@ -125,6 +125,11 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
+                .on('error', err => {
+                    err.message = `Error while gunzipping: ${err.message}`;
+                    metrics.end(null, err);
+                    pgstream.emit('error', err);
+                })
                 .on('data', data => {
                     metrics.addSize(data.length);
 
