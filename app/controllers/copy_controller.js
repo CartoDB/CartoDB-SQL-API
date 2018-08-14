@@ -64,8 +64,12 @@ function handleCopyTo (logger) {
         const { userDbParams, user } = res.locals;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
+        // it is not sure, nginx may choose not to compress the body
+        // but most of the time yes and we want to have it in the metrics
+        const isGzip = req.get('accept-encoding') && req.get('accept-encoding').includes('gzip');
+
         const streamCopy = new StreamCopy(sql, userDbParams);
-        const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user);
+        const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user, isGzip);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
         res.header("Content-Type", "application/octet-stream");
