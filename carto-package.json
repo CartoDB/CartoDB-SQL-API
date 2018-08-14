@@ -2,8 +2,15 @@
     "name": "carto_sql_api",
     "current_version": {
         "requires": {
+            "node": ">=6.9.2",
+            "npm": ">=3.10.9"
         },
         "works_with": {
+            "redis": ">=3.0.0",
+            "postgresql": "9.5.2",
+            "postgis": "2.2.2.0",
+            "mapnik": "",
+            "gdal":""
         }
     }
 }
