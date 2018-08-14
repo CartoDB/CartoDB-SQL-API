@@ -1,0 +1,9 @@
+{
+    "name": "carto_sql_api",
+    "current_version": {
+        "requires": {
+        },
+        "works_with": {
+        }
+    }
+}
