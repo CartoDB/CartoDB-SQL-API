@@ -65,7 +65,8 @@ function handleCopyTo (logger) {
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
         // it is not sure, nginx may choose not to compress the body
-        // but most of the time yes and we want to have it in the metrics
+        // but we want to know it and save it in the metrics
+        // https://github.com/CartoDB/CartoDB-SQL-API/issues/515
         const isGzip = req.get('accept-encoding') && req.get('accept-encoding').includes('gzip');
 
         const streamCopy = new StreamCopy(sql, userDbParams);
