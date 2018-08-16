@@ -1,7 +1,7 @@
 const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 module.exports = class StreamCopyMetrics {
-    constructor(logger, type, sql, user, isGzip = null) {
+    constructor(logger, type, sql, user, isGzip = false) {
         this.logger = logger;
 
         this.type = type;
