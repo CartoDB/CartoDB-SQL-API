@@ -55,7 +55,7 @@ jobs:
         - sudo make install
         - cd ..
         - rm redis-4.0.8.tar.gz
-        
+
         # configure it to accept local connections from postgres
         - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
           | sudo tee /etc/postgresql/9.5/main/pg_hba.conf
