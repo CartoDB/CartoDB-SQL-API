@@ -44,7 +44,6 @@ jobs:
         - sudo apt-get -y install postgresql-server-dev-9.5=9.5.2-3cdb3
         - sudo apt-get -y install postgresql-plpython-9.5=9.5.2-3cdb3 --allow-downgrades
         - sudo apt-get -y install postgresql-9.5-postgis-2.2=2.2.2.0-cdb2
-        - sudo apt-get install -q gdal-bin
         - sudo apt-get install -q ogr2ogr2-static-bin
         - sudo apt-get install -y libc6
 
@@ -55,7 +54,7 @@ jobs:
         - sudo make install
         - cd ..
         - rm redis-4.0.8.tar.gz
-        
+
         # configure it to accept local connections from postgres
         - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
           | sudo tee /etc/postgresql/9.5/main/pg_hba.conf
