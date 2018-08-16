@@ -9,7 +9,8 @@
             "redis": ">=3.0.0",
             "postgresql": ">=9.5",
             "postgis": ">=2.2",
-            "gdal":">=1.10 checking if needed"
+            "gdal":">=1.11.0",
+            "carto_postgresql_ext": ">=0.19"
         }
     }
 }
