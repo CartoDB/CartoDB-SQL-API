@@ -6,7 +6,7 @@ let server = require('../../../app/server');
 const assert = require('assert');
 const querystring = require('querystring');
 
-describe.only('export folder', function() {
+describe('export folder', function() {
     it('folder exists', function(done){
         const currentTmpDir = global.settings.tmpDir;
 
