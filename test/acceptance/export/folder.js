@@ -1,7 +1,7 @@
 require('../../helper');
 require('../../support/assert');
 
-var fs = require('fs');
+const fs = require('fs');
 let server = require('../../../app/server');
 const assert = require('assert');
 const querystring = require('querystring');
@@ -10,7 +10,8 @@ describe('export folder', function() {
     it('folder exists', function(done){
         const currentTmpDir = global.settings.tmpDir;
 
-        global.settings.tmpDir = `/tmp/${new Date().getTime()}/a/b/c`;
+        const dynamicTmpDir = `/tmp/${new Date().getTime()}/a/b/c`;
+        global.settings.tmpDir = dynamicTmpDir;
         server = server();
 
         assert.response(server, {
@@ -22,7 +23,7 @@ describe('export folder', function() {
         }, {}, function(err, res) {
             assert.ifError(err);
             assert.ok(res.statusCode === 200);
-            assert.ok(fs.existsSync(global.settings.tmpDir));
+            assert.ok(fs.existsSync(dynamicTmpDir));
 
             global.settings.tmpDir = currentTmpDir;
 
