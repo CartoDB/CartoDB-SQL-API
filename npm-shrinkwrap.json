@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "dependencies": {
     "@carto/fqdn-sync": {
       "version": "0.2.2",
@@ -696,7 +696,7 @@
     },
     "mkdirp": {
       "version": "0.5.1",
-      "from": "mkdirp@>=0.5.1 <0.6.0",
+      "from": "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
       "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz"
     },
     "moment": {
