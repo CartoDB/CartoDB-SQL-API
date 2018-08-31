@@ -5,6 +5,7 @@ Released 2018-mm-dd
 
 Bug fixes:
   * Errors from zlib while gunzipping (`/sql/copyfrom` compressed requests) are now handled correctly.
+  * Ensure exports temporal folder
 
 
 ## 2.2.0

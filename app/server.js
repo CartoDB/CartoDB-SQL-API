@@ -17,6 +17,8 @@
 var express = require('express');
 var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
 var TableCacheFactory = require('./utils/table_cache_factory');
 
 var RedisPool = require('redis-mpool');
@@ -75,9 +77,14 @@ function App(statsClient) {
                 job_get: false,
                 job_delete: false
             }
-        }, 
+        },
         global.settings.ratelimits
     );
+
+    global.settings.tmpDir = global.settings.tmpDir || '/tmp';
+    if (!fs.existsSync(global.settings.tmpDir)) {
+        mkdirp.sync(global.settings.tmpDir);
+    }
 
     var tableCache = new TableCacheFactory().build(global.settings);
 
@@ -147,7 +154,7 @@ function App(statsClient) {
     // basic routing
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
-    
+
     const userLimitsServiceOptions = {
         limits: {
             rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
@@ -168,27 +175,27 @@ function App(statsClient) {
     genericController.route(app);
 
     var queryController = new QueryController(
-        metadataBackend, 
-        userDatabaseService, 
-        tableCache, 
-        statsClient, 
+        metadataBackend,
+        userDatabaseService,
+        tableCache,
+        statsClient,
         userLimitsService
     );
     queryController.route(app);
 
     var copyController = new CopyController(
-        metadataBackend, 
-        userDatabaseService, 
+        metadataBackend,
+        userDatabaseService,
         userLimitsService,
         dataIngestionLogger
     );
     copyController.route(app);
-    
+
     var jobController = new JobController(
-        metadataBackend, 
-        userDatabaseService, 
-        jobService, 
-        statsClient, 
+        metadataBackend,
+        userDatabaseService,
+        jobService,
+        statsClient,
         userLimitsService
     );
     jobController.route(app);
