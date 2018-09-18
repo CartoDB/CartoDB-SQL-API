@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2.2.1
-Released 2018-mm-dd
+Released 2018-09-18
 
 Bug fixes:
   * Errors from zlib while gunzipping (`/sql/copyfrom` compressed requests) are now handled correctly.
