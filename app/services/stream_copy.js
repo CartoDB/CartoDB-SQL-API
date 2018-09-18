@@ -44,7 +44,12 @@ module.exports = class StreamCopy {
                 const pgstream = client.query(this.stream);
 
                 pgstream
-                    .on('end', () => done())
+                    .on('end', () => {
+                        if(action === ACTION_TO) {
+                            pgstream.connection.stream.resume();
+                        }
+                        done();
+                    })
                     .on('error', err => done(err))
                     .on('cancelQuery', err => {
                         if(action === ACTION_TO) {

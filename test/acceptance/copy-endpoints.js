@@ -314,7 +314,7 @@ describe('copy-endpoints', function() {
                 return new Promise(resolve => {
                     assert.response(server, {
                         url: "/api/v1/sql/copyto?" + querystring.stringify({
-                            q: 'COPY copy_endpoints_test TO STDOUT',
+                            q: `COPY (SELECT * FROM generate_series(1, 10000)) TO STDOUT`,
                             filename: '/tmp/output.dmp'
                         }),
                         headers: {host: 'vizzuality.cartodb.com'},
