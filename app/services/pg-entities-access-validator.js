@@ -14,48 +14,60 @@ const FORBIDDEN_ENTITIES = {
     ]
 };
 
-const Validator = {
+function isForbiddenTable (schema, table) {
+    return FORBIDDEN_ENTITIES[schema] && FORBIDDEN_ENTITIES[schema].includes(table);
+}
+
+function isForbiddenSchema (schema) {
+    return FORBIDDEN_ENTITIES[schema] && FORBIDDEN_ENTITIES[schema][0] === '*';
+}
+
+function isForbiddenEntity (entity) {
+    const { schema_name: schema, table_name: table } = entity;
+
+    return isForbiddenSchema(schema) || isForbiddenTable(schema, table);
+}
+
+function isSystemEntity (entity) {
+    const { table_name: table } = entity;
+    return table.match(/\bpg_/);
+}
+
+module.exports = class PGEntitiesAccessValidator {
     validate(affectedTables, authorizationLevel) {
         let hardValidationResult = true;
         let softValidationResult = true;
 
         if (!!affectedTables && affectedTables.tables) {
             if (global.settings.validatePGEntitiesAccess) {
-                hardValidationResult = this.hardValidation(affectedTables.tables);
+                hardValidationResult = this._hardValidation(affectedTables.tables);
             }
 
             if (authorizationLevel !== 'master') {
-                softValidationResult = this.softValidation(affectedTables.tables);
+                softValidationResult = this._softValidation(affectedTables.tables);
             }
         }
 
         return hardValidationResult && softValidationResult;
-    },
+    }
 
-    hardValidation(tables) {
+    _hardValidation(tables) {
         for (let table of tables) {
-            if (FORBIDDEN_ENTITIES[table.schema_name] && FORBIDDEN_ENTITIES[table.schema_name].length &&
-                (
-                    FORBIDDEN_ENTITIES[table.schema_name][0] === '*' ||
-                    FORBIDDEN_ENTITIES[table.schema_name].includes(table.table_name)
-                )
-            ) {
-                return false;
-            }
-        }
-
-        return true;
-    },
-
-    softValidation(tables) {
-        for (let table of tables) {
-            if (table.table_name.match(/\bpg_/)) {
+            if (isForbiddenEntity(table)) {
                 return false;
             }
         }
 
         return true;
     }
-}; 
 
-module.exports = Validator;
+    _softValidation(tables) {
+        for (let table of tables) {
+            if (isSystemEntity(table)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
