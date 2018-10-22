@@ -48,7 +48,7 @@ You can use the SQL API to run any query and export the results in different for
 
 You can easily export CARTO datasets using the [GeoPackage](http://www.geopackage.org/) file format, which is an "open, standards-based, platform-independent, portable, self-describing, compact format for transferring geospatial information- &copy;". A .gpkg file itself is a [type](http://www.geopackage.org/spec/#table_column_data_types) of database, more complex than a plain file.
 
-_**Tip:** GeoPackage is the recommended format since it exports your dataset in smaller pieces;  typically avoiding error messages that might appear due to long file names and/or large datasets._. If exporting a map with the SQL API, the `GPKG` format does not include any visualization or styling, which helps reduce the file size during the export process.
+**Tip:** _GeoPackage is the recommended format since it exports your dataset in smaller pieces;_ typically avoiding error messages that might appear due to long file names and/or large datasets. If exporting a map with the SQL API, the `GPKG` format does not include any visualization or styling, which helps reduce the file size during the export process.
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q=SELECT * FROM {table_name}&format=gpkg&filename={file_name}.gpkg
