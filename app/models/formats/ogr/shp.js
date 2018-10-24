@@ -48,7 +48,7 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
   step (
     function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
+      fs.mkdir(outdirpath, 0o777, this);
     },
     function spawnDumper(err) {
       assert.ifError(err);
