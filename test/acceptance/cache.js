@@ -1,4 +1,4 @@
-'use const';
+'use strict';
 
 var server = require('../../app/server')();
 const assert = require('../support/assert');

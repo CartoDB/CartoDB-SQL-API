@@ -1,3 +1,5 @@
+'use strict';
+
 class ErrorHandler extends Error {
     constructor({ message, context, detail, hint, http_status, name }) {
         super(message);

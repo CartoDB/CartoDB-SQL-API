@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 
 var server = require('../../../app/server')();
@@ -34,7 +36,7 @@ it('GET /api/v1/sql with SQL parameter, ensuring content-disposition set to geoj
 
 it('POST /api/v1/sql with SQL parameter, ensuring content-disposition set to geojson', function(done) {
     assert.response(server, {
-        url: '/api/v1/sql', 
+        url: '/api/v1/sql',
         data: querystring.stringify({q: "SELECT * FROM untitle_table_4", format: 'geojson' }),
         headers: {host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
         method: 'POST'

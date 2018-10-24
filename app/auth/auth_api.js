@@ -1,3 +1,5 @@
+'use strict';
+
 var ApiKeyAuth = require('./apikey'),
     OAuthAuth  = require('./oauth');
 

@@ -1,3 +1,5 @@
+'use strict';
+
 // CartoDB SQL API
 //
 // all requests expect the following URL args:

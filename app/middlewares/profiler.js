@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports.initializeProfilerMiddleware = function initializeProfiler (label) {
     return function initializeProfilerMiddleware (req, res, next) {
         if (req.profiler) {

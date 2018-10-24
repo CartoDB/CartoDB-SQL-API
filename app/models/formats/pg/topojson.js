@@ -1,3 +1,5 @@
+'use strict';
+
 var pg  = require('./../pg');
 var _ = require('underscore');
 var geojson = require('./geojson');

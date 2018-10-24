@@ -1,3 +1,5 @@
+'use strict';
+
 var QueryTables = require('cartodb-query-tables');
 
 var generateMD5 = require('../utils/md5');

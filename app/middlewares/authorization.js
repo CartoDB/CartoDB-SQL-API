@@ -1,3 +1,5 @@
+'use strict';
+
 const AuthApi = require('../auth/auth_api');
 const basicAuth = require('basic-auth');
 

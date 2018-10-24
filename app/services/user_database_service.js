@@ -1,3 +1,5 @@
+'use strict';
+
 function isApiKeyFound(apikey) {
     return apikey.type !== null &&
         apikey.user !== null &&
@@ -43,7 +45,7 @@ UserDatabaseService.prototype.getConnectionParams = function (username, apikeyTo
         };
 
         this.metadataBackend.getMasterApikey(username, (err, masterApikey) => {
-            
+
             if (err) {
                 err.http_status = 404;
                 err.message = errorUserNotFoundMessageTemplate(username);

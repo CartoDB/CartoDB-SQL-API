@@ -1,3 +1,5 @@
+'use strict';
+
 // too bound to the request object, but ok for now
 var _ = require('underscore');
 var OAuthUtil = require('oauth-client');

@@ -1,3 +1,5 @@
+'use strict';
+
 const CdbRequest = require('../models/cartodb_request');
 
 module.exports = function user(metadataBackend) {

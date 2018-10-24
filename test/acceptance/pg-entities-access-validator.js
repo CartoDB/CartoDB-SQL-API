@@ -1,3 +1,5 @@
+'use strict';
+
 const assert = require('../support/assert');
 const TestClient = require('../support/test-client');
 
@@ -26,25 +28,25 @@ describe('PG entities access validator', function () {
 
     describe('validatePGEntitiesAccess enabled', function() {
         before(function(){
-            global.settings.validatePGEntitiesAccess = true;            
+            global.settings.validatePGEntitiesAccess = true;
         });
 
         forbiddenQueries.forEach(query => {
             it(`testClientApiKey: query: ${query}`, function(done) {
                 assertQuery(query, testClientApiKey, done);
             });
-    
+
             it(`testClientAuthorized: query: ${query}`, function(done) {
                 assertQuery(query, testClientAuthorized, done);
-            });    
+            });
         });
     });
-    
+
     describe('validatePGEntitiesAccess disabled', function() {
         before(function(){
-            global.settings.validatePGEntitiesAccess = false;            
+            global.settings.validatePGEntitiesAccess = false;
         });
-        
+
         forbiddenQueries.forEach(query => {
             it(`testClientApiKey: query: ${query}`, function(done) {
                 testClientApiKey.getResult(query, err => {
@@ -52,13 +54,13 @@ describe('PG entities access validator', function () {
                     done();
                 });
             });
-    
+
             it(`testClientAuthorized: query: ${query}`, function(done) {
                 testClientAuthorized.getResult(query, err => {
                     assert.ifError(err);
                     done();
                 });
-            });    
+            });
         });
     });
 });

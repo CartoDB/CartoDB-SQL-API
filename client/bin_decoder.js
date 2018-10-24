@@ -1,4 +1,4 @@
-
+'use strict';
 
 function ArrayBufferSer(arrayBuffer) {
   this.buffer = arrayBuffer;

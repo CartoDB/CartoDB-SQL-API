@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function timeoutLimits (metadataBackend) {
     return function timeoutLimitsMiddleware (req, res, next) {
         const { user, authorizationLevel } = res.locals;

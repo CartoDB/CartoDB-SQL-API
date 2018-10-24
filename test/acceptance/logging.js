@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var appServer = require('../../app/server');

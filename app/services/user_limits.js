@@ -1,7 +1,9 @@
+'use strict';
+
 /**
  * UserLimits
- * @param {cartodb-redis} metadataBackend 
- * @param {object} options 
+ * @param {cartodb-redis} metadataBackend
+ * @param {object} options
  */
 class UserLimits {
     constructor(metadataBackend, options = {}) {

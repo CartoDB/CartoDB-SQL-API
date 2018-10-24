@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function connectionParams (userDatabaseService) {
     return function connectionParamsMiddleware (req, res, next) {
         const { user, api_key: apikeyToken, authorizationLevel } = res.locals;

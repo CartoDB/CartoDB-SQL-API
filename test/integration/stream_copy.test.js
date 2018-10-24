@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 const assert = require('assert');
 

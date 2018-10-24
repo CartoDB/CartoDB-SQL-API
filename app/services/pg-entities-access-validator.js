@@ -1,3 +1,5 @@
+'use strict';
+
 const FORBIDDEN_ENTITIES = {
     carto: ['*'],
     cartodb: [
@@ -56,6 +58,6 @@ const Validator = {
 
         return true;
     }
-}; 
+};
 
 module.exports = Validator;

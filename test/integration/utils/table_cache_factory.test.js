@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 var assert = require('assert');
 var LRU = require('lru-cache');

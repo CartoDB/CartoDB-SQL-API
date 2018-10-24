@@ -1,3 +1,5 @@
+'use strict';
+
 var step = require('step');
 var fs = require('fs');
 var spawn = require('child_process').spawn;
