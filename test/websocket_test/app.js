@@ -1,3 +1,5 @@
+'use strict';
+
 // this is a test to understand accessing sql api via websockets
 var express = require('express')
   , app     = express.createServer(

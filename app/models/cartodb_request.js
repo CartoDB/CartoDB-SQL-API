@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * this module provides cartodb-specific interpretation
  * of request headers

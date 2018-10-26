@@ -1,3 +1,5 @@
+'use strict';
+
 const assert = require('../support/assert');
 const TestClient = require('../support/test-client');
 const BatchTestClient = require('../support/batch-test-client');

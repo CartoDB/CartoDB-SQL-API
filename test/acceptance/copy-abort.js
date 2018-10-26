@@ -1,3 +1,5 @@
+'use strict';
+
 const querystring = require('querystring');
 const StatsClient = require('../../app/stats/client');
 const statsClient = StatsClient.getInstance(global.settings.statsd);

@@ -1,3 +1,5 @@
+'use strict';
+
 var step = require('step');
 var PSQL = require('cartodb-psql');
 var assert = require('assert');

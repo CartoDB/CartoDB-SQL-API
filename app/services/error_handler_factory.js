@@ -1,3 +1,5 @@
+'use strict';
+
 const ErrorHandler = require('./error_handler');
 const { codeToCondition } = require('../postgresql/error_codes');
 

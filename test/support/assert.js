@@ -1,3 +1,5 @@
+'use strict';
+
 var assert = module.exports = exports = require('assert');
 var request = require('request');
 var debug = require('debug')('assert-response');

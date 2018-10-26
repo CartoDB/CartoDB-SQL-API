@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');

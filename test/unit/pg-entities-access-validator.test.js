@@ -1,3 +1,5 @@
+'use strict';
+
 const assert = require('assert');
 const pgEntitiesAccessValidator = require('../../app/services/pg-entities-access-validator');
 
@@ -99,54 +101,54 @@ describe('pg entities access validator with validatePGEntitiesAccess enabled', f
     it('validate function: should not be validated', function () {
         let authorizationLevel = 'master';
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCarto }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCarto }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCartodbKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCartodbKO }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPgcatalog }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPgcatalog }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesInfo }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesInfo }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPublicKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPublicKO }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesTopologyKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesTopologyKO }, authorizationLevel),
             false
         );
 
-        
+
         authorizationLevel = 'regular';
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCarto }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCarto }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCartodbKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCartodbKO }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPgcatalog }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPgcatalog }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesInfo }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesInfo }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPublicKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesPublicKO }, authorizationLevel),
             false
         );
         assert.strictEqual(
-            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesTopologyKO }, authorizationLevel), 
+            pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesTopologyKO }, authorizationLevel),
             false
         );
     });

@@ -1,3 +1,5 @@
+'use strict';
+
 const { getFormatFromCopyQuery } = require('../utils/query_info');
 
 module.exports = class StreamCopyMetrics {

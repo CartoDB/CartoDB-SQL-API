@@ -1,3 +1,5 @@
+'use strict';
+
 const PSQL = require('cartodb-psql');
 const copyTo = require('pg-copy-streams').to;
 const copyFrom = require('pg-copy-streams').from;

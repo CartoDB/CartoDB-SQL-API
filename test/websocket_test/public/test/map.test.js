@@ -1,3 +1,5 @@
+'use strict';
+
 describe("Event", function() {
 
     before_each(function() {
@@ -23,7 +25,7 @@ describe("MapModel", function() {
 
     before_each(function() {
         this.map_model = new MapModel(new LatLng(0, 0));
-    }); 
+    });
 
     it("center_changed should be called", function() {
         var c = 0;

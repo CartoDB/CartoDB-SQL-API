@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  *
  * Requires the database and tables setup in config/environments/test.js to exist

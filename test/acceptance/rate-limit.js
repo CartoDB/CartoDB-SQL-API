@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 const qs = require('querystring');
@@ -30,7 +32,7 @@ function setLimit(count, period, burst) {
             return;
         }
 
-        const key = `limits:rate:store:${user}:sql:${RATE_LIMIT_ENDPOINTS_GROUPS.QUERY}`;        
+        const key = `limits:rate:store:${user}:sql:${RATE_LIMIT_ENDPOINTS_GROUPS.QUERY}`;
         redisClient.rpush(key, burst);
         redisClient.rpush(key, count);
         redisClient.rpush(key, period);
@@ -40,9 +42,9 @@ function setLimit(count, period, burst) {
 
 function assertRequest (status, limit, remaining, reset, retry, done = null) {
     assert.response(
-        server, 
-        request, 
-        { status }, 
+        server,
+        request,
+        { status },
         function(err, res) {
             assert.ifError(err);
             assert.equal(res.headers['carto-rate-limit-limit'], limit);
@@ -53,10 +55,10 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
                 assert.equal(res.headers['retry-after'], retry);
             }
 
-            if(status === 429) { 
-                const expectedResponse = { 
+            if(status === 429) {
+                const expectedResponse = {
                     error: ["You are over platform\'s limits. Please contact us to know more details"],
-                    context: "limit", 
+                    context: "limit",
                     detail: "rate-limit"
                 };
 
@@ -74,7 +76,7 @@ describe('rate limit', function() {
     before(function() {
         global.settings.ratelimits.rateLimitsEnabled = true;
         global.settings.ratelimits.endpoints.query = true;
-        
+
         server = app();
         redisClient = redis.createClient(global.settings.redis_port);
 
@@ -94,7 +96,7 @@ describe('rate limit', function() {
     });
 
     it("1 req/sec: 2 req/seg should be limited", function(done) {
-        assertRequest(200, 2, 1, 1);  
+        assertRequest(200, 2, 1, 1);
         setTimeout( () => assertRequest(200, 2, 0, 1, null), 250 );
         setTimeout( () => assertRequest(429, 2, 0, 1, 1),  500 );
         setTimeout( () => assertRequest(429, 2, 0, 1, 1),  750 );

@@ -1,3 +1,5 @@
+'use strict';
+
 const TestClient = require('../../support/test-client');
 
 require('../../support/assert');

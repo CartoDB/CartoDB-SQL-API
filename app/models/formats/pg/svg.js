@@ -1,3 +1,5 @@
+'use strict';
+
 var pg  = require('./../pg');
 
 var svg_width  = 1024.0;

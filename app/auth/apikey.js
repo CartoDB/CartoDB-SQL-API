@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * this module allows to auth user using an pregenerated api key
  */
@@ -32,7 +34,7 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
 
                 return callback(usernameError);
             }
-            
+
             if (!apikey.grantsSql) {
                 const forbiddenError = new Error('forbidden');
                 forbiddenError.http_status = 403;
@@ -47,8 +49,8 @@ ApikeyAuth.prototype.verifyCredentials = function (callback) {
             apiKeyNotFoundError.subtype = 'api-key-not-found';
             apiKeyNotFoundError.http_status = 401;
 
-            return callback(apiKeyNotFoundError);  
-        }      
+            return callback(apiKeyNotFoundError);
+        }
     });
 };
 

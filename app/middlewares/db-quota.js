@@ -1,3 +1,5 @@
+'use strict';
+
 const PSQL = require('cartodb-psql');
 
 const remainingQuotaQuery = 'SELECT _CDB_UserQuotaInBytes() - CDB_UserDataSize(current_schema()) AS remaining_quota';

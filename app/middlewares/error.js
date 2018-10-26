@@ -1,3 +1,5 @@
+'use strict';
+
 const errorHandlerFactory = require('../services/error_handler_factory');
 
 module.exports = function error() {

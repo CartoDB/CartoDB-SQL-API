@@ -1,3 +1,5 @@
+'use strict';
+
 var JobQueue = require('../../../batch/job_queue');
 var assert = require('assert');
 

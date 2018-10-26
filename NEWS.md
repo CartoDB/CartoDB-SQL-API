@@ -3,6 +3,8 @@
 ## 2.2.2
 Released 2018-mm-dd
 
+Bug fixes:
+  * Make all modules to use strict mode semantics.
 
 
 ## 2.2.1

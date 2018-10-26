@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('underscore');
 
 var pg  = require('./../pg');
@@ -22,7 +24,7 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
   var total_rows = result.rowCount;
   var rows = result.rows;
 
-  // get headers 
+  // get headers
   if(!total_rows) {
     callback(null, new Buffer(0));
     return;
@@ -62,7 +64,7 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
       var d = [];
       var n = headersNames[i];
       for(var r = 0; r < total_rows; ++r) {
-        var row = rows[r][n]; 
+        var row = rows[r][n];
         if(headerTypes[i] > ArrayBufferSer.BUFFER) {
           row = new ArrayBufferSer(headerTypes[i] - ArrayBufferSer.BUFFER, row);
         }
