@@ -849,9 +849,9 @@
       "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
     },
     "pg-copy-streams": {
-      "version": "1.2.0",
-      "from": "cartodb/node-pg-copy-streams#use-strict",
-      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#c85f7d27b85f885578c31698f7d84bdfd9016855"
+      "version": "1.2.0-carto.2",
+      "from": "cartodb/node-pg-copy-streams#v1.2.0-carto.2",
+      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#6f1d5cb4a54be07cf2ca076563142737e44eaf5c"
     },
     "pg-int8": {
       "version": "1.0.1",
