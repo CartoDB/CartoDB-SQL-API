@@ -11,6 +11,9 @@ echo "$0 $1"
 # start PostgreSQL
 /etc/init.d/postgresql start
 
+# Configure
+./configure
+
 echo "Node.js version:"
 node -v
 
