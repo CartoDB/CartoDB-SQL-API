@@ -3,7 +3,6 @@
 var step = require('step');
 var fs = require('fs');
 var spawn = require('child_process').spawn;
-var assert = require('assert');
 
 var ogr = require('./../ogr');
 
@@ -51,12 +50,16 @@ ShpFormat.prototype.toSHP = function (options, callback) {
       fs.mkdir(outdirpath, 0o777, this);
     },
     function spawnDumper(err) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       fmtObj.toOGR(options, 'ESRI Shapefile', shapefile, this);
     },
     function doZip(err) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var next = this;
 
