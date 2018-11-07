@@ -5,7 +5,7 @@
 ./configure
 
 # install dependencies
-npm i
+npm ci
 
 # run tests
 npm test

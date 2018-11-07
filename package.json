@@ -58,8 +58,8 @@
     "test": "make test-all",
     "test:unit": "mocha test/unit/**/*.js",
     "test:unit:watch": "npm run test:unit -- -w",
-    "docker-test": "docker run -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash test/run_tests_docker.sh && docker ps --filter status=dead --filter status=exited -aq | xargs -r docker rm -v",
-    "docker-bash": "docker run  -it -v `pwd`:/srv carto/nodejs6-xenial-pg101 bash"
+    "docker-test": "./docker-test.sh",
+    "docker-bash": "./docker-bash.sh"
   },
   "engines": {
     "node": ">= 4.5.0",
