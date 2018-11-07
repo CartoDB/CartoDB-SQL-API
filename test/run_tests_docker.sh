@@ -24,14 +24,18 @@ if [ "$NODEJS_VERSION" = "nodejs10" ];
 then
     echo "npm version on install:"
     npm -v
+    mv npm-shrinkwrap.json npm-shrinkwrap.json.backup
     npm ci
     npm ls
+    mv npm-shrinkwrap.json.backup npm-shrinkwrap.json
 elif [ "$NODEJS_VERSION" = "nodejs6" ];
 then
     echo "npm version on install:"
     npm -v
+    mv package-lock.json package-lock.json.backup
     npm i
     npm ls
+    mv package-lock.json.backup package-lock.json
 else
     usage
 fi
