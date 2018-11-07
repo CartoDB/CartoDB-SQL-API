@@ -19,5 +19,5 @@ else
     usage
 fi
 
-docker run -v `pwd`:/srv carto/${DOCKER} bash test/run_tests_docker.sh && \
+docker run -v `pwd`:/srv carto/${DOCKER} bash test/run_tests_docker.sh ${NODEJS_VERSION} && \
     docker ps --filter status=dead --filter status=exited -aq | xargs -r docker rm -v
