@@ -147,6 +147,25 @@ function isGteMinVersion(version, minVersion) {
     return false;
 }
 
+setInterval(function memoryUsageMetrics () {
+    var memoryUsage = process.memoryUsage();
+    Object.keys(memoryUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.memory.${property}`, memoryUsage[property]);
+    });
+}, 5000);
+
+let previousCPUUsage = process.cpuUsage();
+
+setInterval(function cpuUsageMetrics () {
+    const CPUUsage = process.cpuUsage(previousCPUUsage);
+
+    Object.keys(CPUUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.cpu.${property}`, CPUUsage[property]);
+    });
+
+    previousCPUUsage = CPUUsage;
+}, 5000);
+
 if (global.gc && isGteMinVersion(process.version, 6)) {
     var gcInterval = Number.isFinite(global.settings.gc_interval) ?
         global.settings.gc_interval :
