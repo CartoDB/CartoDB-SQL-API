@@ -148,7 +148,8 @@ function isGteMinVersion(version, minVersion) {
 }
 
 setInterval(function memoryUsageMetrics () {
-    var memoryUsage = process.memoryUsage();
+    let memoryUsage = process.memoryUsage();
+
     Object.keys(memoryUsage).forEach(property => {
         statsClient.gauge(`sqlapi.memory.${property}`, memoryUsage[property]);
     });
