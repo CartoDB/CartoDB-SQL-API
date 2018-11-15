@@ -147,6 +147,48 @@ function isGteMinVersion(version, minVersion) {
     return false;
 }
 
+setInterval(function memoryUsageMetrics () {
+    let memoryUsage = process.memoryUsage();
+
+    Object.keys(memoryUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.memory.${property}`, memoryUsage[property]);
+    });
+}, 5000);
+
+function getCPUUsage (oldUsage) {
+    let usage;
+
+    if (oldUsage && oldUsage._start) {
+        usage = Object.assign({}, process.cpuUsage(oldUsage._start.cpuUsage));
+        usage.time = Date.now() - oldUsage._start.time;
+    } else {
+        usage = Object.assign({}, process.cpuUsage());
+        usage.time = process.uptime() * 1000; // s to ms
+    }
+
+    usage.percent = (usage.system + usage.user) / (usage.time * 10);
+
+    Object.defineProperty(usage, '_start', {
+        value: {
+            cpuUsage: process.cpuUsage(),
+            time: Date.now()
+        }
+    });
+
+    return usage;
+}
+
+let previousCPUUsage = getCPUUsage();
+setInterval(function cpuUsageMetrics () {
+    const CPUUsage = getCPUUsage(previousCPUUsage);
+
+    Object.keys(CPUUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.cpu.${property}`, CPUUsage[property]);
+    });
+
+    previousCPUUsage = CPUUsage;
+}, 5000);
+
 if (global.gc && isGteMinVersion(process.version, 6)) {
     var gcInterval = Number.isFinite(global.settings.gc_interval) ?
         global.settings.gc_interval :
