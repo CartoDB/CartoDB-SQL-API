@@ -154,10 +154,32 @@ setInterval(function memoryUsageMetrics () {
     });
 }, 5000);
 
-let previousCPUUsage = process.cpuUsage();
+function getCPUUsage (oldUsage) {
+    let usage;
 
+    if (oldUsage && oldUsage._start) {
+        usage = Object.assign({}, process.cpuUsage(oldUsage._start.cpuUsage));
+        usage.time = Date.now() - oldUsage._start.time;
+    } else {
+        usage = Object.assign({}, process.cpuUsage());
+        usage.time = process.uptime() * 1000; // s to ms
+    }
+
+    usage.percent = (usage.system + usage.user) / (usage.time * 10);
+
+    Object.defineProperty(usage, '_start', {
+        value: {
+            cpuUsage: process.cpuUsage(),
+            time: Date.now()
+        }
+    });
+
+    return usage;
+}
+
+let previousCPUUsage = getCPUUsage();
 setInterval(function cpuUsageMetrics () {
-    const CPUUsage = process.cpuUsage(previousCPUUsage);
+    const CPUUsage = getCPUUsage(previousCPUUsage);
 
     Object.keys(CPUUsage).forEach(property => {
         statsClient.gauge(`sqlapi.cpu.${property}`, CPUUsage[property]);
