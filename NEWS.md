@@ -1,10 +1,16 @@
 # Changelog
 
-## 2.2.2
+## 2.3.0
 Released 2018-mm-dd
 
+Announcements:
+ * Support Node.js 10
+ * Add package-lock.json
+ * Configure Travis CI to run docker tests against Node.js 6 & 10 versions
+
 Bug fixes:
-  * Make all modules to use strict mode semantics.
+ * Do not use `assert` to throw erros as in Node.js > 6 wraps the original error, the keyword 'throw' does the trick and it's backwards compatible
+ * Make all modules to use strict mode semantics.
 
 
 ## 2.2.1

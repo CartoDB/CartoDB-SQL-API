@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "dependencies": {
     "@carto/fqdn-sync": {
       "version": "0.2.2",
@@ -110,9 +110,9 @@
       }
     },
     "bluebird": {
-      "version": "3.5.2",
+      "version": "3.5.3",
       "from": "bluebird@>=3.3.3 <4.0.0",
-      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.5.2.tgz"
+      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.5.3.tgz"
     },
     "boom": {
       "version": "2.10.1",
@@ -162,9 +162,9 @@
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-3.0.0.tgz"
     },
     "cartodb-psql": {
-      "version": "0.12.0",
-      "from": "cartodb-psql@0.12.0",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.12.0.tgz",
+      "version": "0.13.0",
+      "from": "cartodb-psql@0.13.0",
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.13.0.tgz",
       "dependencies": {
         "debug": {
           "version": "3.2.6",
@@ -174,14 +174,14 @@
       }
     },
     "cartodb-query-tables": {
-      "version": "0.2.0",
-      "from": "cartodb-query-tables@0.2.0",
-      "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.2.0.tgz"
+      "version": "0.4.0",
+      "from": "cartodb-query-tables@0.4.0",
+      "resolved": "https://registry.npmjs.org/cartodb-query-tables/-/cartodb-query-tables-0.4.0.tgz"
     },
     "cartodb-redis": {
-      "version": "2.0.2",
-      "from": "cartodb-redis@2.0.2",
-      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-2.0.2.tgz"
+      "version": "2.1.0",
+      "from": "cartodb-redis@2.1.0",
+      "resolved": "https://registry.npmjs.org/cartodb-redis/-/cartodb-redis-2.1.0.tgz"
     },
     "caseless": {
       "version": "0.11.0",
@@ -463,9 +463,9 @@
       "optional": true
     },
     "graceful-fs": {
-      "version": "4.1.11",
+      "version": "4.1.15",
       "from": "graceful-fs@>=4.1.2 <5.0.0",
-      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.11.tgz"
+      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.15.tgz"
     },
     "har-validator": {
       "version": "2.0.6",
@@ -839,9 +839,9 @@
       "resolved": "https://registry.npmjs.org/path-type/-/path-type-1.1.0.tgz"
     },
     "pg": {
-      "version": "6.4.2",
-      "from": "cartodb/node-postgres#6.4.2-cdb1",
-      "resolved": "git://github.com/cartodb/node-postgres.git#449fac1d6da711ffcc6694ae3c89f85244f48bdc"
+      "version": "6.4.2-cdb2",
+      "from": "cartodb/node-postgres#6.4.2-cdb2",
+      "resolved": "git://github.com/cartodb/node-postgres.git#5417d7b29b7272ca2e71bb396899ab3f177a9ae6"
     },
     "pg-connection-string": {
       "version": "0.1.3",
@@ -849,9 +849,9 @@
       "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-0.1.3.tgz"
     },
     "pg-copy-streams": {
-      "version": "1.2.0-carto.2",
-      "from": "cartodb/node-pg-copy-streams#v1.2.0-carto.2",
-      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#6f1d5cb4a54be07cf2ca076563142737e44eaf5c"
+      "version": "1.2.0-carto.3",
+      "from": "cartodb/node-pg-copy-streams#v1.2.0-carto.3",
+      "resolved": "git://github.com/cartodb/node-pg-copy-streams.git#94c8d89abaea54bd4e6f61f63f47ef81cdc44253"
     },
     "pg-int8": {
       "version": "1.0.1",
@@ -964,9 +964,9 @@
       "resolved": "https://registry.npmjs.org/redis-commands/-/redis-commands-1.4.0.tgz"
     },
     "redis-mpool": {
-      "version": "0.5.0",
-      "from": "redis-mpool@0.5.0",
-      "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.5.0.tgz",
+      "version": "0.7.0",
+      "from": "redis-mpool@0.7.0",
+      "resolved": "https://registry.npmjs.org/redis-mpool/-/redis-mpool-0.7.0.tgz",
       "dependencies": {
         "generic-pool": {
           "version": "2.1.1",
@@ -1082,9 +1082,9 @@
       "resolved": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-3.0.0.tgz"
     },
     "spdx-license-ids": {
-      "version": "3.0.1",
+      "version": "3.0.2",
       "from": "spdx-license-ids@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-3.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-3.0.2.tgz"
     },
     "split": {
       "version": "1.0.1",
@@ -1092,9 +1092,9 @@
       "resolved": "https://registry.npmjs.org/split/-/split-1.0.1.tgz"
     },
     "sshpk": {
-      "version": "1.15.1",
+      "version": "1.15.2",
       "from": "sshpk@>=1.7.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/sshpk/-/sshpk-1.15.1.tgz",
+      "resolved": "https://registry.npmjs.org/sshpk/-/sshpk-1.15.2.tgz",
       "dependencies": {
         "assert-plus": {
           "version": "1.0.0",

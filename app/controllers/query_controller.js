@@ -2,7 +2,6 @@
 
 var _ = require('underscore');
 var step = require('step');
-var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
 const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
@@ -158,7 +157,9 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 });
             },
             function setHeaders(err, affectedTables) {
-                assert.ifError(err);
+                if (err) {
+                    throw err;
+                }
 
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
@@ -206,7 +207,9 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 return null;
             },
             function generateFormat(err){
-                assert.ifError(err);
+                if (err) {
+                    throw err;
+                }
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!

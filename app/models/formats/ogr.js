@@ -6,7 +6,6 @@ var fs = require('fs');
 var _ = require('underscore');
 var PSQL = require('cartodb-psql');
 var spawn = require('child_process').spawn;
-var assert = require('assert');
 
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
@@ -95,7 +94,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       pg.query(colsql, this);
     },
     function findSRS(err, result) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var needSRS = that._needSRS;
 
@@ -139,7 +140,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       });
     },
     function spawnDumper(err, srid, type) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var next = this;
 
