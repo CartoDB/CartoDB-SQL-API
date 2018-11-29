@@ -140,12 +140,14 @@ function handleCopyFrom (logger) {
 
                     if(metrics.size > dbRemainingQuota) {
                         const quotaError = new Error('DB Quota exceeded');
+                        pgstream.emit('cancelQuery', err);
                         pgstream.emit('error', quotaError);
                     }
                     if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
                         const maxPostSizeError = new Error(
                             `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
                         );
+                        pgstream.emit('cancelQuery', err);
                         pgstream.emit('error', maxPostSizeError);
                     }
                 })
