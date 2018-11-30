@@ -21,6 +21,26 @@ const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../app/server')(statsClient);
 
 
+// Give it enough time to connect and issue the query
+// but not too much so as to disconnect in the middle of the query.
+const CLIENT_DISCONNECT_TIMEOUT = 100;
+const assertCanReuseCanceledConnection = function (done) {
+    assert.response(server, {
+        url: '/api/v1/sql?' + querystring.stringify({
+            q: 'SELECT count(*) FROM copy_endpoints_test',
+        }),
+        headers: { host: 'vizzuality.cartodb.com' },
+        method: 'GET'
+    }, {}, function(err, res) {
+        assert.ifError(err);
+        assert.ok(res.statusCode === 200);
+        const result = JSON.parse(res.body);
+        assert.strictEqual(result.rows[0].count, 0);
+        done();
+    });
+};
+
+
 describe('copy-endpoints', function() {
     before(function() {
         this.client = new Client({
@@ -347,10 +367,6 @@ describe('copy-endpoints', function() {
     });
 
     describe('client disconnection', function() {
-        // Give it enough time to connect and issue the query
-        // but not too much so as to disconnect in the middle of the query.
-        const CLIENT_DISCONNECT_TIMEOUT = 100;
-
         before(function() {
             this.db_pool_size = global.settings.db_pool_size;
             global.settings.db_pool_size = 1;
@@ -370,22 +386,6 @@ describe('copy-endpoints', function() {
             }, {}, function(err, res) {
                 assert.ifError(err);
                 assert.ok(res.statusCode === 200);
-                done();
-            });
-        };
-
-        const assertCanReuseCanceledConnection = function (done) {
-            assert.response(server, {
-                url: '/api/v1/sql?' + querystring.stringify({
-                    q: 'SELECT count(*) FROM copy_endpoints_test',
-                }),
-                headers: { host: 'vizzuality.cartodb.com' },
-                method: 'GET'
-            }, {}, function(err, res) {
-                assert.ifError(err);
-                assert.ok(res.statusCode === 200);
-                const result = JSON.parse(res.body);
-                assert.strictEqual(result.rows[0].count, 0);
                 done();
             });
         };
@@ -511,6 +511,9 @@ describe('copy-endpoints', function() {
                               END;
                               $$ LANGUAGE 'plpgsql' VOLATILE;
                               `, err => done(err));
+
+            this.db_pool_size = global.settings.db_pool_size;
+            global.settings.db_pool_size = 1;
         });
 
         after('Restore the old quota', function(done) {
@@ -523,6 +526,8 @@ describe('copy-endpoints', function() {
                               END;
                               $$ LANGUAGE 'plpgsql' VOLATILE;
                               `, err => done(err));
+
+            global.settings.db_pool_size = this.db_pool_size;
         });
 
         it('COPY FROM fails with an error if DB quota is exhausted', function(done) {
@@ -540,7 +545,8 @@ describe('copy-endpoints', function() {
             }, function(err, res) {
                 const response = JSON.parse(res.body);
                 assert.deepEqual(response, { error: ["DB Quota exceeded"] });
-                done();
+
+                setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });
         });
 
@@ -566,10 +572,13 @@ describe('copy-endpoints', function() {
             this.previous_max_post_size_pretty = global.settings.copy_from_max_post_size_pretty;
             global.settings.copy_from_max_post_size = 10;
             global.settings.copy_from_max_post_size_pretty = '10 bytes';
+            this.db_pool_size = global.settings.db_pool_size;
+            global.settings.db_pool_size = 1;
         });
         after('Restore the max POST size limit values', function() {
             global.settings.copy_from_max_post_size = this.previous_max_post_size;
             global.settings.copy_from_max_post_size_pretty = this.previous_max_post_size_pretty;
+            global.settings.db_pool_size = this.db_pool_size;
         });
 
         it('honors the max POST size limit', function(done) {
@@ -587,7 +596,8 @@ describe('copy-endpoints', function() {
             }, function(err, res) {
                 const response = JSON.parse(res.body);
                 assert.deepEqual(response, { error: ["COPY FROM maximum POST size of 10 bytes exceeded"] });
-                done();
+
+                setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });
         });
     });
