@@ -117,9 +117,9 @@ describe('error-handler', function() {
         });
     });
 
-    it('should truncat too long errors', function (done) {
-        const veryLongString = 'Very long error message '.repeat(2);
-        const truncatedString = veryLongString.substring(0,10);
+    it('should truncat too long error messages', function (done) {
+        const veryLongString = 'Very long error message '.repeat(1000);
+        const truncatedString = veryLongString.substring(0, 1024);
 
         let error = new Error(veryLongString);
 

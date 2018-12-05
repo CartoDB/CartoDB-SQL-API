@@ -1,6 +1,7 @@
 'use strict';
 
 const errorHandlerFactory = require('../services/error_handler_factory');
+const MAX_ERROR_STRING_LENGTH = 1024;
 
 module.exports = function error() {
     return function errorMiddleware(err, req, res, next) {
@@ -74,7 +75,9 @@ function setErrorHeader(errorHandler, res) {
 function stringifyForLogs(object) {
     Object.keys(object).map(key => {
         if (typeof object[key] === 'string') {
-            object[key] = object[key].replace(/[^a-zA-Z0-9]/g, ' ');
+            object[key] = object[key]
+		.substring(0, MAX_ERROR_STRING_LENGTH)
+		.replace(/[^a-zA-Z0-9]/g, ' ');
         } else if (typeof object[key] === 'object') {
             stringifyForLogs(object[key]);
         } else if (object[key] instanceof Array) {
