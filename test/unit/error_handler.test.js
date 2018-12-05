@@ -2,6 +2,7 @@
 
 var assert = require('assert');
 var errorMiddleware = require('../../app/middlewares/error');
+require('../helper');
 
 const req = { query: { callback: true } };
 
