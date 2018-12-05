@@ -116,4 +116,28 @@ describe('error-handler', function() {
             done();
         });
     });
+
+    it('should truncat too long errors', function (done) {
+        const veryLongString = 'Very long error message '.repeat(2);
+        const truncatedString = veryLongString.substring(0,10);
+
+        let error = new Error(veryLongString);
+
+        const expectedErrorHeader = {
+            statusCode: 400,
+            message: truncatedString
+	};
+
+        const res = getRes();
+
+        errorMiddleware()(error, req, res, function () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(expectedErrorHeader)
+            );
+
+            done();
+        });
+    });
 });
