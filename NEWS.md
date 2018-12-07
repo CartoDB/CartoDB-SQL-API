@@ -11,6 +11,7 @@ Announcements:
 Bug fixes:
  * Do not use `assert` to throw erros as in Node.js > 6 wraps the original error, the keyword 'throw' does the trick and it's backwards compatible
  * Make all modules to use strict mode semantics.
+ * Avoid too long messages in `X-SQLAPI-Errors` header #543
 
 
 ## 2.2.1
