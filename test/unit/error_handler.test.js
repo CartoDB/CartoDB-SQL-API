@@ -2,6 +2,7 @@
 
 var assert = require('assert');
 var errorMiddleware = require('../../app/middlewares/error');
+require('../helper');
 
 const req = { query: { callback: true } };
 
@@ -110,6 +111,30 @@ describe('error-handler', function() {
             assert.deepEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
+            );
+
+            done();
+        });
+    });
+
+    it('should truncat too long error messages', function (done) {
+        const veryLongString = 'Very long error message '.repeat(1000);
+        const truncatedString = veryLongString.substring(0, 1024);
+
+        let error = new Error(veryLongString);
+
+        const expectedErrorHeader = {
+            statusCode: 400,
+            message: truncatedString
+	};
+
+        const res = getRes();
+
+        errorMiddleware()(error, req, res, function () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(expectedErrorHeader)
             );
 
             done();
