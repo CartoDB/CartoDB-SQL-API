@@ -121,7 +121,6 @@ module.exports.ratelimits = {
   // whether it should rate limit one or more endpoints (only if rateLimitsEnabled = true)
   endpoints: {
     query: false,
-    query_format: false,
     job_create: false,
     job_get: false,
     job_delete: false
