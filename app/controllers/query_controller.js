@@ -35,12 +35,12 @@ QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
     const forceToBeMaster = false;
 
-    const queryMiddlewares = endpointGroup => {
+    const queryMiddlewares = () => {
         return [
             bodyParserMiddleware(),
             initializeProfilerMiddleware('query'),
             userMiddleware(this.metadataBackend),
-            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
+            rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
             authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
@@ -49,8 +49,8 @@ QueryController.prototype.route = function (app) {
         ];
     };
 
-    app.all(`${base_url}/sql`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
-    app.all(`${base_url}/sql.:f`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY_FORMAT));
+    app.all(`${base_url}/sql`, queryMiddlewares());
+    app.all(`${base_url}/sql.:f`, queryMiddlewares());
 };
 
 // jshint maxcomplexity:21
