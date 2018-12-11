@@ -162,9 +162,9 @@
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-3.0.0.tgz"
     },
     "cartodb-psql": {
-      "version": "0.13.0",
-      "from": "cartodb-psql@0.13.0",
-      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.13.0.tgz",
+      "version": "0.13.1",
+      "from": "cartodb-psql@0.13.1",
+      "resolved": "https://registry.npmjs.org/cartodb-psql/-/cartodb-psql-0.13.1.tgz",
       "dependencies": {
         "debug": {
           "version": "3.2.6",
