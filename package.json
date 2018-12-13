@@ -21,7 +21,7 @@
     "basic-auth": "^2.0.0",
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
-    "cartodb-psql": "^0.13.1",
+    "cartodb-psql": "0.13.1",
     "cartodb-query-tables": "0.4.0",
     "cartodb-redis": "2.1.0",
     "debug": "2.2.0",
