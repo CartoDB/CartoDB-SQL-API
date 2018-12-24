@@ -7,6 +7,7 @@ Announcements:
  * Support Node.js 10
  * Add package-lock.json
  * Configure Travis CI to run docker tests against Node.js 6 & 10 versions
+ * Update cartodb-psql to 0.13.1 (type cache depends now on db host)
 
 Bug fixes:
  * Do not use `assert` to throw erros as in Node.js > 6 wraps the original error, the keyword 'throw' does the trick and it's backwards compatible
