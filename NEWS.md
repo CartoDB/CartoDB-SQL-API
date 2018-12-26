@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.2
+Released 2018-mm-dd
+
+
 ## 2.3.1
 Released 2018-12-23
 
