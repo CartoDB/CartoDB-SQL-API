@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 all:
-	npm install
+	npm ci
 
 clean:
 	rm -rf node_modules/*

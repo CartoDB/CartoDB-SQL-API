@@ -17,17 +17,22 @@ core requirements
 * GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
 * zip commandline tool.
 * Redis `3`, recommended reversion `3.0.2`.
-* Node.js `6`, recommended reversion `6.9.2`.
-* npm `3`, recommended version `3.10.9`.
+* Node.js `10`.
+* npm `6`.
 
 
 Install dependencies
 --------------------
 
 ```sh
-npm install
+npm ci
 ```
 
+if you want to update dependencies:
+
+```sh
+rm -rf node_modules && npm install
+```
 
 usage
 -----
