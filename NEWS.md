@@ -1,7 +1,10 @@
 # Changelog
 
-## 2.3.2
+## 3.0.0
 Released 2018-mm-dd
+
+Breaking changes:
+- Drop support for Node.js 6
 
 
 ## 2.3.1

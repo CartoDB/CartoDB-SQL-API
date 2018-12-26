@@ -2,8 +2,8 @@
     "name": "carto_sql_api",
     "current_version": {
         "requires": {
-            "node": ">=6.9.2 <11.0.0",
-            "npm": ">=3.10.9",
+            "node": ">=10.14.2",
+            "npm": ">=6.4.1",
             "gdal":">=1.11.0"
         },
         "works_with": {
