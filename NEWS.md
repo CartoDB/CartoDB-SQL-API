@@ -1,7 +1,10 @@
 # Changelog
 
 ## 2.3.1
-Released 2018-mm-dd
+Released 2018-12-23
+
+Bug fixes:
+* Update carto-package.json
 
 
 ## 2.3.0
