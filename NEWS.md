@@ -3,6 +3,9 @@
 ## 2.3.2
 Released 2018-mm-dd
 
+Announcements:
+ * Update docs: compatible Node.js and npm versions
+
 
 ## 2.3.1
 Released 2018-12-23
