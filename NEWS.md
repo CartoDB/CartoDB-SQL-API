@@ -1,7 +1,12 @@
 # Changelog
 
+**Deprecation warning**: Next major release will drop support for `Node.js 6 LTS` and `npm 3.x`. You'll be able to use the latest ES features as soon as we release 3.0.0. In the meantime, as a developer, you should keep compatibility with Node.js 6 LTS and keep updated both `package-lock.json` and `npm-shrinkwrap.json` files.
+
 ## 2.3.2
 Released 2018-mm-dd
+
+Announcements:
+ * Update docs: compatible Node.js and npm versions
 
 
 ## 2.3.1
