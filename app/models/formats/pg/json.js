@@ -3,6 +3,7 @@
 var _ = require('underscore');
 
 var pg  = require('./../pg');
+const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function JsonFormat() {
     this.buffer = '';
@@ -131,7 +132,7 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
     ];
 
     if (this.error) {
-        out.push(',"error":', JSON.stringify([this.error.message]));
+        out.push(',"error":', JSON.stringify(errorHandlerFactory(this.error).getResponse().error));
     }
 
 

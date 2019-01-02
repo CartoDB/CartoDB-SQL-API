@@ -771,59 +771,74 @@ it('GET with callback must return 200 status error even if it is an error', func
     });
 });
 
-    it('GET with slow query exceeding statement timeout returns proper error message', function(done){
-        assert.response(server, {
-                url: "/api/v1/sql?q=select%20pg_sleep(2.1)%20as%20sleep",
-                headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
-            },
-            {
-                status: 429,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
-                }
-            },
-            function(err, res) {
-                var error = JSON.parse(res.body);
-                assert.deepEqual(error, {
-                    error: [
-                        'You are over platform\'s limits: SQL query timeout error.' +
-                        ' Refactor your query before running again or contact CARTO support for more details.',
-                    ],
-                    context: 'limit',
-                    detail: 'datasource'
-                });
+it('GET with slow query exceeding statement timeout returns proper error message', function(done){
+    assert.response(server, {
+            url: "/api/v1/sql?q=select%20pg_sleep(2.1)%20as%20sleep",
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },
+        {
+            // status: 429,  ---> Both 200 and 429 are valid
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        },
+        function(err, res) {
+            var error = JSON.parse(res.body);
+            assert.deepEqual(error.error, [
+                    'You are over platform\'s limits: SQL query timeout error.' +
+                    ' Refactor your query before running again or contact CARTO support for more details.'
+                ]);
 
-                done();
-            });
-    });
+            done();
+        });
+});
 
-    it('GET with slow python script exceeding statement timeout returns proper error message', function(done){
-        assert.response(server, {
-                url: "/api/v1/sql?q=select%20py_sleep(2.1)",
-                headers: {host: 'vizzuality.cartodb.com'},
-                method: 'GET'
-            },
-            {
-                status: 429,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
-                }
-            },
-            function(err, res) {
-                var error = JSON.parse(res.body);
-                assert.deepEqual(error, {
-                    error: [
-                        'You are over platform\'s limits: SQL query timeout error.' +
-                        ' Refactor your query before running again or contact CARTO support for more details.',
-                    ],
-                    context: 'limit',
-                    detail: 'datasource'
-                });
+it('GET with slow query exceeding statement timeout returns proper error message (streaming)', function(done){
+    assert.response(server, {
+            url: "/api/v1/sql?q=SELECT%20pg_sleep(generate_series(2,10)/10.0)",
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },
+        {
+            // status: 429,  ---> Both 200 and 429 are valid
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        },
+        function(err, res) {
+            var error = JSON.parse(res.body);
+            assert.deepEqual(error.error, [
+                    'You are over platform\'s limits: SQL query timeout error.' +
+                    ' Refactor your query before running again or contact CARTO support for more details.'
+                ]);
 
-                done();
-            });
-    });
+            done();
+        });
+});
+
+it('GET with slow python script exceeding statement timeout returns proper error message', function(done){
+    assert.response(server, {
+            url: "/api/v1/sql?q=select%20py_sleep(2.1)",
+            headers: {host: 'vizzuality.cartodb.com'},
+            method: 'GET'
+        },
+        {
+            // status: 429,  ---> Both 200 and 429 are valid
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        },
+        function(err, res) {
+            var error = JSON.parse(res.body);
+            assert.deepEqual(error.error, [
+                    'You are over platform\'s limits: SQL query timeout error.' +
+                    ' Refactor your query before running again or contact CARTO support for more details.'
+                ]);
+
+            done();
+        });
+});
 
     it('too large rows get into error log', function(done){
 
