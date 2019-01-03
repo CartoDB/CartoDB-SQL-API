@@ -14,7 +14,8 @@ module.exports = function ErrorHandlerFactory (err) {
 function isTimeoutError(err) {
     return err.message && (
         err.message.indexOf('statement timeout') > -1 ||
-        err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1
+        err.message.indexOf('RuntimeError: Execution of function interrupted by signal') > -1 ||
+        err.message.indexOf('canceling statement due to user request') > -1
     );
 }
 

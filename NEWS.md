@@ -8,6 +8,7 @@ Released 2018-mm-dd
 Announcements:
  * Update docs: compatible Node.js and npm versions
  * Set platform limits message also on streaming responses
+ * Consider cancelled queries as platform limits.
 
 
 ## 2.3.1
