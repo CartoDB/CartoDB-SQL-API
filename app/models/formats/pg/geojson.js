@@ -3,6 +3,7 @@
 var _ = require('underscore');
 
 var pg  = require('./../pg');
+const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function GeoJsonFormat() {
     this.buffer = '';
@@ -72,7 +73,7 @@ GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
     this.buffer += ']'; // end of features
 
     if (this.error) {
-        this.buffer += ',"error":' + JSON.stringify([this.error.message]);
+        this.buffer += ',"error":' + JSON.stringify(errorHandlerFactory(this.error).getResponse().error);
     }
 
     this.buffer += '}'; // end of root object
