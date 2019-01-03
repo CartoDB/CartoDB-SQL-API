@@ -46,12 +46,13 @@ tags:
 paths:
   /sql:
     get:
-      summary: Runs a single SQL statement
+      summary: [GET] Runs a single SQL statement
       description: |
         Runs a single SQL statement:
         - SELECT, INSERT, UPDATE, DELETE,
         - CREATE TABLE, ALTER TABLE, DROP TABLE
         - CREATE INDEX
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the *error* property is set in the response.
       tags:
         - Single SQL Statement
       operationId: getSQLStatement
@@ -80,10 +81,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatementResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementErrorResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -93,7 +102,7 @@ paths:
             curl -X GET \
             https://username.carto.com/api/v2/sql?q=SELECT count(*) FROM cities
     post:
-      summary: Runs a single SQL statement.
+      summary: [POST] Runs a single SQL statement.
       description: >
         Runs a single SQL statement:
 
@@ -106,6 +115,8 @@ paths:
 
         Offers the same functionality as the GET endpoint. This version may come
         handy when dealing with complex/long statments.
+
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the *error* property is set in the response.
       tags:
         - Single SQL Statement
       operationId: postSQLStatement
@@ -130,15 +141,23 @@ paths:
               filename: number_of_cities.json
       responses:
         '200':
-          description: Ok
+          description: Ok (Check `error` property)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatementResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementErrorResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -199,6 +218,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -231,7 +252,7 @@ paths:
           required: false
       responses:
         '200':
-          description: Text file formatted as described by the COPY statement
+          description: Ok.
           content:
             application/octet-stream:
               schema:
@@ -240,6 +261,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -279,6 +302,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -318,6 +343,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -364,6 +391,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -408,6 +437,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
       security:
         - ApiKeyHTTPBasicAuth: []
         - ApiKeyQueryParam: []
@@ -436,6 +467,11 @@ components:
     StatementResult:
       type: object
       properties:
+        error:
+          type: array
+          items:
+            type: string
+            description: [Optional] List of errors produced by the query. If this property is present, the query has failed.
         time:
           type: number
           format: float
@@ -454,6 +490,20 @@ components:
         total_rows: 1
         rows:
           - count: 4994
+    StatementErrorResult:
+      type: object
+      properties:
+        error:
+          type: array
+          items:
+            type: string
+            description: List of errors produced by the query.
+        hint:
+          type: string
+          description: [Optional] Hint about the errors
+      example:
+        error: ["function st_buffer(geometry) does not exist"]
+        hint: No function matches the given name and argument types. You might need to add explicit type casts
     Job:
       allOf:
         - $ref: '#/components/schemas/SQLGeneralStatment'
@@ -634,3 +684,5 @@ components:
       description: Forbidden. The API key does not authorize this request.
     BadInput:
       description: Request's parameters error
+    PlatformLimits:
+      description: You are over platform's limits.
