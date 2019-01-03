@@ -204,8 +204,8 @@ if (global.gc && isGteMinVersion(process.version, 6)) {
 const gcStats = require('gc-stats')();
 
 gcStats.on('stats', function ({ pauseMS, gctype }) {
-    global.statsClient.timing('sqlapi.gc', pauseMS);
-    global.statsClient.timing(`sqlapi.gctype.${getGCTypeValue(gctype)}`, pauseMS);
+    statsClient.timing('sqlapi.gc', pauseMS);
+    statsClient.timing(`sqlapi.gctype.${getGCTypeValue(gctype)}`, pauseMS);
 });
 
 function getGCTypeValue (type) {
