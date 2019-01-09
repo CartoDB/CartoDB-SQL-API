@@ -10,6 +10,7 @@ Announcements:
  * Set platform limits message also on streaming responses
  * Consider cancelled queries as platform limits.
  * Report fine-grained Garbage Collector stats
+ * Both query endpoints as the same one in rate limits terms
 
 ## 2.3.1
 Released 2018-12-23
@@ -26,7 +27,6 @@ Announcements:
  * Add package-lock.json
  * Configure Travis CI to run docker tests against Node.js 6 & 10 versions
  * Update cartodb-psql to 0.13.1 (type cache depends now on db host)
- * Both query endpoints as the same one in rate limits terms
 
 Bug fixes:
  * Do not use `assert` to throw erros as in Node.js > 6 wraps the original error, the keyword 'throw' does the trick and it's backwards compatible
