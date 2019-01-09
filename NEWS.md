@@ -10,6 +10,7 @@ Announcements:
  * Set platform limits message also on streaming responses
  * Consider cancelled queries as platform limits.
  * Report fine-grained Garbage Collector stats
+ * Both query endpoints as the same one in rate limits terms
 
 ## 2.3.1
 Released 2018-12-23

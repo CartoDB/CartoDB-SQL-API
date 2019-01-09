@@ -74,7 +74,6 @@ function App(statsClient) {
             rateLimitsEnabled: false,
             endpoints: {
                 query: false,
-                query_format: false,
                 job_create: false,
                 job_get: false,
                 job_delete: false
