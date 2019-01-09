@@ -2,7 +2,7 @@
 
 CARTO is based on the rock solid PostgreSQL database. All of your tables reside in a single database, which means you can perform complex queries joining tables, or carrying out geospatial operations. The best place to learn about PostgreSQL's SQL language is the [official documentation](http://www.postgresql.org/docs/9.1/static/).
 
-CARTO is also based on PostGIS, so you can view the [official PostGIS reference](http://postgis.refractions.net/docs/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
+CARTO is also based on PostGIS, so you can view the [official PostGIS reference](https://postgis.net/documentation/) to know what functionality we support in terms of geospatial operations. All of our tables include a column called *the_geom,* which is a geometry field that indexes geometries in the EPSG:4326 (WGS 1984) coordinate system. All tables also have an automatically generated and updated column called *the_geom_webmercator*. We use the column internally to quickly create tiles for maps.
 
 
 ## URL Endpoints
@@ -171,6 +171,8 @@ To help you debug your SQL queries, the CARTO SQL API returns the full error pro
   ]
 }
 ```
+
+**WARNING**: If the database finds an error after it has started streaming the response, the error header will still be set but the HTTP status code will be **200**.
 
 You can use these errors to help understand your SQL. If you encounter errors executing SQL, either through CARTO Builder, or through the SQL API, it is suggested to Google search the error for independent troubleshooting.
 

@@ -46,7 +46,7 @@ describe('Auth API', function () {
         };
         this.testClient.getResult(privateSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'permission denied for relation private_table');
+            assert.ok(result.error[0].match(/permission denied for .+? private_table/));
             done();
         });
     });
@@ -88,7 +88,7 @@ describe('Auth API', function () {
 
         this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'permission denied for relation scoped_table_1');
+            assert.ok(result.error[0].match(/permission denied for .+? scoped_table_1/));
             done();
         });
     });
@@ -183,7 +183,7 @@ describe('Auth API', function () {
 
             this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.error, 'permission denied for relation scoped_table_1');
+                assert.ok(result.error[0].match(/permission denied for .+? scoped_table_1/));
                 done();
             });
         });

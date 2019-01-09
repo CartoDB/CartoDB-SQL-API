@@ -196,9 +196,46 @@ if (global.gc && isGteMinVersion(process.version, 6)) {
 
     if (gcInterval > 0) {
         setInterval(function gcForcedCycle() {
-            var start = Date.now();
             global.gc();
-            statsClient.timing('sqlapi.gc', Date.now() - start);
         }, gcInterval);
     }
+}
+
+const gcStats = require('gc-stats')();
+
+gcStats.on('stats', function ({ pauseMS, gctype }) {
+    statsClient.timing('sqlapi.gc', pauseMS);
+    statsClient.timing(`sqlapi.gctype.${getGCTypeValue(gctype)}`, pauseMS);
+});
+
+function getGCTypeValue (type) {
+    // 1: Scavenge (minor GC)
+    // 2: Mark/Sweep/Compact (major GC)
+    // 4: Incremental marking
+    // 8: Weak/Phantom callback processing
+    // 15: All
+    let value;
+
+    switch (type) {
+        case 1:
+            value = 'Scavenge';
+            break;
+        case 2:
+            value = 'MarkSweepCompact';
+            break;
+        case 4:
+            value = 'IncrementalMarking';
+            break;
+        case 8:
+            value = 'ProcessWeakCallbacks';
+            break;
+        case 15:
+            value = 'All';
+            break;
+        default:
+            value = 'Unkown';
+            break;
+    }
+
+    return value;
 }

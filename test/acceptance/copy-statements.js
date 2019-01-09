@@ -68,10 +68,10 @@ describe('copy-statements', function() {
         assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
         assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
         assert.deepEqual(res.headers['content-disposition'], 'inline');
-        assert.deepEqual(JSON.parse(res.body), {
-            error: ["must be superuser to COPY to or from a file"],
-            hint: "Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone."
-        });
+        const error_exp = /must be superuser.* to COPY.* a file/;
+        const hint_exp = /Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone./;
+        assert.ok(JSON.parse(res.body).error[0].match(error_exp));
+        assert.ok(JSON.parse(res.body).hint.match(hint_exp));
         done();
         });
     });

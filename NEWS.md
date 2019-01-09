@@ -1,7 +1,25 @@
 # Changelog
 
-## 2.3.0
+**Deprecation warning**: Next major release will drop support for `Node.js 6 LTS` and `npm 3.x`. You'll be able to use the latest ES features as soon as we release 3.0.0. In the meantime, as a developer, you should keep compatibility with Node.js 6 LTS and keep updated both `package-lock.json` and `npm-shrinkwrap.json` files.
+
+## 2.4.0
 Released 2018-mm-dd
+
+Announcements:
+ * Update docs: compatible Node.js and npm versions
+ * Set platform limits message also on streaming responses
+ * Consider cancelled queries as platform limits.
+ * Report fine-grained Garbage Collector stats
+
+## 2.3.1
+Released 2018-12-23
+
+Bug fixes:
+* Update carto-package.json
+
+
+## 2.3.0
+Released 2018-12-26
 
 Announcements:
  * Support Node.js 10
