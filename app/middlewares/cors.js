@@ -2,7 +2,7 @@
 
 module.exports = function cors(extraHeaders) {
     return function(req, res, next) {
-        var baseHeaders = 'X-Requested-With, X-Prototype-Version, X-CSRF-Token';
+        var baseHeaders = 'X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization';
 
         if(extraHeaders) {
             baseHeaders += ', ' + extraHeaders;
