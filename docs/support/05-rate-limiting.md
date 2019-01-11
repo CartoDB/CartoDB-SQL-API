@@ -16,17 +16,17 @@ Rate limit is on a per-user basis (or more accurately described, per user access
 We are using the [generic cell rate algorithm](https://en.wikipedia.org/wiki/Generic_cell_rate_algorithm), a [leaky bucket](https://en.wikipedia.org/wiki/Leaky_bucket) algorithm type.
 
 The main keys to keep in mind about this algorithm and our implementation are:
-- We allow a request every a certain time period 
+- We allow a request every a certain time period
 ```
 If an endpoint has a limit of 5 requests per second, you will have a request available every 200ms and when you spend all the available requests, you will need to wait 200ms to have another available request, instead of 1 second
 ```
-- Most of the endpoints are limited per second 
+- Most of the endpoints are limited per second
 ```
 If an endpoint has a limit of 5 requests per second, after a second without requests, you will have at least 5 available requests
 ```
-- Most of the endpoints allow an initial burst equal to the number of requests per second 
+- Most of the endpoints allow an initial burst equal to the number of requests per second
 ```
-If an endpoint has a limit of 5 requests per second, initially you will have 5 available requests 
+If an endpoint has a limit of 5 requests per second, initially you will have 5 available requests
 ```
 
 ### Caches
@@ -44,7 +44,7 @@ When an application exceeds the rate limit for a given API endpoint, the API wil
 
 Use the HTTP headers in order to understand where the application is at for a given rate limit, on the method that was just utilized. Note that the HTTP headers are contextual. That is, they indicate the rate limit for the user context. If you have multiple apps (maps) accessing to their resources with the same user, HTTP headers are related to that user.
 
-- **Carto-Rate-Limit-Limit**: total allowed requests 
+- **Carto-Rate-Limit-Limit**: total allowed requests
 - **Carto-Rate-Limit-Remaining**: remaining requests
 - **Retry-After**: seconds until next available request (returns `-1` if the current request is allowed)
 - **Carto-Rate-Limit-Reset**: seconds until the limit will reset to its maximum capacity
@@ -62,30 +62,33 @@ Below, you can find the values of the rate limit by user account type and endpoi
 
 |Endpoint   |Request   |Time period  |Burst  |
 | :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |50  |1  |50  |
-| GET /api/v2/sql.{format} <br> POST /api/v2/sql.{format} |2  |1  |2  |
-| POST /api/v2/sql/job        |2  |1  |2  |
-| GET /api/v2/sql/job/{job_id}  |2  |1  |2  |
-| DELETE /api/v2/sql/job/{job_id}  |2  |1  |2  |
+| GET /api/v2/sql <br> POST /api/v2/sql |15  |1  |15  |
+| POST /api/v2/sql/job        |5  |1  |5  |
+| GET /api/v2/sql/job/{job_id}  |5  |1  |5  |
+| DELETE /api/v2/sql/job/{job_id}  |5  |1  |5  |
+| POST /api/v2/sql/copyfrom  |3  |60  |3  |
+| GET /api/v2/sql/copyto  |3  |60  |3  |
 
 
 #### Professional plans
 
 |Endpoint   |Request   |Time period  |Burst  |
 | :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |30  |1  |30  |
-| GET /api/v2/sql.{format} <br> POST /api/v2/sql.{format} |2  |1  |2  |
+| GET /api/v2/sql <br> POST /api/v2/sql |6  |1  |6  |
 | POST /api/v2/sql/job        |2  |1  |2  |
 | GET /api/v2/sql/job/{job_id}  |2  |1  |2  |
 | DELETE /api/v2/sql/job/{job_id}  |2  |1  |2  |
+| POST /api/v2/sql/copyfrom  |1  |60  |1  |
+| GET /api/v2/sql/copyto  |1  |60  |1  |
 
 
 #### Free plans
 
 |Endpoint   |Request   |Time period  |Burst  |
 | :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |2  |1  |2  |
-| GET /api/v2/sql.{format} <br> POST /api/v2/sql.{format} |1  |1  |1  |
-| POST /api/v2/sql/job        |2  |1  |2  |
+| GET /api/v2/sql <br> POST /api/v2/sql |6  |1  |6  |
+| POST /api/v2/sql/job        |1  |1  |1  |
 | GET /api/v2/sql/job/{job_id}  |1  |1  |1  |
 | DELETE /api/v2/sql/job/{job_id}  |1  |1  |1  |
+| POST /api/v2/sql/copyfrom  |1  |60  |1  |
+| GET /api/v2/sql/copyto  |1  |60  |1  |
