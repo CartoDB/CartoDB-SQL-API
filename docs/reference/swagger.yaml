@@ -471,7 +471,7 @@ components:
           type: array
           items:
             type: string
-            description: [Optional] List of errors produced by the query. If this property is present, the query has failed.
+            description: (Optional) List of errors produced by the query. If this property is present, the query has failed.
         time:
           type: number
           format: float
@@ -500,7 +500,7 @@ components:
             description: List of errors produced by the query.
         hint:
           type: string
-          description: [Optional] Hint about the errors
+          description: (Optional) Hint about the errors
       example:
         error: ["function st_buffer(geometry) does not exist"]
         hint: No function matches the given name and argument types. You might need to add explicit type casts
