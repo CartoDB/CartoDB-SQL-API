@@ -11,6 +11,8 @@ Announcements:
  * Consider cancelled queries as platform limits.
  * Report fine-grained Garbage Collector stats
  * Both query endpoints as the same one in rate limits terms
+ * Adding Authorization to Access-Control-Allow-Headers (https://github.com/CartoDB/CartoDB-SQL-API/issues/534)
+
 
 ## 2.3.1
 Released 2018-12-23
