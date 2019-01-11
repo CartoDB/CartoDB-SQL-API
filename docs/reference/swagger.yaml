@@ -46,13 +46,15 @@ tags:
 paths:
   /sql:
     get:
-      summary: Run a single SQL statement using GET.
+      summary: Using GET
       description: |
-        Runs a single SQL statement:
+        Runs a single SQL statement using the GET endpoint:
         - SELECT, INSERT, UPDATE, DELETE,
         - CREATE TABLE, ALTER TABLE, DROP TABLE
         - CREATE INDEX
-        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the *error* property is set in the response.
+
+
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the **optional** *error* property is set in the response.
       tags:
         - Single SQL Statement
       operationId: getSQLStatement
@@ -76,7 +78,7 @@ paths:
           required: false
       responses:
         '200':
-          description: Ok
+          description: Ok (Check if `error` property is present)
           content:
             application/json:
               schema:
@@ -102,9 +104,9 @@ paths:
             curl -X GET \
             https://username.carto.com/api/v2/sql?q=SELECT count(*) FROM cities
     post:
-      summary: Run a single SQL statement using POST.
+      summary: Using POST
       description: >
-        Runs a single SQL statement:
+        Runs a single SQL statement using the POST endpoint:
 
         - SELECT, INSERT, UPDATE, DELETE,
 
@@ -116,7 +118,8 @@ paths:
         Offers the same functionality as the GET endpoint. This version may come
         handy when dealing with complex/long statments.
 
-        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the *error* property is set in the response.
+
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the **optional** *error* property is set in the response.
       tags:
         - Single SQL Statement
       operationId: postSQLStatement
@@ -141,7 +144,7 @@ paths:
               filename: number_of_cities.json
       responses:
         '200':
-          description: Ok (Check `error` property)
+          description: Ok (Check if `error` property is present)
           content:
             application/json:
               schema:
