@@ -46,7 +46,7 @@ tags:
 paths:
   /sql:
     get:
-      summary: [GET] Runs a single SQL statement
+      summary: Run a single SQL statement using GET.
       description: |
         Runs a single SQL statement:
         - SELECT, INSERT, UPDATE, DELETE,
@@ -102,7 +102,7 @@ paths:
             curl -X GET \
             https://username.carto.com/api/v2/sql?q=SELECT count(*) FROM cities
     post:
-      summary: [POST] Runs a single SQL statement.
+      summary: Run a single SQL statement using POST.
       description: >
         Runs a single SQL statement:
 
