@@ -798,7 +798,8 @@
     "glob": {
       "version": "6.0.4",
       "from": "glob@6.0.4",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-6.0.4.tgz"
+      "resolved": "https://registry.npmjs.org/glob/-/glob-6.0.4.tgz",
+      "optional": true
     },
     "graceful-fs": {
       "version": "4.1.11",
@@ -1345,7 +1346,8 @@
     "rimraf": {
       "version": "2.4.5",
       "from": "rimraf@2.4.5",
-      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.4.5.tgz"
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.4.5.tgz",
+      "optional": true
     },
     "safe-buffer": {
       "version": "5.1.2",

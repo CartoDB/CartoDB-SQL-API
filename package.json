@@ -54,7 +54,7 @@
     "mockdate": "^2.0.2",
     "shapefile": "0.3.0",
     "sqlite3": "4.0.0",
-    "zipfile": "0.5.11"
+    "zipfile": "0.5.12"
   },
   "scripts": {
     "test": "make test-all",
