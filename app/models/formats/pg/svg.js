@@ -1,6 +1,6 @@
 'use strict';
 
-var pg  = require('./../pg');
+var Pg  = require('./../pg');
 
 var svg_width  = 1024.0;
 var svg_height = 768.0;
@@ -24,7 +24,7 @@ function SvgFormat() {
     this._streamingStarted = false;
 }
 
-SvgFormat.prototype = new pg('svg');
+SvgFormat.prototype = new Pg('svg');
 SvgFormat.prototype._contentType = "image/svg+xml; charset=utf-8";
 
 SvgFormat.prototype.getQuery = function(sql, options) {
