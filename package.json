@@ -24,7 +24,7 @@
     "cartodb-psql": "0.13.1",
     "cartodb-query-tables": "0.4.0",
     "cartodb-redis": "2.1.0",
-    "debug": "2.2.0",
+    "debug": "^4.1.1",
     "express": "^4.16.4",
     "gc-stats": "1.2.1",
     "log4js": "cartodb/log4js-node#cdb",
