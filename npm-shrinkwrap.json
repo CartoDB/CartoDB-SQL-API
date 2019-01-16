@@ -1,6 +1,6 @@
 {
   "name": "cartodb_sql_api",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "dependencies": {
     "@carto/fqdn-sync": {
       "version": "0.2.2",
