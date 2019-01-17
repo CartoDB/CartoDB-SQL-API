@@ -5,6 +5,15 @@
 ## 2.4.1
 Released 2019-mm-dd
 
+Announcements:
+* Deps:
+  * Upgrade `debug` to version 4.1.1
+  * Upgrade `express` to version 4.16.4
+  * Upgrade `request` to version 2.88.0
+* Dev deps:
+  * Upgrade `jshint` to version 2.9.7
+  * Upgrade `mocha` to version 5.2.0
+  * Upgrade `zipfile` to version 0.5.12
 
 ## 2.4.0
 Released 2019-01-16
