@@ -2,7 +2,7 @@
 
 var _ = require('underscore');
 
-var pg  = require('./../pg');
+var Pg  = require('./../pg');
 const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function JsonFormat() {
@@ -10,7 +10,7 @@ function JsonFormat() {
     this.lastKnownResult = {};
 }
 
-JsonFormat.prototype = new pg('json');
+JsonFormat.prototype = new Pg('json');
 
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 

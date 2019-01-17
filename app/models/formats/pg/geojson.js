@@ -2,14 +2,14 @@
 
 var _ = require('underscore');
 
-var pg  = require('./../pg');
+var Pg  = require('./../pg');
 const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function GeoJsonFormat() {
     this.buffer = '';
 }
 
-GeoJsonFormat.prototype = new pg('geojson');
+GeoJsonFormat.prototype = new Pg('geojson');
 
 GeoJsonFormat.prototype._contentType = "application/json; charset=utf-8";
 

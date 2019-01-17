@@ -4,12 +4,12 @@ var step = require('step');
 var fs = require('fs');
 var spawn = require('child_process').spawn;
 
-var ogr = require('./../ogr');
+var Ogr = require('./../ogr');
 
 function ShpFormat() {
 }
 
-ShpFormat.prototype = new ogr('shp');
+ShpFormat.prototype = new Ogr('shp');
 
 ShpFormat.prototype._contentType = "application/zip; charset=utf-8";
 ShpFormat.prototype._fileExtension = "zip";
