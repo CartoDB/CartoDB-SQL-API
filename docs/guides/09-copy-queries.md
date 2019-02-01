@@ -102,7 +102,7 @@ username = {api_key}
 upload_file = 'upload_example.csv'
 q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
-url = "http://%s.carto.com/api/v2/sql/copyfrom" % username
+url = "https://%s.carto.com/api/v2/sql/copyfrom" % username
 with open(upload_file, 'rb') as f:
     r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
 
@@ -211,7 +211,7 @@ download_filename = 'download_example.csv'
 q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
 # request the download
-url = "http://%s.carto.com/api/v2/sql/copyto" % username
+url = "https://%s.carto.com/api/v2/sql/copyto" % username
 r = requests.get(url, params={'api_key': api_key, 'q': q}, stream=True)
 r.raise_for_status()
 
