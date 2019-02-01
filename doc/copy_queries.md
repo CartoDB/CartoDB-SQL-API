@@ -59,7 +59,7 @@ you can get these queries executed directly through the SQL API this way, just b
 curl -v "https://{user}.carto.com/api/v2/sql?api_key={api_key}&q=CREATE+TABLE+upload_example+(the_geom+geometry,name+text,age+integer)"
 
 # Cartodbfy table (optional, but allows for table registartion in Builder dashboard)
-curl -v "http://{user}.carto.com/api/v2/sql?api_key={api_key}&q=SELECT+CDB_CartodbfyTable(current_schema,'upload_example')"
+curl -v "https://{user}.carto.com/api/v2/sql?api_key={api_key}&q=SELECT+CDB_CartodbfyTable(current_schema,'upload_example')"
 ```
 
 
@@ -213,9 +213,9 @@ For our example, we'll read back just the three columns we originally loaded:
 The SQL needs to be URL-encoded before being embedded in the CURL command, so the final result looks like this:
 
     curl \
-        --output upload_example_dl.csv \
+        --output download_example_dl.csv \
 		--compressed \
-        "http://{username}.carto.com/api/v2/sql/copyto?q=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
+        "https://{username}.carto.com/api/v2/sql/copyto?q=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
 ### Python Example
 
@@ -230,7 +230,7 @@ download_filename = 'download_example.csv'
 q = "COPY upload_example (the_geom, name, age) TO stdout WITH (FORMAT csv, HEADER true)"
 
 # request the download
-url = "http://%s.carto.com/api/v2/sql/copyto" % username
+url = "https://%s.carto.com/api/v2/sql/copyto" % username
 r = requests.get(url, params={'api_key': api_key, 'q': q}, stream=True)
 r.raise_for_status()
 
