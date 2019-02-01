@@ -25,7 +25,7 @@ Using cURL tool:
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "{query}"
-}' "http://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
+}' "https://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
 ```
 
 Using Node.js request client:
@@ -35,7 +35,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "https://{username}.carto.com/api/v2/sql/job",
   qs: {
     "api_key": "{api_key}"
   },
@@ -124,7 +124,7 @@ If you are using the Batch Query create operation for a cURL POST request, use t
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 If you are using the Batch Query create operation for a Node.js client POST request, use the following code:
@@ -134,7 +134,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "https://{username}.carto.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
     query: "CREATE TABLE world_airports AS SELECT a.cartodb_id, a.the_geom, a.the_geom_webmercator, a.name airport, b.name country FROM world_borders b JOIN airports a ON ST_Contains(b.the_geom, a.the_geom)"
@@ -180,7 +180,7 @@ BODY: {
 If you are using the Batch Query read operation for a cURL GET request, use the following code:
 
 ```bash
-curl -X GET "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+curl -X GET "https://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are a Batch Query read operation for a Node.js client GET request, use the following code:
@@ -190,7 +190,7 @@ var request = require("request");
 
 var options = {
   method: "GET",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+  url: "https://{username}.carto.com/api/v2/sql/job/{job_id}"
 };
 
 request(options, function (error, response, body) {
@@ -241,7 +241,7 @@ errors: [
 If you are using the Batch Query cancel operation for cURL DELETE request, use the following code:
 
 ```bash
-curl -X DELETE  "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+curl -X DELETE  "https://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Batch Query cancel operation for a Node.js client DELETE request, use the following code:
@@ -251,7 +251,7 @@ var request = require("request");
 
 var options = {
   method: "DELETE",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
+  url: "https://{username}.carto.com/api/v2/sql/job/{job_id}",
 };
 
 request(options, function (error, response, body) {
@@ -320,7 +320,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "DROP TABLE airports",
     "ALTER TABLE world_airports RENAME TO airport"
   ]
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 If you are using the Chained Batch Query operation for a Node.js client POST request, use the following code:
@@ -330,7 +330,7 @@ var request = require("request");
 
 var options = {
   method: "POST",
-  url: "http://{username}.carto.com/api/v2/sql/job",
+  url: "https://{username}.carto.com/api/v2/sql/job",
   headers: { "content-type": "application/json" },
   body: {
     "query": [
@@ -361,7 +361,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{
     "ALTER TABLE world_airports RENAME TO airport",
     "UPDATE airports SET airport = upper(airport)"
   ]
-}' "http://{username}.carto.com/api/v2/sql/job/{job_id}"
+}' "https://{username}.carto.com/api/v2/sql/job/{job_id}"
 ```
 
 If you are using the Chained Batch Query operation for a Node.js client PUT request, use the following code:
@@ -371,7 +371,7 @@ var request = require("request");
 
 var options = {
   method: "PUT",
-  url: "http://{username}.carto.com/api/v2/sql/job/{job_id}",
+  url: "https://{username}.carto.com/api/v2/sql/job/{job_id}",
   headers: { "content-type": "application/json" },
   body: {
     query: [
@@ -408,7 +408,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'nasdaq'"
     }]
   }
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 If query finishes successfully, then onsuccess fallback will be fired. Otherwise, onerror will be fired. You can define fallbacks per query:
@@ -426,7 +426,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
       "onerror": "UPDATE market_status SET status = 'outdated' WHERE table_name = 'down_jones'"
     }]
   }
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 ...at the job level..
@@ -442,7 +442,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "onsuccess": "UPDATE market_status SET status = 'updated', updated_at = NOW()",
     "onerror": "UPDATE market_status SET status = 'outdated'"
   }
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 If a query of a job fails (and onerror fallbacks for that query and job are defined), then Batch Queries runs the first fallback for that query. The job fallback runs next and sets the job as failed. Remaining queries will not be executed. Furthermore, Batch Queries will run the onsuccess fallback at the job level, if (and only if), every query has finished successfully.
@@ -464,7 +464,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     }],
     "onerror": "INSERT INTO errors_log (job_id, error_message, date) VALUES ('<%= job_id %>', '<%= error_message %>', NOW())"
   }
-}' "http://{username}.carto.com/api/v2/sql/job"
+}' "https://{username}.carto.com/api/v2/sql/job"
 ```
 
 More templates are coming soon.

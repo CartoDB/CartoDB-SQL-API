@@ -229,7 +229,7 @@ paths:
       x-code-samples:
         - lang: Curl
           source: |
-            curl -X POST -H 'Content-Encoding: gzip' -H 'Transfer-Encoding: chunked' -H 'Content-Type: application/octet-stream' --data-binary @upload_example.csv.gz 'http://{username}.carto.com/api/v2/sql/copyfrom?q=COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)&api_key={api_key}'
+            curl -X POST -H 'Content-Encoding: gzip' -H 'Transfer-Encoding: chunked' -H 'Content-Type: application/octet-stream' --data-binary @upload_example.csv.gz 'https://{username}.carto.com/api/v2/sql/copyfrom?q=COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)&api_key={api_key}'
 
   /sql/copyto:
     get:
@@ -272,7 +272,7 @@ paths:
       x-code-samples:
         - lang: Curl
           source: |
-            curl --output upload_example_dl.csv --compressed  "http://{username}.carto.com/api/v2/sql/copyto?q=COPY upload_example (the_geom,name,age) TO stdout WITH(FORMAT csv,HEADER true)&api_key={api_key}"
+            curl --output upload_example_dl.csv --compressed  "https://{username}.carto.com/api/v2/sql/copyto?q=COPY upload_example (the_geom,name,age) TO stdout WITH(FORMAT csv,HEADER true)&api_key={api_key}"
 
   /sql/job:
     post:
