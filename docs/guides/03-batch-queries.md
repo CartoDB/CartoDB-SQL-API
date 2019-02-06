@@ -8,7 +8,7 @@ _Batch Queries are not intended to be used for large query payloads that contain
 
 ### Authentication
 
-An API Key is required to manage your jobs. The following error message appears if you are not [authenticated]({{ site.sqlapi_docs }}/guides/authentication/):
+The Master API Key is required to manage your jobs. The following error message appears if you are not [authenticated]({{ site.sqlapi_docs }}/guides/authentication/):
 
 ```bash
 {
@@ -18,14 +18,14 @@ An API Key is required to manage your jobs. The following error message appears 
 }
 ```
 
-In order to get full access, you must use your API Key.
+In order to get full access, you must use your Master API Key.
 
 Using cURL tool:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "{query}"
-}' "https://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
+}' "https://{username}.carto.com/api/v2/sql/job?api_key={master_api_key}"
 ```
 
 Using Node.js request client:
@@ -37,7 +37,7 @@ var options = {
   method: "POST",
   url: "https://{username}.carto.com/api/v2/sql/job",
   qs: {
-    "api_key": "{api_key}"
+    "api_key": "{master_api_key}"
   },
   headers: {
     "content-type": "application/json"
