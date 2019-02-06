@@ -4,11 +4,11 @@ A Batch Query enables you to request queries with long-running CPU processing ti
 
 _Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
-**Note:** In order to use Batch Queries, you **must** be [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/) using API keys.
+**Note:** In order to use Batch Queries, you **must** be [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/) using your Master API key.
 
 ## Authentication
 
-An API Key is required to manage your jobs. The following error message appears if you are not [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/):
+The Master API Key is required to manage your jobs. The following error message appears if you are not [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/):
 
 ```bash
 {
@@ -18,7 +18,7 @@ An API Key is required to manage your jobs. The following error message appears 
 }
 ```
 
-In order to get full access, you must use your API Key.
+In order to get full access, you must use your Master API Key.
 
 Using cURL tool:
 
