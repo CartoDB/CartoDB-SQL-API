@@ -29,13 +29,13 @@ function payloadSize(query) {
 }
 
 var minPayloadSize = payloadSize('');
-var queryMaxSize = new Array(JobController.MAX_LIMIT_QUERY_SIZE_IN_BYTES - minPayloadSize + 1).join('a');
+var queryMaxSize = new Array(JobController.DEFAULT_MAX_LIMIT_QUERY_SIZE_IN_BYTES - minPayloadSize + 1).join('a');
 var queryTooLong = queryMaxSize.concat('a');
 
 describe('job query limit', function() {
 
     function expectedErrorMessage(query) {
-        return JobController.getMaxSizeErrorMessage(payload(query));
+        return JobController.getMaxSizeErrorMessage(payload(query).length, JobController.DEFAULT_MAX_LIMIT_QUERY_SIZE_IN_BYTES);
     }
 
     after(function (done) {
