@@ -176,10 +176,6 @@ function max_limit_query_size_in_bytes() {
     return ( getMaxQuerySizeInKBs(user) || DEFAULT_MAX_LIMIT_QUERY_SIZE_IN_KB ) * ONE_KILOBYTE_IN_BYTES;
 }
 
-function max_limit_query_size_in_kb() {
-    return max_limit_query_size_in_bytes / ONE_KILOBYTE_IN_BYTES;
-}
-
 function checkBodyPayloadSize () {
     return function checkBodyPayloadSizeMiddleware(req, res, next) {
         const payload = JSON.stringify(req.body);
