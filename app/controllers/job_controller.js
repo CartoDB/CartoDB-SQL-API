@@ -165,13 +165,22 @@ function listWorkInProgressJobs (jobService) {
     };
 }
 
+function max_limit_query_size_in_bytes() {
+    return 16;
+}
+
+function max_limit_query_size_in_kb() {
+    return max_limit_query_size_in_bytes / ONE_KILOBYTE_IN_BYTES;
+}
 
 function checkBodyPayloadSize () {
     return function checkBodyPayloadSizeMiddleware(req, res, next) {
         const payload = JSON.stringify(req.body);
+        const payload_length = payload.length;
+        const payload_max_size = max_limit_query_size_in_bytes();
 
-        if (payload.length > MAX_LIMIT_QUERY_SIZE_IN_BYTES) {
-            return next(new Error(getMaxSizeErrorMessage(payload)), res);
+        if (payload_length > payload_max_size) {
+            return next(new Error(getMaxSizeErrorMessage(payload_length, payload_max_size)), res);
         }
 
         next();
@@ -179,22 +188,21 @@ function checkBodyPayloadSize () {
 }
 
 const ONE_KILOBYTE_IN_BYTES = 1024;
-const MAX_LIMIT_QUERY_SIZE_IN_KB = 16;
-const MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
-function getMaxSizeErrorMessage(sql) {
-    return util.format([
+function getMaxSizeErrorMessage(payload_length, payload_max_size) {
+    return util.format(
+        [
             'Your payload is too large: %s bytes. Max size allowed is %s bytes (%skb).',
             'Are you trying to import data?.',
             'Please, check out import api http://docs.cartodb.com/cartodb-platform/import-api/'
         ].join(' '),
-        sql.length,
-        MAX_LIMIT_QUERY_SIZE_IN_BYTES,
-        Math.round(MAX_LIMIT_QUERY_SIZE_IN_BYTES / ONE_KILOBYTE_IN_BYTES)
+        payload_length,
+        payload_max_size,
+        Math.round(payload_max_size / ONE_KILOBYTE_IN_BYTES)
     );
 }
 
-module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
+//module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
 function setServedByDBHostHeader () {
