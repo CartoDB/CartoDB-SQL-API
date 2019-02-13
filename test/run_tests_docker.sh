@@ -14,7 +14,7 @@ echo "npm version:"
 npm -v
 
 # install dependencies
-if [ "$NODEJS_VERSION" = "6" ];
+if [ "$NODEJS_VERSION" = "6.9.2" ];
 then
     mv package-lock.json package-lock.json.backup
     npm i
