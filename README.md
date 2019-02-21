@@ -9,36 +9,27 @@ Provides a node.js based API for running SQL queries against CartoDB.
 * Authenticated requests to this API should always be made over SSL.
 
 
-core requirements
------------------
-* Node >= 10.14.2 or 6.9.2
-* npm >= 6.4.1 || 3.10.9 || 3.10.10
-* Postgres `9.3+`.
-* Postgis `2.2`.
-* [CartoDB Postgres Extension](https://github.com/CartoDB/cartodb-postgresql/blob/0.19.2/README.md) `0.19+`.
+## Requirements
+
+* Node 10.x
+* npm 6.x
+* gcc 4.9
+* PostgreSQL >= 10.0
+* PostGIS >= 2.4
+* CARTO Postgres Extension >= 0.24.1
+* Redis >= 4
 * GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
 * zip commandline tool.
-* Redis `3`, recommended reversion `3.0.2`.
 
 
-Install dependencies
---------------------
+## Install dependencies
 
-- Node.js >= 10.14.2:
-```
-$ mv npm-shrinkwrap.json npm-shrinkwrap.json.backup
-$ npm ci
-$ mv npm-shrinkwrap.json.backup npm-shrinkwrap.json
-```
-
-- Node.js 6.9.2:
 ```sh
-npm install
+$ npm install
 ```
 
+## Usage
 
-usage
------
 
 Create and edit config/environments/<environment>.js from .js.example files.
 You may find the ./configure script useful to make an edited copy for you,
@@ -62,13 +53,12 @@ See doc/API.md for API documentation.
 For examples of use, see under test/.
 
 
-tests
------
+## Tests
 
 Run with:
 
 ```sh
-npm test
+$ npm test
 ```
 
 If any issue arise see test/README.md
