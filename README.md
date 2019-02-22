@@ -13,13 +13,13 @@ Provides a node.js based API for running SQL queries against CartoDB.
 
 * Node 10.x
 * npm 6.x
-* gcc 4.9
 * PostgreSQL >= 10.0
 * PostGIS >= 2.4
 * CARTO Postgres Extension >= 0.24.1
 * Redis >= 4
 * GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
 * zip commandline tool.
+* C++11 (to build internal dependencies if needed)
 
 
 ## Install dependencies
