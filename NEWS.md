@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.1
+Released 2019-mm-dd
+
 ## 3.0.0
 Released 2019-02-22
 
