@@ -1,7 +1,7 @@
 # Changelog
 
 ## 3.0.0
-Released 2019-mm-dd
+Released 2019-02-22
 
 Breaking changes:
 * Drop support for Node.js 6
