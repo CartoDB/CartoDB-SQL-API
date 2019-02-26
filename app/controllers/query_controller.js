@@ -70,7 +70,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
 
-    let { q: sql } = res.locals;
+    let { sql } = res.locals;
     const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
 
     var skipfields;
