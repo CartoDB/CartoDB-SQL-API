@@ -12,5 +12,5 @@ function notBatchApiQuery(req) {
 }
 
 function batchApiQuery(req) {
-    return req.body.query;
+    return req.body && req.body.query;
 }
