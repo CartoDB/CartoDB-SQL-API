@@ -11,7 +11,7 @@ const JobStatus = require('../../batch/job_status');
 const QUERY = `SELECT 14 as foo`;
 const API_KEY = 1234;
 
-describe.only('Handle query middleware', function() {
+describe('Handle query middleware', function() {
     describe('regular queries endpoint', function() {
         ['GET', 'POST'].forEach(method => {
             it(`${method} without query fails`, function(done) {
