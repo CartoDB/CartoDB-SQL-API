@@ -58,7 +58,6 @@ QueryController.prototype.route = function (app) {
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
-    var sql = res.locals.q;
     // clone so don't modify req.params or req.body so oauth is not broken
     var params = _.extend({}, req.query, req.body || {});
     var limit = parseInt(params.rows_per_page);
@@ -71,6 +70,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
 
+    let { q: sql } = res.locals;
     const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
 
     var skipfields;
