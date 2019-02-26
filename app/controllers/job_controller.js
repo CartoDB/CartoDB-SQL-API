@@ -43,7 +43,7 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job`,
         bodyParserMiddleware(),
         checkBodyPayloadSize(),
-        handleQueryMiddleware(),
+        handleQueryMiddleware(true),
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
     app.get(
