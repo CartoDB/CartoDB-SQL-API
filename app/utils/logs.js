@@ -11,7 +11,7 @@ module.exports = {
     stringifyForLogs(object, max_string_length = 1024) {
         return JSON.stringify(cloneAndFilter(object, max_string_length));
     }
-}
+};
 
 function cloneAndFilter(object, max_string_length) {
     if (!object || !(object instanceof Object)) {
@@ -22,7 +22,7 @@ function cloneAndFilter(object, max_string_length) {
 
     Object.keys(object).map(key => {
         if (typeof object[key] === 'string') {
-            newObject[key] = filterString(object[key], max_string_length)
+            newObject[key] = filterString(object[key], max_string_length);
         } else if (typeof object[key] === 'object') {
             newObject[key] = cloneAndFilter(object[key], max_string_length);
         } else if (object[key] instanceof Array) {

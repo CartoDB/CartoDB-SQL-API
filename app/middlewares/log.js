@@ -9,7 +9,7 @@ module.exports = function log() {
             request: {
                 sql: prepareSQL(res.locals.sql)
             }
-        }
+        };
 
         res.set('X-SQLAPI-Log', stringifyForLogs(logObj, MAX_SQL_LENGTH));
 
@@ -25,16 +25,16 @@ function prepareSQL(sql) {
     if (typeof sql === 'string') {
         return {
             simple: sql.substring(0, MAX_SQL_LENGTH)
-        }
+        };
     }
 
     if (Array.isArray(sql)) {
         return {
             multiple: sql.map(q => q.substring(0, MAX_SQL_LENGTH))
-        }
+        };
     }
 
     return {
         other: sql
-    }
+    };
 }
