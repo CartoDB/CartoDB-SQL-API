@@ -1,13 +1,14 @@
 'use strict';
 
 const { stringifyForLogs } = require('../utils/logs');
-const MAX_SQL_LENGTH = 2048;
 
 module.exports = function log() {
     return function logMiddleware(req, res, next) {
+        const MAX_SQL_LENGTH = (global.settings.logQueries && global.settings.maxQueriesLogLength) || 1024;
+
         const logObj = {
             request: {
-                sql: prepareSQL(res.locals.sql)
+                sql: prepareSQL(res.locals.sql, MAX_SQL_LENGTH)
             }
         };
 
@@ -17,8 +18,8 @@ module.exports = function log() {
     };
 };
 
-function prepareSQL(sql) {
-    if (!sql) {
+function prepareSQL(sql, MAX_SQL_LENGTH) {
+    if (!sql || !global.settings.logQueries) {
         return null;
     }
 
