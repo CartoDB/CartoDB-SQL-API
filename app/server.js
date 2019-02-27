@@ -76,7 +76,9 @@ function App(statsClient) {
                 query: false,
                 job_create: false,
                 job_get: false,
-                job_delete: false
+                job_delete: false,
+                copy_from: false,
+                copy_to: false
             }
         },
         global.settings.ratelimits
