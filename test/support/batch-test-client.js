@@ -82,7 +82,7 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
             }
 
             if (res.statusCode < 400) {
-                return callback(null, new JobResult(JSON.parse(res.body), this, override));
+                return callback(null, new JobResult(JSON.parse(res.body), this, override), res);
             } else {
                 return callback(null, res);
             }
