@@ -244,13 +244,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                   res.header('X-Served-By-DB-Host', dbopts.host);
                 }
 
-                const logObj = {
-                    request: {
-                        sql: res.locals.sql
-                    }
-                }
-                res.set('X-SQLAPI-Log', JSON.stringify(logObj));
-
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
