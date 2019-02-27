@@ -1,5 +1,6 @@
 'use strict';
 
+const { stringifyForLogs } = require('../utils/logs');
 const MAX_SQL_LENGTH = 2048;
 
 module.exports = function log() {
@@ -10,7 +11,7 @@ module.exports = function log() {
             }
         }
 
-        res.set('X-SQLAPI-Log', JSON.stringify(logObj));
+        res.set('X-SQLAPI-Log', stringifyForLogs(logObj, MAX_SQL_LENGTH));
 
         return next();
     };
@@ -36,5 +37,4 @@ function prepareSQL(sql) {
     return {
         other: sql
     }
-
 }
