@@ -21,6 +21,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -46,6 +47,7 @@ QueryController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             handleQueryMiddleware(),
+            logMiddleware(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -241,6 +243,14 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (dbopts.host) {
                   res.header('X-Served-By-DB-Host', dbopts.host);
                 }
+
+                const logObj = {
+                    request: {
+                        sql: res.locals.sql
+                    }
+                }
+                res.set('X-SQLAPI-Log', JSON.stringify(logObj));
+
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){

@@ -11,6 +11,7 @@ const errorMiddleware = require('../middlewares/error');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -44,6 +45,7 @@ JobController.prototype.route = function (app) {
         bodyParserMiddleware(),
         checkBodyPayloadSize(),
         handleQueryMiddleware(true),
+        logMiddleware(),
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
     app.get(
