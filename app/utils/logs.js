@@ -9,24 +9,33 @@ module.exports = {
      * @param {Number} max_string_length
      */
     stringifyForLogs(object, max_string_length = 1024) {
-        return doStringifyForLogs(object, max_string_length);
+        return JSON.stringify(cloneAndFilter(object, max_string_length));
     }
 }
 
-function doStringifyForLogs(object, max_string_length) {
+function cloneAndFilter(object, max_string_length) {
+    if (!object || !(object instanceof Object)) {
+        return null;
+    }
+
+    const newObject = {};
+
     Object.keys(object).map(key => {
         if (typeof object[key] === 'string') {
-            object[key] = filterString(object[key], max_string_length)
+            newObject[key] = filterString(object[key], max_string_length)
         } else if (typeof object[key] === 'object') {
-            doStringifyForLogs(object[key], max_string_length);
+            newObject[key] = cloneAndFilter(object[key], max_string_length);
         } else if (object[key] instanceof Array) {
+            newObject[key] = [];
             for (let element of object[key]) {
-                doStringifyForLogs(element, max_string_length);
+                newObject[key].push(cloneAndFilter(element, max_string_length));
             }
+        } else {
+            newObject[key] = object[key];
         }
     });
 
-    return JSON.stringify(object);
+    return newObject;
 }
 
 function filterString(s, max_string_length) {
