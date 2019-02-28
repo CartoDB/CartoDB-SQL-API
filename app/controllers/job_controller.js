@@ -45,7 +45,7 @@ JobController.prototype.route = function (app) {
         bodyParserMiddleware(),
         checkBodyPayloadSize(),
         handleQueryMiddleware(true),
-        logMiddleware(),
+        logMiddleware(logMiddleware.TYPES.JOB),
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
     app.get(

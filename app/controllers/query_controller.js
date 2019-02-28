@@ -47,7 +47,7 @@ QueryController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
             handleQueryMiddleware(),
-            logMiddleware(),
+            logMiddleware(logMiddleware.TYPES.QUERY),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];

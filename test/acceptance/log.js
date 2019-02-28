@@ -6,6 +6,7 @@ const server = require('../../app/server')();
 const assert = require('../support/assert');
 const qs = require('querystring');
 const BatchTestClient = require('../support/batch-test-client');
+const { TYPES } = require('../../app/middlewares/log');
 
 const QUERY = `SELECT 14 as foo`;
 const API_KEY = 1234;
@@ -73,7 +74,8 @@ describe('Log middleware', function() {
                         assert.deepEqual(log, {
                             request: {
                                 sql: {
-                                    simple: QUERY
+                                    type: TYPES.QUERY,
+                                    sql: QUERY
                                 }
                             }
                         });
@@ -104,7 +106,8 @@ describe('Log middleware', function() {
                 assert.deepEqual(log, {
                     request: {
                         sql: {
-                            simple: QUERY
+                            type: TYPES.JOB,
+                            sql: QUERY
                         }
                     }
                 });
@@ -123,7 +126,8 @@ describe('Log middleware', function() {
                 assert.deepEqual(log, {
                     request: {
                         sql: {
-                            multiple: [QUERY, QUERY]
+                            type: TYPES.JOB,
+                            sql: [QUERY, QUERY]
                         }
                     }
                 });
@@ -202,7 +206,8 @@ describe('Log middleware', function() {
                     assert.deepEqual(log, {
                         request: {
                             sql: {
-                                simple: QUERY.substring(0, global.settings.maxQueriesLogLength)
+                                type: TYPES.QUERY.substring(0, global.settings.maxQueriesLogLength),
+                                sql: QUERY.substring(0, global.settings.maxQueriesLogLength)
                             }
                         }
                     });
