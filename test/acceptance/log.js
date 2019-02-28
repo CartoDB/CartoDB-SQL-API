@@ -97,7 +97,7 @@ describe('Log middleware', function() {
         });
 
         it('one query', function (done) {
-            var payload = { query: QUERY };
+            const payload = { query: QUERY };
             this.batchTestClient.createJob(payload, function(err, jobResult, res) {
                 assert.ok(!err);
 
@@ -117,7 +117,7 @@ describe('Log middleware', function() {
         });
 
         it('multiquery job with two queries', function (done) {
-            var payload = { query: [QUERY, QUERY] };
+            const payload = { query: [QUERY, QUERY] };
             this.batchTestClient.createJob(payload, function(err, jobResult, res) {
                 assert.ok(!err);
 
@@ -128,6 +128,36 @@ describe('Log middleware', function() {
                         sql: {
                             type: TYPES.JOB,
                             sql: [QUERY, QUERY]
+                        }
+                    }
+                });
+
+                return done();
+            });
+        });
+
+        it('queries with fallbacks', function (done) {
+            const FALLBACK_QUERY = {
+                query: [{
+                    query: QUERY,
+                    onsuccess: QUERY,
+                    onerror: QUERY
+                }],
+                onsuccess: QUERY,
+                onerror: QUERY
+            };
+            const payload = { query: FALLBACK_QUERY };
+
+            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+                assert.ok(!err);
+
+                assert.ok(res.headers['x-sqlapi-log']);
+                const log = JSON.parse(res.headers['x-sqlapi-log']);
+                assert.deepEqual(log, {
+                    request: {
+                        sql: {
+                            type: TYPES.JOB,
+                            sql: FALLBACK_QUERY
                         }
                     }
                 });
@@ -206,7 +236,7 @@ describe('Log middleware', function() {
                     assert.deepEqual(log, {
                         request: {
                             sql: {
-                                type: TYPES.QUERY.substring(0, global.settings.maxQueriesLogLength),
+                                type: TYPES.QUERY,
                                 sql: QUERY.substring(0, global.settings.maxQueriesLogLength)
                             }
                         }
