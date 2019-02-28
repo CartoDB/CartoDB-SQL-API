@@ -60,6 +60,7 @@ function prepareSQL(sql, sqlType) {
  */
 function prepareBatchFallbackQuery(sql) {
     const fallbackQuery = {};
+
     if (sql.onsuccess) {
         fallbackQuery.onsuccess = ensureMaxQueryLength(sql.onsuccess);
     }
@@ -71,7 +72,7 @@ function prepareBatchFallbackQuery(sql) {
     fallbackQuery.query = sql.query.map(query => {
         const subquery = {
             query: ensureMaxQueryLength(query.query)
-        }
+        };
 
         if (query.onsuccess) {
             subquery.onsuccess = ensureMaxQueryLength(query.onsuccess);
