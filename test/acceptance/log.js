@@ -12,7 +12,6 @@ const QUERY = `SELECT 14 as foo`;
 const API_KEY = 1234;
 
 const logQueries = global.settings.logQueries;
-const maxQueriesLogLength = global.settings.maxQueriesLogLength;
 
 describe('Log middleware', function() {
     before(function() {
@@ -197,48 +196,6 @@ describe('Log middleware', function() {
                     assert.deepEqual(log, {
                         request: {
                             sql: null
-                        }
-                    });
-
-                    return done();
-                }
-            );
-        });
-    });
-
-    describe('modify queries log length', function() {
-        before(function() {
-            global.settings.maxQueriesLogLength = 2;
-        });
-
-        after(function() {
-            global.settings.maxQueriesLogLength = maxQueriesLogLength;
-        });
-
-        it(`GET query`, function(done) {
-            assert.response(server,
-                {
-                    method: 'GET',
-                    url: '/api/v1/sql?' + qs.stringify({
-                        q: QUERY,
-                        api_key: API_KEY
-                    }),
-                    headers: {
-                        host: 'vizzuality.cartodb.com'
-                    }
-                },
-                { statusCode: 200 },
-                function(err, res) {
-                    assert.ok(!err);
-
-                    assert.ok(res.headers['x-sqlapi-log']);
-                    const log = JSON.parse(res.headers['x-sqlapi-log']);
-                    assert.deepEqual(log, {
-                        request: {
-                            sql: {
-                                type: TYPES.QUERY,
-                                sql: QUERY.substring(0, global.settings.maxQueriesLogLength)
-                            }
                         }
                     });
 
