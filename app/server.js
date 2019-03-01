@@ -91,20 +91,6 @@ function App(statsClient) {
 
     var tableCache = new TableCacheFactory().build(global.settings);
 
-    // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
-    var SQL_QUERY_BODY_LOG_MAX_LENGTH = 2000;
-    app.getSqlQueryFromRequestBody = function(req) {
-        var sqlQuery = req.body && req.body.q;
-        if (!sqlQuery) {
-            return '';
-        }
-
-        if (sqlQuery.length > SQL_QUERY_BODY_LOG_MAX_LENGTH) {
-            sqlQuery = sqlQuery.substring(0, SQL_QUERY_BODY_LOG_MAX_LENGTH) + ' [...]';
-        }
-        return JSON.stringify({q: sqlQuery});
-    };
-
     if ( global.log4js ) {
         var loggerOpts = {
             buffer: true,
@@ -115,7 +101,6 @@ function App(statsClient) {
                 var logFormat = global.settings.log_format ||
                     ':remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type]';
 
-                logFormat = logFormat.replace(/:sql/, app.getSqlQueryFromRequestBody(req));
                 return format(logFormat);
             }
         };

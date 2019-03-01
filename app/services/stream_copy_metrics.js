@@ -8,6 +8,7 @@ module.exports = class StreamCopyMetrics {
 
         this.type = type;
         this.format = getFormatFromCopyQuery(sql);
+        this.sql = sql;
         this.isGzip = isGzip;
         this.username = user;
         this.size = 0;
@@ -66,7 +67,8 @@ module.exports = class StreamCopyMetrics {
             gzip: this.isGzip,
             'cdb-user': this.username,
             time: this.time,
-            timestamp
+            timestamp,
+            sql: this.sql
         };
 
         if (gzipSize) {

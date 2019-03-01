@@ -1,6 +1,7 @@
 'use strict';
 
 const errorHandlerFactory = require('../services/error_handler_factory');
+const { stringifyForLogs } = require('../utils/logs');
 const MAX_ERROR_STRING_LENGTH = 1024;
 
 module.exports = function error() {
@@ -63,29 +64,5 @@ function setErrorHeader(errorHandler, res) {
         message: errorHandler.message
     };
 
-    res.set('X-SQLAPI-Errors', stringifyForLogs(errorsLog));
-}
-
-/**
- * Remove problematic nested characters
- * from object for logs RegEx
- *
- * @param {Object} object
- */
-function stringifyForLogs(object) {
-    Object.keys(object).map(key => {
-        if (typeof object[key] === 'string') {
-            object[key] = object[key]
-		.substring(0, MAX_ERROR_STRING_LENGTH)
-		.replace(/[^a-zA-Z0-9]/g, ' ');
-        } else if (typeof object[key] === 'object') {
-            stringifyForLogs(object[key]);
-        } else if (object[key] instanceof Array) {
-            for (let element of object[key]) {
-                stringifyForLogs(element);
-            }
-        }
-    });
-
-    return JSON.stringify(object);
+    res.set('X-SQLAPI-Errors', stringifyForLogs(errorsLog, MAX_ERROR_STRING_LENGTH));
 }

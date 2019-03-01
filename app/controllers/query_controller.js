@@ -20,6 +20,8 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
@@ -44,6 +46,8 @@ QueryController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
+            handleQueryMiddleware(),
+            logMiddleware(logMiddleware.TYPES.QUERY),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -56,11 +60,8 @@ QueryController.prototype.route = function (app) {
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
-    // extract input
-    var body = (req.body) ? req.body : {};
     // clone so don't modify req.params or req.body so oauth is not broken
-    var params = _.extend({}, req.query, body);
-    var sql = params.q;
+    var params = _.extend({}, req.query, req.body || {});
     var limit = parseInt(params.rows_per_page);
     var offset = parseInt(params.page);
     var orderBy = params.order_by;
@@ -71,6 +72,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
 
+    let { sql } = res.locals;
     const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
 
     var skipfields;
@@ -241,6 +243,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (dbopts.host) {
                   res.header('X-Served-By-DB-Host', dbopts.host);
                 }
+
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){

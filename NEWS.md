@@ -2,6 +2,7 @@
 
 ## 3.0.1
 Released 2019-mm-dd
+* Log queries (https://github.com/CartoDB/CartoDB-SQL-API/pull/574)
 
 ## 3.0.0
 Released 2019-02-22

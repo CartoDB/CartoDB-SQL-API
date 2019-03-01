@@ -6,7 +6,7 @@ var assert = require('../../support/assert');
 var JobStatus = require('../../../batch/job_status');
 var BatchTestClient = require('../../support/batch-test-client');
 
-describe('Batc API fallback job', function () {
+describe('Batch API fallback job', function () {
 
     before(function() {
         this.batchTestClient = new BatchTestClient();

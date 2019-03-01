@@ -13,6 +13,7 @@ const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
+const handleQueryMiddleware = require('../middlewares/handle-query');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
@@ -33,6 +34,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             validateCopyQuery(),
             dbQuotaMiddleware(),
+            handleQueryMiddleware(),
             handleCopyFrom(this.logger),
             errorHandler(),
             errorMiddleware()
@@ -47,6 +49,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             validateCopyQuery(),
+            handleQueryMiddleware(),
             handleCopyTo(this.logger),
             errorHandler(),
             errorMiddleware()
@@ -60,8 +63,7 @@ CopyController.prototype.route = function (app) {
 
 function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
-        const sql = req.query.q;
-        const { userDbParams, user } = res.locals;
+        const { sql, userDbParams, user } = res.locals;
         const filename = req.query.filename || 'carto-sql-copyto.dmp';
 
         // it is not sure, nginx may choose not to compress the body
@@ -104,8 +106,7 @@ function handleCopyTo (logger) {
 
 function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
-        const sql = req.query.q;
-        const { userDbParams, user, dbRemainingQuota } = res.locals;
+        const { sql, userDbParams, user, dbRemainingQuota } = res.locals;
         const isGzip = req.get('content-encoding') === 'gzip';
         const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 2 * 1024 * 1024 * 1024; // 2 GB
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
