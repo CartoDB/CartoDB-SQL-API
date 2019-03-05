@@ -1,8 +1,11 @@
+'use strict';
+
 require('../helper');
 
 var server = require('../../app/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
+var MockDate = require('mockdate');
 
 describe('last modified header', function() {
 
@@ -62,10 +65,7 @@ describe('last modified header', function() {
             api_key: 1234
         });
         var fixedDateNow = Date.now();
-        var dateNowFn = Date.now;
-        Date.now = function() {
-            return fixedDateNow;
-        };
+	MockDate.set(fixedDateNow);
         assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
@@ -78,7 +78,7 @@ describe('last modified header', function() {
                 statusCode: 200
             },
             function(err, res) {
-                Date.now = dateNowFn;
+                MockDate.reset();
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
             }
@@ -91,10 +91,7 @@ describe('last modified header', function() {
             api_key: 1234
         });
         var fixedDateNow = Date.now();
-        var dateNowFn = Date.now;
-        Date.now = function() {
-            return fixedDateNow;
-        };
+	MockDate.set(fixedDateNow);
         assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
@@ -107,7 +104,7 @@ describe('last modified header', function() {
                 statusCode: 200
             },
             function(err, res) {
-                Date.now = dateNowFn;
+                MockDate.reset();
                 assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
             }

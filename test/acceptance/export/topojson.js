@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 
 var server = require('../../../app/server')();
@@ -46,7 +48,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
         var trans = topojson.transform;
         assert.equal(_.keys(trans).length, 2); // only scale and translate
         assert.equal(trans.scale.length, 2); // scalex, scaley
-        assert.equal(Math.round(trans.scale[0]*1e6), 1000); 
+        assert.equal(Math.round(trans.scale[0]*1e6), 1000);
         assert.equal(Math.round(trans.scale[1]*1e6), 1000);
         assert.equal(trans.translate.length, 2); // translatex, translatey
         assert.equal(trans.translate[0], -5);
@@ -58,7 +60,7 @@ it('GET two polygons sharing an edge as topojson', function(done){
 
         var obj = topojson.objects[0];
         //console.dir(obj);
-        // Expected: 
+        // Expected:
         // { type: 'Polygon',
         //   arcs: [ [ 0, 1 ] ],
         //   properties: { gid: 1, nam: 'U' } }
@@ -74,9 +76,9 @@ it('GET two polygons sharing an edge as topojson', function(done){
         assert.equal(props.gid, 1);
         assert.equal(props.name, 'U');
 
-        obj = topojson.objects[1]; 
+        obj = topojson.objects[1];
         //console.dir(obj);
-        // Expected: 
+        // Expected:
         // { type: 'Polygon',
         //   arcs: [ [ 0, 2 ] ],
         //   properties: { gid: 2, nam: 'D' } }
@@ -94,37 +96,37 @@ it('GET two polygons sharing an edge as topojson', function(done){
 
         // Check arcs
         assert.ok(topojson.hasOwnProperty('arcs'));
-        assert.equal(topojson.arcs.length, 3); // one shared, two non-shared 
+        assert.equal(topojson.arcs.length, 3); // one shared, two non-shared
         var arc = topojson.arcs[0]; // shared arc
         assert.equal(arc.length, 2); // shared arc has two vertices
         var p = arc[0];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 0); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 5); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 0);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 5);
         p = arc[1];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 5); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 5); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 5);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 5);
         arc = topojson.arcs[1]; // non shared arc
         assert.equal(arc.length, 3); // non shared arcs have three vertices
         p = arc[0];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 5); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 10); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 5);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 10);
         p = arc[1];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 5); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), -5); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 5);
+        assert.equal(Math.round(p[1]*trans.scale[1]), -5);
         p = arc[2];
-        assert.equal(Math.round(p[0]*trans.scale[0]), -10); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 0); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), -10);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 0);
         arc = topojson.arcs[2]; // non shared arc
         assert.equal(arc.length, 3); // non shared arcs have three vertices
         p = arc[0];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 5); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 10); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 5);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 10);
         p = arc[1];
-        assert.equal(Math.round(p[0]*trans.scale[0]), 0); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), -10); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), 0);
+        assert.equal(Math.round(p[1]*trans.scale[1]), -10);
         p = arc[2];
-        assert.equal(Math.round(p[0]*trans.scale[0]), -5); 
-        assert.equal(Math.round(p[1]*trans.scale[1]), 5); 
+        assert.equal(Math.round(p[0]*trans.scale[0]), -5);
+        assert.equal(Math.round(p[1]*trans.scale[1]), 5);
 
         done();
     });
@@ -151,7 +153,7 @@ it('null geometries', function(done){
         var trans = topojson.transform;
         assert.equal(_.keys(trans).length, 2); // only scale and translate
         assert.equal(trans.scale.length, 2); // scalex, scaley
-        assert.equal(Math.round(trans.scale[0]*1e6), 1000); 
+        assert.equal(Math.round(trans.scale[0]*1e6), 1000);
         assert.equal(Math.round(trans.scale[1]*1e6), 500);
         assert.equal(trans.translate.length, 2); // translatex, translatey
         assert.equal(trans.translate[0], -5);
@@ -163,7 +165,7 @@ it('null geometries', function(done){
 
         var obj = topojson.objects[0];
         //console.dir(obj);
-        // Expected: 
+        // Expected:
         // { type: 'Polygon',
         //   arcs: [ [ 0, 1 ] ],
         //   properties: { gid: 1, nam: 'U' } }
@@ -180,8 +182,8 @@ it('null geometries', function(done){
 
         // Check arcs
         assert.ok(topojson.hasOwnProperty('arcs'));
-        assert.equal(topojson.arcs.length, 1); 
-        var arc = topojson.arcs[0]; 
+        assert.equal(topojson.arcs.length, 1);
+        var arc = topojson.arcs[0];
         assert.deepEqual(arc, [ [ 0, 0 ], [ 4999, 9999 ], [ 5000, -9999 ], [ -9999, 0 ] ]);
 
         done();

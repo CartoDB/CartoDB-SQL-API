@@ -1,14 +1,15 @@
+'use strict';
+
 var step = require('step');
 var fs = require('fs');
 var spawn = require('child_process').spawn;
-var assert = require('assert');
 
-var ogr = require('./../ogr');
+var Ogr = require('./../ogr');
 
 function ShpFormat() {
 }
 
-ShpFormat.prototype = new ogr('shp');
+ShpFormat.prototype = new Ogr('shp');
 
 ShpFormat.prototype._contentType = "application/zip; charset=utf-8";
 ShpFormat.prototype._fileExtension = "zip";
@@ -46,15 +47,19 @@ ShpFormat.prototype.toSHP = function (options, callback) {
 
   step (
     function createOutDir() {
-      fs.mkdir(outdirpath, 0777, this);
+      fs.mkdir(outdirpath, 0o777, this);
     },
     function spawnDumper(err) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       fmtObj.toOGR(options, 'ESRI Shapefile', shapefile, this);
     },
     function doZip(err) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var next = this;
 

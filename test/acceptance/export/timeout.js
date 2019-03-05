@@ -1,12 +1,18 @@
+'use strict';
+
 const TestClient = require('../../support/test-client');
 
 require('../../support/assert');
 
 var assert = require('assert');
 var querystring = require('querystring');
+const db_utils = require('../../support/db_utils');
 
 describe('timeout', function () {
     describe('export database', function () {
+        before(db_utils.resetPgBouncerConnections);
+        after(db_utils.resetPgBouncerConnections);
+
         const databaseTimeoutQuery = `
             select
                 ST_SetSRID(ST_Point(0, 0), 4326) as the_geom,
@@ -98,8 +104,11 @@ describe('timeout', function () {
 
                     assert.deepEqual(res, {
                         error: [
-                            'You are over platform\'s limits. Please contact us to know more details'
-                        ]
+                            'You are over platform\'s limits: SQL query timeout error.' +
+                            ' Refactor your query before running again or contact CARTO support for more details.',
+                        ],
+                        context: 'limit',
+                        detail: 'datasource'
                     });
 
                     done();
@@ -178,8 +187,11 @@ describe('timeout', function () {
 
                     assert.deepEqual(res, {
                         error: [
-                            'You are over platform\'s limits. Please contact us to know more details'
-                        ]
+                            'You are over platform\'s limits: SQL query timeout error.' +
+                            ' Refactor your query before running again or contact CARTO support for more details.',
+                        ],
+                        context: 'limit',
+                        detail: 'datasource'
                     });
 
                     done();

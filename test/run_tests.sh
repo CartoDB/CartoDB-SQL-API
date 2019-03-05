@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # To make output dates deterministic
 export TZ='Europe/Rome'
@@ -18,6 +18,7 @@ OPT_DROP_PGSQL=yes   # drop the postgreql test environment
 OPT_DROP_REDIS=yes   # drop the redis test environment
 OPT_COVERAGE=no      # run tests with coverage
 OPT_OFFLINE=no       # do not donwload scripts
+
 
 cd $(dirname $0)
 BASEDIR=$(pwd)
@@ -112,7 +113,11 @@ TESTS=$@
 
 if test x"$OPT_CREATE_REDIS" = xyes; then
   echo "Starting redis on port ${REDIS_PORT}"
-  echo "port ${REDIS_PORT}" | redis-server - > ${BASEDIR}/test.log &
+  REDIS_CELL_PATH="${BASEDIR}/support/libredis_cell.so"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    REDIS_CELL_PATH="${BASEDIR}/support/libredis_cell.dylib"
+  fi
+  echo "port ${REDIS_PORT}" | redis-server - --loadmodule ${REDIS_CELL_PATH} > ${BASEDIR}/test.log &
   PID_REDIS=$!
   echo ${PID_REDIS} > ${BASEDIR}/redis.pid
 fi
@@ -143,10 +148,10 @@ echo
 
 if test x"$OPT_COVERAGE" = xyes; then
   echo "Running tests with coverage"
-  ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u tdd --trace -t 5000 ${TESTS}
+  ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u tdd --trace -t 5000 --exit ${TESTS}
 else
   echo "Running tests"
-  mocha -u tdd -t 5000 ${TESTS}
+  mocha -u tdd -t 5000 --exit ${TESTS}
 fi
 ret=$?
 

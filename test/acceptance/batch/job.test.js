@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  *
  * Requires the database and tables setup in config/environments/test.js to exist
@@ -91,7 +93,7 @@ describe('job module', function() {
             status: 401
         }, function(err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'permission denied' ] });
+            assert.deepEqual(error, { error: [ 'Unauthorized' ] });
             done();
         });
     });
@@ -110,7 +112,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error, {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });
@@ -143,7 +145,7 @@ describe('job module', function() {
             status: 401
         }, function(err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'permission denied' ] });
+            assert.deepEqual(error, { error: ['Unauthorized'] });
             done();
         });
     });
@@ -191,7 +193,7 @@ describe('job module', function() {
             status: 401
         }, function(err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: [ 'permission denied' ] });
+            assert.deepEqual(error, { error: ['Unauthorized'] });
             done();
         });
     });
@@ -207,7 +209,7 @@ describe('job module', function() {
             var error = JSON.parse(res.body);
             assert.deepEqual(error , {
                 error: [
-                    'Sorry, we can\'t find CartoDB user \'wrong-host\'. ' +
+                    'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
                 ]
             });

@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var qs = require('querystring');
@@ -74,7 +76,7 @@ describe('query-tables-api', function() {
     });
 
     it('should skip cache to retrieve affected tables', function(done) {
-        var authenticatedRequest = {
+        var masterRequest = {
             url: '/api/v1/sql?' + qs.stringify({
                 q: 'SELECT * FROM untitle_table_4',
                 api_key: '1234'
@@ -84,7 +86,7 @@ describe('query-tables-api', function() {
             },
             method: 'GET'
         };
-        assert.response(server, authenticatedRequest, RESPONSE_OK, function(err) {
+        assert.response(server, masterRequest, RESPONSE_OK, function(err) {
             assert.ok(!err, err);
 
             getCacheStatus(function(err, cacheStatus) {

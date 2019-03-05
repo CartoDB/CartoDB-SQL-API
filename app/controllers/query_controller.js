@@ -2,41 +2,66 @@
 
 var _ = require('underscore');
 var step = require('step');
-var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
-var AuthApi = require('../auth/auth_api');
+const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 
-var CdbRequest = require('../models/cartodb_request');
 var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
-var handleException = require('../utils/error_handler');
+const bodyParserMiddleware = require('../middlewares/body-parser');
+const userMiddleware = require('../middlewares/user');
+const errorMiddleware = require('../middlewares/error');
+const authorizationMiddleware = require('../middlewares/authorization');
+const connectionParamsMiddleware = require('../middlewares/connection-params');
+const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
+const { initializeProfilerMiddleware } = require('../middlewares/profiler');
+const rateLimitsMiddleware = require('../middlewares/rate-limit');
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
 var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
 
-var cdbReq = new CdbRequest();
-
-function QueryController(userDatabaseService, tableCache, statsd_client) {
+function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
+    this.metadataBackend = metadataBackend;
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
     this.queryTables = new CachedQueryTables(tableCache);
+    this.userLimitsService = userLimitsService;
 }
 
 QueryController.prototype.route = function (app) {
-    app.all(global.settings.base_url + '/sql',  this.handleQuery.bind(this));
-    app.all(global.settings.base_url + '/sql.:f',  this.handleQuery.bind(this));
+    const { base_url } = global.settings;
+    const forceToBeMaster = false;
+
+    const queryMiddlewares = () => {
+        return [
+            bodyParserMiddleware(),
+            initializeProfilerMiddleware('query'),
+            userMiddleware(this.metadataBackend),
+            rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
+            authorizationMiddleware(this.metadataBackend, forceToBeMaster),
+            connectionParamsMiddleware(this.userDatabaseService),
+            timeoutLimitsMiddleware(this.metadataBackend),
+            handleQueryMiddleware(),
+            logMiddleware(logMiddleware.TYPES.QUERY),
+            this.handleQuery.bind(this),
+            errorMiddleware()
+        ];
+    };
+
+    app.all(`${base_url}/sql`, queryMiddlewares());
+    app.all(`${base_url}/sql.:f`, queryMiddlewares());
 };
 
 // jshint maxcomplexity:21
-QueryController.prototype.handleQuery = function (req, res) {
+QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
-    // extract input
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var sql = params.q;
+    // clone so don't modify req.params or req.body so oauth is not broken
+    var params = _.extend({}, req.query, req.body || {});
     var limit = parseInt(params.rows_per_page);
     var offset = parseInt(params.page);
     var orderBy = params.order_by;
@@ -46,15 +71,13 @@ QueryController.prototype.handleQuery = function (req, res) {
     var requestedFilename = params.filename;
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
-    var cdbUsername = cdbReq.userByReq(req);
+
+    let { sql } = res.locals;
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
+
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
-    var gn = "the_geom"; // TODO: read from configuration file
-    var userLimits;
-
-    if ( req.profiler ) {
-        req.profiler.start('sqlapi.query');
-    }
+    var gn = "the_geom"; // TODO: read from configuration FILE
 
     req.aborted = false;
     req.on("close", function() {
@@ -107,38 +130,25 @@ QueryController.prototype.handleQuery = function (req, res) {
             throw new Error("You must indicate a sql query");
         }
 
-        // Database options
-        var dbopts = {};
         var formatter;
 
         if ( req.profiler ) {
             req.profiler.done('init');
         }
 
-        // 1. Get user database and related parameters
-        // 3. Get the list of tables affected by the query
-        // 4. Setup headers
-        // 5. Send formatted results back
+        // 1. Get the list of tables affected by the query
+        // 2. Setup headers
+        // 3. Send formatted results back
+        // 4. Handle error
         step(
-            function getUserDBInfo() {
-                self.userDatabaseService.getConnectionParams(new AuthApi(req, params), cdbUsername, this);
-            },
-            function queryExplain(err, dbParams, authDbParams, userTimeoutLimits) {
-                assert.ifError(err);
-
+            function queryExplain() {
                 var next = this;
-
-                dbopts = dbParams;
-                userLimits = userTimeoutLimits;
-
-                if ( req.profiler ) {
-                    req.profiler.done('setDBAuth');
-                }
 
                 checkAborted('queryExplain');
 
                 var pg = new PSQL(authDbParams);
-                var skipCache = !!dbopts.authenticated;
+
+                var skipCache = authorizationLevel === 'master';
 
                 self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
                     if (err) {
@@ -149,7 +159,9 @@ QueryController.prototype.handleQuery = function (req, res) {
                 });
             },
             function setHeaders(err, affectedTables) {
-                assert.ifError(err);
+                if (err) {
+                    throw err;
+                }
 
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
@@ -157,15 +169,10 @@ QueryController.prototype.handleQuery = function (req, res) {
                 }
 
                 checkAborted('setHeaders');
-                if (!dbopts.authenticated && !!affectedTables) {
-                    for ( var i = 0; i < affectedTables.tables.length; ++i ) {
-                        var t = affectedTables.tables[i];
-                        if ( t.table_name.match(/\bpg_/) ) {
-                            var e = new SyntaxError("system tables are forbidden");
-                            e.http_status = 403;
-                            throw(e);
-                        }
-                    }
+                if(!pgEntitiesAccessValidator.validate(affectedTables, authorizationLevel)) {
+                    const syntaxError = new SyntaxError("system tables are forbidden");
+                    syntaxError.http_status = 403;
+                    throw(syntaxError);
                 }
 
                 var FormatClass = formats[format];
@@ -202,14 +209,16 @@ QueryController.prototype.handleQuery = function (req, res) {
                 return null;
             },
             function generateFormat(err){
-                assert.ifError(err);
+                if (err) {
+                    throw err;
+                }
                 checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
 
                 var opts = {
-                  username: cdbUsername,
+                  username: username,
                   dbopts: dbopts,
                   sink: res,
                   gn: gn,
@@ -234,17 +243,18 @@ QueryController.prototype.handleQuery = function (req, res) {
                 if (dbopts.host) {
                   res.header('X-Served-By-DB-Host', dbopts.host);
                 }
+
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){
                 formatter = null;
 
-                if ( err ) {
-                    handleException(err, res);
+                if (err) {
+                    next(err);
                 }
 
                 if ( req.profiler ) {
-                  req.profiler.sendStats();
+                    req.profiler.sendStats();
                 }
                 if (self.statsd_client) {
                   if ( err ) {
@@ -256,7 +266,7 @@ QueryController.prototype.handleQuery = function (req, res) {
             }
         );
     } catch (err) {
-        handleException(err, res);
+        next(err);
 
         if (self.statsd_client) {
             self.statsd_client.increment('sqlapi.query.error');

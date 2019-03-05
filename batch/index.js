@@ -21,10 +21,10 @@ module.exports = function batchFactory (metadataBackend, redisPool, name, statsd
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
     var queryRunner = new QueryRunner(userDatabaseMetadataService);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller);
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient);
-    var logger = new BatchLogger(loggerPath);
+    var logger = new BatchLogger(loggerPath, 'batch-queries');
 
     return new Batch(
         name,

@@ -1,13 +1,15 @@
+'use strict';
+
 var _ = require('underscore');
 
-var pg  = require('./../pg');
-var PgErrorHandler = require('../../../postgresql/error_handler');
+var Pg  = require('./../pg');
+const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function GeoJsonFormat() {
     this.buffer = '';
 }
 
-GeoJsonFormat.prototype = new pg('geojson');
+GeoJsonFormat.prototype = new Pg('geojson');
 
 GeoJsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
@@ -71,8 +73,7 @@ GeoJsonFormat.prototype.handleQueryEnd = function(/*result*/) {
     this.buffer += ']'; // end of features
 
     if (this.error) {
-        var pgErrorHandler = new PgErrorHandler(this.error);
-        this.buffer += ',"error":' + JSON.stringify([pgErrorHandler.getMessage()]);
+        this.buffer += ',"error":' + JSON.stringify(errorHandlerFactory(this.error).getResponse().error);
     }
 
     this.buffer += '}'; // end of root object

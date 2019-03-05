@@ -1,3 +1,5 @@
+'use strict';
+
 var assert = module.exports = exports = require('assert');
 var request = require('request');
 var debug = require('debug')('assert-response');
@@ -46,6 +48,10 @@ assert.response = function(server, req, res, callback) {
 
         if (req.body || req.data) {
             requestParams.body = req.body || req.data;
+        }
+
+        if (req.formData) {
+            requestParams.formData = req.formData;
         }
 
         debug('Request params', requestParams);

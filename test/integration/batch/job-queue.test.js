@@ -10,7 +10,6 @@ var JobQueue = require('../../../batch/job_queue');
 
 var JobBackend = require('../../../batch/job_backend');
 var JobService = require('../../../batch/job_service');
-var UserDatabaseMetadataService = require('../../../batch/user_database_metadata_service');
 var JobCanceller = require('../../../batch/job_canceller');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
@@ -19,8 +18,7 @@ describe('job queue', function () {
     var jobPublisher = new JobPublisher(pool);
     var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
     var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
+    var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller);
 
     var userA = 'userA';

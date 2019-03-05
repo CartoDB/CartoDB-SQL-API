@@ -1,14 +1,16 @@
+'use strict';
+
 var _ = require('underscore');
 
-var pg  = require('./../pg');
-var PgErrorHandler = require('../../../postgresql/error_handler');
+var Pg  = require('./../pg');
+const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function JsonFormat() {
     this.buffer = '';
     this.lastKnownResult = {};
 }
 
-JsonFormat.prototype = new pg('json');
+JsonFormat.prototype = new Pg('json');
 
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
@@ -130,8 +132,7 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
     ];
 
     if (this.error) {
-        var pgErrorHandler = new PgErrorHandler(this.error);
-        out.push(',"error":', JSON.stringify([pgErrorHandler.getMessage()]));
+        out.push(',"error":', JSON.stringify(errorHandlerFactory(this.error).getResponse().error));
     }
 
 

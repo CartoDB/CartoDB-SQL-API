@@ -1,10 +1,22 @@
 'use strict';
 
-var step = require('step');
-var _ = require('underscore');
+function isApiKeyFound(apikey) {
+    return apikey.type !== null &&
+        apikey.user !== null &&
+        apikey.databasePassword !== null &&
+        apikey.databaseRole !== null;
+}
 
 function UserDatabaseService(metadataBackend) {
     this.metadataBackend = metadataBackend;
+}
+
+function errorUserNotFoundMessageTemplate (user) {
+    return `Sorry, we can't find CARTO user '${user}'. Please check that you have entered the correct domain.`;
+}
+
+function isOauthAuthorization({ apikeyToken, authorizationLevel }) {
+    return (authorizationLevel === 'master') && !apikeyToken;
 }
 
 /**
@@ -17,95 +29,79 @@ function UserDatabaseService(metadataBackend) {
  * @param {String} cdbUsername
  * @param {Function} callback (err, dbParams, authDbParams)
  */
-UserDatabaseService.prototype.getConnectionParams = function (authApi, cdbUsername, callback) {
-    var self = this;
+UserDatabaseService.prototype.getConnectionParams = function (username, apikeyToken, authorizationLevel, callback) {
+    this.metadataBackend.getAllUserDBParams(username, (err, dbParams) => {
+        if (err) {
+            err.http_status = 404;
+            err.message = errorUserNotFoundMessageTemplate(username);
 
-    var dbParams;
-    var dbopts = {
-        port: global.settings.db_port,
-        pass: global.settings.db_pubuser_pass
-    };
+            return callback(err);
+        }
 
-    // 1. Get database from redis via the username stored in the host header subdomain
-    // 2. Run the request through OAuth to get R/W user id if signed
-    // 3. Set to user authorization params
-    step(
-        function getDatabaseConnectionParams() {
-            self.metadataBackend.getAllUserDBParams(cdbUsername, this);
-        },
-        function authenticate(err, userDBParams) {
-            var next = this;
+        const commonDBConfiguration = {
+            port: global.settings.db_port,
+            host: dbParams.dbhost,
+            dbname: dbParams.dbname,
+        };
+
+        this.metadataBackend.getMasterApikey(username, (err, masterApikey) => {
 
             if (err) {
                 err.http_status = 404;
-                err.message = "Sorry, we can't find CartoDB user '" + cdbUsername + "'. " +
-                    "Please check that you have entered the correct domain.";
+                err.message = errorUserNotFoundMessageTemplate(username);
+
                 return callback(err);
             }
 
-            dbParams = userDBParams;
+            if (!isApiKeyFound(masterApikey)) {
+                const apiKeyNotFoundError = new Error('Unauthorized');
+                apiKeyNotFoundError.type = 'auth';
+                apiKeyNotFoundError.subtype = 'api-key-not-found';
+                apiKeyNotFoundError.http_status = 401;
 
-            dbopts.host = dbParams.dbhost;
-            dbopts.dbname = dbParams.dbname;
-            dbopts.user = (!!dbParams.dbpublicuser) ? dbParams.dbpublicuser : global.settings.db_pubuser;
-
-            authApi.verifyCredentials({
-                metadataBackend: self.metadataBackend,
-                apiKey: dbParams.apikey
-            }, next);
-        },
-        function getUserLimits (err, isAuthenticated) {
-            var next = this;
-
-            if (err) {
-                return next(err);
+                return callback(apiKeyNotFoundError);
             }
 
-            self.metadataBackend.getUserTimeoutRenderLimits(cdbUsername, function (err, timeoutRenderLimit) {
+            const masterDBConfiguration = Object.assign({
+                user: masterApikey.databaseRole,
+                pass: masterApikey.databasePassword
+            },
+                commonDBConfiguration);
+
+            if (isOauthAuthorization({ apikeyToken, authorizationLevel})) {
+                return callback(null, masterDBConfiguration, masterDBConfiguration);
+            }
+
+            // Default Api key fallback
+            apikeyToken = apikeyToken || 'default_public';
+
+            this.metadataBackend.getApikey(username, apikeyToken, (err, apikey) => {
                 if (err) {
-                    return next(err);
+                    err.http_status = 404;
+                    err.message = errorUserNotFoundMessageTemplate(username);
+
+                    return callback(err);
                 }
 
-                var userLimits = {
-                    timeout: isAuthenticated ? timeoutRenderLimit.render : timeoutRenderLimit.renderPublic
-                };
+                if (!isApiKeyFound(apikey)) {
+                    const apiKeyNotFoundError = new Error('Unauthorized');
+                    apiKeyNotFoundError.type = 'auth';
+                    apiKeyNotFoundError.subtype = 'api-key-not-found';
+                    apiKeyNotFoundError.http_status = 401;
 
-                next(null, isAuthenticated, userLimits);
+                    return callback(apiKeyNotFoundError);
+                }
+
+                const DBConfiguration = Object.assign({
+                    user: apikey.databaseRole,
+                    pass: apikey.databasePassword
+                },
+                    commonDBConfiguration);
+
+                callback(null, DBConfiguration, masterDBConfiguration);
             });
-        },
-        function setDBAuth(err, isAuthenticated, userLimits) {
-            if (err) {
-                throw err;
-            }
-
-            var user = _.template(global.settings.db_user, {user_id: dbParams.dbuser});
-            var pass = null;
-            if (global.settings.hasOwnProperty('db_user_pass')) {
-                pass = _.template(global.settings.db_user_pass, {
-                    user_id: dbParams.dbuser,
-                    user_password: dbParams.dbpass
-                });
-            }
-
-            if (_.isBoolean(isAuthenticated) && isAuthenticated) {
-                dbopts.authenticated = isAuthenticated;
-                dbopts.user = user;
-                dbopts.pass = pass;
-            }
-
-            var authDbOpts = _.defaults({user: user, pass: pass}, dbopts);
-
-            return this(null, dbopts, authDbOpts, userLimits);
-        },
-        function errorHandle(err, dbopts, authDbOpts, userLimits) {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, dbopts, authDbOpts, userLimits);
-        }
-    );
-
+        });
+    });
 };
 
 module.exports = UserDatabaseService;

@@ -1,44 +1,74 @@
+'use strict';
+
 /**
  * this module allows to auth user using an pregenerated api key
  */
-function ApikeyAuth(req) {
+function ApikeyAuth(req, metadataBackend, username, apikeyToken) {
     this.req = req;
+    this.metadataBackend = metadataBackend;
+    this.username = username;
+    this.apikeyToken = apikeyToken;
 }
 
 module.exports = ApikeyAuth;
 
-ApikeyAuth.prototype.verifyCredentials = function(options, callback) {
-    verifyRequest(this.req, options.apiKey, callback);
-};
+function usernameMatches(basicAuthUsername, requestUsername) {
+    return !(basicAuthUsername && (basicAuthUsername !== requestUsername));
+}
 
-ApikeyAuth.prototype.hasCredentials = function() {
-    return !!(this.req.query.api_key || this.req.query.map_key ||
-        (this.req.body && this.req.body.api_key) || (this.req.body && this.req.body.map_key));
-};
+ApikeyAuth.prototype.verifyCredentials = function (callback) {
+    this.metadataBackend.getApikey(this.username, this.apikeyToken, (err, apikey) => {
+        if (err) {
+            err.http_status = 500;
+            err.message = 'Unexpected error';
 
-/**
- * Get id of authorized user
- *
- * @param {Object} req - standard req object. Importantly contains table and host information
- * @param {String} requiredApi - the API associated to the user, req must contain it
- * @param {Function} callback - err, boolean (whether the request is authenticated or not)
- */
-function verifyRequest(req, requiredApi, callback) {
-
-    var valid = false;
-
-    if ( requiredApi ) {
-        if ( requiredApi === req.query.map_key ) {
-            valid = true;
-        } else if ( requiredApi === req.query.api_key ) {
-            valid = true;
-        // check also in request body
-        } else if ( req.body && req.body.map_key && requiredApi === req.body.map_key ) {
-            valid = true;
-        } else if ( req.body && req.body.api_key && requiredApi === req.body.api_key ) {
-            valid = true;
+            return callback(err);
         }
-    }
 
-    callback(null, valid);
+        if (isApiKeyFound(apikey)) {
+            if (!usernameMatches(apikey.user, this.username)) {
+                const usernameError = new Error('Forbidden');
+                usernameError.type = 'auth';
+                usernameError.subtype = 'api-key-username-mismatch';
+                usernameError.http_status = 403;
+
+                return callback(usernameError);
+            }
+
+            if (!apikey.grantsSql) {
+                const forbiddenError = new Error('forbidden');
+                forbiddenError.http_status = 403;
+
+                return callback(forbiddenError);
+            }
+
+            return callback(null, getAuthorizationLevel(apikey));
+        }  else {
+            const apiKeyNotFoundError = new Error('Unauthorized');
+            apiKeyNotFoundError.type = 'auth';
+            apiKeyNotFoundError.subtype = 'api-key-not-found';
+            apiKeyNotFoundError.http_status = 401;
+
+            return callback(apiKeyNotFoundError);
+        }
+    });
+};
+
+ApikeyAuth.prototype.hasCredentials = function () {
+    return !!this.apikeyToken;
+};
+
+ApikeyAuth.prototype.getCredentials = function () {
+    return this.apikeyToken;
+};
+
+function getAuthorizationLevel(apikey) {
+    return apikey.type;
+}
+
+function isApiKeyFound(apikey) {
+    return apikey.type !== null &&
+        apikey.user !== null &&
+        apikey.databasePassword !== null &&
+        apikey.databaseRole !== null;
 }

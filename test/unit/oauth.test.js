@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var _ = require('underscore');
@@ -99,7 +101,7 @@ it('can return user for verified signature', function(done){
 
     oAuth.verifyRequest(req, metadataBackend, function(err, data){
         assert.ok(!err, err);
-        assert.equal(data, 1);
+        assert.equal(data, 'master');
         done();
     });
 });
@@ -120,7 +122,7 @@ it('can return user for verified signature (for other allowed domains)', functio
     oAuth.verifyRequest(req, metadataBackend, function(err, data){
         oAuth.getAllowedHosts = oAuthGetAllowedHostsFn;
         assert.ok(!err, err);
-        assert.equal(data, 1);
+        assert.equal(data, 'master');
         done();
     });
 });

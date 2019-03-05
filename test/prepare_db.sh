@@ -70,12 +70,13 @@ if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
   echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
+  echo "PAUSE; RESUME;" | psql -p 6432 pgbouncer # make sure there are no connections pgbouncer -> test_db
   dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
   psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
 
-  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep'
+  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep quota_mock'
   REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
 
   if test x"$OFFLINE" = xno; then
@@ -107,7 +108,7 @@ if test x"$PREPARE_PGSQL" = xyes; then
       sed "s/:PUBLICPASS/${PUBLICPASS}/" |
       sed "s/:TESTUSER/${TESTUSER}/" |
       sed "s/:TESTPASS/${TESTPASS}/" |
-      PGOPTIONS='--client-min-messages=WARNING' psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
+      psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
   done
 
 fi
@@ -142,6 +143,7 @@ HMSET rails:users:cartodb250user \
  database_host ${PGHOST} \
  database_password ${TESTPASS} \
  map_key 1234
+SADD rails:users:cartodb250user:map_key 1234
 EOF
 
   cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 3
@@ -152,6 +154,16 @@ HMSET rails:oauth_access_tokens:l0lPbtP68ao8NfStCiA3V3neqfM03JKhToxhUQTR \
  access_token_secret 22zBIek567fMDEebzfnSdGe8peMFVFqAreOENaDK \
  user_id 1 \
  time sometime
+EOF
+
+  cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET rails:users:cartofante \
+ id 2 \
+ database_name ${TEST_DB} \
+ database_host ${PGHOST} \
+ database_password test_cartodb_user_2_pass \
+ map_key 4321
+SADD rails:users:fallback_1:map_key 4321
 EOF
 
 # delete previous jobs
@@ -167,6 +179,70 @@ EOF
 # delete user index
 cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
 DEL batch:users:vizzuality
+EOF
+
+# User: vizzuality
+
+# API Key Default public
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:vizzuality:default_public \
+  user "vizzuality" \
+  type "default" \
+  grants_sql "true" \
+  database_role "testpublicuser" \
+  database_password "public"
+EOF
+
+# API Key Master
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:vizzuality:1234 \
+  user "vizzuality" \
+  type "master" \
+  grants_sql "true" \
+  database_role "${TESTUSER}" \
+  database_password "${TESTPASS}"
+EOF
+
+# API Key Regular1
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  HMSET api_keys:vizzuality:regular1 \
+    user "vizzuality" \
+    type "regular" \
+    grants_sql "true" \
+    database_role "regular_1" \
+    database_password "regular1"
+EOF
+
+# API Key Regular1
+cat <<EOF | redis-cli -p ${REDIS_PORT} -n 5
+  HMSET api_keys:vizzuality:regular2 \
+    user "vizzuality" \
+    type "regular" \
+    grants_sql "true" \
+    database_role "regular_2" \
+    database_password "regular2"
+EOF
+
+# User: cartodb250user
+
+# API Key Default public
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:cartodb250user:default_public \
+  user "cartodb250user" \
+  type "default" \
+  grants_sql "true" \
+  database_role "testpublicuser" \
+  database_password "public"
+EOF
+
+# API Key Master
+cat <<EOF | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5
+HMSET api_keys:cartodb250user:1234 \
+  user "cartodb250user" \
+  type "master" \
+  grants_sql "true" \
+  database_role "${TESTUSER}" \
+  database_password "${TESTPASS}"
 EOF
 
 fi

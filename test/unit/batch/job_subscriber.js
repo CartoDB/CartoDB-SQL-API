@@ -1,3 +1,5 @@
+'use strict';
+
 var Channel = require('../../../batch/pubsub/channel');
 var JobSubscriber = require('../../../batch/pubsub/job-subscriber');
 var assert = require('assert');

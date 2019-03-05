@@ -1,15 +1,188 @@
 'use strict';
 
-var _ = require('underscore');
-var util = require('util');
+const util = require('util');
 
-var userMiddleware = require('../middlewares/user');
-var authenticatedMiddleware = require('../middlewares/authenticated-request');
-var handleException = require('../utils/error_handler');
+const bodyParserMiddleware = require('../middlewares/body-parser');
+const userMiddleware = require('../middlewares/user');
+const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
+const authorizationMiddleware = require('../middlewares/authorization');
+const connectionParamsMiddleware = require('../middlewares/connection-params');
+const errorMiddleware = require('../middlewares/error');
+const rateLimitsMiddleware = require('../middlewares/rate-limit');
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
-var ONE_KILOBYTE_IN_BYTES = 1024;
-var MAX_LIMIT_QUERY_SIZE_IN_KB = 16;
-var MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
+function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
+    this.metadataBackend = metadataBackend;
+    this.userDatabaseService = userDatabaseService;
+    this.jobService = jobService;
+    this.statsdClient = statsdClient;
+    this.userLimitsService = userLimitsService;
+}
+
+module.exports = JobController;
+
+JobController.prototype.route = function (app) {
+    const { base_url } = global.settings;
+    const jobMiddlewares = composeJobMiddlewares(
+        this.metadataBackend,
+        this.userDatabaseService,
+        this.jobService,
+        this.statsdClient,
+        this.userLimitsService
+    );
+
+    app.get(
+        `${base_url}/jobs-wip`,
+        bodyParserMiddleware(),
+        listWorkInProgressJobs(this.jobService),
+        sendResponse(),
+        errorMiddleware()
+    );
+    app.post(
+        `${base_url}/sql/job`,
+        bodyParserMiddleware(),
+        checkBodyPayloadSize(),
+        handleQueryMiddleware(true),
+        logMiddleware(logMiddleware.TYPES.JOB),
+        jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
+    );
+    app.get(
+        `${base_url}/sql/job/:job_id`,
+        bodyParserMiddleware(),
+        jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
+    );
+    app.delete(
+        `${base_url}/sql/job/:job_id`,
+        bodyParserMiddleware(),
+        jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
+    );
+};
+
+function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
+    return function jobMiddlewares (action, jobMiddleware, endpointGroup) {
+        const forceToBeMaster = true;
+
+        return [
+            initializeProfilerMiddleware('job'),
+            userMiddleware(metadataBackend),
+            rateLimitsMiddleware(userLimitsService, endpointGroup),
+            authorizationMiddleware(metadataBackend, forceToBeMaster),
+            connectionParamsMiddleware(userDatabaseService),
+            jobMiddleware(jobService),
+            setServedByDBHostHeader(),
+            finishProfilerMiddleware(),
+            logJobResult(action),
+            incrementSuccessMetrics(statsdClient),
+            sendResponse(),
+            incrementErrorMetrics(statsdClient),
+            errorMiddleware()
+        ];
+    };
+}
+
+function cancelJob (jobService) {
+    return function cancelJobMiddleware (req, res, next) {
+        const { job_id } = req.params;
+
+        jobService.cancel(job_id, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('cancelJob');
+            }
+
+            if (err) {
+                return next(err);
+            }
+
+            res.body = job.serialize();
+
+            next();
+        });
+    };
+}
+
+function getJob (jobService) {
+    return function getJobMiddleware (req, res, next) {
+        const { job_id } = req.params;
+
+        jobService.get(job_id, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('getJob');
+            }
+
+            if (err) {
+                return next(err);
+            }
+
+            res.body = job.serialize();
+
+            next();
+        });
+    };
+}
+
+function createJob (jobService) {
+    return function createJobMiddleware (req, res, next) {
+        var data = {
+            user: res.locals.user,
+            query: res.locals.sql,
+            host: res.locals.userDbParams.host,
+            port: global.settings.db_batch_port || res.locals.userDbParams.port,
+            pass: res.locals.userDbParams.pass,
+            dbname: res.locals.userDbParams.dbname,
+            dbuser: res.locals.userDbParams.user
+        };
+
+        jobService.create(data, (err, job) => {
+            if (req.profiler) {
+                req.profiler.done('createJob');
+            }
+
+            if (err) {
+                return next(err);
+            }
+
+            res.locals.job_id = job.job_id;
+
+            res.statusCode = 201;
+            res.body = job.serialize();
+
+            next();
+        });
+    };
+}
+
+function listWorkInProgressJobs (jobService) {
+    return function listWorkInProgressJobsMiddleware (req, res, next) {
+        jobService.listWorkInProgressJobs((err, list) => {
+            if (err) {
+                return next(err);
+            }
+
+            res.body = list;
+
+            next();
+        });
+    };
+}
+
+
+function checkBodyPayloadSize () {
+    return function checkBodyPayloadSizeMiddleware(req, res, next) {
+        const payload = JSON.stringify(req.body);
+
+        if (payload.length > MAX_LIMIT_QUERY_SIZE_IN_BYTES) {
+            return next(new Error(getMaxSizeErrorMessage(payload)), res);
+        }
+
+        next();
+    };
+}
+
+const ONE_KILOBYTE_IN_BYTES = 1024;
+const MAX_LIMIT_QUERY_SIZE_IN_KB = 16;
+const MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_KB * ONE_KILOBYTE_IN_BYTES;
 
 function getMaxSizeErrorMessage(sql) {
     return util.format([
@@ -23,124 +196,60 @@ function getMaxSizeErrorMessage(sql) {
     );
 }
 
-function JobController(userDatabaseService, jobService, statsdClient) {
-    this.userDatabaseService = userDatabaseService;
-    this.jobService = jobService;
-    this.statsdClient = statsdClient || { increment: function () {} };
-}
-
-function bodyPayloadSizeMiddleware(req, res, next) {
-    var payload = JSON.stringify(req.body);
-    if (payload.length > MAX_LIMIT_QUERY_SIZE_IN_BYTES) {
-        return handleException(new Error(getMaxSizeErrorMessage(payload)), res);
-    } else {
-        return next(null);
-    }
-}
-
-module.exports = JobController;
 module.exports.MAX_LIMIT_QUERY_SIZE_IN_BYTES = MAX_LIMIT_QUERY_SIZE_IN_BYTES;
 module.exports.getMaxSizeErrorMessage = getMaxSizeErrorMessage;
 
-JobController.prototype.route = function (app) {
-    app.post(
-        global.settings.base_url + '/sql/job',
-        bodyPayloadSizeMiddleware, userMiddleware, authenticatedMiddleware(this.userDatabaseService),
-        this.createJob.bind(this)
-    );
-    app.get(
-        global.settings.base_url + '/jobs-wip',
-        this.listWorkInProgressJobs.bind(this)
-    );
-    app.get(
-        global.settings.base_url + '/sql/job/:job_id',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
-        this.getJob.bind(this)
-    );
-    app.delete(
-        global.settings.base_url + '/sql/job/:job_id',
-        userMiddleware, authenticatedMiddleware(this.userDatabaseService),
-        this.cancelJob.bind(this)
-    );
-};
+function setServedByDBHostHeader () {
+    return function setServedByDBHostHeaderMiddleware (req, res, next) {
+        const { userDbParams } = res.locals;
 
-JobController.prototype.cancelJob = function (req, res) {
-    this.jobService.cancel(req.params.job_id, jobResponse(req, res, this.statsdClient, 'cancel'));
-};
+        if (userDbParams.host) {
+            res.header('X-Served-By-DB-Host', res.locals.userDbParams.host);
+        }
 
-JobController.prototype.getJob = function (req, res) {
-    this.jobService.get(req.params.job_id, jobResponse(req, res, this.statsdClient, 'retrieve'));
-};
-
-JobController.prototype.createJob = function (req, res) {
-    var body = (req.body) ? req.body : {};
-    var params = _.extend({}, req.query, body); // clone so don't modify req.params or req.body so oauth is not broken
-    var sql = (params.query === "" || _.isUndefined(params.query)) ? null : params.query;
-
-    var data = {
-        user: req.context.user,
-        query: sql,
-        host: req.context.userDatabase.host
+        next();
     };
+}
 
-    this.jobService.create(data, jobResponse(req, res, this.statsdClient, 'create', 201));
-};
-
-JobController.prototype.listWorkInProgressJobs = function (req, res) {
-    var self = this;
-
-    this.jobService.listWorkInProgressJobs(function (err, list) {
-        if (err) {
-            self.statsdClient.increment('sqlapi.job.error');
-            return handleException(err, res);
-        }
-
-        req.profiler.done('list');
-        req.profiler.end();
-        req.profiler.sendStats();
-
-        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-        self.statsdClient.increment('sqlapi.job.success');
-
+function logJobResult (action) {
+    return function logJobResultMiddleware (req, res, next) {
         if (process.env.NODE_ENV !== 'test') {
             console.info(JSON.stringify({
                 type: 'sql_api_batch_job',
-                username: req.context.user,
-                action: 'list'
-            }));
-        }
-
-        res.status(200).send(list);
-    });
-};
-
-function jobResponse(req, res, statsdClient, action, status) {
-    return function handler(err, job) {
-        status = status || 200;
-
-        if (err) {
-            statsdClient.increment('sqlapi.job.error');
-            return handleException(err, res);
-        }
-
-        res.header('X-Served-By-DB-Host', req.context.userDatabase.host);
-
-        req.profiler.done(action);
-        req.profiler.end();
-        req.profiler.sendStats();
-
-        res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-        statsdClient.increment('sqlapi.job.success');
-
-        if (process.env.NODE_ENV !== 'test') {
-            console.info(JSON.stringify({
-                type: 'sql_api_batch_job',
-                username: req.context.user,
+                username: res.locals.user,
                 action: action,
-                job_id: job.job_id
+                job_id: req.params.job_id || res.locals.job_id
             }));
         }
 
-        res.status(status).send(job.serialize());
+        next();
+    };
+}
+
+const METRICS_PREFIX = 'sqlapi.job';
+
+function incrementSuccessMetrics (statsdClient) {
+    return function incrementSuccessMetricsMiddleware (req, res, next) {
+        if (statsdClient !== undefined) {
+            statsdClient.increment(`${METRICS_PREFIX}.success`);
+        }
+
+        next();
+    };
+}
+
+function incrementErrorMetrics (statsdClient) {
+    return function incrementErrorMetricsMiddleware (err, req, res, next) {
+        if (statsdClient !== undefined) {
+            statsdClient.increment(`${METRICS_PREFIX}.error`);
+        }
+
+        next(err);
+    };
+}
+
+function sendResponse () {
+    return function sendResponseMiddleware (req, res) {
+        res.status(res.statusCode || 200).send(res.body);
     };
 }

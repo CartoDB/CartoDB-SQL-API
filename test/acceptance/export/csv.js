@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 require('../../support/assert');
 
@@ -124,8 +126,7 @@ it('GET /api/v1/sql as csv', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var expected = 'cartodb_id,geom\r\n1,"SRID=4326;POINT(-3.699732 40.423012)"\r\n';
-        assert.equal(res.body, expected);
+        assert.ok(res.body.match(/cartodb_id,geom\r\n.?1.?,"SRID=4326;POINT(.*)"\r\n/));
         done();
     });
 });
@@ -153,8 +154,7 @@ it('GET /api/v1/sql as csv, properly escaped', function(done){
         method: 'GET'
     },{ }, function(err, res){
         assert.equal(res.statusCode, 200, res.body);
-        var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
-        assert.equal(res.body, expected);
+        assert.ok(res.body.match(/cartodb_id,address\r\n.?1.?,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n/));
         done();
     });
 });
@@ -164,8 +164,7 @@ it('GET /api/v1/sql as csv, concurrently', function(done){
     var concurrency = 4;
     var waiting = concurrency;
     function validate(err, res){
-        var expected = 'cartodb_id,address\r\n1,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n';
-        assert.equal(res.body, expected);
+        assert.ok(res.body.match(/cartodb_id,address\r\n.?1.?,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n/));
         if ( ! --waiting ) {
             done();
         }

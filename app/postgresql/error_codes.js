@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('underscore');
 
 // reference http://www.postgresql.org/docs/9.3/static/errcodes-appendix.html

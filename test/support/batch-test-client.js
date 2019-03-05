@@ -35,7 +35,7 @@ function BatchTestClient(config) {
     this.batch.on('ready', function() {
         this.ready = true;
         this.pendingJobs.forEach(function(pendingJob) {
-            this.createJob(pendingJob.job, pendingJob.callback);
+            this.createJob(pendingJob.job, pendingJob.override, pendingJob.callback);
         }.bind(this));
     }.bind(this));
 }
@@ -46,6 +46,10 @@ BatchTestClient.prototype.isReady = function() {
     return this.ready;
 };
 
+BatchTestClient.prototype.getExpectedResponse = function (override) {
+    return override.response || this.config.response || RESPONSE.CREATED;
+};
+
 BatchTestClient.prototype.createJob = function(job, override, callback) {
     if (!callback) {
         callback = override;
@@ -54,6 +58,7 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
     if (!this.isReady()) {
         this.pendingJobs.push({
             job: job,
+            override: override || {},
             callback: callback
         });
         return debug('Waiting for Batch service to be ready');
@@ -64,17 +69,23 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
             url: this.getUrl(override),
             headers: {
                 host: this.getHost(override),
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                authorization: this.getAuthorization(override)
             },
             method: 'POST',
             data: JSON.stringify(job)
         },
-        RESPONSE.CREATED,
+        this.getExpectedResponse(override),
         function (err, res) {
             if (err) {
                 return callback(err);
             }
-            return callback(null, new JobResult(JSON.parse(res.body), this, override));
+
+            if (res.statusCode < 400) {
+                return callback(null, new JobResult(JSON.parse(res.body), this, override), res);
+            } else {
+                return callback(null, res);
+            }
         }.bind(this)
     );
 };
@@ -85,7 +96,8 @@ BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
         {
             url: this.getUrl(override, jobId),
             headers: {
-                host: this.getHost(override)
+                host: this.getHost(override),
+                authorization: this.getAuthorization(override)
             },
             method: 'GET',
             timeout: override.timeout
@@ -155,12 +167,20 @@ BatchTestClient.prototype.getHost = function(override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
+BatchTestClient.prototype.getAuthorization = function (override) {
+    const auth = override.authorization || this.config.authorization;
+
+    if (auth) {
+        return `Basic ${new Buffer(auth).toString('base64')}`;
+    }
+};
+
 BatchTestClient.prototype.getUrl = function(override, jobId) {
     var urlParts = ['/api/v2/sql/job'];
     if (jobId) {
         urlParts.push(jobId);
     }
-    return urlParts.join('/') + '?api_key=' + this.getApiKey(override);
+    return `${urlParts.join('/')}${override.anonymous ? '' : '?api_key=' + this.getApiKey(override)}`;
 };
 
 BatchTestClient.prototype.getApiKey = function(override) {
