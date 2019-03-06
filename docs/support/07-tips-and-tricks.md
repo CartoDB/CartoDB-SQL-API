@@ -42,7 +42,7 @@ Yes, through using GRANT statements to the SQL API. There are a few caveats to b
 
 You can use the SQL API to run any query and export the results in different formats, such as a CSV or GeoPackage. This is helpful for accessing your datasets offline.
 
-**Note:** View the [response formats]({{ site.sqlapi_docs }}/guides/making-calls/#response-formats) that are available with the SQL API and ensure that your dataset does not exceed the maximum file size for [SQL API exports](https://carto.com/docs/faqs/carto-engine-usage-limits/#sql-api-limits).
+**Note:** View the [response formats]({{ site.sqlapi_docs }}/guides/making-calls/#response-formats) that are available with the SQL API and ensure that your dataset does not exceed the maximum file size for [SQL API exports](https://carto.com/help/getting-started/limits/#sql-api-limits).
 
 #### Export Datasets as a GeoPackage
 

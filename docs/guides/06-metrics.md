@@ -1,6 +1,6 @@
 ## Metrics
 
-SQL API provides you with a set of operations to handle metrics. You are able to manage timers operations that allow you to analyze your queries, and counters operations that allow you to meaure success and failed queries.
+SQL API provides you with a set of operations to handle metrics. You are able to manage timer operations that allow you to analyze the time spent in your queries, and counter operations that allow you to measure the number of successful and failed queries.
 
 ### Timers
 - **sqlapi.query**: time to return a query resultset from the API, splitted into:

@@ -2,7 +2,7 @@
 
 A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
 
-_Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API]({{ site.sqlapi_docs }}/guides/) for this type of data management. Batch Queries are specific to queries and CPU usage._
+_Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API]({{site.importapi_docs}}/) or [SQL API]({{site.sqlapi_docs}}/guides/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
 **Note:** SQL API does not expose any endpoint to list Batch Queries (jobs). Thus, when creating a Batch Query (job), you must always save the ID from the response, as the main reference for any later operation.
 
@@ -487,7 +487,7 @@ For best practices, follow these recommended usage notes when using Batch Querie
 
 - Batch Queries are recommended for INSERT, UPDATE, and CREATE queries that manipulate and create new data, such as creating expensive indexes, applying updates over large tables, and creating tables from complex queries. Batch queries have no effect for SELECT queries that retrieve data but do not store the results in a table. For example, running a batch query using `SELECT * from my_dataset` will not produce any results.
 
-- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](https://carto.com/docs/carto-engine/import-api/) for this type of data management.
+- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API]({{site.importapi_docs}}/) for this type of data management.
 
 - There is a limit of 16kb per job. The following error message appears if your job exceeds this size:
 

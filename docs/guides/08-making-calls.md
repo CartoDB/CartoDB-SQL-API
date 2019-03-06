@@ -37,7 +37,7 @@ https://{username}.carto.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 }
 ```
 
-Finally, remember that in order to use the SQL API, either your table must be public, or you must be [authenticated](http://docs.carto.com/carto-engine/sql-api/authentication/#authentication) using API Keys.
+Finally, remember that in order to use the SQL API, either your table must be public, or you must be [authenticated]({{site.sqlapi_docs}}/guides/authentication/#authentication) using API Keys.
 
 
 ### POST and GET
