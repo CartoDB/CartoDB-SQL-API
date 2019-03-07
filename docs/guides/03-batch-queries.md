@@ -1,14 +1,14 @@
-# Batch Queries
+## Batch Queries
 
 A Batch Query enables you to request queries with long-running CPU processing times. Typically, these kind of requests raise timeout errors when using the SQL API. In order to avoid timeouts, you can use Batch Queries to [create](#create-a-job), [read](#read-a-job) and [cancel](#cancel-a-job) queries. You can also run a [chained batch query](#chaining-batch-queries) to chain several SQL queries into one job. A Batch Query schedules the incoming jobs and allows you to request the job status for each query.
 
-_Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API](https://carto.com/docs/carto-engine/import-api/) or [SQL API](https://carto.com/docs/carto-engine/sql-api/) for this type of data management. Batch Queries are specific to queries and CPU usage._
+_Batch Queries are not intended to be used for large query payloads that contain over 16384 characters (16kb). For instance, if you are inserting a large number of rows into your table, you still need to use the [Import API]({{site.importapi_docs}}/) or [SQL API]({{site.sqlapi_docs}}/guides/) for this type of data management. Batch Queries are specific to queries and CPU usage._
 
-**Note:** In order to use Batch Queries, you **must** be [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/) using your Master API key.
+**Note:** SQL API does not expose any endpoint to list Batch Queries (jobs). Thus, when creating a Batch Query (job), you must always save the ID from the response, as the main reference for any later operation.
 
-## Authentication
+### Authentication
 
-The Master API Key is required to manage your jobs. The following error message appears if you are not [authenticated](https://carto.com/docs/carto-engine/sql-api/authentication/):
+The Master API Key is required to manage your jobs. The following error message appears if you are not [authenticated]({{ site.sqlapi_docs }}/guides/authentication/):
 
 ```bash
 {
@@ -25,7 +25,7 @@ Using cURL tool:
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": "{query}"
-}' "https://{username}.carto.com/api/v2/sql/job?api_key={api_key}"
+}' "https://{username}.carto.com/api/v2/sql/job?api_key={master_api_key}"
 ```
 
 Using Node.js request client:
@@ -37,7 +37,7 @@ var options = {
   method: "POST",
   url: "https://{username}.carto.com/api/v2/sql/job",
   qs: {
-    "api_key": "{api_key}"
+    "api_key": "{master_api_key}"
   },
   headers: {
     "content-type": "application/json"
@@ -55,7 +55,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Batch Queries Job Schema
+### Batch Queries Job Schema
 
 A Batch Query request to your CARTO account includes the following job schema elements. _Only the `query` element can be modified._ All other elements of the job schema are defined by the Batch Query and are read-only.
 
@@ -76,7 +76,7 @@ Name | Description
 `updated_at` | the date and time of when the job schema was last updated, or modified.
 `failed_reason` | displays the database error message, if something went wrong.
 
-#### Example
+##### Example
 
 ```bash
 HEADERS: 201 CREATED; application/json
@@ -90,7 +90,7 @@ BODY: {
 }
 ```
 
-### Create a Job
+#### Create a Job
 
 To create a Batch Query job, make a POST request with the following parameters.
 
@@ -103,7 +103,7 @@ BODY: {
 }
 ```
 
-#### Response
+##### Response
 
 ```bash
 HEADERS: 201 CREATED; application/json
@@ -117,7 +117,7 @@ BODY: {
 }
 ```
 
-##### POST Examples
+###### POST Examples
 
 If you are using the Batch Query create operation for a cURL POST request, use the following code:
 
@@ -149,7 +149,10 @@ request(options, function (error, response, body) {
 });
 ```
 
-### Read a Job
+**Note:** You must always save the `job_id` from the response for any later operation like reading or deleting a job. As mentioned above, SQL API does not expose any endpoint to list jobs.
+
+
+#### Read a Job
 
 To read a Batch Query job, make a GET request with the following parameters.
 
@@ -158,7 +161,7 @@ HEADERS: GET /api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
 BODY: {}
 ```
 
-#### Response
+##### Response
 
 ```bash
 HEADERS: 200 OK; application/json
@@ -172,7 +175,7 @@ BODY: {
 }
 ```
 
-##### GET Examples
+###### GET Examples
 
 If you are using the Batch Query read operation for a cURL GET request, use the following code:
 
@@ -197,7 +200,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-### Cancel a Job
+#### Cancel a Job
 
 To cancel a Batch Query, make a DELETE request with the following parameters.
 
@@ -211,7 +214,7 @@ BODY: {}
 - If the job is `pending`, the job will never be executed
 - If the job is `running`, the job will be terminated immediately
 
-#### Response
+##### Response
 
 ```bash
 HEADERS: 200 OK; application/json
@@ -233,7 +236,7 @@ errors: [
 ]
 ```
 
-##### DELETE Examples
+###### DELETE Examples
 
 If you are using the Batch Query cancel operation for cURL DELETE request, use the following code:
 
@@ -258,7 +261,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-### Chaining Batch Queries
+#### Chaining Batch Queries
 
 In some cases, you may need to chain queries into one job. The Chaining Batch Query option enables you run an array of SQL statements, and define the order in which the queries are executed. You can use any of the operations (create, read, list, update, cancel) for the queries in a chained batch query.
 
@@ -273,7 +276,7 @@ BODY: {
 }
 ```
 
-#### Response
+##### Response
 
 ```bash
 HEADERS: 201 CREATED; application/json
@@ -306,7 +309,7 @@ BODY: {
 
 - Creating several jobs does not guarantee that jobs are going to be executed in the same order that they were created. If you need run queries in a specific order, you may want use [Chaining Batch Queries](#chaining-batch-queries).
 
-##### POST Examples
+###### POST Examples
 
 If you are using the Chained Batch Query operation for cURL POST request, use the following code:
 
@@ -346,7 +349,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-##### PUT Examples
+###### PUT Examples
 
 If you are using the Chained Batch Query operation for cURL PUT request, use the following code:
 
@@ -388,7 +391,7 @@ request(options, function (error, response, body) {
 });
 ```
 
-## Chaining Batch Queries with fallbacks
+### Chaining Batch Queries with fallbacks
 
 When you need to run an extra query based on how a chaining query finished, Batch Queries enable you to define onerror and onsuccess fallbacks. This powerful feature opens a huge range of possibilities, for instance:
 
@@ -444,7 +447,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 If a query of a job fails (and onerror fallbacks for that query and job are defined), then Batch Queries runs the first fallback for that query. The job fallback runs next and sets the job as failed. Remaining queries will not be executed. Furthermore, Batch Queries will run the onsuccess fallback at the job level, if (and only if), every query has finished successfully.
 
-### Templates
+#### Templates
 
 Batch Queries provide a simple way to get the error message and the job identifier to be used in your fallbacks, by using the following templates:
 
@@ -466,7 +469,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 More templates are coming soon.
 
-## Fetching Job Results
+### Fetching Job Results
 
 In some scenarios, you may need to fetch the output of a job. If that is the case, wrap the query with `SELECT * INTO`, or `CREATE TABLE AS`. The output is stored in a new table in your database. For example, if using the query `SELECT * FROM airports`:
 
@@ -474,17 +477,17 @@ In some scenarios, you may need to fetch the output of a job. If that is the cas
 
 2. [Create a job](#create-a-job), as described previously
 
-3. Once the job is done, fetch the results through the [CARTO SQL API](https://carto.com/docs/carto-engine/sql-api/), `SELECT * FROM job_result`
+3. Once the job is done, fetch the results through the [CARTO SQL API]({{ site.sqlapi_docs }}/guides/), `SELECT * FROM job_result`
 
 **Note:** If you need to create a map or analysis with the new table, use the [CDB_CartodbfyTable function](https://github.com/CartoDB/cartodb-postgresql/blob/master/doc/cartodbfy-requirements.rst).
 
-## Best Practices
+### Best Practices
 
 For best practices, follow these recommended usage notes when using Batch Queries:
 
 - Batch Queries are recommended for INSERT, UPDATE, and CREATE queries that manipulate and create new data, such as creating expensive indexes, applying updates over large tables, and creating tables from complex queries. Batch queries have no effect for SELECT queries that retrieve data but do not store the results in a table. For example, running a batch query using `SELECT * from my_dataset` will not produce any results.
 
-- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API](https://carto.com/docs/carto-engine/import-api/) for this type of data management.
+- Batch Queries are not intended for large query payloads (e.g: inserting thousands of rows), use the [Import API]({{site.importapi_docs}}/) for this type of data management.
 
 - There is a limit of 16kb per job. The following error message appears if your job exceeds this size:
 

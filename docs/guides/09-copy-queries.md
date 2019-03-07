@@ -1,4 +1,4 @@
-# Copy Queries
+## Copy Queries
 
 Copy queries allow you to use the [PostgreSQL copy command](https://www.postgresql.org/docs/10/static/sql-copy.html) for efficient streaming of data to and from CARTO.
 
@@ -7,7 +7,7 @@ The support for copy is split across two API end points:
 * `https://{username}.carto.com/api/v2/sql/copyfrom` for uploading data to CARTO
 * `https://{username}.carto.com/api/v2/sql/copyto` for exporting data out of CARTO
 
-## Copy From
+### Copy From
 
 The PostgreSQL `COPY` command is extremely fast, but requires very precise inputs:
 
@@ -27,11 +27,9 @@ Parameter | Description
 
 Composing a chunked POST is moderately complicated, so most developers will use a tool or scripting language to upload data to CARTO via "copy from". 
 
-### Example
+#### Example
 
-#### Table preparation
-
-First of all, you'll need to have **a table with the right schema** to copy your data into. For a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
+For a table to be readable by CARTO, it must have a minimum of three columns with specific data types:
 
 * `cartodb_id`, a `serial` primary key
 * `the_geom`, a `geometry` in the ESPG:4326 projection (aka long/lat)
@@ -39,29 +37,20 @@ First of all, you'll need to have **a table with the right schema** to copy your
 
 Creating a new CARTO table with all the right triggers and columns can be tricky, so here is an example:
 
-```sql
--- Create the table using the *required* columns and a couple more
-CREATE TABLE upload_example (
-    the_geom geometry,
-    name text,
-    age integer
-);
+    -- create the table using the *required* columns and a
+    -- couple more
+    CREATE TABLE upload_example (
+        the_geom geometry,
+        name text,
+        age integer
+    );
 
--- adds the 'cartodb_id' and 'the_geom_webmercator'
--- adds the required triggers and indexes
-SELECT CDB_CartodbfyTable(current_schema, 'upload_example');
-```
-
-you can get these queries executed directly through the SQL API this way, just by replacing the `{username}` and `{api_key}` by yours:
-
-```sh
-# Table creation
-curl -v "https://{user}.carto.com/api/v2/sql?api_key={api_key}&q=CREATE+TABLE+upload_example+(the_geom+geometry,name+text,age+integer)"
-
-# Cartodbfy table (optional, but allows for table registartion in Builder dashboard)
-curl -v "https://{user}.carto.com/api/v2/sql?api_key={api_key}&q=SELECT+CDB_CartodbfyTable(current_schema,'upload_example')"
-```
-
+    -- adds the 'cartodb_id' and 'the_geom_webmercator'
+    -- adds the required triggers and indexes
+    SELECT CDB_CartodbfyTable('upload_example');
+    
+    -- Note that CDB_CartodbfyTable is called differently if you have an organization user
+    -- SELECT CDB_CartodbfyTable('your_org_username', 'upload_example');
 
 Now you are ready to upload your file. Suppose you have a CSV file like this:
 
@@ -113,28 +102,20 @@ username = {api_key}
 upload_file = 'upload_example.csv'
 q = "COPY upload_example (the_geom, name, age) FROM STDIN WITH (FORMAT csv, HEADER true)"
 
-def read_in_chunks(file_object, chunk_size=8192):
-    while True:
-        data = file_object.read(chunk_size)
-        if not data:
-            break
-        yield data
-
 url = "https://%s.carto.com/api/v2/sql/copyfrom" % username
 with open(upload_file, 'rb') as f:
-    resp = requests.post(url,
-                         params={'api_key': api_key, 'q': q},
-                         data=read_in_chunks(f),
-                         headers={'Content-Type': 'application/octet-stream'},
-                         stream=True)
-print("status: %d" % resp.status_code)
-data = resp.json()
-print(data)
+    r = requests.post(url, params={'api_key': api_key, 'q': q}, data=f, stream=True)
+
+    if r.status_code != 200:
+        print(r.text)
+    else:
+        status = r.json()
+        print("Success: %s rows imported" % status['total_rows'])
 ```
 
-A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly. However, you will still need to make sure that the table schema (`CREATE TABLE`) is suitable for receiving the data from the `COPY` query.
+A slightly more sophisticated script could read the headers from the CSV and compose the `COPY` command on the fly.
 
-### CSV files and column ordering
+#### CSV files and column ordering
 
 When using the **CSV format, please note that [PostgreSQL ignores the header](https://www.postgresql.org/docs/10/static/sql-copy.html)**.
 
@@ -169,7 +150,7 @@ your query has to specify the correct ordering, regardless of the header in the 
 COPY upload_example (the_geom, age, name) FROM stdin WITH (FORMAT csv, HEADER true);
 ```
 
-### Response Format
+#### Response Format
 
 A successful upload will return with status code 200, and a small JSON with information about the upload.
 
@@ -179,7 +160,7 @@ A failed upload will return with status code 400 and a larger JSON with the Post
 
     {"error":["Unexpected field"]}
 
-## Copy To
+### Copy To
 
 "Copy to" copies data "to" your desired output file, "from" CARTO.
 
@@ -198,7 +179,7 @@ Parameter | Description
 `filename` | filename to put in the "Content-disposition" HTTP header, useful for tools that automatically save the download to a file name
 
 
-### CURL Example
+#### CURL Example
 
 The SQL to start a "copy to" can specify
 
@@ -213,11 +194,11 @@ For our example, we'll read back just the three columns we originally loaded:
 The SQL needs to be URL-encoded before being embedded in the CURL command, so the final result looks like this:
 
     curl \
-        --output download_example_dl.csv \
+        --output upload_example_dl.csv \
 		--compressed \
         "https://{username}.carto.com/api/v2/sql/copyto?q=COPY+upload_example+(the_geom,name,age)+TO+stdout+WITH(FORMAT+csv,HEADER+true)&api_key={api_key}"
 
-### Python Example
+#### Python Example
 
 The Python to "copy to" is very simple, because the HTTP call is a simple get. The only complexity in this example is at the end, where the result is streamed back block-by-block, to avoid pulling the entire download into memory before writing to file.
 
@@ -240,7 +221,7 @@ with open(download_filename, 'wb') as handle:
 print("Downloaded to: %s" % savefilename)
 ```
 
-## Limits
+### Limits
 
 There's a **5 hours timeout** limit for the `/copyfrom` and `/copyto` endpoints. The idea behind is that, in practice, COPY operations should not be limited by your regular query timeout.
 

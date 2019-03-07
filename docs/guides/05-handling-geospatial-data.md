@@ -1,18 +1,18 @@
-# Handling Geospatial Data
+## Handling Geospatial Data
 
 Handling geospatial data through the SQL API is easy. By default, *the_geom* is returned straight from the database, in a format called Well-Known Binary. There are a handful of ways you can transform your geometries into more useful formats.
 
 The first is to use the format=GeoJSON method described above. Others can be handled through your SQL statements directly. For example, enclosing your the_geom in a function called [ST_AsGeoJSON](http://www.postgis.org/documentation/manual-svn/ST_AsGeoJSON.html) will allow you to use JSON for your data but a GeoJSON string for your geometry column only. Alternatively, using a the [ST_AsText](http://www.postgis.org/documentation/manual-svn/ST_AsGeoJSON.html) function will return your geometry as Well-Known Text.
 
-### ST_AsGeoJSON
+#### ST_AsGeoJSON
 
-#### Call
+##### Call
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM {table_name} LIMIT 1
 ```
 
-#### Result
+##### Result
 
 ```javascript
 {
@@ -27,15 +27,15 @@ https://{username}.carto.com/api/v2/sql?q=SELECT cartodb_id,ST_AsGeoJSON(the_geo
 }
 ```
 
-### ST_AsText
+#### ST_AsText
 
-#### Call
+##### Call
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q=SELECT cartodb_id,ST_AsText(the_geom) FROM {table_name} LIMIT 1
 ```
 
-#### Result
+##### Result
 
 ```javascript
 {
@@ -54,7 +54,7 @@ More advanced methods exist in the PostGIS library to extract meaningful data fr
 
 All data returned from *the_geom* column is in WGS 84 (EPSG:4326). You can change this quickly on the fly, by using SQL. For example, if you prefer geometries using the Hanoi 1972 (EPSG:4147) projection, use [ST_Transform](http://www.postgis.org/docs/ST_Transform.html),
 
-### ST_Transform
+#### ST_Transform
 
 ```bash
 https://{username}.carto.com/api/v2/sql?q=SELECT ST_Transform(the_geom,4147) FROM {table_name} LIMIT 1

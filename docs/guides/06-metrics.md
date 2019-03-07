@@ -1,7 +1,8 @@
-CartoDB-SQL-API metrics
-=======================
+## Metrics
 
-## Timers
+SQL API provides you with a set of operations to handle metrics. You are able to manage timer operations that allow you to analyze the time spent in your queries, and counter operations that allow you to measure the number of successful and failed queries.
+
+### Timers
 - **sqlapi.query**: time to return a query resultset from the API, splitted into:
     + **sqlapi.query.init**: time to prepare params from the request
     + **sqlapi.query.getDBParams**: time to retrieve the database connection params
@@ -14,6 +15,6 @@ CartoDB-SQL-API metrics
     + **sqlapi.query.generate**: Time to prepare and generate a response from ogr
     + **sqlapi.query.finish**: time to handle an exception
 
-## Counters
+### Counters
 - **sqlapi.query.success**: number of successful queries
 - **sqlapi.query.error**: number of failed queries
