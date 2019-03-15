@@ -13,9 +13,6 @@ To make things easier for developers, we provide client libraries for different 
 - **PHP**  
   The PHP library provides a wrapper around the SQL API to get PHP objects straight from SQL calls to CARTO. [Fork it on GitHub!](https://github.com/Vizzuality/cartodbclient-php)
 
-- **PYTHON**  
-  Provides API Key access to SQL API. [Fork it on GitHub!](https://github.com/CartoDB/carto-python)
-
 - **JAVA**  
   Very basic example of how to access CARTO SQL API. [Fork it on GitHub!](https://github.com/cartodb/cartodb-java-client)
 
