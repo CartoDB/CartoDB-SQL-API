@@ -46,7 +46,7 @@ It may take a few seconds for the connected table to appear renamed. Refresh you
 
 If you remove a table, **any maps using the connected dataset will be affected**. The deleted dataset cannot be recovered. Even if you create a new table with the same name as a removed table, CARTO still internalizes it as a different table.
 
-Some users and third-party libraries update the data from a map dataset making a _DROP TABLE_ + _CREATE TABLE_ + _INSERT_ in the table. Your map will be affected unless you make the _DROP TABLE_ + _CREATE TABLE_ inside a transaction.
+Some users and third-party libraries update the data from a map dataset making a _DROP TABLE_ + _CREATE TABLE_ + _INSERT_ in the table. Doing that, your map will be affected unless you make the _DROP TABLE_ + _CREATE TABLE_ **inside a transaction**. But our recommendation is to use _TRUNCATE TABLE_ + _INSERT_.
 
 To remove a connected dataset from _Your datasets_ dashboard, run the following SQL query with the SQL API:
 
