@@ -40,11 +40,13 @@ To rename a connected dataset in _Your datasets_ dashboard, run the following SQ
 ALTER TABLE {table_name} RENAME to {renamed table_name};
 ```
 
-It may take a few seconds for the connected table to appear renamed. Refresh your browser to ensure that you can visualize the changes in _Your datasets_ dashboard. 
+It may take a few seconds for the connected table to appear renamed. Refresh your browser to ensure that you can visualize the changes in _Your datasets_ dashboard.
 
 ### Remove a Table
 
 If you remove a table, **any maps using the connected dataset will be affected**. The deleted dataset cannot be recovered. Even if you create a new table with the same name as a removed table, CARTO still internalizes it as a different table.
+
+Some users and third-party libraries update the data from a map dataset making a _DROP TABLE_ + _CREATE TABLE_ + _INSERT_ in the table. Doing that, your map will be affected unless you make the _DROP TABLE_ + _CREATE TABLE_ **inside a transaction**. But our recommendation is to use _TRUNCATE TABLE_ + _INSERT_.
 
 To remove a connected dataset from _Your datasets_ dashboard, run the following SQL query with the SQL API:
 
@@ -52,4 +54,4 @@ To remove a connected dataset from _Your datasets_ dashboard, run the following 
 DROP TABLE {table_name};
 ```
 
-This removes the connected table from _Your datasets_ dashboard. Refresh your browser to ensure that the connected dataset was removed. 
+This removes the connected table from _Your datasets_ dashboard. Refresh your browser to ensure that the connected dataset was removed.
