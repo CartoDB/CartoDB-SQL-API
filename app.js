@@ -124,15 +124,19 @@ process.on('SIGHUP', function() {
 });
 
 process.on('SIGTERM', function () {
-    server.batch.stop();
-    server.batch.drain(function (err) {
+    server.batch.stop(function (err) {
         if (err) {
-            console.log('Exit with error');
-            return process.exit(1);
+            global.logger.fatal('On batch stop: ', err);
         }
 
-        console.log('Exit gracefully');
-        process.exit(0);
+        server.batch.drain(function (err) {
+            if (err) {
+                global.logger.fatal('On batch drain: ', err);
+                return process.exit(1);
+            }
+
+            process.exit(0);
+        });
     });
 });
 
