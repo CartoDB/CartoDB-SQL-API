@@ -185,7 +185,7 @@ Batch.prototype._drainJob = function (user, callback) {
             return callback(err);
         }
 
-        self.clearWorkInProgressJob(user, jobId, function (err) {
+        self.clearWorkInProgressJob(user, job_id, function (err) {
             if (err) {
                 debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
             }
