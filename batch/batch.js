@@ -185,7 +185,13 @@ Batch.prototype._drainJob = function (user, callback) {
             return callback(err);
         }
 
-        self.jobQueue.enqueueFirst(user, job_id, callback);
+        self.clearWorkInProgressJob(user, jobId, function (err) {
+            if (err) {
+                debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
+            }
+
+            self.jobQueue.enqueueFirst(user, job_id, callback);
+        });
     });
 };
 
