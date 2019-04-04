@@ -56,13 +56,13 @@ class Logger {
     //
     // See: https://github.com/trentm/node-bunyan/issues/37
     // See: https://github.com/trentm/node-bunyan/issues/73
-    end () {
+    end (callback) {
         // process.stdout cannot be closed
         if (!this.path) {
-            return;
+            return callback();
         }
 
-        this.logger.streams[0].stream.on('finish', resolve);
+        this.logger.streams[0].stream.on('finish', callback);
         this.logger.streams[0].stream.end(); // close stream, flush buffer to disk
     }
 }

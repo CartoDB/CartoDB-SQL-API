@@ -133,8 +133,9 @@ process.on('SIGTERM', function () {
                 }
 
                 global.logger.info('Exit gracefully');
-                server.batch.logger.end();
-                process.exit(0);
+                server.batch.logger.end(function () {
+                    process.exit(0);
+                });
             });
         });
     });
