@@ -2,8 +2,6 @@
 
 'use strict';
 
-process.env.DEBUG = 'batch,job-backend,queue,job-service,query-runner';
-
 /*
 * SQL API loader
 * ===============
