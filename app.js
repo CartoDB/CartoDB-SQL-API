@@ -123,23 +123,62 @@ process.on('SIGHUP', function() {
     }
 });
 
-process.once('SIGTERM', function () {
-    listener.close(function () {
-        server.batch.stop(function () {
-            server.batch.drain(function (err) {
-                if (err) {
-                    global.logger.error(err);
-                    return process.exit(1);
-                }
+addHandlers({ killTimeout: 45000 });
 
-                global.logger.info('Exit gracefully');
-                server.batch.logger.end(function () {
-                    process.exit(0);
+function addHandlers({ killTimeout }) {
+    // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
+    // process.on('uncaughtException', exitProcess(listener, logger, killTimeout));
+    process.once('unhandledRejection', exitProcess(killTimeout));
+    process.once('SIGINT', exitProcess(killTimeout));
+    process.once('SIGTERM', exitProcess(killTimeout));
+}
+
+function exitProcess (killTimeout) {
+    return function exitProcessFn (signal) {
+        scheduleForcedExit(killTimeout, logger);
+
+        let code = 0;
+
+        if (!['SIGINT', 'SIGTERM'].includes(signal)) {
+            const err = signal instanceof Error ? signal : new Error(signal);
+            signal = undefined;
+            code = 1;
+
+            global.logger.fatal(err);
+        } else {
+            global.logger.info(`Process has received signal: ${signal}`);
+        }
+
+        listener.close(function () {
+            server.batch.stop(function () {
+                server.batch.drain(function (err) {
+                    if (err) {
+                        global.logger.error(err);
+                        return process.exit(1);
+                    }
+
+                    global.logger.info(`Process is going to exit with code: ${code}`);
+                    global.log4js.shutdown(function () {
+                        server.batch.logger.end(function () {
+                            process.exit(code);
+                        });
+                    });
                 });
             });
         });
-    });
-});
+    };
+}
+
+function scheduleForcedExit (killTimeout) {
+    // Schedule exit if there is still ongoing work to deal with
+    const killTimer = setTimeout(() => {
+        global.logger.info('Process didn\'t close on time. Force exit');
+        process.exit(1);
+    }, killTimeout);
+
+    // Don't keep the process open just for this
+    killTimer.unref();
+}
 
 function isGteMinVersion(version, minVersion) {
     var versionMatch = /[a-z]?([0-9]*)/.exec(version);
