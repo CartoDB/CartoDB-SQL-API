@@ -1,12 +1,12 @@
 'use strict';
 
-var debug = require('./util/debug')('job-service');
 var JobFactory = require('./models/job_factory');
 var jobStatus = require('./job_status');
 
-function JobService(jobBackend, jobCanceller) {
+function JobService(jobBackend, jobCanceller, logger) {
     this.jobBackend = jobBackend;
     this.jobCanceller = jobCanceller;
+    this.logger = logger;
 }
 
 module.exports = JobService;
@@ -108,7 +108,7 @@ JobService.prototype.drain = function (job_id, callback) {
 
         self.jobCanceller.cancel(job, function (err) {
             if (err) {
-                debug('There was an error while draining job %s, %s ', job_id, err);
+                self.logger.debug('There was an error while draining job %s, %s ', job_id, err);
                 return callback(err);
             }
 

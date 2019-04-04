@@ -2,7 +2,6 @@
 
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-var debug = require('./util/debug')('batch');
 var queue = require('queue-async');
 var HostScheduler = require('./scheduler/host-scheduler');
 
@@ -31,7 +30,7 @@ module.exports = Batch;
 
 Batch.prototype.start = function () {
     var self = this;
-    var onJobHandler = createJobHandler(self.name, self.userDatabaseMetadataService, self.hostScheduler);
+    var onJobHandler = createJobHandler(self.name, self.userDatabaseMetadataService, self.hostScheduler, self.logger);
 
     self.jobQueue.scanQueues(function (err, queues) {
         if (err) {
@@ -51,19 +50,19 @@ Batch.prototype.start = function () {
     });
 };
 
-function createJobHandler (name, userDatabaseMetadataService, hostScheduler) {
+function createJobHandler (name, userDatabaseMetadataService, hostScheduler, logger) {
     return function onJobHandler(user) {
         userDatabaseMetadataService.getUserMetadata(user, function (err, userDatabaseMetadata) {
             if (err) {
-                return debug('Could not get host user=%s from %s. Reason: %s', user, name, err.message);
+                return logger.debug('Could not get host user=%s from %s. Reason: %s', user, name, err.message);
             }
 
             var host = userDatabaseMetadata.host;
 
-            debug('[%s] onJobHandler(%s, %s)', name, user, host);
+            logger.debug('[%s] onJobHandler(%s, %s)', name, user, host);
             hostScheduler.add(host, user, function(err) {
                 if (err) {
-                    return debug(
+                    return logger.debug(
                         'Could not schedule host=%s user=%s from %s. Reason: %s', host, user, name, err.message
                     );
                 }
@@ -78,7 +77,7 @@ Batch.prototype._startScheduleInterval = function (onJobHandler) {
     self.scheduleInterval = setInterval(function () {
         self.jobQueue.getQueues(function (err, queues) {
             if (err) {
-                return debug('Could not get queues from %s. Reason: %s', self.name, err.message);
+                return self.logger.debug('Could not get queues from %s. Reason: %s', self.name, err.message);
             }
 
             queues.forEach(onJobHandler);
@@ -101,20 +100,20 @@ Batch.prototype.processJob = function (user, callback) {
         }
 
         if (!jobId) {
-            debug('Queue empty user=%s', user);
+            self.logger.debug('Queue empty user=%s', user);
             return callback(null, EMPTY_QUEUE);
         }
 
         self._processWorkInProgressJob(user, jobId, function (err, job) {
             if (err) {
-                debug(err);
+                self.logger.debug(err);
                 if (err.name === 'JobNotRunnable') {
                     return callback(null, !EMPTY_QUEUE);
                 }
                 return callback(err, !EMPTY_QUEUE);
             }
 
-            debug(
+            self.logger.debug(
                 '[%s] Job=%s status=%s user=%s (failed_reason=%s)',
                 self.name, jobId, job.data.status, user, job.failed_reason
             );
@@ -131,13 +130,13 @@ Batch.prototype._processWorkInProgressJob = function (user, jobId, callback) {
 
     self.setWorkInProgressJob(user, jobId, function (errSet) {
         if (errSet) {
-            debug(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
+            self.logger.debug(new Error('Could not add job to work-in-progress list. Reason: ' + errSet.message));
         }
 
         self.jobRunner.run(jobId, function (err, job) {
             self.clearWorkInProgressJob(user, jobId, function (errClear) {
                 if (errClear) {
-                    debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
+                    self.logger.debug(new Error('Could not clear job from work-in-progress list. Reason: ' + errClear.message));
                 }
 
                 return callback(err, job);
@@ -157,9 +156,9 @@ Batch.prototype.drain = function (callback) {
 
     batchQueues.awaitAll(function (err) {
         if (err) {
-            debug('Something went wrong draining', err);
+            self.logger.debug('Something went wrong draining', err);
         } else {
-            debug('Drain complete');
+            self.logger.debug('Drain complete');
         }
 
         callback();
@@ -187,7 +186,7 @@ Batch.prototype._drainJob = function (user, callback) {
 
         self.clearWorkInProgressJob(user, job_id, function (err) {
             if (err) {
-                debug(new Error('Could not clear job from work-in-progress list. Reason: ' + err.message));
+                self.logger.debug(new Error('Could not clear job from work-in-progress list. Reason: ' + err.message));
             }
 
             self.jobQueue.enqueueFirst(user, job_id, callback);

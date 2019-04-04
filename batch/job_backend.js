@@ -4,14 +4,14 @@ var REDIS_PREFIX = 'batch:jobs:';
 var REDIS_DB = 5;
 var JobStatus = require('./job_status');
 var queue = require('queue-async');
-var debug = require('./util/debug')('job-backend');
 
-function JobBackend(metadataBackend, jobQueue) {
+function JobBackend(metadataBackend, jobQueue, logger) {
     this.metadataBackend = metadataBackend;
     this.jobQueue = jobQueue;
     this.maxNumberOfQueuedJobs = global.settings.batch_max_queued_jobs || 64;
     this.inSecondsJobTTLAfterFinished = global.settings.finished_jobs_ttl_in_seconds || 2 * 3600; // 2 hours
     this.hostname = global.settings.api_hostname || 'batch';
+    this.logger = logger;
 }
 
 function toRedisParams(job) {
@@ -188,7 +188,7 @@ var WORK_IN_PROGRESS_JOB = {
 
 JobBackend.prototype.addWorkInProgressJob = function (user, jobId, callback) {
     var userWIPKey = WORK_IN_PROGRESS_JOB.PREFIX_USER + user;
-    debug('add job %s to user %s (%s)', jobId, user, userWIPKey);
+    this.logger.debug('add job %s to user %s (%s)', jobId, user, userWIPKey);
     this.metadataBackend.redisMultiCmd(WORK_IN_PROGRESS_JOB.DB, [
         ['SADD', WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user],
         ['RPUSH', userWIPKey, jobId]
@@ -212,13 +212,13 @@ JobBackend.prototype.clearWorkInProgressJob = function (user, jobId, callback) {
                 return callback(err);
             }
 
-            debug('user %s has work in progress jobs %j', user, workInProgressJobs);
+            self.logger.debug('user %s has work in progress jobs %j', user, workInProgressJobs);
 
             if (workInProgressJobs.length < 0) {
                 return callback();
             }
 
-            debug('delete user %s from index', user);
+            self.logger.debug('delete user %s from index', user);
 
             params = [WORK_IN_PROGRESS_JOB.USER_INDEX_KEY, user];
             self.metadataBackend.redisCmd(DB, 'SREM', params, function (err) {
@@ -252,7 +252,7 @@ JobBackend.prototype.listWorkInProgressJobs = function (callback) {
             return callback(null, {});
         }
 
-        debug('found %j work in progress users', workInProgressUsers);
+        self.logger.debug('found %j work in progress users', workInProgressUsers);
 
         var usersQueue = queue(4);
 
@@ -267,7 +267,7 @@ JobBackend.prototype.listWorkInProgressJobs = function (callback) {
 
             var workInProgressJobs = workInProgressUsers.reduce(function (users, user, index) {
                 users[user] = userWorkInProgressJobs[index];
-                debug('found %j work in progress jobs for user %s', userWorkInProgressJobs[index], user);
+                self.logger.debug('found %j work in progress jobs for user %s', userWorkInProgressJobs[index], user);
                 return users;
             }, {});
 

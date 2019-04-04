@@ -27,6 +27,7 @@ var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
 var UserDatabaseService = require('./services/user_database_service');
 var UserLimitsService = require('./services/user_limits');
+var BatchLogger = require('../batch/batch-logger');
 var JobPublisher = require('../batch/pubsub/job-publisher');
 var JobQueue = require('../batch/job_queue');
 var JobBackend = require('../batch/job_backend');
@@ -153,11 +154,12 @@ function App(statsClient) {
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
 
+    var logger = new BatchLogger(global.settings.batch_log_filename, 'batch-queries');
     var jobPublisher = new JobPublisher(redisPool);
-    var jobQueue = new JobQueue(metadataBackend, jobPublisher);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
     var jobCanceller = new JobCanceller();
-    var jobService = new JobService(jobBackend, jobCanceller);
+    var jobService = new JobService(jobBackend, jobCanceller, logger);
 
     var genericController = new GenericController();
     genericController.route(app);

@@ -1,10 +1,10 @@
 'use strict';
 
 var PSQL = require('cartodb-psql');
-var debug = require('./util/debug')('query-runner');
 
-function QueryRunner(userDatabaseMetadataService) {
+function QueryRunner(userDatabaseMetadataService, logger) {
     this.userDatabaseMetadataService = userDatabaseMetadataService;
+    this.logger = logger;
 }
 
 module.exports = QueryRunner;
@@ -20,10 +20,11 @@ QueryRunner.prototype.run = function (job_id, sql, user, timeout, dbparams, call
 
     const dbConfigurationError = new Error('Batch Job DB misconfiguration');
 
-    return callback(dbConfigurationError);  
+    return callback(dbConfigurationError);
 };
 
 QueryRunner.prototype._run = function (dbparams, job_id, sql, timeout, callback) {
+    var self = this;
     var pg = new PSQL(dbparams);
 
     pg.query('SET statement_timeout=' + timeout, function (err) {
@@ -34,7 +35,7 @@ QueryRunner.prototype._run = function (dbparams, job_id, sql, timeout, callback)
         // mark query to allow to users cancel their queries
         sql = '/* ' + job_id + ' */ ' + sql;
 
-        debug('Running query [timeout=%d] %s', timeout, sql);
+        self.logger.debug('Running query [timeout=%d] %s', timeout, sql);
         pg.eventedQuery(sql, function (err, query) {
             if (err) {
                 return callback(err);

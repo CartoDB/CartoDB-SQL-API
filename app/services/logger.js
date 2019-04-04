@@ -4,8 +4,10 @@ const bunyan = require('bunyan');
 
 class Logger {
     constructor (path, name) {
+        const env = process.env.NODE_ENV;
+        const logLevel = process.env.LOG_LEVEL;
         const stream = {
-            level: process.env.NODE_ENV === 'test' ? 'fatal' : 'info'
+            level: logLevel ? logLevel : (env === 'test') ? 'fatal' : (env === 'development') ? 'debug' : 'info'
         };
 
         if (path) {
@@ -21,18 +23,33 @@ class Logger {
         });
     }
 
-    info (log, message) {
-        this.logger.info(log, message);
+    fatal (...args) {
+        this.logger.fatal(...args);
     }
 
-    warn (log, message) {
-        this.logger.warn(log, message);
+    error (...args) {
+        this.logger.error(...args);
+    }
+
+    warn (...args) {
+        this.logger.warn(...args);
+    }
+
+    info (...args) {
+        this.logger.info(...args);
+    }
+
+    debug (...args) {
+        this.logger.debug(...args);
+    }
+
+    trace (...args) {
+        this.logger.trace(...args);
     }
 
     reopenFileStreams () {
-        console.log('Reloading log file', this.path);
         this.logger.reopenFileStreams();
     }
 }
- 
+
 module.exports = Logger;

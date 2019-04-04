@@ -1,11 +1,11 @@
 'use strict';
 
-var debug = require('./util/debug')('queue');
 var queueAsync = require('queue-async');
 
-function JobQueue(metadataBackend, jobPublisher) {
+function JobQueue(metadataBackend, jobPublisher, logger) {
     this.metadataBackend = metadataBackend;
     this.jobPublisher = jobPublisher;
+    this.logger = logger;
 }
 
 module.exports = JobQueue;
@@ -19,7 +19,7 @@ var QUEUE = {
 module.exports.QUEUE = QUEUE;
 
 JobQueue.prototype.enqueue = function (user, jobId, callback) {
-    debug('JobQueue.enqueue user=%s, jobId=%s', user, jobId);
+    this.logger.debug('JobQueue.enqueue user=%s, jobId=%s', user, jobId);
 
     this.metadataBackend.redisMultiCmd(QUEUE.DB, [
         [ 'LPUSH', QUEUE.PREFIX + user, jobId ],
@@ -39,6 +39,7 @@ JobQueue.prototype.size = function (user, callback) {
 };
 
 JobQueue.prototype.dequeue = function (user, callback) {
+    var self = this;
     var dequeueScript = [
         'local job_id = redis.call("RPOP", KEYS[1])',
         'if redis.call("LLEN", KEYS[1]) == 0 then',
@@ -56,13 +57,13 @@ JobQueue.prototype.dequeue = function (user, callback) {
     ];
 
     this.metadataBackend.redisCmd(QUEUE.DB, 'EVAL', redisParams, function (err, jobId) {
-        debug('JobQueue.dequeued user=%s, jobId=%s', user, jobId);
+        self.logger.debug('JobQueue.dequeued user=%s, jobId=%s', user, jobId);
         return callback(err, jobId);
     });
 };
 
 JobQueue.prototype.enqueueFirst = function (user, jobId, callback) {
-    debug('JobQueue.enqueueFirst user=%s, jobId=%s', user, jobId);
+    this.logger.debug('JobQueue.enqueueFirst user=%s, jobId=%s', user, jobId);
     this.metadataBackend.redisMultiCmd(QUEUE.DB, [
         [ 'RPUSH', QUEUE.PREFIX + user, jobId ],
         [ 'SADD', QUEUE.INDEX, user ]

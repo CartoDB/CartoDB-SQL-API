@@ -7,15 +7,17 @@ var BATCH_SOURCE = '../../../batch/';
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 
+var BatchLogger = require(BATCH_SOURCE + 'batch-logger');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 var JobFactory = require(BATCH_SOURCE + 'models/job_factory');
 var jobStatus = require(BATCH_SOURCE + 'job_status');
 
+var logger = new BatchLogger(null, 'batch-queries');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
+var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
 
 var queue = require('queue-async');
 
@@ -33,7 +35,7 @@ function createWadusJob() {
 }
 
 describe('job backend', function() {
-    var jobBackend = new JobBackend(metadataBackend, jobQueue);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
     after(function (done) {
         redisUtils.clean('batch:*', done);
