@@ -123,7 +123,7 @@ process.on('SIGHUP', function() {
     }
 });
 
-process.on('SIGTERM', function () {
+process.once('SIGTERM', function () {
     listener.close(function () {
         server.batch.stop(function () {
             server.batch.drain(function (err) {
