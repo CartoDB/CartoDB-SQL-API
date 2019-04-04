@@ -45,6 +45,7 @@ Batch.prototype.start = function () {
                 return self.emit('error', err);
             }
 
+            self.logger.debug('Batch Queries ready!');
             self.emit('ready');
         });
     });

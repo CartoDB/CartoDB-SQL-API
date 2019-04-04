@@ -127,20 +127,16 @@ process.on('SIGTERM', function () {
     global.logger.debug('Signal TERM Received');
     listener.close(function () {
         global.logger.debug('Http server closed');
-        server.batch.stop(function (err) {
+
+        server.batch.stop();
+        server.batch.drain(function (err) {
             if (err) {
                 global.logger.error(err);
+                return process.exit(1);
             }
 
-            server.batch.drain(function (err) {
-                if (err) {
-                    global.logger.error(err);
-                    return process.exit(1);
-                }
-
-                global.logger.info('Exit gracefully');
-                process.exit(0);
-            });
+            global.logger.info('Exit gracefully');
+            process.exit(0);
         });
     });
 });

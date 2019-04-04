@@ -96,6 +96,7 @@ JobQueue.prototype.scanQueues = function (callback) {
             return callback(err);
         }
 
+        this.logger.debug('JobQueue.scanQueues found queues=%s', queues.join(', '));
         self.addToQueueIndex(queues, function (err) {
             if (err) {
                 return callback(err);
