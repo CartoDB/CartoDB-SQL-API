@@ -135,7 +135,7 @@ function addHandlers({ killTimeout }) {
 
 function exitProcess (killTimeout) {
     return function exitProcessFn (signal) {
-        scheduleForcedExit(killTimeout, logger);
+        scheduleForcedExit(killTimeout);
 
         let code = 0;
 
