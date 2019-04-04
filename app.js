@@ -124,15 +124,24 @@ process.on('SIGHUP', function() {
 });
 
 process.on('SIGTERM', function () {
-    server.batch.stop();
-    server.batch.drain(function (err) {
-        if (err) {
-            console.log('Exit with error');
-            return process.exit(1);
-        }
+    global.logger.debug('Signal TERM Received');
+    listener.close(function () {
+        global.logger.debug('Http server closed');
+        server.batch.stop(function (err) {
+            if (err) {
+                global.logger.error(err);
+            }
 
-        console.log('Exit gracefully');
-        process.exit(0);
+            server.batch.drain(function (err) {
+                if (err) {
+                    global.logger.error(err);
+                    return process.exit(1);
+                }
+
+                global.logger.info('Exit gracefully');
+                process.exit(0);
+            });
+        });
     });
 });
 

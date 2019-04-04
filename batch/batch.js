@@ -152,6 +152,8 @@ Batch.prototype.drain = function (callback) {
     var workingUsers = this.getWorkInProgressUsers();
     var batchQueues = queue(workingUsers.length);
 
+    this.logger.debug('Drain batch-queries processing');
+
     workingUsers.forEach(function (user) {
         batchQueues.defer(self._drainJob.bind(self), user);
     });
@@ -197,6 +199,7 @@ Batch.prototype._drainJob = function (user, callback) {
 };
 
 Batch.prototype.stop = function (callback) {
+    this.logger.debug('Stop batch-queries processing');
     this.removeAllListeners();
     this._stopScheduleInterval();
     this.jobSubscriber.unsubscribe(callback);
