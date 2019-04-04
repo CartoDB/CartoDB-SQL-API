@@ -24,7 +24,7 @@ describe('batch API job queue', function () {
         };
         this.logger = {
             debug: function () {}
-        }
+        };
         this.jobQueue = new JobQueue(this.metadataBackend, this.jobPublisher, this.logger);
     });
 
