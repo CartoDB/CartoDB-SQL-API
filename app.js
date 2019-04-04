@@ -124,20 +124,19 @@ process.on('SIGHUP', function() {
 });
 
 process.on('SIGTERM', function () {
-    global.logger.debug('Signal TERM Received');
-    listener.close();
-    global.logger.debug('Http server closed');
+    listener.close(function () {
+        server.batch.stop(function () {
+            server.batch.drain(function (err) {
+                if (err) {
+                    global.logger.error(err);
+                    return process.exit(1);
+                }
 
-    server.batch.stop();
-    global.logger.debug('Batch queries stopped');
-    server.batch.drain(function (err) {
-        if (err) {
-            global.logger.error(err);
-            return process.exit(1);
-        }
-        global.logger.debug('Batch queries drained');
-        global.logger.info('Exit gracefully');
-        process.exit(0);
+                global.logger.info('Exit gracefully');
+                server.batch.logger.end();
+                process.exit(0);
+            });
+        });
     });
 });
 

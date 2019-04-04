@@ -50,6 +50,21 @@ class Logger {
     reopenFileStreams () {
         this.logger.reopenFileStreams();
     }
+
+    // Ensures that the writable stream is flushed.
+    // Use this function before exiting the process to not lose log entries
+    //
+    // See: https://github.com/trentm/node-bunyan/issues/37
+    // See: https://github.com/trentm/node-bunyan/issues/73
+    end () {
+        // process.stdout cannot be closed
+        if (!this.path) {
+            return;
+        }
+
+        this.logger.streams[0].stream.on('finish', resolve);
+        this.logger.streams[0].stream.end(); // close stream, flush buffer to disk
+    }
 }
 
 module.exports = Logger;
