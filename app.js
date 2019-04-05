@@ -128,14 +128,14 @@ addHandlers({ killTimeout: 45000 });
 function addHandlers({ killTimeout }) {
     // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
     // process.on('uncaughtException', exitProcess(listener, logger, killTimeout));
-    process.once('unhandledRejection', exitProcess(killTimeout));
-    process.once('SIGINT', exitProcess(killTimeout));
-    process.once('SIGTERM', exitProcess(killTimeout));
+    process.on('unhandledRejection', exitProcess({ killTimeout }));
+    process.on('SIGINT', exitProcess({ killTimeout }));
+    process.on('SIGTERM', exitProcess({ killTimeout }));
 }
 
-function exitProcess (killTimeout) {
+function exitProcess ({ killTimeout }) {
     return function exitProcessFn (signal) {
-        scheduleForcedExit(killTimeout);
+        scheduleForcedExit({ killTimeout });
 
         let code = 0;
 
@@ -169,7 +169,7 @@ function exitProcess (killTimeout) {
     };
 }
 
-function scheduleForcedExit (killTimeout) {
+function scheduleForcedExit ({ killTimeout }) {
     // Schedule exit if there is still ongoing work to deal with
     const killTimer = setTimeout(() => {
         global.logger.info('Process didn\'t close on time. Force exit');
