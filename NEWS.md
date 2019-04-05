@@ -6,6 +6,7 @@ Released 2019-mm-dd
 Announcements:
 * Upgrade devel dependency `sqlite3` to version `4.0.6`
 * Log queries (https://github.com/CartoDB/CartoDB-SQL-API/pull/574)
+* Improve batch-queries draining while exiting the process #582
 
 ## 3.0.0
 Released 2019-02-22

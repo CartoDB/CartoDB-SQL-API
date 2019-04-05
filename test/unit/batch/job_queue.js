@@ -22,7 +22,10 @@ describe('batch API job queue', function () {
         this.jobPublisher = {
             publish: function () {}
         };
-        this.jobQueue = new JobQueue(this.metadataBackend, this.jobPublisher);
+        this.logger = {
+            debug: function () {}
+        };
+        this.jobQueue = new JobQueue(this.metadataBackend, this.jobPublisher, this.logger);
     });
 
     it('.enqueue() should enqueue the provided job', function (done) {
@@ -45,5 +48,4 @@ describe('batch API job queue', function () {
             done();
         });
     });
-
 });
