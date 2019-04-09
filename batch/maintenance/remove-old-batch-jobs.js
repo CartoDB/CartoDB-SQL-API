@@ -1,5 +1,7 @@
 'use strict';
 
+// jshint ignore:start
+
 const debug = require('debug')('>');
 debug.enabled = true;
 const { promisify } = require('util');
@@ -127,3 +129,5 @@ async function main () {
 }
 
 main().then(() => process.exit(0));
+
+// jshint ignore:end
