@@ -55,7 +55,7 @@ module.exports = class StreamCopy {
                     .on('error', err => done(err))
                     .on('cancelQuery', err => {
                         if(action === ACTION_TO) {
-                            // See https://www.postgresql.org/docs/9.5/static/protocol-flow.html#PROTOCOL-COPY
+                            // See https://www.postgresql.org/docs/11/protocol-flow.html#PROTOCOL-COPY
                             const cancelingClient = new Client(client.connectionParameters);
                             cancelingClient.cancel(client, pgstream);
 
