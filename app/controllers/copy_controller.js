@@ -71,7 +71,7 @@ function handleCopyTo (logger) {
         // https://github.com/CartoDB/CartoDB-SQL-API/issues/515
         const isGzip = req.get('accept-encoding') && req.get('accept-encoding').includes('gzip');
 
-        const streamCopy = new StreamCopy(sql, userDbParams);
+        const streamCopy = new StreamCopy(sql, userDbParams, logger);
         const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user, isGzip);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
@@ -111,7 +111,7 @@ function handleCopyFrom (logger) {
         const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 2 * 1024 * 1024 * 1024; // 2 GB
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
 
-        const streamCopy = new StreamCopy(sql, userDbParams);
+        const streamCopy = new StreamCopy(sql, userDbParams, logger);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.getPGStream(StreamCopy.ACTION_FROM, (err, pgstream) => {
