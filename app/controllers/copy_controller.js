@@ -113,6 +113,7 @@ function handleCopyFrom (logger) {
 
         const streamCopy = new StreamCopy(sql, userDbParams, logger);
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
+        const decompress = isGzip ? zlib.createGunzip() : new PassThrough();
 
         streamCopy.getPGStream(StreamCopy.ACTION_FROM, (err, pgstream) => {
             if (err) {
@@ -136,6 +137,7 @@ function handleCopyFrom (logger) {
                     metrics.end(null, err);
                     pgstream.emit('error', err);
                 })
+                .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
 
