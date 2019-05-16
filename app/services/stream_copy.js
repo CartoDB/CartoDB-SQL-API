@@ -55,7 +55,7 @@ module.exports = class StreamCopy {
                         done();
                     })
                     .on('error', err => done(err))
-                    .on('cancelQuery', () => this.cancel(client, action));
+                    .on('cancelQuery', () => this.cancel(client.processID, action));
 
                 callback(null, pgstream);
             });
@@ -66,14 +66,14 @@ module.exports = class StreamCopy {
         return this.stream.rowCount;
     }
 
-    cancel (client, action) {
-        const pid = client.processID;
+    cancel (pid, action) {
         const pg = new PSQL(this.dbParams);
 
         pg.query(cancelQuery(pid), (err, result) => {
             if (err) {
                 return this.logger.error(err);
             }
+
             const actionType = action === ACTION_TO ? ACTION_TO : ACTION_FROM;
             const isCancelled = result.rows[0].pg_cancel_backend;
 
