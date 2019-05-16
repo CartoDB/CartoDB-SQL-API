@@ -112,8 +112,8 @@ function handleCopyFrom (logger) {
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
 
         const streamCopy = new StreamCopy(sql, userDbParams, logger);
-        const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
         const decompress = isGzip ? zlib.createGunzip() : new PassThrough();
+        const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.getPGStream(StreamCopy.ACTION_FROM, (err, pgstream) => {
             if (err) {
@@ -155,7 +155,8 @@ function handleCopyFrom (logger) {
                 .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
-                    req.unpipe(pgstream);
+                    req.unpipe(decompress);
+                    decompress.unpipe(pgstream);
                     return next(err);
                 })
                 .on('end', () => {
