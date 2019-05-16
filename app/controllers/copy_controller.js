@@ -127,32 +127,30 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .on('close', () => {
-                    const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery', err);
-                    pgstream.emit('error', err);
-                })
-                .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
-                .on('error', err => {
-                    err.message = `Error while gunzipping: ${err.message}`;
-                    metrics.end(null, err);
-                    pgstream.emit('error', err);
+                    pgstream.emit('cancelQuery');
+                    pgstream.emit('error', new Error('Connection closed by client'));
                 })
                 .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
 
                     if(metrics.size > dbRemainingQuota) {
-                        const quotaError = new Error('DB Quota exceeded');
-                        pgstream.emit('cancelQuery', err);
-                        pgstream.emit('error', quotaError);
+                        pgstream.emit('cancelQuery');
+                        return pgstream.emit('error', new Error('DB Quota exceeded'));
                     }
+
                     if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
-                        const maxPostSizeError = new Error(
+                        pgstream.emit('cancelQuery');
+                        return pgstream.emit('error', new Error(
                             `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
-                        );
-                        pgstream.emit('cancelQuery', err);
-                        pgstream.emit('error', maxPostSizeError);
+                        ));
                     }
+                })
+                .on('error', err => {
+                    err.message = `Error while gunzipping: ${err.message}`;
+                    metrics.end(null, err);
+                    pgstream.emit('cancelQuery');
+                    pgstream.emit('error', err);
                 })
                 .pipe(pgstream)
                 .on('error', err => {
