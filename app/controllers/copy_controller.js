@@ -36,7 +36,7 @@ CopyController.prototype.route = function (app) {
             dbQuotaMiddleware(),
             handleQueryMiddleware(),
             handleCopyFrom(this.logger),
-            errorHandler(),
+            errorHandler(this.logger),
             errorMiddleware()
         ];
     };
@@ -51,7 +51,7 @@ CopyController.prototype.route = function (app) {
             validateCopyQuery(),
             handleQueryMiddleware(),
             handleCopyTo(this.logger),
-            errorHandler(),
+            errorHandler(this.logger),
             errorMiddleware()
         ];
     };
@@ -94,7 +94,7 @@ function handleCopyTo (logger) {
                 .pipe(res)
                 .on('close', () => {
                     const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery', err);
+                    pgstream.emit('cancelQuery');
                     pgstream.emit('error', err);
                 })
                 .on('error', err => {
@@ -193,10 +193,10 @@ function validateCopyQuery () {
     };
 }
 
-function errorHandler () {
+function errorHandler (logger) {
     return function errorHandlerMiddleware (err, req, res, next) {
         if (res.headersSent) {
-            console.error("EXCEPTION REPORT: " + err.stack);
+            logger.error(err);
             const errorHandler = errorHandlerFactory(err);
             res.write(JSON.stringify(errorHandler.getResponse()));
             res.end();
