@@ -91,7 +91,7 @@ function handleCopyTo (logger) {
                     return next(err);
                 })
                 .on('end', () => metrics.end(streamCopy.getRowCount()))
-                .pipe(res)
+            .pipe(res)
                 .on('close', () => {
                     const err = new Error('Connection closed by client');
                     pgstream.emit('cancelQuery');
@@ -130,7 +130,7 @@ function handleCopyFrom (logger) {
                     pgstream.emit('cancelQuery');
                     pgstream.emit('error', new Error('Connection closed by client'));
                 })
-                .pipe(decompress)
+            .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
 
@@ -152,7 +152,7 @@ function handleCopyFrom (logger) {
                     pgstream.emit('cancelQuery');
                     pgstream.emit('error', err);
                 })
-                .pipe(pgstream)
+            .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
                     req.unpipe(decompress);
