@@ -50,14 +50,16 @@ module.exports = class StreamCopy {
                 this.stream = streamMaker(this.sql);
                 const pgstream = client.query(this.stream);
 
-                pgstream
-                    .on('end', () => {
-                        if(action === ACTION_TO) {
-                            pgstream.connection.stream.resume();
-                        }
+                if (action === ACTION_TO) {
+                    pgstream.on('end', () => {
+                        pgstream.connection.stream.resume();
                         done();
-                    })
-                    .on('error', err => done(err));
+                    });
+                } else if (action === ACTION_FROM) {
+                    pgstream.on('finish', () => done())
+                }
+
+                pgstream.on('error', err => done(err));
 
                 callback(null, pgstream);
             });
