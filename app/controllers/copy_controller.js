@@ -93,9 +93,8 @@ function handleCopyTo (logger) {
                 .on('end', () => metrics.end(streamCopy.getRowCount()))
             .pipe(res)
                 .on('close', () => {
-                    const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery');
-                    pgstream.emit('error', err);
+                    streamCopy.cancel();
+                    pgstream.emit('error', new Error('Connection closed by client'));
                 })
                 .on('error', err => {
                     pgstream.emit('error', err);
@@ -127,7 +126,7 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .on('close', () => {
-                    pgstream.emit('cancelQuery');
+                    streamCopy.cancel();
                     pgstream.emit('error', new Error('Connection closed by client'));
                 })
             .pipe(decompress)
@@ -135,12 +134,12 @@ function handleCopyFrom (logger) {
                     metrics.addSize(data.length);
 
                     if(metrics.size > dbRemainingQuota) {
-                        pgstream.emit('cancelQuery');
+                        streamCopy.cancel();
                         return pgstream.emit('error', new Error('DB Quota exceeded'));
                     }
 
                     if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
-                        pgstream.emit('cancelQuery');
+                        streamCopy.cancel();
                         return pgstream.emit('error', new Error(
                             `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
                         ));
@@ -149,7 +148,7 @@ function handleCopyFrom (logger) {
                 .on('error', err => {
                     err.message = `Error while gunzipping: ${err.message}`;
                     metrics.end(null, err);
-                    pgstream.emit('cancelQuery');
+                    streamCopy.cancel();
                     pgstream.emit('error', err);
                 })
             .pipe(pgstream)
@@ -157,6 +156,7 @@ function handleCopyFrom (logger) {
                     metrics.end(null, err);
                     req.unpipe(decompress);
                     decompress.unpipe(pgstream);
+
                     return next(err);
                 })
                 .on('end', () => {
