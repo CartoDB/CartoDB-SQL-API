@@ -90,7 +90,7 @@ function handleCopyTo (logger) {
 
                     return next(err);
                 })
-                .on('end', () => metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_TO) ))
+                .on('end', () => metrics.end(streamCopy.getRowCount()))
                 .pipe(res)
                 .on('close', () => {
                     const err = new Error('Connection closed by client');
@@ -160,7 +160,7 @@ function handleCopyFrom (logger) {
                     return next(err);
                 })
                 .on('end', () => {
-                    metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_FROM) );
+                    metrics.end(streamCopy.getRowCount());
 
                     const { time, rows } = metrics;
 
