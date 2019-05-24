@@ -46,17 +46,14 @@ module.exports = class StreamCopy {
 
                 this.clientProcessID = client.processID;
 
-                const streamMaker = action === ACTION_TO ? copyTo : copyFrom;
-                this.stream = streamMaker(this.sql);
+                this.stream  = action === ACTION_TO ? copyTo(this.sql) : copyFrom(this.sql);
+
                 const pgstream = client.query(this.stream);
 
                 if (action === ACTION_TO) {
-                    pgstream.on('end', () => {
-                        pgstream.connection.stream.resume();
-                        done();
-                    });
+                    pgstream.on('end', () => done());
                 } else if (action === ACTION_FROM) {
-                    pgstream.on('finish', () => done())
+                    pgstream.on('finish', () => done());
                 }
 
                 pgstream.on('error', err => done(err));
