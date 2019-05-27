@@ -12,7 +12,7 @@ const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const zlib = require('zlib');
-const { PassThrough } = require('stream');
+const { PassThrough, Transform } = require('stream');
 const handleQueryMiddleware = require('../middlewares/handle-query');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
@@ -97,6 +97,26 @@ function handleCopyTo (logger) {
     };
 }
 
+class Throttle extends Transform {
+    constructor (pgstream, ...args) {
+        super(...args);
+
+        this.pgstream = pgstream;
+
+        this.timeout = setTimeout(() => {
+            pgstream.emit('error', new Error('Connection closed by server: no data received'));
+        }, 5000);
+    }
+
+    _transform (chunk, encoding, callback) {
+        if (!this.timeout._destroyed) {
+            clearTimeout(this.timeout);
+        }
+
+        callback(null, chunk);
+    }
+}
+
 function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
         const { sql, userDbParams, user, dbRemainingQuota } = res.locals;
@@ -113,6 +133,8 @@ function handleCopyFrom (logger) {
                 return next(err);
             }
 
+            const throttle = new Throttle(pgstream);
+
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
                 .on('error', err => {
@@ -120,6 +142,7 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+            .pipe(throttle)
             .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
