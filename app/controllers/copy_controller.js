@@ -91,13 +91,8 @@ function handleCopyTo (logger) {
                 })
                 .on('end', () => metrics.end(streamCopy.getRowCount()))
             .pipe(res)
-                .on('close', () => {
-                    streamCopy.cancel();
-                    pgstream.emit('error', new Error('Connection closed by client'));
-                })
-                .on('error', err => {
-                    pgstream.emit('error', err);
-                });
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+                .on('error', err => pgstream.emit('error', err));
         });
     };
 }
@@ -124,21 +119,16 @@ function handleCopyFrom (logger) {
                     metrics.end(null, err);
                     pgstream.emit('error', err);
                 })
-                .on('close', () => {
-                    streamCopy.cancel();
-                    pgstream.emit('error', new Error('Connection closed by client'));
-                })
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
             .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
 
                     if(metrics.size > dbRemainingQuota) {
-                        streamCopy.cancel();
                         return pgstream.emit('error', new Error('DB Quota exceeded'));
                     }
 
                     if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
-                        streamCopy.cancel();
                         return pgstream.emit('error', new Error(
                             `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
                         ));
@@ -147,7 +137,6 @@ function handleCopyFrom (logger) {
                 .on('error', err => {
                     err.message = `Error while gunzipping: ${err.message}`;
                     metrics.end(null, err);
-                    streamCopy.cancel();
                     pgstream.emit('error', err);
                 })
             .pipe(pgstream)

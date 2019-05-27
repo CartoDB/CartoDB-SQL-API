@@ -47,7 +47,7 @@ module.exports = class StreamCopy {
 
                 this.clientProcessID = client.processID;
 
-                this.stream  = action === ACTION_TO ? copyTo(this.sql) : copyFrom(this.sql);
+                this.stream = action === ACTION_TO ? copyTo(this.sql) : copyFrom(this.sql);
 
                 const pgstream = client.query(this.stream);
 
@@ -57,7 +57,10 @@ module.exports = class StreamCopy {
                     pgstream.on('finish', () => done());
                 }
 
-                pgstream.on('error', err => done(err));
+                pgstream.on('error', err => {
+                    this._cancel(client.processID, action);
+                    done(err);
+                });
 
                 callback(null, pgstream);
             });
@@ -68,10 +71,9 @@ module.exports = class StreamCopy {
         return this.stream.rowCount;
     }
 
-    cancel () {
-        const pid = this.clientProcessID;
+    _cancel (pid, action) {
         const pg = new PSQL(this.dbParams);
-        const actionType = this.action === ACTION_TO ? ACTION_TO : ACTION_FROM;
+        const actionType = action === ACTION_TO ? ACTION_TO : ACTION_FROM;
 
         pg.query(cancelQuery(pid), (err, result) => {
             if (err) {
