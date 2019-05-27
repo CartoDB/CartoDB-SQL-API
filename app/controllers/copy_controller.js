@@ -86,7 +86,6 @@ function handleCopyTo (logger) {
                 .on('data', data => metrics.addSize(data.length))
                 .on('error', err => {
                     metrics.end(null, err);
-                    pgstream.unpipe(res);
 
                     return next(err);
                 })
@@ -154,8 +153,6 @@ function handleCopyFrom (logger) {
             .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
-                    req.unpipe(decompress);
-                    decompress.unpipe(pgstream);
 
                     return next(err);
                 })
