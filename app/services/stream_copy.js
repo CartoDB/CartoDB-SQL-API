@@ -8,7 +8,8 @@ const ACTION_TO = 'to';
 const ACTION_FROM = 'from';
 const DEFAULT_TIMEOUT = "'5h'";
 
-const cancelQuery = pid => `SELECT pg_cancel_backend(${pid})`;
+const cancelQuery = pid => `SELECT pg_cancel_backend(${pid}) as cancelled`;
+const terminateQuery = pid => `SELECT pg_terminate_backend(${pid}) as terminated`;
 const timeoutQuery = timeout => `SET statement_timeout=${timeout}`;
 
 module.exports = class StreamCopy {
@@ -70,20 +71,34 @@ module.exports = class StreamCopy {
     cancel () {
         const pid = this.clientProcessID;
         const pg = new PSQL(this.dbParams);
+        const actionType = this.action === ACTION_TO ? ACTION_TO : ACTION_FROM;
 
         pg.query(cancelQuery(pid), (err, result) => {
             if (err) {
                 return this.logger.error(err);
             }
 
-            const actionType = this.action === ACTION_TO ? ACTION_TO : ACTION_FROM;
-            const isCancelled = result.rows[0].pg_cancel_backend;
+            const isCancelled = result.rows.length && result.rows[0].cancelled;
 
-            if (!isCancelled) {
-                return this.logger.error(new Error(`Unable to cancel "copy ${actionType}" stream query (pid: ${pid})`));
+            if (isCancelled) {
+                return this.logger.info(`Canceled "copy ${actionType}" stream query successfully (pid: ${pid})`);
             }
 
-            return this.logger.info(`Canceled "copy ${actionType}" stream query successfully (pid: ${pid})`);
+            return pg.query(terminateQuery(pid), (err, result) => {
+                if (err) {
+                    return this.logger.error(err);
+                }
+
+                const isTerminated = result.rows.length && result.rows[0].terminated;
+
+                if (!isTerminated) {
+                    return this.logger.error(
+                        new Error(`Unable to terminate "copy ${actionType}" stream query (pid: ${pid})`)
+                    );
+                }
+
+                return this.logger.info(`Terminated "copy ${actionType}" stream query successfully (pid: ${pid})`);
+            });
         });
     }
 };
