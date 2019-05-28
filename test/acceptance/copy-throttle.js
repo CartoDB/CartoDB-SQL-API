@@ -94,7 +94,7 @@ describe('COPY FROM throttle', function () {
             method: 'GET'
         };
 
-        request(dropTableOptions, function (err, res, body) {
+        request(dropTableOptions, function (err) {
             if (err) {
                 return done(err);
             }
