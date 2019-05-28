@@ -97,23 +97,50 @@ function handleCopyTo (logger) {
     };
 }
 
-class Throttle extends Transform {
+class Throttler extends Transform {
     constructor (pgstream, ...args) {
         super(...args);
 
         this.pgstream = pgstream;
 
-        this.timeout = setTimeout(() => {
-            pgstream.emit('error', new Error('Connection closed by server: no data received'));
-        }, 5000);
+        this.sampleLength = global.settings.copy_from_maximum_slow_input_speed_interval || 15;
+        this.minimunBytesPerSecondThershold = global.settings.copy_from_minimum_input_speed || 1;
+        this.byteCount = 0;
+        this.bytesPerSecondHistory = [];
+
+        this._interval = setInterval(this._updateMetrics.bind(this), 1000);
+    }
+
+    _updateMetrics () {
+        this.bytesPerSecondHistory.push(this.byteCount);
+        this.byteCount = 0;
+
+        if (this.bytesPerSecondHistory > this.sampleLength) {
+            this.bytesPerSecondHistory.shift();
+        }
+
+        const doesNotReachThreshold = [];
+
+        for (const bytesPerSecond of this.bytesPerSecondHistory) {
+            if (bytesPerSecond <= this.minimunBytesPerSecondThershold) {
+                doesNotReachThreshold.push(true);
+            }
+        }
+
+        if (doesNotReachThreshold.length >= this.sampleLength) {
+            clearInterval(this._interval);
+            this.pgstream.emit('error', new Error('Connection closed by server: input data too slow'));
+        }
     }
 
     _transform (chunk, encoding, callback) {
-        if (!this.timeout._destroyed) {
-            clearTimeout(this.timeout);
-        }
-
+        this.byteCount += chunk.length;
         callback(null, chunk);
+    }
+
+    _flush (callback) {
+        clearInterval(this._interval);
+        callback();
     }
 }
 
@@ -133,7 +160,7 @@ function handleCopyFrom (logger) {
                 return next(err);
             }
 
-            const throttle = new Throttle(pgstream);
+            const throttle = new Throttler(pgstream);
 
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)

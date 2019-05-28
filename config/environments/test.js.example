@@ -36,6 +36,8 @@ module.exports.batch_log_filename = 'logs/batch-queries.log';
 module.exports.copy_timeout = "'5h'";
 module.exports.copy_from_max_post_size = 2 * 1024 * 1024 * 1024 // 2 GB;
 module.exports.copy_from_max_post_size_pretty = '2 GB';
+module.exports.copy_from_minimum_input_speed = 1; // 1 byte per second
+module.exports.copy_from_maximum_slow_input_speed_interval = 15 // 15 seconds
 // Max number of queued jobs a user can have at a given time
 module.exports.batch_max_queued_jobs = 64;
 // Capacity strategy to use.
