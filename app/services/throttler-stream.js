@@ -47,4 +47,4 @@ module.exports = class Throttler extends Transform {
         clearInterval(this._interval);
         callback();
     }
-}
+};
