@@ -11,6 +11,7 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
+const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
 const handleQueryMiddleware = require('../middlewares/handle-query');
@@ -113,6 +114,8 @@ function handleCopyFrom (logger) {
                 return next(err);
             }
 
+            const throttle = new Throttler(pgstream);
+
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
                 .on('error', err => {
@@ -120,6 +123,7 @@ function handleCopyFrom (logger) {
                     pgstream.emit('error', err);
                 })
                 .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+            .pipe(throttle)
             .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
