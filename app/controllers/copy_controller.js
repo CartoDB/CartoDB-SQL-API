@@ -11,6 +11,7 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
+const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
 const handleQueryMiddleware = require('../middlewares/handle-query');
@@ -86,20 +87,13 @@ function handleCopyTo (logger) {
                 .on('data', data => metrics.addSize(data.length))
                 .on('error', err => {
                     metrics.end(null, err);
-                    pgstream.unpipe(res);
 
                     return next(err);
                 })
-                .on('end', () => metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_TO) ))
-                .pipe(res)
-                .on('close', () => {
-                    const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery');
-                    pgstream.emit('error', err);
-                })
-                .on('error', err => {
-                    pgstream.emit('error', err);
-                });
+                .on('end', () => metrics.end(streamCopy.getRowCount()))
+            .pipe(res)
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+                .on('error', err => pgstream.emit('error', err));
         });
     };
 }
@@ -120,27 +114,25 @@ function handleCopyFrom (logger) {
                 return next(err);
             }
 
+            const throttle = new Throttler(pgstream);
+
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
                 .on('error', err => {
                     metrics.end(null, err);
                     pgstream.emit('error', err);
                 })
-                .on('close', () => {
-                    pgstream.emit('cancelQuery');
-                    pgstream.emit('error', new Error('Connection closed by client'));
-                })
-                .pipe(decompress)
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+            .pipe(throttle)
+            .pipe(decompress)
                 .on('data', data => {
                     metrics.addSize(data.length);
 
                     if(metrics.size > dbRemainingQuota) {
-                        pgstream.emit('cancelQuery');
                         return pgstream.emit('error', new Error('DB Quota exceeded'));
                     }
 
                     if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
-                        pgstream.emit('cancelQuery');
                         return pgstream.emit('error', new Error(
                             `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
                         ));
@@ -149,18 +141,16 @@ function handleCopyFrom (logger) {
                 .on('error', err => {
                     err.message = `Error while gunzipping: ${err.message}`;
                     metrics.end(null, err);
-                    pgstream.emit('cancelQuery');
                     pgstream.emit('error', err);
                 })
-                .pipe(pgstream)
+            .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
-                    req.unpipe(decompress);
-                    decompress.unpipe(pgstream);
+
                     return next(err);
                 })
                 .on('end', () => {
-                    metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_FROM) );
+                    metrics.end(streamCopy.getRowCount());
 
                     const { time, rows } = metrics;
 
