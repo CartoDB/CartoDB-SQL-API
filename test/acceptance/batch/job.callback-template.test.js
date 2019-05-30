@@ -43,7 +43,7 @@ describe('Batch API callback templates', function () {
         };
 
         self.testClient.getResult(
-            'create table test_batch_errors (job_id text, error_message text)', function (err) {
+            'BEGIN;CREATE TABLE test_batch_errors (job_id text, error_message text);COMMIT', function (err) {
             if (err) {
                 return done(err);
             }

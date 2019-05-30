@@ -11,6 +11,7 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const errorHandlerFactory = require('../services/error_handler_factory');
 const StreamCopy = require('../services/stream_copy');
 const StreamCopyMetrics = require('../services/stream_copy_metrics');
+const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
 const handleQueryMiddleware = require('../middlewares/handle-query');
@@ -36,7 +37,7 @@ CopyController.prototype.route = function (app) {
             dbQuotaMiddleware(),
             handleQueryMiddleware(),
             handleCopyFrom(this.logger),
-            errorHandler(),
+            errorHandler(this.logger),
             errorMiddleware()
         ];
     };
@@ -51,7 +52,7 @@ CopyController.prototype.route = function (app) {
             validateCopyQuery(),
             handleQueryMiddleware(),
             handleCopyTo(this.logger),
-            errorHandler(),
+            errorHandler(this.logger),
             errorMiddleware()
         ];
     };
@@ -71,7 +72,7 @@ function handleCopyTo (logger) {
         // https://github.com/CartoDB/CartoDB-SQL-API/issues/515
         const isGzip = req.get('accept-encoding') && req.get('accept-encoding').includes('gzip');
 
-        const streamCopy = new StreamCopy(sql, userDbParams);
+        const streamCopy = new StreamCopy(sql, userDbParams, logger);
         const metrics = new StreamCopyMetrics(logger, 'copyto', sql, user, isGzip);
 
         res.header("Content-Disposition", `attachment; filename=${encodeURIComponent(filename)}`);
@@ -86,20 +87,13 @@ function handleCopyTo (logger) {
                 .on('data', data => metrics.addSize(data.length))
                 .on('error', err => {
                     metrics.end(null, err);
-                    pgstream.unpipe(res);
 
                     return next(err);
                 })
-                .on('end', () => metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_TO) ))
-                .pipe(res)
-                .on('close', () => {
-                    const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery', err);
-                    pgstream.emit('error', err);
-                })
-                .on('error', err => {
-                    pgstream.emit('error', err);
-                });
+                .on('end', () => metrics.end(streamCopy.getRowCount()))
+            .pipe(res)
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+                .on('error', err => pgstream.emit('error', err));
         });
     };
 }
@@ -111,7 +105,8 @@ function handleCopyFrom (logger) {
         const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 2 * 1024 * 1024 * 1024; // 2 GB
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
 
-        const streamCopy = new StreamCopy(sql, userDbParams);
+        const streamCopy = new StreamCopy(sql, userDbParams, logger);
+        const decompress = isGzip ? zlib.createGunzip() : new PassThrough();
         const metrics = new StreamCopyMetrics(logger, 'copyfrom', sql, user, isGzip);
 
         streamCopy.getPGStream(StreamCopy.ACTION_FROM, (err, pgstream) => {
@@ -119,47 +114,43 @@ function handleCopyFrom (logger) {
                 return next(err);
             }
 
+            const throttle = new Throttler(pgstream);
+
             req
                 .on('data', data => isGzip ? metrics.addGzipSize(data.length) : undefined)
                 .on('error', err => {
                     metrics.end(null, err);
                     pgstream.emit('error', err);
                 })
-                .on('close', () => {
-                    const err = new Error('Connection closed by client');
-                    pgstream.emit('cancelQuery', err);
-                    pgstream.emit('error', err);
+                .on('close', () => pgstream.emit('error', new Error('Connection closed by client')))
+            .pipe(throttle)
+            .pipe(decompress)
+                .on('data', data => {
+                    metrics.addSize(data.length);
+
+                    if(metrics.size > dbRemainingQuota) {
+                        return pgstream.emit('error', new Error('DB Quota exceeded'));
+                    }
+
+                    if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
+                        return pgstream.emit('error', new Error(
+                            `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
+                        ));
+                    }
                 })
-                .pipe(isGzip ? zlib.createGunzip() : new PassThrough())
                 .on('error', err => {
                     err.message = `Error while gunzipping: ${err.message}`;
                     metrics.end(null, err);
                     pgstream.emit('error', err);
                 })
-                .on('data', data => {
-                    metrics.addSize(data.length);
-
-                    if(metrics.size > dbRemainingQuota) {
-                        const quotaError = new Error('DB Quota exceeded');
-                        pgstream.emit('cancelQuery', err);
-                        pgstream.emit('error', quotaError);
-                    }
-                    if((metrics.gzipSize || metrics.size) > COPY_FROM_MAX_POST_SIZE) {
-                        const maxPostSizeError = new Error(
-                            `COPY FROM maximum POST size of ${COPY_FROM_MAX_POST_SIZE_PRETTY} exceeded`
-                        );
-                        pgstream.emit('cancelQuery', err);
-                        pgstream.emit('error', maxPostSizeError);
-                    }
-                })
-                .pipe(pgstream)
+            .pipe(pgstream)
                 .on('error', err => {
                     metrics.end(null, err);
-                    req.unpipe(pgstream);
+
                     return next(err);
                 })
                 .on('end', () => {
-                    metrics.end( streamCopy.getRowCount(StreamCopy.ACTION_FROM) );
+                    metrics.end(streamCopy.getRowCount());
 
                     const { time, rows } = metrics;
 
@@ -192,10 +183,10 @@ function validateCopyQuery () {
     };
 }
 
-function errorHandler () {
+function errorHandler (logger) {
     return function errorHandlerMiddleware (err, req, res, next) {
         if (res.headersSent) {
-            console.error("EXCEPTION REPORT: " + err.stack);
+            logger.error(err);
             const errorHandler = errorHandlerFactory(err);
             res.write(JSON.stringify(errorHandler.getResponse()));
             res.end();
