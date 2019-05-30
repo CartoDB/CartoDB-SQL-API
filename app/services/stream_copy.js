@@ -32,7 +32,6 @@ module.exports = class StreamCopy {
     }
 
     getPGStream(action, callback) {
-        this.action = action;
         const pg = new PSQL(this.dbParams);
 
         pg.connect((err, client, done) => {
