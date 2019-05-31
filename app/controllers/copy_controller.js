@@ -53,6 +53,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             validateCopyQuery(),
             handleQueryMiddleware(),
+            getFilenameParam(),
             handleCopyTo(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
@@ -64,11 +65,9 @@ CopyController.prototype.route = function (app) {
     app.post(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
 };
 
-
 function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
-        const { sql, userDbParams, user } = res.locals;
-        const filename = ( req.query.filename || req.body && req.body.filename) || 'carto-sql-copyto.dmp';
+        const { sql, filename, userDbParams, user } = res.locals;
 
         // it is not sure, nginx may choose not to compress the body
         // but we want to know it and save it in the metrics
@@ -167,6 +166,20 @@ function handleCopyFrom (logger) {
                     });
                 });
         });
+    };
+}
+
+function getFilenameParam () {
+    return function getFilenameParamMiddleware (req, res, next) {
+        let filename = (req.query && req.query.filename) || (req.body && req.body.filename);
+
+        if (!filename) {
+            filename = 'carto-sql-copyto.dmp';
+        }
+
+        res.locals.filename = filename;
+
+        next();
     };
 }
 
