@@ -137,7 +137,7 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should work with copyfrom endpoint', function(done){
+        it('should work with copyto endpoint', function(done){
             assert.response(server, {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
