@@ -185,7 +185,7 @@ function getFilenameParam () {
 
 function validateCopyQuery () {
     return function validateCopyQueryMiddleware (req, res, next) {
-        const sql = req.query.q || (req.body && req.body.q);
+        const sql = (req.query && req.query.q) || (req.body && req.body.q);
 
         if (!sql) {
             return next(new Error("SQL is missing"));
