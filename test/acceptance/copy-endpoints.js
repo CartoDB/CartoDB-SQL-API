@@ -170,7 +170,7 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it.only('should work with copyto endpoint', function(done){
+        it('should work with copyto endpoint and POST method', function(done){
             assert.response(server, {
                 url: "/api/v1/sql/copyfrom?" + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
@@ -191,7 +191,7 @@ describe('copy-endpoints', function() {
                     }),
                     headers: {
                         host: 'vizzuality.cartodb.com',
-                        'Content-Type': 'application/json; charset=utf-8'
+                        'Content-Type': 'application/x-www-form-urlencoded'
                     },
                     method: 'POST'
                 }, {}, function(err, res) {
