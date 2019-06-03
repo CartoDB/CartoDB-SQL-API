@@ -8,6 +8,7 @@ Announcements:
 * Log queries (https://github.com/CartoDB/CartoDB-SQL-API/pull/574)
 * Improve batch-queries draining while exiting the process #582
 * Implement a mechanism to short out hung connections in copy-from endpoints.
+* Implement POST method for copy-to endpoint,
 
 
 ## 3.0.0
