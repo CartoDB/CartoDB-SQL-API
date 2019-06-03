@@ -46,8 +46,8 @@ JsonFormat.prototype.formatResultFields = function(flds) {
       }
     }
 
-    if (cname === 'geometry') {
-        const { wkbtype, ndims, srid } = this.client.typeModInfo(f.dataTypeID);
+    if (['geography', 'geometry'].includes(cname)) {
+        let { wkbtype, ndims, srid } = this.client.typeModInfo(f.dataTypeModifier);
         nfields[f.name] = { type: tname, wkbtype, dims: ndims, srid };
     } else {
         nfields[f.name] = { type: tname, pgtype: cname };
