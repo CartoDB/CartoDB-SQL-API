@@ -15,6 +15,7 @@ const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
 const handleQueryMiddleware = require('../middlewares/handle-query');
+const bodyParserMiddleware = require('../middlewares/body-parser');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
     this.metadataBackend = metadataBackend;
@@ -44,6 +45,7 @@ CopyController.prototype.route = function (app) {
 
     const copyToMiddlewares = endpointGroup => {
         return [
+            bodyParserMiddleware(),
             initializeProfilerMiddleware('copyto'),
             userMiddleware(this.metadataBackend),
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
@@ -51,6 +53,7 @@ CopyController.prototype.route = function (app) {
             connectionParamsMiddleware(this.userDatabaseService),
             validateCopyQuery(),
             handleQueryMiddleware(),
+            getFilenameParam(),
             handleCopyTo(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
@@ -59,13 +62,12 @@ CopyController.prototype.route = function (app) {
 
     app.post(`${base_url}/sql/copyfrom`, copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
     app.get(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+    app.post(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
 };
-
 
 function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
-        const { sql, userDbParams, user } = res.locals;
-        const filename = req.query.filename || 'carto-sql-copyto.dmp';
+        const { sql, filename, userDbParams, user } = res.locals;
 
         // it is not sure, nginx may choose not to compress the body
         // but we want to know it and save it in the metrics
@@ -167,9 +169,23 @@ function handleCopyFrom (logger) {
     };
 }
 
+function getFilenameParam () {
+    return function getFilenameParamMiddleware (req, res, next) {
+        let filename = (req.query && req.query.filename) || (req.body && req.body.filename);
+
+        if (!filename) {
+            filename = 'carto-sql-copyto.dmp';
+        }
+
+        res.locals.filename = filename;
+
+        next();
+    };
+}
+
 function validateCopyQuery () {
     return function validateCopyQueryMiddleware (req, res, next) {
-        const sql = req.query.q;
+        const sql = (req.query && req.query.q) || (req.body && req.body.q);
 
         if (!sql) {
             return next(new Error("SQL is missing"));

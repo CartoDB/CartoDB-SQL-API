@@ -170,6 +170,46 @@ describe('copy-endpoints', function() {
             });
         });
 
+        it('should work with copyto endpoint and POST method', function(done){
+            assert.response(server, {
+                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                    q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
+                }),
+                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                headers: {
+                    host: 'vizzuality.cartodb.com'
+                },
+                method: 'POST'
+            }, {}, function(err) {
+                assert.ifError(err);
+
+                assert.response(server, {
+                    url: '/api/v1/sql/copyto',
+                    data: querystring.stringify({
+                        q: 'COPY copy_endpoints_test TO STDOUT',
+                        filename: '/tmp/output.dmp'
+                    }),
+                    headers: {
+                        host: 'vizzuality.cartodb.com',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    method: 'POST'
+                }, {}, function(err, res) {
+                    assert.ifError(err);
+
+                    assert.strictEqual(
+                        res.body,
+                        '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
+                    );
+
+                    assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
+                    assert.equal(res.headers['content-type'], 'application/octet-stream');
+
+                    done();
+                });
+            });
+        });
+
         it('should fail with copyto endpoint and without sql', function(done){
             assert.response(server, {
                 url: "/api/v1/sql/copyto?" + querystring.stringify({
