@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.1
+## 3.1.0
 Released 2019-mm-dd
 
 Announcements:
