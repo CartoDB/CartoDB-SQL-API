@@ -60,8 +60,6 @@ describe('results-pagination', function() {
             }
         }
         var prcur = pr[testing++];
-        console.log("Test " + testing + "/" + pr.length + " method " + methods[method] + " " +
-            ( authorized ? "authenticated" : "" ) );
         var page = prcur[0];
         var nrows = prcur[1];
         var data_obj = {

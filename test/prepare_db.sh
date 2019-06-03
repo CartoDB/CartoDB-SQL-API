@@ -7,7 +7,6 @@
 
 PREPARE_REDIS=yes
 PREPARE_PGSQL=yes
-OFFLINE=no
 
 while [ -n "$1" ]; do
   if test "$1" = "--skip-pg"; then
@@ -15,9 +14,6 @@ while [ -n "$1" ]; do
     shift; continue
   elif test "$1" = "--skip-redis"; then
     PREPARE_REDIS=no
-    shift; continue
-  elif test "$1" = "--offline"; then
-    OFFLINE=yes
     shift; continue
   fi
 done
@@ -70,28 +66,14 @@ if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
   echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
-  echo "PAUSE; RESUME;" | psql -p 6432 pgbouncer # make sure there are no connections pgbouncer -> test_db
-  dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
-  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
+  echo "PAUSE; RESUME;" | psql pgbouncer 2>/dev/null # make sure there are no connections pgbouncer -> test_db
+  dropdb --if-exists ${TEST_DB} || die "Could not drop test database ${TEST_DB}"
+  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database ${TEST_DB}"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
-  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
+  psql -c "CREATE EXTENSION IF NOT EXISTS cartodb CASCADE;" ${TEST_DB}
 
   LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep quota_mock'
-  REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
-
-  if test x"$OFFLINE" = xno; then
-      CURL_ARGS=""
-      for i in ${REMOTE_SQL_SCRIPTS}
-      do
-        CURL_ARGS="${CURL_ARGS}\"https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql\" -o support/sql/$i.sql "
-      done
-      echo "Downloading and updating: ${REMOTE_SQL_SCRIPTS}"
-      echo ${CURL_ARGS} | xargs curl -L -s
-  fi
-
-  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
-  ALL_SQL_SCRIPTS="${REMOTE_SQL_SCRIPTS} ${LOCAL_SQL_SCRIPTS}"
-  for i in ${ALL_SQL_SCRIPTS}
+  for i in ${LOCAL_SQL_SCRIPTS}
   do
     cat support/sql/${i}.sql |
       sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |

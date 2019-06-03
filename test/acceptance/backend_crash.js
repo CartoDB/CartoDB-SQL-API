@@ -8,11 +8,8 @@ var net = require('net');
 
 var sql_server_port = 5540;
 var sql_server = net.createServer(function(c) {
-  console.log('server connected');
   c.destroy();
-  console.log('server socket destroyed.');
   sql_server.close(function() {
-  console.log('server closed');
   });
 });
 
@@ -24,7 +21,6 @@ before(function(done){
 
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/135
 it('does not hang server', function(done){
-//console.log("settings:"); console.dir(global.settings);
   var db_host_backup = global.settings.db_host;
   var db_port_backup = global.settings.db_port;
   global.settings.db_host = 'localhost';
