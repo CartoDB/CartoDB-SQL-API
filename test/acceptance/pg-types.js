@@ -115,7 +115,7 @@ describe('PG field type information', function () {
                         type: 'geometry', wkbtype: 'MultiPolygon', dims: 4, srid: 4326
                     },
                     raster: {
-                        type: 'raster', pgtype: 'raster'
+                        type: 'raster', dims: 4, srid: -1
                     },
                     boolean: {
                         type: 'boolean', pgtype: 'bool'
