@@ -22,6 +22,7 @@ JsonFormat.prototype.formatResultFields = function(flds) {
     var f = flds[i];
     var cname = this.client.typeName(f.dataTypeID);
     var tname;
+
     if ( ! cname ) {
       tname = 'unknown(' + f.dataTypeID + ')';
     } else {
@@ -44,7 +45,14 @@ JsonFormat.prototype.formatResultFields = function(flds) {
         tname += '[]';
       }
     }
-    nfields[f.name] = { type: tname };
+
+    if (cname === 'geometry') {
+        const { wkbtype, ndims, srid } = this.client.typeModInfo(f.dataTypeID);
+        nfields[f.name] = { type: tname, wkbtype, dims: ndims, srid };
+    } else {
+        nfields[f.name] = { type: tname, pgtype: cname };
+    }
+
   }
   return nfields;
 };

@@ -41,8 +41,16 @@ describe('stream-responses', function() {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.rows.length, 2);
                     assert.deepEqual(parsedBody.fields, {
-                        the_geom: { type: "geometry" },
-                        cdb_ratio: { type: "number" }
+                        the_geom: {
+                            type: "geometry",
+                            wkbtype: "LineString",
+                            dims: 3,
+                            srid: 64
+                        },
+                        cdb_ratio: {
+                            pgtype: "int4",
+                            type: "number"
+                        }
                     });
                     assert.deepEqual(parsedBody.error, ["division by zero"]);
                     done();
