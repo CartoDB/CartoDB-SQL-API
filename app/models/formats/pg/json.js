@@ -14,7 +14,7 @@ JsonFormat.prototype = new Pg('json');
 
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
-// jshint maxcomplexity:9
+// jshint maxcomplexity:10
 JsonFormat.prototype.formatResultFields = function(flds) {
   flds = flds || [];
   var nfields = {};
