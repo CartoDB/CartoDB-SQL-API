@@ -53,6 +53,7 @@ module.exports = class StreamCopy {
                 if (action === ACTION_TO) {
                     pgstream.on('end', () => done());
                     pgstream.on('error', () => this._cancel(client.processID, action));
+                    pgstream.on('warning', (msg) => this.logger.warn(msg));
                 } else if (action === ACTION_FROM) {
                     pgstream.on('finish', () => done());
                     pgstream.on('error', err =>  client.connection.sendCopyFail(err.message));
