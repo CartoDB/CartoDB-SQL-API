@@ -9,6 +9,7 @@ Announcements:
 * Improve batch-queries draining while exiting the process #582
 * Implement a mechanism to short out hung connections in copy-from endpoints.
 * Implement POST method for copy-to endpoint.
+* Retrieve the exact PG field type information in JSON format responses.
 
 
 ## 3.0.0

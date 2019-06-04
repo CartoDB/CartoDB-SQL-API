@@ -231,3 +231,58 @@ CREATE TABLE copy_endpoints_test (
 );
 GRANT ALL ON TABLE copy_endpoints_test TO :TESTUSER;
 GRANT ALL ON TABLE copy_endpoints_test TO :PUBLICUSER;
+
+DROP TABLE IF EXISTS pgtypes_table;
+CREATE TABLE pgtypes_table (
+    -- postgis type
+    geography_point_4326 geography(point,4326),
+    geometry_point_4326 geometry(point,4326),
+    geometry_point_3857 geometry(point,3857),
+    geometry_pointz_4326 geometry(pointz,4326),
+    geometry_pointzm_4326 geometry(pointzm,4326),
+    geography_line_4326 geography(linestring,4326),
+    geometry_line_4326 geometry(linestring,4326),
+    geometry_line_3857 geometry(linestring,3857),
+    geometry_linez_4326 geometry(linestringz,4326),
+    geometry_linezm_4326 geometry(linestringzm,4326),
+    geography_polygon_4326 geography(polygon,4326),
+    geometry_polygon_4326 geometry(polygon,4326),
+    geometry_polygon_3857 geometry(polygon,3857),
+    geometry_polygonz_4326 geometry(polygonz,4326),
+    geometry_polygonzm_4326 geometry(polygonzm,4326),
+    geography_multipoint_4326 geography(multipoint,4326),
+    geometry_multipoint_4326 geometry(multipoint,4326),
+    geometry_multipoint_3857 geometry(multipoint,3857),
+    geometry_multipointz_4326 geometry(multipointz,4326),
+    geometry_multipointzm_4326 geometry(multipointzm,4326),
+    geography_multilinestring_4326 geography(multilinestring,4326),
+    geometry_multilinestring_4326 geometry(multilinestring,4326),
+    geometry_multilinestring_3857 geometry(multilinestring,3857),
+    geometry_multilinestringz_4326 geometry(multilinestringz,4326),
+    geometry_multilinestringzm_4326 geometry(multilinestringzm,4326),
+    geography_multipolygon_4326 geography(multipolygon,4326),
+    geometry_multipolygon_4326 geometry(multipolygon,4326),
+    geometry_multipolygon_3857 geometry(multipolygon,3857),
+    geometry_multipolygonz_4326 geometry(multipolygonz,4326),
+    geometry_multipolygonzm_4326 geometry(multipolygonzm,4326),
+    raster raster,
+    -- common postgres types
+    boolean boolean,
+    smallint smallint,
+    integer integer,
+    bigint bigint,
+    float double precision,
+    real real,
+    varchar varchar,
+    text text,
+    time time,
+    date date,
+    timestamp timestamp,
+    timestamptz timestamptz,
+    money money
+);
+
+GRANT ALL ON TABLE pgtypes_table TO :PUBLICUSER;
+GRANT ALL ON TABLE pgtypes_table TO :TESTUSER;
+
+INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('pgtypes_table'::regclass, '2015-01-01T23:31:30.123Z');
