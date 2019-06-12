@@ -1,6 +1,6 @@
 ## Authentication
 
-For all access to private tables, and for write access to public tables, CARTO enforces secure API access that requires you to authorize your queries. In order to authorize queries, you can use an API Key or a Consumer Key.
+For all access to private tables, and for write access to public tables, CARTO enforces secure API access that requires you to authorize your queries. In order to authorize queries, you need to use an API Key.
 
 ### API Key
 
