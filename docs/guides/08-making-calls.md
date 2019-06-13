@@ -37,7 +37,13 @@ https://{username}.carto.com/api/v2/sql?q=SELECT count(*) FROM {table_name}
 }
 ```
 
-Finally, remember that in order to use the SQL API, either your table must be public, or you must be [authenticated]({{site.sqlapi_docs}}/guides/authentication/#authentication) using API Keys.
+**Tip:** Finally, remember that in order to use the SQL API, either your table must be public, or you must be [authenticated]({{site.sqlapi_docs}}/guides/authentication/#authentication) using API Keys.
+
+So, using the same Count Example, it would be as follows:
+
+```bash
+https://{username}.carto.com/api/v2/sql?api_key={your_api_key}&q=SELECT count(*) FROM {table_name}
+```
 
 
 ### POST and GET
