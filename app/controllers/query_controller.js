@@ -191,11 +191,11 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (cachePolicy === 'persist') {
                     res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
-                    if (affectedTables && affectedTables.getTables().some(table => !table.updated_at)) {
-                        const maxAge = global.settings.cache.fallbackTtl || FIVE_MINUTES_IN_SECONDS;
+                    if (affectedTables && affectedTables.getTables().every(table => table.updated_at !== null)) {
+                        const maxAge = mayWrite ? 0 : (global.settings.cache.ttl || ONE_YEAR_IN_SECONDS);
                         res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
                     } else {
-                        const maxAge = mayWrite ? 0 : (global.settings.cache.ttl || ONE_YEAR_IN_SECONDS);
+                        const maxAge = global.settings.cache.fallbackTtl || FIVE_MINUTES_IN_SECONDS;
                         res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
                     }
                 }
