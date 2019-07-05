@@ -22,6 +22,7 @@ const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const handleQueryMiddleware = require('../middlewares/handle-query');
 const logMiddleware = require('../middlewares/log');
+const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 
 const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
 const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
@@ -49,6 +50,7 @@ QueryController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             handleQueryMiddleware(),
             logMiddleware(logMiddleware.TYPES.QUERY),
+            cancelOnClientAbort(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -79,24 +81,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration FILE
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
 
     try {
 
@@ -145,8 +129,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             function queryExplain() {
                 var next = this;
 
-                checkAborted('queryExplain');
-
                 var pg = new PSQL(authDbParams);
 
                 var skipCache = authorizationLevel === 'master';
@@ -169,7 +151,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                     req.profiler.done('queryExplain');
                 }
 
-                checkAborted('setHeaders');
                 if(!pgEntitiesAccessValidator.validate(affectedTables, authorizationLevel)) {
                     const syntaxError = new SyntaxError("system tables are forbidden");
                     syntaxError.http_status = 403;
@@ -218,7 +199,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (err) {
                     throw err;
                 }
-                checkAborted('generateFormat');
 
                 // TODO: drop this, fix UI!
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
@@ -234,7 +214,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
-                  abortChecker: checkAborted,
                   timeout: userLimits.timeout
                 };
 
