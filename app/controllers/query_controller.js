@@ -23,7 +23,8 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const handleQueryMiddleware = require('../middlewares/handle-query');
 const logMiddleware = require('../middlewares/log');
 
-var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
+const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
+const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
 
 function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -190,8 +191,13 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (cachePolicy === 'persist') {
                     res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
-                    var maxAge = (mayWrite) ? 0 : ONE_YEAR_IN_SECONDS;
-                    res.header('Cache-Control', 'no-cache,max-age='+maxAge+',must-revalidate,public');
+                    if (affectedTables && affectedTables.getTables().every(table => table.updated_at !== null)) {
+                        const maxAge = mayWrite ? 0 : (global.settings.cache.ttl || ONE_YEAR_IN_SECONDS);
+                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
+                    } else {
+                        const maxAge = global.settings.cache.fallbackTtl || FIVE_MINUTES_IN_SECONDS;
+                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
+                    }
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.

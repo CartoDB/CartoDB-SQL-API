@@ -131,3 +131,8 @@ module.exports.validatePGEntitiesAccess = false;
 module.exports.dataIngestionLogPath = 'logs/data-ingestion.log';
 module.exports.logQueries = true;
 module.exports.maxQueriesLogLength = 2000;
+
+module.exports.cache = {
+  ttl: 60 * 60 * 24 * 365, // one year in seconds
+  fallbackTtl: 60 * 5 // five minutes in seconds
+};
