@@ -23,7 +23,7 @@ describe('cache headers', function () {
         });
     });
 
-    it('should return a proper max-age when he table is or isn\'t added to CDB_TableMetadata', function (done) {
+    it('should return a proper max-age when CDB_TableMetadata table includes the last updated time', function (done) {
         const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
         const noTtl = 0;
         const fallbackTtl = global.settings.cache.fallbackTtl;
@@ -86,6 +86,27 @@ describe('cache headers', function () {
                     });
                 });
             });
+        });
+    });
+
+    it('should return a proper max-age when the query doesn\'t use any table', function (done) {
+        const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+        const ttl = global.settings.cache.ttl || ONE_YEAR_IN_SECONDS;
+
+        assert.response(server, {
+            url: `/api/v1/sql?${qs.encode({
+                api_key: '1234',
+                q: `select 1`
+            })}`,
+            headers: {
+                host: 'vizzuality.cartodb.com'
+            },
+            method: 'GET'
+        },
+        {},
+        function (err, res) {
+            assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
+            done();
         });
     });
 });
