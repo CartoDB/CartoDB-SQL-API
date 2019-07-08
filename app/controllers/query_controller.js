@@ -28,7 +28,7 @@ const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
 const cacheControl = Object.assign({
     ttl: ONE_YEAR_IN_SECONDS,
     fallbackTtl: FIVE_MINUTES_IN_SECONDS
-}, global.settings.cache)
+}, global.settings.cache);
 
 function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
