@@ -4,6 +4,7 @@
 Released 2019-mm-dd
 
 Announcements:
+* Update `cartodb-query-tables` to version [`0.5.0`](https://github.com/CartoDB/node-cartodb-query-tables/releases/tag/0.5.0)
 * Cache control header fine tuning. Set a shorter value for "max-age" directive if there is no way to know when to trigger the invalidation.
 * Upgrade devel dependency `sqlite3` to version `4.0.6`
 * Log queries (https://github.com/CartoDB/CartoDB-SQL-API/pull/574)
