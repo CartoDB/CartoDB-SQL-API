@@ -25,6 +25,10 @@ const logMiddleware = require('../middlewares/log');
 
 const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
 const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
+const cacheControl = Object.assign({
+    ttl: ONE_YEAR_IN_SECONDS,
+    fallbackTtl: FIVE_MINUTES_IN_SECONDS
+}, global.settings.cache);
 
 function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -192,10 +196,10 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                     res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
                     if (affectedTables && affectedTables.getTables().every(table => table.updated_at !== null)) {
-                        const maxAge = mayWrite ? 0 : (global.settings.cache.ttl || ONE_YEAR_IN_SECONDS);
+                        const maxAge = mayWrite ? 0 : cacheControl.ttl;
                         res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
                     } else {
-                        const maxAge = global.settings.cache.fallbackTtl || FIVE_MINUTES_IN_SECONDS;
+                        const maxAge = cacheControl.fallbackTtl;
                         res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
                     }
                 }
