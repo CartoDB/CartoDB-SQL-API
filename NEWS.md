@@ -13,7 +13,7 @@ Announcements:
 * Implement POST method for copy-to endpoint.
 * Log NOTICE's and WARNING's coming from COPY TO queries.
 * Retrieve the exact PG field type information in JSON format responses.
-
+* Middlewarify client abort query checker.
 
 ## 3.0.0
 Released 2019-02-22
