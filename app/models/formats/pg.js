@@ -75,9 +75,6 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
 
   step (
     function packageResult() {
-      if ( that.opts.abortChecker ) {
-        that.opts.abortChecker('packageResult');
-      }
       that.transform(result, that.opts, this);
     },
     function sendResults(err, out){
