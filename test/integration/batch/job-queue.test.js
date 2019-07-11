@@ -5,29 +5,29 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
+var BatchLogger = require('../../../batch/batch-logger');
 var JobPublisher = require('../../../batch/pubsub/job-publisher');
 var JobQueue = require('../../../batch/job_queue');
 
 var JobBackend = require('../../../batch/job_backend');
 var JobService = require('../../../batch/job_service');
-var UserDatabaseMetadataService = require('../../../batch/user_database_metadata_service');
 var JobCanceller = require('../../../batch/job_canceller');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
 describe('job queue', function () {
     var pool = redisUtils.getPool();
+    var logger = new BatchLogger(null, 'batch-queries');
     var jobPublisher = new JobPublisher(pool);
-    var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
-    var jobService = new JobService(jobBackend, jobCanceller);
+    var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
+    var jobCanceller = new JobCanceller();
+    var jobService = new JobService(jobBackend, jobCanceller, logger);
 
     var userA = 'userA';
     var userB = 'userB';
 
     beforeEach(function () {
-        this.jobQueue = new JobQueue(metadataBackend, jobPublisher);
+        this.jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
     });
 
     afterEach(function (done) {

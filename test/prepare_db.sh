@@ -7,7 +7,6 @@
 
 PREPARE_REDIS=yes
 PREPARE_PGSQL=yes
-OFFLINE=no
 
 while [ -n "$1" ]; do
   if test "$1" = "--skip-pg"; then
@@ -15,9 +14,6 @@ while [ -n "$1" ]; do
     shift; continue
   elif test "$1" = "--skip-redis"; then
     PREPARE_REDIS=no
-    shift; continue
-  elif test "$1" = "--offline"; then
-    OFFLINE=yes
     shift; continue
   fi
 done
@@ -70,44 +66,22 @@ if test x"$PREPARE_PGSQL" = xyes; then
 
   echo "preparing postgres..."
   echo "PostgreSQL server version: `psql -A -t -c 'select version()'`"
-  dropdb ${TEST_DB} # 2> /dev/null # error expected if doesn't exist, but not otherwise
-  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database"
+  echo "PAUSE; RESUME;" | psql pgbouncer 2>/dev/null # make sure there are no connections pgbouncer -> test_db
+  dropdb --if-exists ${TEST_DB} || die "Could not drop test database ${TEST_DB}"
+  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database ${TEST_DB}"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
-  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
+  psql -c "CREATE EXTENSION IF NOT EXISTS cartodb CASCADE;" ${TEST_DB}
 
-  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep'
-  REMOTE_SQL_SCRIPTS='CDB_QueryStatements CDB_QueryTables CDB_CartodbfyTable CDB_TableMetadata CDB_ForeignTable CDB_UserTables CDB_ColumnNames CDB_ZoomFromScale CDB_OverviewsSupport CDB_Overviews'
-
-  if test x"$OFFLINE" = xno; then
-      CURL_ARGS=""
-      for i in ${REMOTE_SQL_SCRIPTS}
-      do
-        CURL_ARGS="${CURL_ARGS}\"https://github.com/CartoDB/cartodb-postgresql/raw/master/scripts-available/$i.sql\" -o support/sql/$i.sql "
-      done
-      echo "Downloading and updating: ${REMOTE_SQL_SCRIPTS}"
-      echo ${CURL_ARGS} | xargs curl -L -s
-  fi
-
-  PG_PARALLEL=$(pg_config --version | (awk '{$2*=1000; if ($2 >= 9600) print 1; else print 0;}' 2> /dev/null || echo 0))
-
-  psql -c "CREATE EXTENSION IF NOT EXISTS plpythonu;" ${TEST_DB}
-  ALL_SQL_SCRIPTS="${REMOTE_SQL_SCRIPTS} ${LOCAL_SQL_SCRIPTS}"
-  for i in ${ALL_SQL_SCRIPTS}
+  LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep quota_mock'
+  for i in ${LOCAL_SQL_SCRIPTS}
   do
-    # Strip PARALLEL labels for PostgreSQL releases before 9.6
-    if [ $PG_PARALLEL -eq 0 ]; then
-      TMPFILE=$(mktemp /tmp/$(basename $0).XXXXXXXX)
-      sed -e 's/PARALLEL \= [A-Z]*,/''/g' \
-          -e 's/PARALLEL [A-Z]*/''/g' support/sql/${i}.sql > $TMPFILE
-      mv $TMPFILE support/sql/${i}.sql
-    fi
     cat support/sql/${i}.sql |
       sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |
       sed "s/:PUBLICUSER/${PUBLICUSER}/" |
       sed "s/:PUBLICPASS/${PUBLICPASS}/" |
       sed "s/:TESTUSER/${TESTUSER}/" |
       sed "s/:TESTPASS/${TESTPASS}/" |
-      PGOPTIONS='--client-min-messages=WARNING' psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
+      psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
   done
 
 fi
@@ -188,7 +162,7 @@ HMSET api_keys:vizzuality:default_public \
   user "vizzuality" \
   type "default" \
   grants_sql "true" \
-  database_role "test_windshaft_publicuser" \
+  database_role "testpublicuser" \
   database_password "public"
 EOF
 
@@ -230,7 +204,7 @@ HMSET api_keys:cartodb250user:default_public \
   user "cartodb250user" \
   type "default" \
   grants_sql "true" \
-  database_role "test_windshaft_publicuser" \
+  database_role "testpublicuser" \
   database_password "public"
 EOF
 

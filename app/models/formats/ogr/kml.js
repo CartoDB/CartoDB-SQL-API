@@ -1,8 +1,10 @@
-var ogr = require('./../ogr');
+'use strict';
+
+var Ogr = require('./../ogr');
 
 function KmlFormat() {}
 
-KmlFormat.prototype = new ogr('kml');
+KmlFormat.prototype = new Ogr('kml');
 
 KmlFormat.prototype._contentType = "application/kml; charset=utf-8";
 KmlFormat.prototype._fileExtension = "kml";

@@ -1,3 +1,5 @@
+'use strict';
+
 // CartoDB SQL API
 //
 // all requests expect the following URL args:
@@ -15,27 +17,29 @@
 //
 
 var express = require('express');
-var bodyParser = require('./middlewares/body-parser');
 var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
 var TableCacheFactory = require('./utils/table_cache_factory');
 
 var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
 var UserDatabaseService = require('./services/user_database_service');
 var UserLimitsService = require('./services/user_limits');
+var BatchLogger = require('../batch/batch-logger');
 var JobPublisher = require('../batch/pubsub/job-publisher');
 var JobQueue = require('../batch/job_queue');
 var JobBackend = require('../batch/job_backend');
 var JobCanceller = require('../batch/job_canceller');
 var JobService = require('../batch/job_service');
-
-var UserDatabaseMetadataService = require('../batch/user_database_metadata_service');
+const Logger = require('./services/logger');
 
 var cors = require('./middlewares/cors');
 
 var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
+var CopyController = require('./controllers/copy_controller');
 var JobController = require('./controllers/job_controller');
 var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
@@ -66,22 +70,27 @@ function App(statsClient) {
     // Set default configuration
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
     global.settings.bufferedRows = global.settings.bufferedRows || 1000;
+    global.settings.ratelimits = Object.assign(
+        {
+            rateLimitsEnabled: false,
+            endpoints: {
+                query: false,
+                job_create: false,
+                job_get: false,
+                job_delete: false,
+                copy_from: false,
+                copy_to: false
+            }
+        },
+        global.settings.ratelimits
+    );
+
+    global.settings.tmpDir = global.settings.tmpDir || '/tmp';
+    if (!fs.existsSync(global.settings.tmpDir)) {
+        mkdirp.sync(global.settings.tmpDir);
+    }
 
     var tableCache = new TableCacheFactory().build(global.settings);
-
-    // Size based on https://github.com/CartoDB/cartodb.js/blob/3.15.2/src/geo/layer_definition.js#L72
-    var SQL_QUERY_BODY_LOG_MAX_LENGTH = 2000;
-    app.getSqlQueryFromRequestBody = function(req) {
-        var sqlQuery = req.body && req.body.q;
-        if (!sqlQuery) {
-            return '';
-        }
-
-        if (sqlQuery.length > SQL_QUERY_BODY_LOG_MAX_LENGTH) {
-            sqlQuery = sqlQuery.substring(0, SQL_QUERY_BODY_LOG_MAX_LENGTH) + ' [...]';
-        }
-        return JSON.stringify({q: sqlQuery});
-    };
 
     if ( global.log4js ) {
         var loggerOpts = {
@@ -93,7 +102,6 @@ function App(statsClient) {
                 var logFormat = global.settings.log_format ||
                     ':remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type]';
 
-                logFormat = logFormat.replace(/:sql/, app.getSqlQueryFromRequestBody(req));
                 return format(logFormat);
             }
         };
@@ -127,7 +135,6 @@ function App(statsClient) {
       });
     }
 
-    app.use(bodyParser());
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
@@ -136,7 +143,7 @@ function App(statsClient) {
     // basic routing
 
     var userDatabaseService = new UserDatabaseService(metadataBackend);
-    
+
     const userLimitsServiceOptions = {
         limits: {
             rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
@@ -144,30 +151,41 @@ function App(statsClient) {
     };
     const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
 
+    const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
+    app.dataIngestionLogger = dataIngestionLogger;
+
+    var logger = new BatchLogger(global.settings.batch_log_filename, 'batch-queries');
     var jobPublisher = new JobPublisher(redisPool);
-    var jobQueue = new JobQueue(metadataBackend, jobPublisher);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue);
-    var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-    var jobCanceller = new JobCanceller(userDatabaseMetadataService);
-    var jobService = new JobService(jobBackend, jobCanceller);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
+    var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
+    var jobCanceller = new JobCanceller();
+    var jobService = new JobService(jobBackend, jobCanceller, logger);
 
     var genericController = new GenericController();
     genericController.route(app);
 
     var queryController = new QueryController(
-        metadataBackend, 
-        userDatabaseService, 
-        tableCache, 
-        statsClient, 
+        metadataBackend,
+        userDatabaseService,
+        tableCache,
+        statsClient,
         userLimitsService
     );
     queryController.route(app);
 
+    var copyController = new CopyController(
+        metadataBackend,
+        userDatabaseService,
+        userLimitsService,
+        dataIngestionLogger
+    );
+    copyController.route(app);
+
     var jobController = new JobController(
-        metadataBackend, 
-        userDatabaseService, 
-        jobService, 
-        statsClient, 
+        metadataBackend,
+        userDatabaseService,
+        jobService,
+        statsClient,
         userLimitsService
     );
     jobController.route(app);

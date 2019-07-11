@@ -1,7 +1,109 @@
 # Changelog
 
-## 2.0.1
-Released 2018-mm-dd
+## 3.1.0
+Released 2019-mm-dd
+
+Announcements:
+* Update `cartodb-query-tables` to version [`0.5.0`](https://github.com/CartoDB/node-cartodb-query-tables/releases/tag/0.5.0)
+* Cache control header fine tuning. Set a shorter value for "max-age" directive if there is no way to know when to trigger the invalidation.
+* Upgrade devel dependency `sqlite3` to version `4.0.6`
+* Log queries (https://github.com/CartoDB/CartoDB-SQL-API/pull/574)
+* Improve batch-queries draining while exiting the process #582
+* Implement a mechanism to short out hung connections in copy-from endpoints.
+* Implement POST method for copy-to endpoint.
+* Log NOTICE's and WARNING's coming from COPY TO queries.
+* Retrieve the exact PG field type information in JSON format responses.
+* Middlewarify client abort query checker.
+
+## 3.0.0
+Released 2019-02-22
+
+Breaking changes:
+* Drop support for Node.js 6
+* Drop support for npm 3
+* Drop support for Postgres 9.5
+* Drop support for PosGIS 2.2
+* Drop support for Redis 3
+
+Announcements:
+* Deps:
+  * Upgrade `debug` to version 4.1.1
+  * Upgrade `express` to version 4.16.4
+  * Upgrade `request` to version 2.88.0
+* Dev deps:
+  * Upgrade `jshint` to version 2.9.7
+  * Upgrade `mocha` to version 5.2.0
+  * Upgrade `zipfile` to version 0.5.12
+
+## 2.4.0
+Released 2019-01-16
+
+Announcements:
+ * Update docs: compatible Node.js and npm versions
+ * Set platform limits message also on streaming responses
+ * Consider cancelled queries as platform limits.
+ * Report fine-grained Garbage Collector stats
+ * Both query endpoints as the same one in rate limits terms
+ * Adding Authorization to Access-Control-Allow-Headers (https://github.com/CartoDB/CartoDB-SQL-API/issues/534)
+
+
+## 2.3.1
+Released 2018-12-23
+
+Bug fixes:
+* Update carto-package.json
+
+
+## 2.3.0
+Released 2018-12-26
+
+Announcements:
+ * Support Node.js 10
+ * Add package-lock.json
+ * Configure Travis CI to run docker tests against Node.js 6 & 10 versions
+ * Update cartodb-psql to 0.13.1 (type cache depends now on db host)
+
+Bug fixes:
+ * Do not use `assert` to throw erros as in Node.js > 6 wraps the original error, the keyword 'throw' does the trick and it's backwards compatible
+ * Make all modules to use strict mode semantics.
+ * Avoid too long messages in `X-SQLAPI-Errors` header #543
+
+
+## 2.2.1
+Released 2018-09-18
+
+Bug fixes:
+  * Errors from zlib while gunzipping (`/sql/copyfrom` compressed requests) are now handled correctly.
+  * Ensure exports temporal folder
+  * Fix an issue with COPY TO returning paused DB connections to the pool #537
+
+
+## 2.2.0
+Released 2018-07-25
+
+Announcements:
+  * Improve error message when the DB query is over the user's limits
+  * Updated cartodb-redis to 2.0.1
+  * Modify the COPY query limits:
+      - Instead of the generic timeout, it now uses a 5h timeout.
+      - For COPY FROM, the limit is size-based, up to the remaining DB quota
+      - The largest COPY FROM that can be made in a single POST request is limited to 2GB
+
+
+## 2.1.0
+Released 2018-06-13
+
+Notice:
+- This release changes the way that authentication works internally. You'll need to run `bundle exec rake carto:api_key:create_default` in your development environment to keep working.
+
+New features:
+ * CI tests with Ubuntu Xenial + PostgreSQL 10.1 and Ubuntu Precise + PostgreSQL 9.5
+ * Making version 2.0.0 configuration parameters backwards compatible
+ * New endpoint for COPY commands
+
+Announcements:
+ * Updated carto-psql to 0.12.0
+ * [Test] Update sqlite3 to 4.0.0
 
 
 ## 2.0.0

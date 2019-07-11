@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var server = require('../../app/server')();
@@ -58,7 +60,8 @@ describe('app-configuration', function() {
             method: 'GET'
         }, RESPONSE_OK, function(err, res) {
             assert.equal(
-                res.headers['access-control-allow-headers'], 'X-Requested-With, X-Prototype-Version, X-CSRF-Token'
+                res.headers['access-control-allow-headers'],
+                'X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization'
             );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
@@ -74,7 +77,8 @@ describe('app-configuration', function() {
         }, RESPONSE_OK, function(err, res) {
             assert.equal(res.body, '');
             assert.equal(
-                res.headers['access-control-allow-headers'], 'X-Requested-With, X-Prototype-Version, X-CSRF-Token'
+                res.headers['access-control-allow-headers'],
+                'X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization'
             );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
@@ -156,7 +160,7 @@ describe('app-configuration', function() {
             assert.equal(res.headers['access-control-allow-origin'], '*');
             assert.equal(
                 res.headers['access-control-allow-headers'],
-                "X-Requested-With, X-Prototype-Version, X-CSRF-Token"
+                "X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization"
             );
             done();
         });

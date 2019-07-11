@@ -1,8 +1,10 @@
-var ogr = require('./../ogr');
+'use strict';
+
+var Ogr = require('./../ogr');
 
 function CsvFormat() {}
 
-CsvFormat.prototype = new ogr('csv');
+CsvFormat.prototype = new Ogr('csv');
 
 CsvFormat.prototype._contentType = "text/csv; charset=utf-8; header=present";
 CsvFormat.prototype._fileExtension = "csv";

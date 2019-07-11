@@ -1,7 +1,9 @@
+'use strict';
+
 var server = require('../../app/server')();
 var assert = require('../support/assert');
 
-describe('error handler', function () { 
+describe('error handler', function () {
     it('should returns a errors header', function (done) {
         const errorHeader = {
             detail: undefined,
@@ -22,7 +24,7 @@ describe('error handler', function () {
                 'Content-Type': 'application/json; charset=utf-8',
                 'X-SQLAPI-Errors': JSON.stringify(errorHeader)
             }
-        }, 
+        },
         function(err){
             assert.ifError(err);
             done();

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 /*
 * SQL API loader
 * ===============
@@ -11,7 +13,7 @@
 */
 var fs = require('fs');
 var path = require('path');
-var os = require('os');
+const fqdn = require('@carto/fqdn-sync');
 
 var argv = require('yargs')
     .usage('Usage: $0 <environment> [options]')
@@ -46,7 +48,7 @@ if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
   process.exit(1);
 }
 
-global.settings.api_hostname = require('os').hostname().split('.')[0];
+global.settings.api_hostname = fqdn.hostname();
 
 global.log4js = require('log4js');
 var log4jsConfig = {
@@ -85,8 +87,7 @@ var StatsClient = require('./app/stats/client');
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
-        var hostToken = os.hostname().split('.').reverse().join('.');
-        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, hostToken);
+        global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, fqdn.reverse());
     }
 }
 var statsClient = StatsClient.getInstance(global.settings.statsd);
@@ -116,20 +117,68 @@ process.on('SIGHUP', function() {
     if (server.batch && server.batch.logger) {
         server.batch.logger.reopenFileStreams();
     }
+
+    if (server.dataIngestionLogger) {
+        server.dataIngestionLogger.reopenFileStreams();
+    }
 });
 
-process.on('SIGTERM', function () {
-    server.batch.stop();
-    server.batch.drain(function (err) {
-        if (err) {
-            console.log('Exit with error');
-            return process.exit(1);
+addHandlers({ killTimeout: 45000 });
+
+function addHandlers({ killTimeout }) {
+    // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
+    // process.on('uncaughtException', exitProcess(listener, logger, killTimeout));
+    process.on('unhandledRejection', exitProcess({ killTimeout }));
+    process.on('SIGINT', exitProcess({ killTimeout }));
+    process.on('SIGTERM', exitProcess({ killTimeout }));
+}
+
+function exitProcess ({ killTimeout }) {
+    return function exitProcessFn (signal) {
+        scheduleForcedExit({ killTimeout });
+
+        let code = 0;
+
+        if (!['SIGINT', 'SIGTERM'].includes(signal)) {
+            const err = signal instanceof Error ? signal : new Error(signal);
+            signal = undefined;
+            code = 1;
+
+            global.logger.fatal(err);
+        } else {
+            global.logger.info(`Process has received signal: ${signal}`);
         }
 
-        console.log('Exit gracefully');
-        process.exit(0);
-    });
-});
+        listener.close(function () {
+            server.batch.stop(function () {
+                server.batch.drain(function (err) {
+                    if (err) {
+                        global.logger.error(err);
+                        return process.exit(1);
+                    }
+
+                    global.logger.info(`Process is going to exit with code: ${code}`);
+                    global.log4js.shutdown(function () {
+                        server.batch.logger.end(function () {
+                            process.exit(code);
+                        });
+                    });
+                });
+            });
+        });
+    };
+}
+
+function scheduleForcedExit ({ killTimeout }) {
+    // Schedule exit if there is still ongoing work to deal with
+    const killTimer = setTimeout(() => {
+        global.logger.info('Process didn\'t close on time. Force exit');
+        process.exit(1);
+    }, killTimeout);
+
+    // Don't keep the process open just for this
+    killTimer.unref();
+}
 
 function isGteMinVersion(version, minVersion) {
     var versionMatch = /[a-z]?([0-9]*)/.exec(version);
@@ -142,6 +191,48 @@ function isGteMinVersion(version, minVersion) {
     return false;
 }
 
+setInterval(function memoryUsageMetrics () {
+    let memoryUsage = process.memoryUsage();
+
+    Object.keys(memoryUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.memory.${property}`, memoryUsage[property]);
+    });
+}, 5000);
+
+function getCPUUsage (oldUsage) {
+    let usage;
+
+    if (oldUsage && oldUsage._start) {
+        usage = Object.assign({}, process.cpuUsage(oldUsage._start.cpuUsage));
+        usage.time = Date.now() - oldUsage._start.time;
+    } else {
+        usage = Object.assign({}, process.cpuUsage());
+        usage.time = process.uptime() * 1000; // s to ms
+    }
+
+    usage.percent = (usage.system + usage.user) / (usage.time * 10);
+
+    Object.defineProperty(usage, '_start', {
+        value: {
+            cpuUsage: process.cpuUsage(),
+            time: Date.now()
+        }
+    });
+
+    return usage;
+}
+
+let previousCPUUsage = getCPUUsage();
+setInterval(function cpuUsageMetrics () {
+    const CPUUsage = getCPUUsage(previousCPUUsage);
+
+    Object.keys(CPUUsage).forEach(property => {
+        statsClient.gauge(`sqlapi.cpu.${property}`, CPUUsage[property]);
+    });
+
+    previousCPUUsage = CPUUsage;
+}, 5000);
+
 if (global.gc && isGteMinVersion(process.version, 6)) {
     var gcInterval = Number.isFinite(global.settings.gc_interval) ?
         global.settings.gc_interval :
@@ -149,9 +240,46 @@ if (global.gc && isGteMinVersion(process.version, 6)) {
 
     if (gcInterval > 0) {
         setInterval(function gcForcedCycle() {
-            var start = Date.now();
             global.gc();
-            statsClient.timing('sqlapi.gc', Date.now() - start);
         }, gcInterval);
     }
+}
+
+const gcStats = require('gc-stats')();
+
+gcStats.on('stats', function ({ pauseMS, gctype }) {
+    statsClient.timing('sqlapi.gc', pauseMS);
+    statsClient.timing(`sqlapi.gctype.${getGCTypeValue(gctype)}`, pauseMS);
+});
+
+function getGCTypeValue (type) {
+    // 1: Scavenge (minor GC)
+    // 2: Mark/Sweep/Compact (major GC)
+    // 4: Incremental marking
+    // 8: Weak/Phantom callback processing
+    // 15: All
+    let value;
+
+    switch (type) {
+        case 1:
+            value = 'Scavenge';
+            break;
+        case 2:
+            value = 'MarkSweepCompact';
+            break;
+        case 4:
+            value = 'IncrementalMarking';
+            break;
+        case 8:
+            value = 'ProcessWeakCallbacks';
+            break;
+        case 15:
+            value = 'All';
+            break;
+        default:
+            value = 'Unkown';
+            break;
+    }
+
+    return value;
 }

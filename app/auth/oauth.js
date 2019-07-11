@@ -1,8 +1,9 @@
+'use strict';
+
 // too bound to the request object, but ok for now
 var _ = require('underscore');
 var OAuthUtil = require('oauth-client');
 var step = require('step');
-var assert = require('assert');
 var CdbRequest = require('../models/cartodb_request');
 var cdbReq = new CdbRequest();
 
@@ -88,7 +89,9 @@ var oAuth = (function(){
         return oAuth.parseTokens(req);
       },
       function getOAuthHash(err, _requestTokens) {
-        assert.ifError(err);
+        if (err) {
+          throw err;
+        }
 
         // this is oauth request only if oauth headers are present
         this.is_oauth_request = !_.isEmpty(_requestTokens);
@@ -101,7 +104,9 @@ var oAuth = (function(){
         }
       },
       function regenerateSignature(err, oAuthHash){
-        assert.ifError(err);
+        if (err) {
+          throw err;
+        }
         if (!this.is_oauth_request) {
             return null;
         }
@@ -142,7 +147,8 @@ var oAuth = (function(){
         }, false);
       },
       function finishValidation(err, hasValidSignature) {
-        return callback(err, hasValidSignature || null);
+        const authorizationLevel = hasValidSignature ? 'master' : null;
+        return callback(err, authorizationLevel);
       }
     );
   };

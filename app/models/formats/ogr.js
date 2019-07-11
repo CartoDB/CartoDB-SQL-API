@@ -1,10 +1,11 @@
+'use strict';
+
 var crypto = require('crypto');
 var step = require('step');
 var fs = require('fs');
 var _ = require('underscore');
 var PSQL = require('cartodb-psql');
 var spawn = require('child_process').spawn;
-var assert = require('assert');
 
 // Keeps track of what's waiting baking for export
 var bakingExports = {};
@@ -93,7 +94,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       pg.query(colsql, this);
     },
     function findSRS(err, result) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var needSRS = that._needSRS;
 
@@ -137,7 +140,9 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
       });
     },
     function spawnDumper(err, srid, type) {
-      assert.ifError(err);
+      if (err) {
+        throw err;
+      }
 
       var next = this;
 
@@ -194,7 +199,7 @@ OgrFormat.prototype.toOGR = function(options, out_format, out_filename, callback
         clearTimeout(ogrTimeout);
 
         if (timedOut) {
-          return next(new Error('You are over platform\'s limits. Please contact us to know more details'));
+          return next(new Error('statement timeout'));
         }
 
         if (code !== 0) {

@@ -12,4 +12,5 @@ test/test.log
 test/acceptance/oauth/venv/*
 coverage/
 npm-debug.log
-libredis_cell.so
+log/*.log
+yarn.lock

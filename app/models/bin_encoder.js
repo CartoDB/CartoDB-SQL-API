@@ -1,3 +1,4 @@
+'use strict';
 
 function ArrayBufferSer(type, data, options) {
   if(type === undefined) {
@@ -83,7 +84,7 @@ ArrayBufferSer.prototype = {
     s = 0;
     if(this.type === ArrayBufferSer.STRING) {
       // calculate size with padding
-      t.forEach(function(arr) { 
+      t.forEach(function(arr) {
         var pad = self._paddingFor(offset, ArrayBufferSer.MAX_PADDING);
         s += pad;
         offset += pad;

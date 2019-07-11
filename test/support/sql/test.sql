@@ -16,7 +16,7 @@ SET standard_conforming_strings = off;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET escape_string_warning = off;
-SET search_path = public, pg_catalog;
+SET search_path = public, cartodb, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
@@ -160,6 +160,8 @@ DROP USER IF EXISTS :PUBLICUSER;
 CREATE USER :PUBLICUSER WITH PASSWORD ':PUBLICPASS';
 ALTER ROLE :PUBLICUSER SET statement_timeout = 2000;
 GRANT SELECT ON TABLE scoped_table_1 TO :PUBLICUSER;
+GRANT USAGE ON SCHEMA cartodb TO :PUBLICUSER;
+GRANT ALL ON CDB_TableMetadata TO :PUBLICUSER;
 
 -- regular user role 1
 DROP USER IF EXISTS regular_1;
@@ -168,21 +170,30 @@ ALTER ROLE regular_1 SET statement_timeout = 2000;
 
 GRANT ALL ON TABLE scoped_table_1 TO regular_1;
 GRANT ALL ON SEQUENCE scoped_table_1_cartodb_id_seq TO regular_1;
+GRANT USAGE ON SCHEMA cartodb TO regular_1;
+GRANT ALL ON CDB_TableMetadata TO regular_1;
 
 -- regular user role 2
 DROP USER IF EXISTS regular_2;
 CREATE USER regular_2 WITH PASSWORD 'regular2';
 ALTER ROLE regular_2 SET statement_timeout = 2000;
+GRANT USAGE ON SCHEMA cartodb TO regular_2;
+GRANT ALL ON CDB_TableMetadata TO regular_2;
 
 -- fallback user role
 DROP USER IF EXISTS test_cartodb_user_2;
 CREATE USER test_cartodb_user_2 WITH PASSWORD 'test_cartodb_user_2_pass';
 GRANT ALL ON TABLE scoped_table_1 TO test_cartodb_user_2;
 GRANT ALL ON SEQUENCE scoped_table_1_cartodb_id_seq TO test_cartodb_user_2;
+GRANT USAGE ON SCHEMA cartodb TO test_cartodb_user_2;
+GRANT ALL ON CDB_TableMetadata TO test_cartodb_user_2;
 
 -- db owner role
 DROP USER IF EXISTS :TESTUSER;
 CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
+
+GRANT USAGE ON SCHEMA cartodb TO :TESTUSER;
+GRANT ALL ON CDB_TableMetadata TO :TESTUSER;
 
 GRANT ALL ON TABLE untitle_table_4 TO :TESTUSER;
 GRANT SELECT ON TABLE untitle_table_4 TO :PUBLICUSER;
@@ -205,15 +216,73 @@ GRANT ALL ON TABLE cpg_test TO :TESTUSER;
 GRANT SELECT ON TABLE cpg_test TO :PUBLICUSER;
 
 
-CREATE TABLE IF NOT EXISTS
-  CDB_TableMetadata (
-    tabname regclass not null primary key,
-    updated_at timestamp with time zone not null default now()
-  );
-
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('untitle_table_4'::regclass, '2014-01-01T23:31:30.123Z');
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('private_table'::regclass, '2015-01-01T23:31:30.123Z');
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('scoped_table_1'::regclass, '2015-01-01T23:31:30.123Z');
 
 GRANT SELECT ON CDB_TableMetadata TO :TESTUSER;
 GRANT SELECT ON CDB_TableMetadata TO test_cartodb_user_2;
+
+DROP TABLE IF EXISTS copy_endpoints_test;
+CREATE TABLE copy_endpoints_test (
+    id integer,
+    name text,
+    age integer default 10
+);
+GRANT ALL ON TABLE copy_endpoints_test TO :TESTUSER;
+GRANT ALL ON TABLE copy_endpoints_test TO :PUBLICUSER;
+
+DROP TABLE IF EXISTS pgtypes_table;
+CREATE TABLE pgtypes_table (
+    -- postgis type
+    geography_point_4326 geography(point,4326),
+    geometry_point_4326 geometry(point,4326),
+    geometry_point_3857 geometry(point,3857),
+    geometry_pointz_4326 geometry(pointz,4326),
+    geometry_pointzm_4326 geometry(pointzm,4326),
+    geography_line_4326 geography(linestring,4326),
+    geometry_line_4326 geometry(linestring,4326),
+    geometry_line_3857 geometry(linestring,3857),
+    geometry_linez_4326 geometry(linestringz,4326),
+    geometry_linezm_4326 geometry(linestringzm,4326),
+    geography_polygon_4326 geography(polygon,4326),
+    geometry_polygon_4326 geometry(polygon,4326),
+    geometry_polygon_3857 geometry(polygon,3857),
+    geometry_polygonz_4326 geometry(polygonz,4326),
+    geometry_polygonzm_4326 geometry(polygonzm,4326),
+    geography_multipoint_4326 geography(multipoint,4326),
+    geometry_multipoint_4326 geometry(multipoint,4326),
+    geometry_multipoint_3857 geometry(multipoint,3857),
+    geometry_multipointz_4326 geometry(multipointz,4326),
+    geometry_multipointzm_4326 geometry(multipointzm,4326),
+    geography_multilinestring_4326 geography(multilinestring,4326),
+    geometry_multilinestring_4326 geometry(multilinestring,4326),
+    geometry_multilinestring_3857 geometry(multilinestring,3857),
+    geometry_multilinestringz_4326 geometry(multilinestringz,4326),
+    geometry_multilinestringzm_4326 geometry(multilinestringzm,4326),
+    geography_multipolygon_4326 geography(multipolygon,4326),
+    geometry_multipolygon_4326 geometry(multipolygon,4326),
+    geometry_multipolygon_3857 geometry(multipolygon,3857),
+    geometry_multipolygonz_4326 geometry(multipolygonz,4326),
+    geometry_multipolygonzm_4326 geometry(multipolygonzm,4326),
+    raster raster,
+    -- common postgres types
+    boolean boolean,
+    smallint smallint,
+    integer integer,
+    bigint bigint,
+    float double precision,
+    real real,
+    varchar varchar,
+    text text,
+    time time,
+    date date,
+    timestamp timestamp,
+    timestamptz timestamptz,
+    money money
+);
+
+GRANT ALL ON TABLE pgtypes_table TO :PUBLICUSER;
+GRANT ALL ON TABLE pgtypes_table TO :TESTUSER;
+
+INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('pgtypes_table'::regclass, '2015-01-01T23:31:30.123Z');

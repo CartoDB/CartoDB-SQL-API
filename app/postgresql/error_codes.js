@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('underscore');
 
 // reference http://www.postgresql.org/docs/9.3/static/errcodes-appendix.html
@@ -118,6 +120,7 @@ var codeToCondition = {
     "25007": "schema_and_data_statement_mixing_not_supported",
     "25P01": "no_active_sql_transaction",
     "25P02": "in_failed_sql_transaction",
+    "25P03": "idle_in_transaction_session_timeout",
 // Class 26 — Invalid SQL Statement Name
     "26000": "invalid_sql_statement_name",
 // Class 27 — Triggered Data Change Violation
@@ -150,6 +153,7 @@ var codeToCondition = {
     "39004": "null_value_not_allowed",
     "39P01": "trigger_protocol_violated",
     "39P02": "srf_protocol_violated",
+    "39P03": "event_trigger_protocol_violated",
 // Class 3B — Savepoint Exception
     "3B000": "savepoint_exception",
     "3B001": "invalid_savepoint_specification",
@@ -180,6 +184,7 @@ var codeToCondition = {
     "42P21": "collation_mismatch",
     "42P22": "indeterminate_collation",
     "42809": "wrong_object_type",
+    "428C9": "generated_always",
     "42703": "undefined_column",
     "42883": "undefined_function",
     "42P01": "undefined_table",
@@ -273,6 +278,7 @@ var codeToCondition = {
     "P0001": "raise_exception",
     "P0002": "no_data_found",
     "P0003": "too_many_rows",
+    "P0004": "assert_failure",
 // Class XX — Internal Error
     "XX000": "internal_error",
     "XX001": "data_corrupted",

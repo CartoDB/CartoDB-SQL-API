@@ -1,11 +1,13 @@
+'use strict';
+
 var _ = require('underscore');
 
-var pg  = require('./../pg');
+var Pg  = require('./../pg');
 var ArrayBufferSer = require("../../bin_encoder");
 
 function BinaryFormat() {}
 
-BinaryFormat.prototype = new pg('arraybuffer');
+BinaryFormat.prototype = new Pg('arraybuffer');
 
 BinaryFormat.prototype._contentType = "application/octet-stream";
 
@@ -22,7 +24,7 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
   var total_rows = result.rowCount;
   var rows = result.rows;
 
-  // get headers 
+  // get headers
   if(!total_rows) {
     callback(null, new Buffer(0));
     return;
@@ -38,6 +40,8 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
 
   try {
     var i;
+    var r;
+    var n;
     var t;
     // get header types (and guess from name)
     for(i = 0; i < headersNames.length; ++i) {
@@ -60,9 +64,9 @@ BinaryFormat.prototype.transform = function(result, options, callback) {
     var data = [header];
     for(i = 0; i < headersNames.length; ++i) {
       var d = [];
-      var n = headersNames[i];
-      for(var r = 0; r < total_rows; ++r) {
-        var row = rows[r][n]; 
+      n = headersNames[i];
+      for(r = 0; r < total_rows; ++r) {
+        var row = rows[r][n];
         if(headerTypes[i] > ArrayBufferSer.BUFFER) {
           row = new ArrayBufferSer(headerTypes[i] - ArrayBufferSer.BUFFER, row);
         }

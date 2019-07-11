@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # To make output dates deterministic
 export TZ='Europe/Rome'
@@ -17,9 +17,6 @@ OPT_CREATE_REDIS=yes # create/prepare the redis test databases
 OPT_DROP_PGSQL=yes   # drop the postgreql test environment
 OPT_DROP_REDIS=yes   # drop the redis test environment
 OPT_COVERAGE=no      # run tests with coverage
-OPT_OFFLINE=no       # do not donwload scripts
-OPT_REDIS_CELL=yes   # download redis cell
-
 
 cd $(dirname $0)
 BASEDIR=$(pwd)
@@ -55,17 +52,6 @@ die() {
 	exit 1
 }
 
-get_redis_cell() {
-  if test x"$OPT_REDIS_CELL" = xyes; then
-    echo "Downloading redis-cell"
-    curl -L https://github.com/brandur/redis-cell/releases/download/v0.2.2/redis-cell-v0.2.2-x86_64-unknown-linux-gnu.tar.gz --output redis-cell.tar.gz > /dev/null 2>&1
-    tar xvzf redis-cell.tar.gz > /dev/null 2>&1
-    mv libredis_cell.so ${BASEDIR}/support/libredis_cell.so
-    rm redis-cell.tar.gz
-    rm libredis_cell.d
-  fi
-}
-
 trap 'cleanup_and_exit' 1 2 3 5 9 13
 
 while [ -n "$1" ]; do
@@ -99,14 +85,6 @@ while [ -n "$1" ]; do
                 OPT_COVERAGE=yes
                 shift
                 continue
-        elif test "$1" = "--offline"; then
-                OPT_OFFLINE=yes
-                shift
-                continue
-        elif test "$1" = "--norediscell"; then
-                OPT_REDIS_CELL=no
-                shift
-                continue
         else
                 break
         fi
@@ -128,9 +106,12 @@ fi
 TESTS=$@
 
 if test x"$OPT_CREATE_REDIS" = xyes; then
-  get_redis_cell
   echo "Starting redis on port ${REDIS_PORT}"
-  echo "port ${REDIS_PORT}" | redis-server - --loadmodule ${BASEDIR}/support/libredis_cell.so > ${BASEDIR}/test.log &
+  REDIS_CELL_PATH="${BASEDIR}/support/libredis_cell.so"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    REDIS_CELL_PATH="${BASEDIR}/support/libredis_cell.dylib"
+  fi
+  echo "port ${REDIS_PORT}" | redis-server - --loadmodule ${REDIS_CELL_PATH} > ${BASEDIR}/test.log &
   PID_REDIS=$!
   echo ${PID_REDIS} > ${BASEDIR}/redis.pid
 fi
@@ -141,9 +122,6 @@ if test x"$OPT_CREATE_PGSQL" != xyes; then
 fi
 if test x"$OPT_CREATE_REDIS" != xyes; then
   PREPARE_DB_OPTS="$PREPARE_DB_OPTS --skip-redis"
-fi
-if test x"$OPT_OFFLINE" == xyes; then
-  PREPARE_DB_OPTS="$PREPARE_DB_OPTS --offline"
 fi
 
 echo "Preparing the environment"
@@ -161,10 +139,10 @@ echo
 
 if test x"$OPT_COVERAGE" = xyes; then
   echo "Running tests with coverage"
-  ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u tdd --trace -t 5000 ${TESTS}
+  ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u tdd --trace -t 5000 --exit ${TESTS}
 else
   echo "Running tests"
-  mocha -u tdd -t 5000 ${TESTS}
+  mocha -u tdd -t 5000 --exit ${TESTS}
 fi
 ret=$?
 

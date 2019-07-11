@@ -1,6 +1,7 @@
+'use strict';
+
 var step = require('step');
 var PSQL = require('cartodb-psql');
-var assert = require('assert');
 
 function PostgresFormat(id) {
     this.id = id;
@@ -74,14 +75,12 @@ PostgresFormat.prototype.handleQueryEnd = function(result) {
 
   step (
     function packageResult() {
-      if ( that.opts.abortChecker ) {
-        that.opts.abortChecker('packageResult');
-      }
       that.transform(result, that.opts, this);
     },
     function sendResults(err, out){
-
-        assert.ifError(err);
+        if (err) {
+            throw err;
+        }
 
         // return to browser
         if ( out ) {

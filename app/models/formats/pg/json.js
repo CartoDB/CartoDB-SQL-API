@@ -1,18 +1,20 @@
+'use strict';
+
 var _ = require('underscore');
 
-var pg  = require('./../pg');
-var PgErrorHandler = require('../../../postgresql/error_handler');
+var Pg  = require('./../pg');
+const errorHandlerFactory = require('../../../services/error_handler_factory');
 
 function JsonFormat() {
     this.buffer = '';
     this.lastKnownResult = {};
 }
 
-JsonFormat.prototype = new pg('json');
+JsonFormat.prototype = new Pg('json');
 
 JsonFormat.prototype._contentType = "application/json; charset=utf-8";
 
-// jshint maxcomplexity:9
+// jshint maxcomplexity:10
 JsonFormat.prototype.formatResultFields = function(flds) {
   flds = flds || [];
   var nfields = {};
@@ -20,6 +22,7 @@ JsonFormat.prototype.formatResultFields = function(flds) {
     var f = flds[i];
     var cname = this.client.typeName(f.dataTypeID);
     var tname;
+
     if ( ! cname ) {
       tname = 'unknown(' + f.dataTypeID + ')';
     } else {
@@ -42,7 +45,14 @@ JsonFormat.prototype.formatResultFields = function(flds) {
         tname += '[]';
       }
     }
-    nfields[f.name] = { type: tname };
+
+    if (['geography', 'geometry', 'raster'].includes(cname)) {
+        let { wkbtype, ndims, srid } = this.client.typeModInfo(f.dataTypeModifier);
+        nfields[f.name] = { type: tname, wkbtype, dims: ndims, srid };
+    } else {
+        nfields[f.name] = { type: tname, pgtype: cname };
+    }
+
   }
   return nfields;
 };
@@ -130,8 +140,7 @@ JsonFormat.prototype.handleQueryEnd = function(result) {
     ];
 
     if (this.error) {
-        var pgErrorHandler = new PgErrorHandler(this.error);
-        out.push(',"error":', JSON.stringify([pgErrorHandler.getMessage()]));
+        out.push(',"error":', JSON.stringify(errorHandlerFactory(this.error).getResponse().error));
     }
 
 

@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var server = require('../../app/server')();
@@ -38,10 +40,6 @@ describe('stream-responses', function() {
                 function(err, res) {
                     var parsedBody = JSON.parse(res.body);
                     assert.equal(parsedBody.rows.length, 2);
-                    assert.deepEqual(parsedBody.fields, {
-                        the_geom: { type: "geometry" },
-                        cdb_ratio: { type: "number" }
-                    });
                     assert.deepEqual(parsedBody.error, ["division by zero"]);
                     done();
                 }

@@ -2,15 +2,16 @@
 
 var _ = require('underscore');
 var step = require('step');
-var assert = require('assert');
 var PSQL = require('cartodb-psql');
 var CachedQueryTables = require('../services/cached-query-tables');
+const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 
 var formats = require('../models/formats');
 
 var sanitize_filename = require('../utils/filename_sanitizer');
 var getContentDisposition = require('../utils/content_disposition');
+const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -19,8 +20,16 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
+const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 
-var ONE_YEAR_IN_SECONDS = 31536000; // 1 year time to live by default
+const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
+const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
+const cacheControl = Object.assign({
+    ttl: ONE_YEAR_IN_SECONDS,
+    fallbackTtl: FIVE_MINUTES_IN_SECONDS
+}, global.settings.cache);
 
 function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -32,31 +41,34 @@ function QueryController(metadataBackend, userDatabaseService, tableCache, stats
 
 QueryController.prototype.route = function (app) {
     const { base_url } = global.settings;
-    const queryMiddlewares = endpointGroup => {
+    const forceToBeMaster = false;
+
+    const queryMiddlewares = () => {
         return [
+            bodyParserMiddleware(),
             initializeProfilerMiddleware('query'),
-            userMiddleware(),
-            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
-            authorizationMiddleware(this.metadataBackend),
+            userMiddleware(this.metadataBackend),
+            rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
+            authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
+            handleQueryMiddleware(),
+            logMiddleware(logMiddleware.TYPES.QUERY),
+            cancelOnClientAbort(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
     };
 
-    app.all(`${base_url}/sql`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY));
-    app.all(`${base_url}/sql.:f`, queryMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.QUERY_FORMAT));
+    app.all(`${base_url}/sql`, queryMiddlewares());
+    app.all(`${base_url}/sql.:f`, queryMiddlewares());
 };
 
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
-    // extract input
-    var body = (req.body) ? req.body : {};
     // clone so don't modify req.params or req.body so oauth is not broken
-    var params = _.extend({}, req.query, body);
-    var sql = params.q;
+    var params = _.extend({}, req.query, req.body || {});
     var limit = parseInt(params.rows_per_page);
     var offset = parseInt(params.page);
     var orderBy = params.order_by;
@@ -67,29 +79,12 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     var filename = requestedFilename;
     var requestedSkipfields = params.skipfields;
 
-    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authenticated } = res.locals;
+    let { sql } = res.locals;
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
 
     var skipfields;
     var dp = params.dp; // decimal point digits (defaults to 6)
     var gn = "the_geom"; // TODO: read from configuration FILE
-
-    req.aborted = false;
-    req.on("close", function() {
-        if (req.formatter && _.isFunction(req.formatter.cancel)) {
-            req.formatter.cancel();
-        }
-        req.aborted = true; // TODO: there must be a builtin way to check this
-    });
-
-    function checkAborted(step) {
-      if ( req.aborted ) {
-        var err = new Error("Request aborted during " + step);
-        // We'll use status 499, same as ngnix in these cases
-        // see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_Error
-        err.http_status = 499;
-        throw err;
-      }
-    }
 
     try {
 
@@ -138,11 +133,9 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             function queryExplain() {
                 var next = this;
 
-                checkAborted('queryExplain');
-
                 var pg = new PSQL(authDbParams);
 
-                var skipCache = authenticated;
+                var skipCache = authorizationLevel === 'master';
 
                 self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
                     if (err) {
@@ -153,23 +146,19 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 });
             },
             function setHeaders(err, affectedTables) {
-                assert.ifError(err);
+                if (err) {
+                    throw err;
+                }
 
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
                     req.profiler.done('queryExplain');
                 }
 
-                checkAborted('setHeaders');
-                if (!authenticated && !!affectedTables) {
-                    for ( var i = 0; i < affectedTables.tables.length; ++i ) {
-                        var t = affectedTables.tables[i];
-                        if ( t.table_name.match(/\bpg_/) ) {
-                            var e = new SyntaxError("system tables are forbidden");
-                            e.http_status = 403;
-                            throw(e);
-                        }
-                    }
+                if(!pgEntitiesAccessValidator.validate(affectedTables, authorizationLevel)) {
+                    const syntaxError = new SyntaxError("system tables are forbidden");
+                    syntaxError.http_status = 403;
+                    throw(syntaxError);
                 }
 
                 var FormatClass = formats[format];
@@ -187,8 +176,13 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (cachePolicy === 'persist') {
                     res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
                 } else {
-                    var maxAge = (mayWrite) ? 0 : ONE_YEAR_IN_SECONDS;
-                    res.header('Cache-Control', 'no-cache,max-age='+maxAge+',must-revalidate,public');
+                    if (affectedTables && affectedTables.getTables().every(table => table.updated_at !== null)) {
+                        const maxAge = mayWrite ? 0 : cacheControl.ttl;
+                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
+                    } else {
+                        const maxAge = cacheControl.fallbackTtl;
+                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
+                    }
                 }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
@@ -206,8 +200,9 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 return null;
             },
             function generateFormat(err){
-                assert.ifError(err);
-                checkAborted('generateFormat');
+                if (err) {
+                    throw err;
+                }
 
                 // TODO: drop this, fix UI!
                 sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
@@ -223,7 +218,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: params.callback,
-                  abortChecker: checkAborted,
                   timeout: userLimits.timeout
                 };
 
@@ -238,6 +232,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 if (dbopts.host) {
                   res.header('X-Served-By-DB-Host', dbopts.host);
                 }
+
                 formatter.sendResponse(opts, this);
             },
             function errorHandle(err){

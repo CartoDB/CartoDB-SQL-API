@@ -1,0 +1,691 @@
+openapi: 3.0.0
+info:
+  title: SQL API
+  description: >
+    # Introduction
+
+    CARTO’s SQL API allows you to interact with your tables and data inside
+    CARTO, as if you were running SQL statements against a normal database.
+
+
+    You can execute single SQL statements or even a batch of long-running ones.
+    Refer to the SQL API guide to learn more.
+
+    # Authorization
+
+    In order to access SQL API you must provide an API key. The CARTO
+    Authorization guide explains how these keys are sent (TLDR: _HTTP basic
+    auth_ or _query string param_ with the API key token). Depending on the
+    permissions granted to the provided API key, the request will be authorized
+    or not.
+  version: 0.0.1
+  contact:
+    name: Have you found an error? Github issues
+    url: 'https://github.com/CartoDB/CartoDB-SQL-API/issues'
+servers:
+  - url: 'https://{user}.{domain}/api/v2/'
+    description: Production server (uses live data)
+    variables:
+      domain:
+        default: carto.com
+        description: 'If on premise, change it to your domain'
+      user:
+        default: username
+        description: Your username
+tags:
+  - name: Single SQL Statement
+    description: Run a single SQL statement
+    externalDocs:
+      url: 'http://doc.carto.com/pet-operations.htm'
+  - name: Batch Queries
+    description: >-
+      A Batch Queries Job enables you to request statements with long-running
+      CPU processing times
+    externalDocs:
+      url: 'http://doc.carto.com/pet-operations.htm'
+paths:
+  /sql:
+    get:
+      summary: Using GET
+      description: |
+        Runs a single SQL statement using the GET endpoint:
+        - SELECT, INSERT, UPDATE, DELETE,
+        - CREATE TABLE, ALTER TABLE, DROP TABLE
+        - CREATE INDEX
+
+
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the **optional** *error* property is set in the response.
+      tags:
+        - Single SQL Statement
+      operationId: getSQLStatement
+      parameters:
+        - in: query
+          name: q
+          description: SQL statement
+          schema:
+            $ref: '#/components/schemas/SQLStatementString'
+          required: true
+        - in: query
+          name: filename
+          description: Output filename
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: format
+          schema:
+            $ref: '#/components/schemas/OutputFormat'
+          required: false
+      responses:
+        '200':
+          description: Ok (Check if `error` property is present)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementErrorResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl -X GET \
+            https://username.carto.com/api/v2/sql?q=SELECT count(*) FROM cities
+    post:
+      summary: Using POST
+      description: >
+        Runs a single SQL statement using the POST endpoint:
+
+        - SELECT, INSERT, UPDATE, DELETE,
+
+        - CREATE TABLE, ALTER TABLE, DROP TABLE
+
+        - CREATE INDEX
+
+
+        Offers the same functionality as the GET endpoint. This version may come
+        handy when dealing with complex/long statments.
+
+
+        **NOTICE:** If the database detects an error when it's already streaming data the status code will be 200. Make sure to check if the **optional** *error* property is set in the response.
+      tags:
+        - Single SQL Statement
+      operationId: postSQLStatement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  $ref: '#/components/schemas/SQLStatementString'
+                filename:
+                  type: string
+                  description: Output filename
+                format:
+                  $ref: '#/components/schemas/OutputFormat'
+              required:
+                - q
+            example:
+              q: SELECT count(*) FROM cities
+              filename: number_of_cities.json
+      responses:
+        '200':
+          description: Ok (Check if `error` property is present)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementErrorResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl -X POST -H "Content-Type: application/json" -d '{ \
+              "q": "SELECT count(*) FROM cities", \
+              "filename": "number_of_cities.json" \
+            }' "https://username.carto.com/api/v2/sql"
+
+  /sql/copyfrom:
+    post:
+      summary: Runs a copy command to ingest data
+      description: |
+        Runs a single COPY command:
+        - COPY mytable (col1, col2) FROM stdin WITH (FORMAT CSV)
+      tags:
+        - Single COPY command
+      operationId: postCopyFromStatement
+      parameters:
+        - in: query
+          name: q
+          description: COPY statement
+          schema:
+            $ref: '#/components/schemas/SQLStatementString'
+          required: true
+          example: COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)
+        - in: header
+          name: Transfer-Encoding
+          schema:
+            type: string
+            enum:
+              - chunked
+          required: true
+        - in: header
+          name: Content-Encoding
+          schema:
+            type: string
+            enum:
+              - gzip
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyFromStatement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl -X POST -H 'Content-Encoding: gzip' -H 'Transfer-Encoding: chunked' -H 'Content-Type: application/octet-stream' --data-binary @upload_example.csv.gz 'https://{username}.carto.com/api/v2/sql/copyfrom?q=COPY upload_example (the_geom,name,age) FROM stdin WITH (FORMAT csv,HEADER true)&api_key={api_key}'
+
+  /sql/copyto:
+    get:
+      summary: Runs a copy command to extract data
+      description: |
+        Runs a single COPY command:
+        - COPY mytable TO stdout WITH (FORMAT CSV)
+      tags:
+        - Single COPY command
+      operationId: getCopyToStatement
+      parameters:
+        - in: query
+          name: q
+          description: COPY statement
+          schema:
+            $ref: '#/components/schemas/SQLStatementString'
+          required: true
+        - in: query
+          name: filename
+          description: Sets the content-disposition file name header
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Ok.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl --output upload_example_dl.csv --compressed  "https://{username}.carto.com/api/v2/sql/copyto?q=COPY upload_example (the_geom,name,age) TO stdout WITH(FORMAT csv,HEADER true)&api_key={api_key}"
+
+  /sql/job:
+    post:
+      summary: Create a Job
+      description: Creates a Batch Queries Job
+      tags:
+        - Batch Queries
+      operationId: createJob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobQueryField'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                job_id: de305d54-75b4-431b-adb2-eb6b9e546014
+                user: username
+                status: pending
+                query: UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'
+                created_at: '2017-12-15T07:36:25Z'
+                updated_at: '2017-12-15T07:36:25Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl -X POST -H "Content-Type: application/json" -d '{ \
+              "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'", \
+            }' "https://username.carto.com/api/v2/sql/job"
+
+  '/sql/job/{job_id}':
+    parameters:
+      - $ref: '#/components/parameters/jobId'
+    get:
+      summary: Get a Job
+      description: Returns a Batch Queries Job based on it's ID.
+      tags:
+        - Batch Queries
+      operationId: getJob
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                job_id: de305d54-75b4-431b-adb2-eb6b9e546014
+                user: username
+                status: pending
+                query: UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'
+                created_at: '2017-12-15T07:36:25Z'
+                updated_at: '2017-12-15T07:36:25Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: >
+            curl -X GET \
+
+            https://username.carto.com/api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
+    put:
+      summary: Update a Job
+      description: |
+        Updates the query of a Batch Queries Job.
+
+        **Notice:** Only the _query_ property can be updated
+      tags:
+        - Batch Queries
+      operationId: updateJob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobQueryField'
+            example:
+              q: UPDATE nasdaq SET price = '$999.00' WHERE company = 'CARTO'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                job_id: de305d54-75b4-431b-adb2-eb6b9e546014
+                user: username
+                status: pending
+                query: UPDATE nasdaq SET price = '999.00' WHERE company = 'CARTO'
+                created_at: '2017-12-15T07:36:25Z'
+                updated_at: '2017-12-16T12:52:13Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: >
+            curl -X PUT -H "Content-Type: application/json" -d '{ \
+              "query": "UPDATE nasdaq SET price = '$999.00' WHERE company = 'CARTO'", \
+            }'
+            "https://username.carto.com/api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014"
+    delete:
+      summary: Cancel a Job
+      description: >
+        Canceles a Batch Queries Job based on it's ID. The Job doesn't get
+        deleted, just it's status is set as _canceled_.
+
+        Only jobs whose status are _pending_ or _running_ can be canceled.
+
+        * **pending**: the job will never be executed
+
+        * **running**: the job will be terminated immediately
+      tags:
+        - Batch Queries
+      operationId: cancelJob
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                job_id: de305d54-75b4-431b-adb2-eb6b9e546014
+                user: username
+                status: canceled
+                query: UPDATE nasdaq SET price = '999.00' WHERE company = 'CARTO'
+                created_at: '2017-12-15T07:36:25Z'
+                updated_at: '2017-12-16T12:52:13Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/PlatformLimits'
+      security:
+        - ApiKeyHTTPBasicAuth: []
+        - ApiKeyQueryParam: []
+      x-code-samples:
+        - lang: Curl
+          source: >
+            curl -X DELETE \
+
+            https://username.carto.com/api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014
+components:
+  schemas:
+    CopyFromStatement:
+      type: object
+      properties:
+        time:
+          type: number
+          format: float
+          description: time in seconds it has taken to run the statement
+        total_rows:
+          type: number
+          format: integer
+          description: number of rows copied into the database
+      example:
+        time: 2.3
+        total_rows: 142012
+    StatementResult:
+      type: object
+      properties:
+        error:
+          type: array
+          items:
+            type: string
+            description: (Optional) List of errors produced by the query. If this property is present, the query has failed.
+        time:
+          type: number
+          format: float
+          description: time in seconds it has taken to run the statement
+        total_rows:
+          type: number
+          format: integer
+          description: number of rows returned
+        rows:
+          type: array
+          items:
+            type: object
+            description: the structure/data depends on the statement
+      example:
+        time: 0.007
+        total_rows: 1
+        rows:
+          - count: 4994
+    StatementErrorResult:
+      type: object
+      properties:
+        error:
+          type: array
+          items:
+            type: string
+            description: List of errors produced by the query.
+        hint:
+          type: string
+          description: (Optional) Hint about the errors
+      example:
+        error: ["function st_buffer(geometry) does not exist"]
+        hint: No function matches the given name and argument types. You might need to add explicit type casts
+    Job:
+      allOf:
+        - $ref: '#/components/schemas/SQLGeneralStatment'
+        - type: object
+          properties:
+            job_id:
+              type: string
+              format: uuid
+              description: a Job's universally unique identifier (uuid).
+            user:
+              type: string
+              description: 'user identifier, as displayed by the username.'
+            status:
+              $ref: '#/components/schemas/JobStatus'
+            failed_reason:
+              description: 'displays the database error message, if something went wrong.'
+              type: string
+        - $ref: '#/components/schemas/Timestamps'
+      example:
+        job_id: de305d54-75b4-431b-adb2-eb6b9e546014
+        user: username
+        status: pending
+        query: UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'
+        created_at: '2017-12-15T07:36:25Z'
+        updated_at: '2017-12-15T07:36:25Z'
+    OutputFormat:
+      title: Output format
+      type: string
+      enum:
+        - GPKG
+        - CSV
+        - SHP
+        - SVG
+        - KML
+        - SpatiaLite
+        - GeoJSON
+      description: Output format
+    JobStatus:
+      title: Job status
+      type: string
+      enum:
+        - pending
+        - running
+        - done
+        - failed
+        - canceled
+        - unknown
+      description: displays the result of the long-running statement
+    SQLStatementString:
+      title: SQL statement
+      type: string
+    SQLSingleStatement:
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/SQLStatementString'
+      required:
+        - query
+    CreateJobQueryField:
+      type: object
+      properties:
+        query:
+          oneOf:
+            - $ref: '#/components/schemas/SQLStatementString'
+            - $ref: '#/components/schemas/ArrayOfSQLStatements'
+            - $ref: '#/components/schemas/CreateJobQueryFieldWithFallbacks'
+          description: long-running SQL statement(s).
+      required:
+        - query
+      example:
+        query: UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'
+    ArrayOfSQLStatements:
+      title: Array of SQL statements
+      type: array
+      items:
+        $ref: '#/components/schemas/SQLStatementString'
+    CreateJobQueryFieldWithFallbacks:
+      title: Array of SQL statements with Fallbacks
+      allOf:
+        - $ref: '#/components/schemas/Fallbacks'
+        - type: object
+          properties:
+            query:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      query:
+                        $ref: '#/components/schemas/SQLStatementString'
+                  - $ref: '#/components/schemas/Fallbacks'
+      required:
+        - query
+    SQLMultipleStatements:
+      type: array
+      items:
+        $ref: '#/components/schemas/StatementAndStatus'
+    SQLMultipleStatementsWithFallbacks:
+      allOf:
+        - type: object
+          properties:
+            query:
+              type: array
+              items:
+                $ref: '#/components/schemas/StatementAndStatusAndFallbacks'
+        - $ref: '#/components/schemas/Fallbacks'
+    StatementAndStatus:
+      title: SQL statement and status
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/SQLStatementString'
+        status:
+          $ref: '#/components/schemas/JobStatus'
+    StatementAndStatusAndFallbacks:
+      allOf:
+        - $ref: '#/components/schemas/StatementAndStatus'
+        - $ref: '#/components/schemas/Fallbacks'
+    Fallbacks:
+      type: object
+      properties:
+        onsuccess:
+          $ref: '#/components/schemas/SQLStatementString'
+        onerror:
+          $ref: '#/components/schemas/SQLStatementString'
+    SQLGeneralStatment:
+      type: object
+      properties:
+        query:
+          oneOf:
+            - $ref: '#/components/schemas/SQLStatementString'
+            - $ref: '#/components/schemas/SQLMultipleStatements'
+            - $ref: '#/components/schemas/SQLMultipleStatementsWithFallbacks'
+          description: long-running SQL statement(s).
+    JobQueryField:
+      type: object
+      properties:
+        query:
+          oneOf:
+            - $ref: '#/components/schemas/SQLStatementString'
+            - $ref: '#/components/schemas/SQLMultipleStatements'
+    Timestamps:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: the date and time when the job schema was created
+        updated_at:
+          type: string
+          format: date-time
+          description: >-
+            the date and time of when the job schema was last updated, or
+            modified.
+  securitySchemes:
+    ApiKeyHTTPBasicAuth:
+      type: http
+      scheme: basic
+    ApiKeyQueryParam:
+      type: apiKey
+      in: header
+      name: api_key
+  parameters:
+    jobId:
+      in: path
+      name: job_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: the job universally unique identifier (uuid).
+  responses:
+    NotFound:
+      description: The specified resource was not found
+    Unauthorized:
+      description: Unauthorized. No authentication provided.
+    Forbidden:
+      description: Forbidden. The API key does not authorize this request.
+    BadInput:
+      description: Request's parameters error
+    PlatformLimits:
+      description: You are over platform's limits.

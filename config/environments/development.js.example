@@ -8,7 +8,7 @@ module.exports.base_url     = '(?:/api/:version|/user/:user/api/:version)';
 // X-SQLAPI-Profile header containing elapsed timing for various
 // steps taken for producing the response.
 module.exports.useProfiler = true;
-module.exports.log_format   = '[:date] :remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler]) (:res[X-SQLAPI-Errors])';
+module.exports.log_format   = '[:date] :remote-addr :method :req[Host]:url :status :response-time ms -> :res[Content-Type] (:res[X-SQLAPI-Profiler]) (:res[X-SQLAPI-Errors]) (:res[X-SQLAPI-Log])';
 // If log_filename is given logs will be written there, in append mode. Otherwise stdout is used (default).
 // Log file will be re-opened on receiving the HUP signal
 module.exports.log_filename = 'logs/cartodb-sql-api.log';
@@ -35,6 +35,11 @@ module.exports.db_batch_port      = '5432';
 module.exports.finished_jobs_ttl_in_seconds = 2 * 3600; // 2 hours
 module.exports.batch_query_timeout = 12 * 3600 * 1000; // 12 hours in milliseconds
 module.exports.batch_log_filename = 'logs/batch-queries.log';
+module.exports.copy_timeout = "'5h'";
+module.exports.copy_from_max_post_size = 2 * 1024 * 1024 * 1024 // 2 GB;
+module.exports.copy_from_max_post_size_pretty = '2 GB';
+module.exports.copy_from_minimum_input_speed = 0; // 1 byte per second
+module.exports.copy_from_maximum_slow_input_speed_interval = 15 // 15 seconds
 // Max number of queued jobs a user can have at a given time
 module.exports.batch_max_queued_jobs = 64;
 // Capacity strategy to use.
@@ -65,14 +70,14 @@ module.exports.db_pool_reapInterval = 1000;
 // max number of bytes for a row, when exceeded the query will throw an error
 //module.exports.db_max_row_size = 10 * 1024 * 1024;
 // allows to use an object to connect with node-postgres instead of a connection string
-//module.exports.db_use_config_object = true;
+module.exports.db_use_config_object = true;
 // requires enabling db_use_config_object=true
 // allows to enable/disable keep alive for database connections
 // by default is not enabled
-//module.exports.db_keep_alive = {
-//    enabled: true,
-//    initialDelay: 5000
-//};
+module.exports.db_keep_alive = {
+    enabled: true,
+    initialDelay: 5000 // Not used yet
+};
 module.exports.redis_host   = '127.0.0.1';
 module.exports.redis_port   = 6379;
 module.exports.redisPool    = 50;
@@ -114,9 +119,20 @@ module.exports.ratelimits = {
   // whether it should rate limit one or more endpoints (only if rateLimitsEnabled = true)
   endpoints: {
     query: false,
-    query_format: false,
     job_create: false,
     job_get: false,
-    job_delete: false
+    job_delete: false,
+    copy_from: false,
+    copy_to: false
   }
 }
+
+module.exports.validatePGEntitiesAccess = false;
+module.exports.dataIngestionLogPath = 'logs/data-ingestion.log';
+module.exports.logQueries = true;
+module.exports.maxQueriesLogLength = 2000;
+
+module.exports.cache = {
+  ttl: 60 * 60 * 24 * 365, // one year in seconds
+  fallbackTtl: 60 * 5 // five minutes in seconds
+};

@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var server = require('../../app/server')();
@@ -64,7 +66,7 @@ describe('Surrogate-Key header', function() {
             {dbname: 'cartodb_test_user_1_db', schema_name: 'public', table_name: 'untitle_table_4'}
         ], done));
     });
-    
+
     it('supports explicit transactions', function(done) {
         var sql =  "BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;";
 

@@ -1,8 +1,10 @@
-var ogr = require('./../ogr');
+'use strict';
+
+var Ogr = require('./../ogr');
 
 function SpatiaLiteFormat() {}
 
-SpatiaLiteFormat.prototype = new ogr('spatialite');
+SpatiaLiteFormat.prototype = new Ogr('spatialite');
 
 SpatiaLiteFormat.prototype._contentType = "application/x-sqlite3; charset=utf-8";
 SpatiaLiteFormat.prototype._fileExtension = "sqlite";

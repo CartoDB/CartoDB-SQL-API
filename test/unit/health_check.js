@@ -1,3 +1,5 @@
+'use strict';
+
 require('../helper');
 
 var assert      = require('assert');
@@ -30,7 +32,7 @@ describe('health checks', function() {
 
     it('does not err if disabled file does not exists', function(done) {
       var fs = require('fs');
-      
+
       var readFileFn = fs.readFile;
       fs.readFile = function(filename, callback) {
         callback(new Error("ENOENT"), null);

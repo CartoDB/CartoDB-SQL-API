@@ -1,17 +1,18 @@
+'use strict';
 
 window.requestAnimFrame = (function(){
-      return  window.requestAnimationFrame       || 
-              window.webkitRequestAnimationFrame || 
-              window.mozRequestAnimationFrame    || 
-              window.oRequestAnimationFrame      || 
-              window.msRequestAnimationFrame     || 
+      return  window.requestAnimationFrame       ||
+              window.webkitRequestAnimationFrame ||
+              window.mozRequestAnimationFrame    ||
+              window.oRequestAnimationFrame      ||
+              window.msRequestAnimationFrame     ||
               function( callback ){
                 window.setTimeout(callback, 1000 / 60);
               };
     })();
 
 function Event() {}
-Event.prototype.on = function(evt, callback) { 
+Event.prototype.on = function(evt, callback) {
     var cb = this.callbacks = this.callbacks || {};
     var l = cb[evt] || (cb[evt] = []);
     l.push(callback);
@@ -263,4 +264,3 @@ function Map(el, opts) {
     this.model.emit('center_changed');
     */
 }
-

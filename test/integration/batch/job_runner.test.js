@@ -7,6 +7,7 @@ var BATCH_SOURCE = '../../../batch/';
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis_utils');
 
+var BatchLogger = require(BATCH_SOURCE + 'batch-logger');
 var JobQueue = require(BATCH_SOURCE + 'job_queue');
 var JobBackend = require(BATCH_SOURCE + 'job_backend');
 var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
@@ -19,13 +20,14 @@ var QueryRunner = require(BATCH_SOURCE + 'query_runner');
 
 
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
+var logger = new BatchLogger(null, 'batch-queries');
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher);
-var jobBackend = new JobBackend(metadataBackend, jobQueue);
+var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
-var jobCanceller = new JobCanceller(userDatabaseMetadataService);
-var jobService = new JobService(jobBackend, jobCanceller);
-var queryRunner = new QueryRunner(userDatabaseMetadataService);
+var jobCanceller = new JobCanceller();
+var jobService = new JobService(jobBackend, jobCanceller, logger);
+var queryRunner = new QueryRunner(userDatabaseMetadataService, logger);
 var StatsD = require('node-statsd').StatsD;
 var statsdClient = new StatsD(global.settings.statsd);
 
@@ -35,7 +37,11 @@ var HOST = 'localhost';
 var JOB = {
     user: USER,
     query: QUERY,
-    host: HOST
+    host: HOST,
+    dbname: 'cartodb_test_user_1_db',
+    dbuser: 'test_cartodb_user_1',
+    port: 5432,
+    pass: 'test_cartodb_user_1_pass',
 };
 
 describe('job runner', function() {

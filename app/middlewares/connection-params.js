@@ -1,8 +1,10 @@
+'use strict';
+
 module.exports = function connectionParams (userDatabaseService) {
     return function connectionParamsMiddleware (req, res, next) {
-        const { user, api_key: apikeyToken, authenticated } = res.locals;
+        const { user, api_key: apikeyToken, authorizationLevel } = res.locals;
 
-        userDatabaseService.getConnectionParams(user, apikeyToken, authenticated,
+        userDatabaseService.getConnectionParams(user, apikeyToken, authorizationLevel,
             function (err, userDbParams, authDbParams) {
             if (req.profiler) {
                 req.profiler.done('getConnectionParams');

@@ -2,6 +2,37 @@
 
 var assert = require('assert');
 var errorMiddleware = require('../../app/middlewares/error');
+require('../helper');
+
+const req = { query: { callback: true } };
+
+const getRes = () => {
+    return {
+        headers: {},
+        set (key, value) {
+            this.headers[key] = value;
+        },
+        header (key, value) {
+            this.set(key, value);
+        },
+        statusCode: 0,
+        status (status) {
+            this.statusCode = status;
+        },
+        json () {},
+        jsonp () {}
+    };
+};
+
+const getErrorHeader = (context, detail, hint, message) => {
+    return {
+        context,
+        detail,
+        hint,
+        statusCode: 400,
+        message
+    };
+};
 
 describe('error-handler', function() {
     it('should return a header with errors', function (done) {
@@ -11,29 +42,14 @@ describe('error-handler', function() {
         error.hint = 'test hint';
         error.context = 'test context';
 
-        const req = {};
-        const res = {
-            headers: {},
-            set (key, value) {
-                this.headers[key] = value;
-            },
-            header (key, value) {
-                this.set(key, value);
-            },
-            statusCode: 0,
-            status (status) {
-                this.statusCode = status;
-            },
-            json () {}
-        };
+        const errorHeader = getErrorHeader(
+            error.context,
+            error.detail,
+            error.hint,
+            error.message
+        );
 
-        const errorHeader = {
-            detail: error.detail,
-            hint: error.hint,
-            context: error.context,
-            statusCode: 400,
-            message: error.message
-        };
+        const res = getRes();
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
@@ -52,31 +68,14 @@ describe('error-handler', function() {
         error.hint = 'test hint';
         error.context = 'test context';
 
-        const req = {
-            query: { callback: true }
-        };
-        const res = {
-            headers: {},
-            set (key, value) {
-                this.headers[key] = value;
-            },
-            header (key, value) {
-                this.set(key, value);
-            },
-            statusCode: 0,
-            status (status) {
-                this.statusCode = status;
-            },
-            jsonp () {}
-        };
+        const errorHeader = getErrorHeader(
+            error.context,
+            error.detail,
+            error.hint,
+            error.message
+        );
 
-        const errorHeader = {
-            detail: error.detail,
-            hint: error.hint,
-            context: error.context,
-            statusCode: 400,
-            message: error.message
-        };
+        const res = getRes();        
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
@@ -98,37 +97,44 @@ describe('error-handler', function() {
         error.hint = badString;
         error.context = badString;
 
-        const req = {
-            query: { callback: true }
-        };
-        const res = {
-            headers: {},
-            set (key, value) {
-                this.headers[key] = value;
-            },
-            header (key, value) {
-                this.set(key, value);
-            },
-            statusCode: 0,
-            status (status) {
-                this.statusCode = status;
-            },
-            jsonp () {}
-        };
+        const errorHeader = getErrorHeader(
+            escapedString,
+            escapedString,
+            escapedString,
+            escapedString
+        );
 
-        const errorHeader = {
-            detail: escapedString,
-            hint: escapedString,
-            context: escapedString,
-            statusCode: 400,
-            message: escapedString
-        };
-
+        const res = getRes();
+        
         errorMiddleware()(error, req, res, function () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
             assert.deepEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
+            );
+
+            done();
+        });
+    });
+
+    it('should truncat too long error messages', function (done) {
+        const veryLongString = 'Very long error message '.repeat(1000);
+        const truncatedString = veryLongString.substring(0, 1024);
+
+        let error = new Error(veryLongString);
+
+        const expectedErrorHeader = {
+            statusCode: 400,
+            message: truncatedString
+	};
+
+        const res = getRes();
+
+        errorMiddleware()(error, req, res, function () {
+            assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
+            assert.deepEqual(
+                res.headers['X-SQLAPI-Errors'],
+                JSON.stringify(expectedErrorHeader)
             );
 
             done();

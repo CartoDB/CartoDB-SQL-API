@@ -1,3 +1,5 @@
+'use strict';
+
 require('../../helper');
 
 var assert = require('../../support/assert');
@@ -5,6 +7,7 @@ var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../batch/job_status');
 var redisUtils = require('../../support/redis_utils');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
+const db_utils = require('../../support/db_utils');
 
 describe('batch query statement_timeout limit', function() {
 
@@ -14,13 +17,14 @@ describe('batch query statement_timeout limit', function() {
         global.settings.batch_query_timeout = 15000;
         metadataBackend.redisCmd(5, 'HMSET', ['limits:batch:vizzuality', 'timeout', 100], done);
     });
-
+    before(db_utils.resetPgBouncerConnections);
     after(function(done) {
         global.settings.batch_query_timeout = this.batchQueryTimeout;
         redisUtils.clean('limits:batch:*', function() {
             this.batchTestClient.drain(done);
         }.bind(this));
     });
+    after(db_utils.resetPgBouncerConnections);
 
     function jobPayload(query) {
         return {

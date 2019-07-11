@@ -1,5 +1,8 @@
+'use strict';
+
 const util = require('util');
 
+const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const { initializeProfilerMiddleware, finishProfilerMiddleware } = require('../middlewares/profiler');
 const authorizationMiddleware = require('../middlewares/authorization');
@@ -7,6 +10,8 @@ const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const handleQueryMiddleware = require('../middlewares/handle-query');
+const logMiddleware = require('../middlewares/log');
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -29,35 +34,41 @@ JobController.prototype.route = function (app) {
     );
 
     app.get(
-        `${base_url}/jobs-wip`, 
-        listWorkInProgressJobs(this.jobService), 
-        sendResponse(), 
+        `${base_url}/jobs-wip`,
+        bodyParserMiddleware(),
+        listWorkInProgressJobs(this.jobService),
+        sendResponse(),
         errorMiddleware()
     );
     app.post(
-        `${base_url}/sql/job`, 
-        checkBodyPayloadSize(), 
+        `${base_url}/sql/job`,
+        bodyParserMiddleware(),
+        checkBodyPayloadSize(),
+        handleQueryMiddleware(true),
+        logMiddleware(logMiddleware.TYPES.JOB),
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
     app.get(
-        `${base_url}/sql/job/:job_id`, 
+        `${base_url}/sql/job/:job_id`,
+        bodyParserMiddleware(),
         jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
     );
     app.delete(
-        `${base_url}/sql/job/:job_id`, 
+        `${base_url}/sql/job/:job_id`,
+        bodyParserMiddleware(),
         jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
     );
 };
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
     return function jobMiddlewares (action, jobMiddleware, endpointGroup) {
-        const forceToBeAuthenticated = true;
+        const forceToBeMaster = true;
 
         return [
             initializeProfilerMiddleware('job'),
-            userMiddleware(),
+            userMiddleware(metadataBackend),
             rateLimitsMiddleware(userLimitsService, endpointGroup),
-            authorizationMiddleware(metadataBackend, forceToBeAuthenticated),
+            authorizationMiddleware(metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(userDatabaseService),
             jobMiddleware(jobService),
             setServedByDBHostHeader(),
@@ -113,11 +124,9 @@ function getJob (jobService) {
 
 function createJob (jobService) {
     return function createJobMiddleware (req, res, next) {
-        const params = Object.assign({}, req.query, req.body);
-
         var data = {
             user: res.locals.user,
-            query: params.query,
+            query: res.locals.sql,
             host: res.locals.userDbParams.host,
             port: global.settings.db_batch_port || res.locals.userDbParams.port,
             pass: res.locals.userDbParams.pass,

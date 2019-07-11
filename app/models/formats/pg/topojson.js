@@ -1,4 +1,6 @@
-var pg  = require('./../pg');
+'use strict';
+
+var Pg  = require('./../pg');
 var _ = require('underscore');
 var geojson = require('./geojson');
 var TopoJSON = require('topojson');
@@ -7,7 +9,7 @@ function TopoJsonFormat() {
     this.features = [];
 }
 
-TopoJsonFormat.prototype = new pg('topojson');
+TopoJsonFormat.prototype = new Pg('topojson');
 
 TopoJsonFormat.prototype.getQuery = function(sql, options) {
   return geojson.prototype.getQuery(sql, options) + ' where ' + options.gn + ' is not null';
