@@ -59,6 +59,7 @@ if test -z "$TEST_DB"; then
   exit 1
 fi
 TEST_DB=`echo ${TEST_DB} | sed "s/<%= user_id %>/${TESTUSERID}/"`
+TEST_DB_FOREIGN=`echo ${TEST_DB}_foreign`
 
 export PGHOST PGPORT
 
@@ -84,6 +85,23 @@ if test x"$PREPARE_PGSQL" = xyes; then
       psql -q -v ON_ERROR_STOP=1 ${TEST_DB} > /dev/null || exit 1
   done
 
+  echo "preparing foreign postgres database without cartodb extension..."
+  dropdb --if-exists ${TEST_DB_FOREIGN} || die "Could not drop test database ${TEST_DB_FOREIGN}"
+  createdb -Ttemplate_postgis -EUTF8 ${TEST_DB_FOREIGN} || die "Could not create test database ${TEST_DB_FOREIGN}"
+  psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB_FOREIGN}
+
+  TESTUSER_FOREIGN=`echo ${TESTUSER}_foreign`
+  TESTPASS_FOREIGN=`echo ${TESTPASS_FOREIGN}_foreign`
+
+  FOREIGN_SQL_SCRIPTS='test_foreign'
+  for i in ${FOREIGN_SQL_SCRIPTS}
+  do
+    cat support/sql/${i}.sql |
+      sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |
+      sed "s/:TESTUSER/${TESTUSER_FOREIGN}/" |
+      sed "s/:TESTPASS/${TESTPASS_FOREIGN}/" |
+      psql -q -v ON_ERROR_STOP=1 ${TEST_DB_FOREIGN} > /dev/null || exit 1
+  done
 fi
 
 if test x"$PREPARE_REDIS" = xyes; then

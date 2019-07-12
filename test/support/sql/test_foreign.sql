@@ -1,0 +1,80 @@
+--
+-- sql-api test database
+--
+-- To use:
+--
+-- > dropdb -Upostgres -hlocalhost  cartodb_test_user_1_db
+-- > createdb -Upostgres -hlocalhost -Ttemplate_postgis -Opostgres -EUTF8 cartodb_test_user_1_db
+-- > psql -Upostgres -hlocalhost cartodb_test_user_1_db < test.sql
+--
+-- NOTE: requires a postgis template called template_postgis with CDB functions included
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+SET search_path = public, cartodb, pg_catalog;
+SET default_tablespace = '';
+SET default_with_oids = false;
+
+-- first table
+DROP TABLE IF EXISTS untitle_table_5;
+CREATE TABLE untitle_table_5 (
+    cartodb_id integer NOT NULL,
+    updated_at timestamp without time zone DEFAULT now(),
+    created_at timestamp without time zone DEFAULT now(),
+    name character varying,
+    address character varying,
+    -- NOTE: the_geom_webmercator is intentionally listed _before_ the_geom
+    --       see https://github.com/CartoDB/CartoDB-SQL-API/issues/116
+    the_geom_webmercator geometry,
+    the_geom geometry,
+    CONSTRAINT enforce_dims_the_geom CHECK ((st_ndims(the_geom) = 2)),
+    CONSTRAINT enforce_dims_the_geom_webmercator CHECK ((st_ndims(the_geom_webmercator) = 2)),
+    CONSTRAINT enforce_geotype_the_geom CHECK (((geometrytype(the_geom) = 'POINT'::text) OR (the_geom IS NULL))),
+    CONSTRAINT enforce_geotype_the_geom_webmercator CHECK (((geometrytype(the_geom_webmercator) = 'POINT'::text) OR (the_geom_webmercator IS NULL))),
+    CONSTRAINT enforce_srid_the_geom CHECK ((st_srid(the_geom) = 4326)),
+    CONSTRAINT enforce_srid_the_geom_webmercator CHECK ((st_srid(the_geom_webmercator) = 3857))
+);
+
+CREATE SEQUENCE untitle_table_5_cartodb_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE untitle_table_5_cartodb_id_seq OWNED BY untitle_table_5.cartodb_id;
+
+SELECT pg_catalog.setval('untitle_table_5_cartodb_id_seq', 60, true);
+
+ALTER TABLE untitle_table_5 ALTER COLUMN cartodb_id SET DEFAULT nextval('untitle_table_5_cartodb_id_seq'::regclass);
+
+INSERT INTO untitle_table_5
+(updated_at, created_at, cartodb_id, name, address, the_geom, the_geom_webmercator)
+VALUES
+('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.314252', 1, 'Hawai', 'Calle de Pérez Galdós 9, Madrid, Spain', '0101000020E6100000A6B73F170D990DC064E8D84125364440', '0101000020110F000076491621312319C122D4663F1DCC5241'),
+('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.319101', 2, 'El Estocolmo', 'Calle de la Palma 72, Madrid, Spain', '0101000020E6100000C90567F0F7AB0DC0AB07CC43A6364440', '0101000020110F0000C4356B29423319C15DD1092DADCC5241'),
+('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.324', 3, 'El Rey del Tallarín', 'Plaza Conde de Toreno 2, Madrid, Spain', '0101000020E610000021C8410933AD0DC0CB0EF10F5B364440', '0101000020110F000053E71AC64D3419C10F664E4659CC5241'),
+('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.329509', 4, 'El Lacón', 'Manuel Fernández y González 8, Madrid, Spain', '0101000020E6100000BC5983F755990DC07D923B6C22354440', '0101000020110F00005DACDB056F2319C1EC41A980FCCA5241'),
+('2011-09-21 14:02:21.358706', '2011-09-21 14:02:21.334931', 5, 'El Pico', 'Calle Divino Pastor 12, Madrid, Spain', '0101000020E61000003B6D8D08C6A10DC0371B2B31CF364440', '0101000020110F00005F716E91992A19C17DAAA4D6DACC5241');
+
+ALTER TABLE ONLY untitle_table_5 ADD CONSTRAINT untitle_table_5_pkey PRIMARY KEY (cartodb_id);
+
+CREATE INDEX untitle_table_5_the_geom_idx ON untitle_table_5 USING gist (the_geom);
+CREATE INDEX untitle_table_5_the_geom_webmercator_idx ON untitle_table_5 USING gist (the_geom_webmercator);
+
+-- db owner role
+DROP USER IF EXISTS :TESTUSER;
+CREATE USER :TESTUSER WITH PASSWORD ':TESTPASS';
+
+GRANT ALL ON TABLE untitle_table_5 TO :TESTUSER;
+GRANT ALL ON SEQUENCE untitle_table_5_cartodb_id_seq TO :TESTUSER;
+
+GRANT ALL ON TABLE spatial_ref_sys TO :TESTUSER;
+
+GRANT ALL ON geometry_columns TO :TESTUSER;
+GRANT ALL ON geography_columns TO :TESTUSER;
