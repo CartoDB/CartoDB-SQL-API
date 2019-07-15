@@ -38,7 +38,6 @@ PUBLICPASS=`node -e "console.log(require('${TESTENV}').db_pubuser_pass || 'xxx')
 echo "PUBLICUSER: [${PUBLICUSER}]"
 echo "PUBLICPASS: [${PUBLICPASS}]"
 
-
 TESTUSERID=1
 
 TESTUSER=`node -e "console.log(require('${TESTENV}').db_user || '')"`
@@ -52,6 +51,11 @@ echo "TESTUSER: [${TESTUSER}]"
 TESTPASS=`node -e "console.log(require('${TESTENV}').db_user_pass || '')"`
 TESTPASS=`echo ${TESTPASS} | sed "s/<%= user_id %>/${TESTUSERID}/"`
 echo "TESTPASS: [${TESTPASS}]"
+
+TESTUSER_FOREIGN=`echo ${TESTUSER}_foreign`
+echo "TESTUSER_FOREIGN: [${TESTUSER_FOREIGN}]"
+TESTPASS_FOREIGN=`echo ${TESTPASS}_foreign`
+echo "TESTPASS_FOREIGN: [${TESTPASS_FOREIGN}]"
 
 TEST_DB=`node -e "console.log(require('${TESTENV}').db_base_name || '')"`
 if test -z "$TEST_DB"; then
@@ -72,12 +76,16 @@ if test x"$PREPARE_PGSQL" = xyes; then
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB} || die "Could not create test database ${TEST_DB}"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB}
   psql -c "CREATE EXTENSION IF NOT EXISTS cartodb CASCADE;" ${TEST_DB}
+  psql -c "CREATE EXTENSION IF NOT EXISTS postgres_fdw;" ${TEST_DB}
 
   LOCAL_SQL_SCRIPTS='test populated_places_simple_reduced py_sleep quota_mock'
   for i in ${LOCAL_SQL_SCRIPTS}
   do
     cat support/sql/${i}.sql |
       sed -e 's/cartodb\./public./g' -e "s/''cartodb''/''public''/g" |
+      sed "s/:TESTUSER_FOREIGN/${TESTUSER_FOREIGN}/" |
+      sed "s/:TESTPASS_FOREIGN/${TESTPASS_FOREIGN}/" |
+      sed "s/:TEST_DB_FOREIGN/${TEST_DB_FOREIGN}/" |
       sed "s/:PUBLICUSER/${PUBLICUSER}/" |
       sed "s/:PUBLICPASS/${PUBLICPASS}/" |
       sed "s/:TESTUSER/${TESTUSER}/" |
@@ -89,9 +97,6 @@ if test x"$PREPARE_PGSQL" = xyes; then
   dropdb --if-exists ${TEST_DB_FOREIGN} || die "Could not drop test database ${TEST_DB_FOREIGN}"
   createdb -Ttemplate_postgis -EUTF8 ${TEST_DB_FOREIGN} || die "Could not create test database ${TEST_DB_FOREIGN}"
   psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' ${TEST_DB_FOREIGN}
-
-  TESTUSER_FOREIGN=`echo ${TESTUSER}_foreign`
-  TESTPASS_FOREIGN=`echo ${TESTPASS_FOREIGN}_foreign`
 
   FOREIGN_SQL_SCRIPTS='test_foreign'
   for i in ${FOREIGN_SQL_SCRIPTS}

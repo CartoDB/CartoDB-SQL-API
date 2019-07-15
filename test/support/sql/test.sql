@@ -286,3 +286,18 @@ GRANT ALL ON TABLE pgtypes_table TO :PUBLICUSER;
 GRANT ALL ON TABLE pgtypes_table TO :TESTUSER;
 
 INSERT INTO CDB_TableMetadata (tabname, updated_at) VALUES ('pgtypes_table'::regclass, '2015-01-01T23:31:30.123Z');
+
+GRANT USAGE ON FOREIGN DATA WRAPPER postgres_fdw TO :TESTUSER;
+CREATE SERVER foreign_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (dbname ':TEST_DB_FOREIGN', host 'localhost', port '5432', extensions 'postgis', use_remote_estimate 'true', fetch_size '1000');
+GRANT USAGE ON FOREIGN SERVER foreign_server TO :TESTUSER;
+CREATE FOREIGN TABLE untitle_table_5 (
+    cartodb_id integer NOT NULL,
+    updated_at timestamp without time zone DEFAULT now(),
+    created_at timestamp without time zone DEFAULT now(),
+    name character varying,
+    address character varying,
+    the_geom_webmercator geometry,
+    the_geom geometry
+) SERVER foreign_server OPTIONS (schema_name 'public', table_name 'untitle_table_5');
+ALTER FOREIGN TABLE public.untitle_table_5 OWNER TO :TESTUSER;
+CREATE USER MAPPING for :TESTUSER SERVER foreign_server OPTIONS (user ':TESTUSER_FOREIGN', password ':TESTPASS_FOREIGN');
