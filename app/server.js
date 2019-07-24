@@ -21,7 +21,6 @@ var Profiler = require('./stats/profiler-proxy');
 var _ = require('underscore');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
-var TableCacheFactory = require('./utils/table_cache_factory');
 
 var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
@@ -41,7 +40,6 @@ var GenericController = require('./controllers/generic_controller');
 var QueryController = require('./controllers/query_controller');
 var CopyController = require('./controllers/copy_controller');
 var JobController = require('./controllers/job_controller');
-var CacheStatusController = require('./controllers/cache_status_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
 
@@ -89,8 +87,6 @@ function App(statsClient) {
     if (!fs.existsSync(global.settings.tmpDir)) {
         mkdirp.sync(global.settings.tmpDir);
     }
-
-    var tableCache = new TableCacheFactory().build(global.settings);
 
     if ( global.log4js ) {
         var loggerOpts = {
@@ -167,7 +163,6 @@ function App(statsClient) {
     var queryController = new QueryController(
         metadataBackend,
         userDatabaseService,
-        tableCache,
         statsClient,
         userLimitsService
     );
@@ -189,9 +184,6 @@ function App(statsClient) {
         userLimitsService
     );
     jobController.route(app);
-
-    var cacheStatusController = new CacheStatusController(tableCache);
-    cacheStatusController.route(app);
 
     var healthCheckController = new HealthCheckController();
     healthCheckController.route(app);
