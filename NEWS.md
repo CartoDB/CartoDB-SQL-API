@@ -1,7 +1,10 @@
 # Changelog
 
-## 3.1.0
+## 4.0.0
 Released 2019-mm-dd
+
+Breaking:
+* Remove in-memory table cache and `/cachestatus` endpoint.
 
 Announcements:
 * Update `cartodb-query-tables` to version [`0.5.0`](https://github.com/CartoDB/node-cartodb-query-tables/releases/tag/0.5.0)

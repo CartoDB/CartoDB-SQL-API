@@ -85,13 +85,6 @@ module.exports.redisIdleTimeoutMillis   = 100;
 module.exports.redisReapIntervalMillis  = 10;
 module.exports.redisLog     = false;
 
-// tableCache settings
-module.exports.tableCacheEnabled = false; // false by default
-// Max number of entries in the query tables cache
-module.exports.tableCacheMax = 8192;
-// Max age of query table cache items, in milliseconds
-module.exports.tableCacheMaxAge = 1000*60*10;
-
 // Temporary directory, make sure it is writable by server user
 module.exports.tmpDir = '/tmp';
 // change ogr2ogr command or path

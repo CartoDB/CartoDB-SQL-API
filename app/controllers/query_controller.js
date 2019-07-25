@@ -3,7 +3,7 @@
 var _ = require('underscore');
 var step = require('step');
 var PSQL = require('cartodb-psql');
-var CachedQueryTables = require('../services/cached-query-tables');
+const QueryTables = require('cartodb-query-tables');
 const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 
@@ -31,11 +31,10 @@ const cacheControl = Object.assign({
     fallbackTtl: FIVE_MINUTES_IN_SECONDS
 }, global.settings.cache);
 
-function QueryController(metadataBackend, userDatabaseService, tableCache, statsd_client, userLimitsService) {
+function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
     this.statsd_client = statsd_client;
     this.userDatabaseService = userDatabaseService;
-    this.queryTables = new CachedQueryTables(tableCache);
     this.userLimitsService = userLimitsService;
 }
 
@@ -135,9 +134,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
 
                 var pg = new PSQL(authDbParams);
 
-                var skipCache = authorizationLevel === 'master';
-
-                self.queryTables.getAffectedTablesFromQuery(pg, sql, skipCache, function(err, result) {
+                QueryTables.getAffectedTablesFromQuery(pg, sql, function (err, result) {
                     if (err) {
                         var errorMessage = (err && err.message) || 'unknown error';
                         console.error("Error on query explain '%s': %s", sql, errorMessage);
