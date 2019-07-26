@@ -2,7 +2,6 @@
 
 var step = require('step');
 var PSQL = require('cartodb-psql');
-var getContentDisposition = require('../utils/content_disposition');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
@@ -23,6 +22,7 @@ const cacheChannel = require('../middlewares/cache-channel');
 const surrogateKey = require('../middlewares/surrogate-key');
 const lastModified = require('../middlewares/last-modified');
 const formatter = require('../middlewares/formatter');
+const content = require('../middlewares/content');
 
 function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -55,6 +55,7 @@ QueryController.prototype.route = function (app) {
             surrogateKey(),
             lastModified(),
             formatter(),
+            content(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -78,24 +79,10 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             req.profiler.done('init');
         }
 
-        // 1. Setup headers
-        // 2. Send formatted results back
-        // 3. Handle error
+        // 1. Send formatted results back
+        // 2. Handle error
         step(
-            function setHeaders() {
-
-                // configure headers for given format
-                var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
-                res.header("Content-Disposition", getContentDisposition(formatter, filename, useInline));
-                res.header("Content-Type", formatter.getContentType());
-
-                return null;
-            },
-            function generateFormat(err){
-                if (err) {
-                    throw err;
-                }
-
+            function generateFormat(){
                 var opts = {
                   username: username,
                   dbopts: dbopts,
