@@ -64,6 +64,7 @@ function queryParametersStrategy (input) {
     params.limit = parseLimit(input.rows_per_page);
     params.offset = parseOffset(input.page, params.limit);
     params.callback = input.callback;
+    params.cachePolicy = input.cache_policy;
 
     return params;
 }

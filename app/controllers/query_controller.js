@@ -19,13 +19,7 @@ const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 const affectedTables = require('../middlewares/affected-tables');
 const accessValidator = require('../middlewares/access-validator');
 const queryMayWrite = require('../middlewares/query-may-write');
-
-const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
-const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
-const cacheControl = Object.assign({
-    ttl: ONE_YEAR_IN_SECONDS,
-    fallbackTtl: FIVE_MINUTES_IN_SECONDS
-}, global.settings.cache);
+const cacheControl = require('../middlewares/cache-control');
 
 function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -53,6 +47,7 @@ QueryController.prototype.route = function (app) {
             affectedTables(),
             accessValidator(),
             queryMayWrite(),
+            cacheControl(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -96,20 +91,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
                 res.header("Content-Disposition", getContentDisposition(formatter, filename, useInline));
                 res.header("Content-Type", formatter.getContentType());
-
-                // set cache headers
-                var cachePolicy = req.query.cache_policy;
-                if (cachePolicy === 'persist') {
-                    res.header('Cache-Control', 'public,max-age=' + ONE_YEAR_IN_SECONDS);
-                } else {
-                    if (affectedTables && affectedTables.getTables().every(table => table.updated_at !== null)) {
-                        const maxAge = mayWrite ? 0 : cacheControl.ttl;
-                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
-                    } else {
-                        const maxAge = cacheControl.fallbackTtl;
-                        res.header('Cache-Control', `no-cache,max-age=${maxAge},must-revalidate,public`);
-                    }
-                }
 
                 // Only set an X-Cache-Channel for responses we want Varnish to cache.
                 var skipNotUpdatedAtTables = true;
