@@ -23,45 +23,47 @@ const lastModified = require('../middlewares/last-modified');
 const formatter = require('../middlewares/formatter');
 const content = require('../middlewares/content');
 
-function QueryController(metadataBackend, userDatabaseService, statsdClient, userLimitsService) {
-    this.metadataBackend = metadataBackend;
-    this.stats = statsdClient;
-    this.userDatabaseService = userDatabaseService;
-    this.userLimitsService = userLimitsService;
-}
+module.exports = class QueryController {
+    constructor (metadataBackend, userDatabaseService, statsdClient, userLimitsService) {
+        this.metadataBackend = metadataBackend;
+        this.stats = statsdClient;
+        this.userDatabaseService = userDatabaseService;
+        this.userLimitsService = userLimitsService;
+    }
 
-QueryController.prototype.route = function (app) {
-    const { base_url } = global.settings;
-    const forceToBeMaster = false;
+    route (app) {
+        const { base_url } = global.settings;
+        const forceToBeMaster = false;
 
-    const queryMiddlewares = () => {
-        return [
-            bodyParserMiddleware(),
-            initializeProfilerMiddleware('query'),
-            userMiddleware(this.metadataBackend),
-            rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
-            authorizationMiddleware(this.metadataBackend, forceToBeMaster),
-            connectionParamsMiddleware(this.userDatabaseService),
-            timeoutLimitsMiddleware(this.metadataBackend),
-            parameters({ strategy: 'query' }),
-            logMiddleware(logMiddleware.TYPES.QUERY),
-            cancelOnClientAbort(),
-            affectedTables(),
-            accessValidator(),
-            queryMayWrite(),
-            cacheControl(),
-            cacheChannel(),
-            surrogateKey(),
-            lastModified(),
-            formatter(),
-            content(),
-            handleQuery({ stats: this.stats }),
-            errorMiddleware()
-        ];
-    };
+        const queryMiddlewares = () => {
+            return [
+                bodyParserMiddleware(),
+                initializeProfilerMiddleware('query'),
+                userMiddleware(this.metadataBackend),
+                rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
+                authorizationMiddleware(this.metadataBackend, forceToBeMaster),
+                connectionParamsMiddleware(this.userDatabaseService),
+                timeoutLimitsMiddleware(this.metadataBackend),
+                parameters({ strategy: 'query' }),
+                logMiddleware(logMiddleware.TYPES.QUERY),
+                cancelOnClientAbort(),
+                affectedTables(),
+                accessValidator(),
+                queryMayWrite(),
+                cacheControl(),
+                cacheChannel(),
+                surrogateKey(),
+                lastModified(),
+                formatter(),
+                content(),
+                handleQuery({ stats: this.stats }),
+                errorMiddleware()
+            ];
+        };
 
-    app.all(`${base_url}/sql`, queryMiddlewares());
-    app.all(`${base_url}/sql.:f`, queryMiddlewares());
+        app.all(`${base_url}/sql`, queryMiddlewares());
+        app.all(`${base_url}/sql.:f`, queryMiddlewares());
+    }
 };
 
 function handleQuery ({ stats } = {}) {
@@ -110,16 +112,18 @@ function handleQuery ({ stats } = {}) {
                     next(err);
                 }
 
-                if ( req.profiler ) {
+                if (req.profiler) {
                     req.profiler.sendStats();
                 }
-                if (statsdClient) {
-                    if ( err ) {
+
+                if (stats) {
+                    if (err) {
                         stats.increment('sqlapi.query.error');
                     } else {
                         stats.increment('sqlapi.query.success');
                     }
                 }
+
             });
         } catch (err) {
             next(err);
@@ -129,6 +133,4 @@ function handleQuery ({ stats } = {}) {
             }
         }
     };
-};
-
-module.exports = QueryController;
+}
