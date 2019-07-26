@@ -7,10 +7,10 @@ module.exports = function queryParams ({ strategy = 'query' } = {}) {
     const getParams = getParamsFromStrategy(strategy);
 
     return function queryParamsMiddleware (req, res, next) {
-        const inputParams = Object.assign({}, req.query, req.body || {});
+        const input = Object.assign({}, req.query, req.body || {});
 
         try {
-            res.locals.params = getParams(inputParams);
+            res.locals.params = getParams(input);
             next();
         } catch (err) {
             next(err);
@@ -41,45 +41,45 @@ function getParamsFromStrategy (strategy) {
     return fn;
 }
 
-function queryParamsStrategy (inputParams) {
+function queryParamsStrategy (input) {
     const params = {};
 
-    params.sql = inputParams.q;
+    params.sql = input.q;
 
     if (typeof params.sql !== 'string') {
         throw new Error('You must indicate a sql query');
     }
 
-    params.format = parseFormat(inputParams.format);
+    params.format = parseFormat(input.format);
 
     if (!formats.hasOwnProperty(params.format) ) {
         throw new Error(`Invalid format: ${params.format}`);
     }
 
-    params.orderBy = inputParams.order_by;
-    params.sortOrder = inputParams.sort_order;
-    params.skipfields = parseSkipFiles(inputParams.skipfields);
-    params.decimalPrecision = inputParams.dp ? inputParams.dp : '6';
-    params.filename = parseQueryFilename(inputParams.filename);
-    params.limit = parseLimit(inputParams.rows_per_page);
-    params.offset = parseOffset(inputParams.page, params.limit);
-    params.callback = inputParams.callback;
+    params.orderBy = input.order_by;
+    params.sortOrder = input.sort_order;
+    params.skipfields = parseSkipFiles(input.skipfields);
+    params.decimalPrecision = input.dp ? input.dp : '6';
+    params.filename = parseQueryFilename(input.filename);
+    params.limit = parseLimit(input.rows_per_page);
+    params.offset = parseOffset(input.page, params.limit);
+    params.callback = input.callback;
 
     return params;
 }
 
-function jobParamsStrategy (inputParams) {
+function jobParamsStrategy (input) {
     const params = {};
 
-    params.sql = inputParams.query;
+    params.sql = input.query;
 
     return params;
 }
 
-function copyFromParamsStrategy (inputParams) {
+function copyFromParamsStrategy (input) {
     const params = {};
 
-    params.sql = inputParams.q;
+    params.sql = input.q;
 
     if (typeof params.sql !== 'string') {
         throw new Error('SQL is missing');
@@ -92,10 +92,10 @@ function copyFromParamsStrategy (inputParams) {
     return params;
 }
 
-function copyToParamsStrategy (inputParams) {
+function copyToParamsStrategy (input) {
     const params = {};
 
-    params.sql = inputParams.q;
+    params.sql = input.q;
 
     if (typeof params.sql !== 'string') {
         throw new Error('SQL is missing');
@@ -105,7 +105,7 @@ function copyToParamsStrategy (inputParams) {
         throw new Error('SQL must start with COPY');
     }
 
-    params.filename = inputParams.filename ? inputParams.filename : 'carto-sql-copyto.dmp';
+    params.filename = input.filename ? input.filename : 'carto-sql-copyto.dmp';
 
     return params;
 }
