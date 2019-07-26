@@ -20,6 +20,8 @@ const affectedTables = require('../middlewares/affected-tables');
 const accessValidator = require('../middlewares/access-validator');
 const queryMayWrite = require('../middlewares/query-may-write');
 const cacheControl = require('../middlewares/cache-control');
+const cacheChannel = require('../middlewares/cache-channel');
+const surrogateKey = require('../middlewares/surrogate-key');
 
 function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -48,6 +50,8 @@ QueryController.prototype.route = function (app) {
             accessValidator(),
             queryMayWrite(),
             cacheControl(),
+            cacheChannel(),
+            surrogateKey(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -91,13 +95,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
                 res.header("Content-Disposition", getContentDisposition(formatter, filename, useInline));
                 res.header("Content-Type", formatter.getContentType());
-
-                // Only set an X-Cache-Channel for responses we want Varnish to cache.
-                var skipNotUpdatedAtTables = true;
-                if (!!affectedTables && affectedTables.getTables(skipNotUpdatedAtTables).length > 0 && !mayWrite) {
-                    res.header('X-Cache-Channel', affectedTables.getCacheChannel(skipNotUpdatedAtTables));
-                    res.header('Surrogate-Key', affectedTables.key(skipNotUpdatedAtTables).join(' '));
-                }
 
                 if(!!affectedTables) {
                     res.header('Last-Modified',
