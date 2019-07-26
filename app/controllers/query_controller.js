@@ -23,9 +23,9 @@ const lastModified = require('../middlewares/last-modified');
 const formatter = require('../middlewares/formatter');
 const content = require('../middlewares/content');
 
-function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
+function QueryController(metadataBackend, userDatabaseService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
-    this.statsd_client = statsd_client;
+    this.statsdClient = statsdClient;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
 }
@@ -115,19 +115,19 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             if ( req.profiler ) {
                 req.profiler.sendStats();
             }
-            if (this.statsd_client) {
+            if (this.statsdClient) {
                 if ( err ) {
-                    this.statsd_client.increment('sqlapi.query.error');
+                    this.statsdClient.increment('sqlapi.query.error');
                 } else {
-                    this.statsd_client.increment('sqlapi.query.success');
+                    this.statsdClient.increment('sqlapi.query.success');
                 }
             }
         });
     } catch (err) {
         next(err);
 
-        if (this.statsd_client) {
-            this.statsd_client.increment('sqlapi.query.error');
+        if (this.statsdClient) {
+            this.statsdClient.increment('sqlapi.query.error');
         }
     }
 
