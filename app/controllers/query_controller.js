@@ -1,17 +1,14 @@
 'use strict';
 
-const PSQL = require('cartodb-psql');
-const bodyParserMiddleware = require('../middlewares/body-parser');
-const userMiddleware = require('../middlewares/user');
-const errorMiddleware = require('../middlewares/error');
-const authorizationMiddleware = require('../middlewares/authorization');
-const connectionParamsMiddleware = require('../middlewares/connection-params');
-const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
-const { initializeProfilerMiddleware } = require('../middlewares/profiler');
-const rateLimitsMiddleware = require('../middlewares/rate-limit');
-const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
+const bodyParser = require('../middlewares/body-parser');
+const { initializeProfilerMiddleware: initializeProfiler } = require('../middlewares/profiler');
+const user = require('../middlewares/user');
+const rateLimits = require('../middlewares/rate-limit');
+const authorization = require('../middlewares/authorization');
+const connectionParams = require('../middlewares/connection-params');
+const timeoutLimits = require('../middlewares/timeout-limits');
 const parameters = require('../middlewares/parameters');
-const logMiddleware = require('../middlewares/log');
+const log = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 const affectedTables = require('../middlewares/affected-tables');
 const accessValidator = require('../middlewares/access-validator');
@@ -22,6 +19,10 @@ const surrogateKey = require('../middlewares/surrogate-key');
 const lastModified = require('../middlewares/last-modified');
 const formatter = require('../middlewares/formatter');
 const content = require('../middlewares/content');
+const error = require('../middlewares/error');
+
+const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimits;
+const PSQL = require('cartodb-psql');
 
 module.exports = class QueryController {
     constructor (metadataBackend, userDatabaseService, statsdClient, userLimitsService) {
@@ -37,15 +38,15 @@ module.exports = class QueryController {
 
         const queryMiddlewares = () => {
             return [
-                bodyParserMiddleware(),
-                initializeProfilerMiddleware('query'),
-                userMiddleware(this.metadataBackend),
-                rateLimitsMiddleware(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
-                authorizationMiddleware(this.metadataBackend, forceToBeMaster),
-                connectionParamsMiddleware(this.userDatabaseService),
-                timeoutLimitsMiddleware(this.metadataBackend),
+                bodyParser(),
+                initializeProfiler('query'),
+                user(this.metadataBackend),
+                rateLimits(this.userLimitsService, RATE_LIMIT_ENDPOINTS_GROUPS.QUERY),
+                authorization(this.metadataBackend, forceToBeMaster),
+                connectionParams(this.userDatabaseService),
+                timeoutLimits(this.metadataBackend),
                 parameters({ strategy: 'query' }),
-                logMiddleware(logMiddleware.TYPES.QUERY),
+                log(log.TYPES.QUERY),
                 cancelOnClientAbort(),
                 affectedTables(),
                 accessValidator(),
@@ -57,7 +58,7 @@ module.exports = class QueryController {
                 formatter(),
                 content(),
                 handleQuery({ stats: this.stats }),
-                errorMiddleware()
+                error()
             ];
         };
 
