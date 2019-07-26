@@ -22,6 +22,7 @@ const queryMayWrite = require('../middlewares/query-may-write');
 const cacheControl = require('../middlewares/cache-control');
 const cacheChannel = require('../middlewares/cache-channel');
 const surrogateKey = require('../middlewares/surrogate-key');
+const lastModified = require('../middlewares/last-modified');
 
 function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -52,6 +53,7 @@ QueryController.prototype.route = function (app) {
             cacheControl(),
             cacheChannel(),
             surrogateKey(),
+            lastModified(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -95,11 +97,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                 var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
                 res.header("Content-Disposition", getContentDisposition(formatter, filename, useInline));
                 res.header("Content-Type", formatter.getContentType());
-
-                if(!!affectedTables) {
-                    res.header('Last-Modified',
-                               new Date(affectedTables.getLastUpdatedAt(Number(new Date()))).toUTCString());
-                }
 
                 return null;
             },
