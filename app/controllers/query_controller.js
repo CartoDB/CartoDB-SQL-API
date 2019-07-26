@@ -2,7 +2,6 @@
 
 var step = require('step');
 var PSQL = require('cartodb-psql');
-var queryMayWrite = require('../utils/query_may_write');
 const formats = require('../models/formats');
 var getContentDisposition = require('../utils/content_disposition');
 const bodyParserMiddleware = require('../middlewares/body-parser');
@@ -19,6 +18,7 @@ const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 const affectedTables = require('../middlewares/affected-tables');
 const accessValidator = require('../middlewares/access-validator');
+const queryMayWrite = require('../middlewares/query-may-write');
 
 const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
 const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
@@ -52,6 +52,7 @@ QueryController.prototype.route = function (app) {
             cancelOnClientAbort(),
             affectedTables(),
             accessValidator(),
+            queryMayWrite(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -69,7 +70,8 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         user: username,
         userDbParams: dbopts,
         userLimits,
-        affectedTables
+        affectedTables,
+        mayWrite
     } = res.locals;
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
     const { sql, format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
@@ -86,12 +88,9 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         // 3. Handle error
         step(
             function setHeaders() {
-                var mayWrite = queryMayWrite(sql);
-
                 var FormatClass = formats[format];
                 formatter = new FormatClass();
                 req.formatter = formatter;
-
 
                 // configure headers for given format
                 var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
