@@ -2,7 +2,6 @@
 
 var step = require('step');
 var PSQL = require('cartodb-psql');
-const QueryTables = require('cartodb-query-tables');
 const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 const formats = require('../models/formats');
@@ -19,6 +18,7 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const parameters = require('../middlewares/parameters');
 const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
+const affectedTables = require('../middlewares/affected-tables');
 
 const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
 const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
@@ -50,6 +50,7 @@ QueryController.prototype.route = function (app) {
             parameters({ strategy: 'query' }),
             logMiddleware(logMiddleware.TYPES.QUERY),
             cancelOnClientAbort(),
+            affectedTables(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -63,11 +64,15 @@ QueryController.prototype.route = function (app) {
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
 
-    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
+    const {
+        user: username,
+        userDbParams: dbopts,
+        userLimits,
+        authorizationLevel,
+        affectedTables
+    } = res.locals;
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
-    const { format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
-
-    let { sql } = res.locals.params;
+    const { sql, format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
 
     try {
         let formatter;
@@ -76,29 +81,11 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             req.profiler.done('init');
         }
 
-        // 1. Get the list of tables affected by the query
-        // 2. Setup headers
-        // 3. Send formatted results back
-        // 4. Handle error
+        // 1. Setup headers
+        // 2. Send formatted results back
+        // 3. Handle error
         step(
-            function queryExplain() {
-                var next = this;
-
-                var pg = new PSQL(authDbParams);
-
-                QueryTables.getAffectedTablesFromQuery(pg, sql, function (err, result) {
-                    if (err) {
-                        var errorMessage = (err && err.message) || 'unknown error';
-                        console.error("Error on query explain '%s': %s", sql, errorMessage);
-                    }
-                    return next(null, result);
-                });
-            },
-            function setHeaders(err, affectedTables) {
-                if (err) {
-                    throw err;
-                }
-
+            function setHeaders() {
                 var mayWrite = queryMayWrite(sql);
                 if ( req.profiler ) {
                     req.profiler.done('queryExplain');
@@ -153,9 +140,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                     throw err;
                 }
 
-                // TODO: drop this, fix UI!
-                sql = new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query();
-
                 var opts = {
                   username: username,
                   dbopts: dbopts,
@@ -163,7 +147,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                   gn: 'the_geom', // TODO: read from configuration FILE,
                   dp: decimalPrecision,
                   skipfields: skipfields,
-                  sql: sql,
+                  sql: new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query(),
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
                   callback: callback,
