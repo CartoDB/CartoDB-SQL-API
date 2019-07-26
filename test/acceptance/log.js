@@ -24,34 +24,6 @@ describe('Log middleware', function() {
 
     describe('regular queries endpoint', function() {
         ['GET', 'POST'].forEach(method => {
-            it(`${method} without query fails`, function(done) {
-                assert.response(server,
-                    {
-                        method,
-                        url: '/api/v1/sql?' + qs.stringify({
-                            api_key: API_KEY
-                        }),
-                        headers: {
-                            host: 'vizzuality.cartodb.com'
-                        }
-                    },
-                    { statusCode: 400 },
-                    function(err, res) {
-                        assert.ok(!err);
-
-                        assert.ok(res.headers['x-sqlapi-log']);
-                        const log = JSON.parse(res.headers['x-sqlapi-log']);
-                        assert.deepEqual(log, {
-                            request: {
-                                sql: null
-                            }
-                        });
-
-                        return done();
-                    }
-                );
-            });
-
             it(`${method} query`, function(done) {
                 assert.response(server,
                     {

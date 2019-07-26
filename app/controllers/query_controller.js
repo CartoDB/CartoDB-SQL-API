@@ -16,7 +16,6 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const handleQueryMiddleware = require('../middlewares/handle-query');
 const parseQueryParams = require('../middlewares/query-params');
 const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
@@ -48,9 +47,8 @@ QueryController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
-            handleQueryMiddleware(),
+            parseQueryParams({ strategy: 'query' }),
             logMiddleware(logMiddleware.TYPES.QUERY),
-            parseQueryParams(),
             cancelOnClientAbort(),
             this.handleQuery.bind(this),
             errorMiddleware()
@@ -69,7 +67,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
     const { format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
 
-    let { sql } = res.locals;
+    let { sql } = res.locals.params;
 
     try {
         let formatter;

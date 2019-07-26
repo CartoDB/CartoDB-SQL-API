@@ -12,7 +12,7 @@ module.exports = function log(sqlType = TYPES.QUERY) {
     return function logMiddleware(req, res, next) {
         const logObj = {
             request: {
-                sql: prepareSQL(res.locals.sql, sqlType)
+                sql: prepareSQL(res.locals.params.sql, sqlType)
             }
         };
 

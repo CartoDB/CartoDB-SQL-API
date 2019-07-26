@@ -14,7 +14,7 @@ const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
-const handleQueryMiddleware = require('../middlewares/handle-query');
+const parseQueryParams = require('../middlewares/query-params');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
@@ -34,9 +34,8 @@ CopyController.prototype.route = function (app) {
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
-            validateCopyQuery(),
             dbQuotaMiddleware(),
-            handleQueryMiddleware(),
+            parseQueryParams({ strategy: 'copyfrom' }),
             handleCopyFrom(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
@@ -51,9 +50,7 @@ CopyController.prototype.route = function (app) {
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
-            validateCopyQuery(),
-            handleQueryMiddleware(),
-            getFilenameParam(),
+            parseQueryParams({ strategy: 'copyto' }),
             handleCopyTo(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
@@ -67,7 +64,8 @@ CopyController.prototype.route = function (app) {
 
 function handleCopyTo (logger) {
     return function handleCopyToMiddleware (req, res, next) {
-        const { sql, filename, userDbParams, user } = res.locals;
+        const { userDbParams, user } = res.locals;
+        const { sql, filename } = res.locals.params;
 
         // it is not sure, nginx may choose not to compress the body
         // but we want to know it and save it in the metrics
@@ -102,7 +100,8 @@ function handleCopyTo (logger) {
 
 function handleCopyFrom (logger) {
     return function handleCopyFromMiddleware (req, res, next) {
-        const { sql, userDbParams, user, dbRemainingQuota } = res.locals;
+        const { userDbParams, user, dbRemainingQuota } = res.locals;
+        const { sql } = res.locals.params;
         const isGzip = req.get('content-encoding') === 'gzip';
         const COPY_FROM_MAX_POST_SIZE = global.settings.copy_from_max_post_size || 2 * 1024 * 1024 * 1024; // 2 GB
         const COPY_FROM_MAX_POST_SIZE_PRETTY = global.settings.copy_from_max_post_size_pretty || '2 GB';
@@ -166,36 +165,6 @@ function handleCopyFrom (logger) {
                     });
                 });
         });
-    };
-}
-
-function getFilenameParam () {
-    return function getFilenameParamMiddleware (req, res, next) {
-        let filename = (req.query && req.query.filename) || (req.body && req.body.filename);
-
-        if (!filename) {
-            filename = 'carto-sql-copyto.dmp';
-        }
-
-        res.locals.filename = filename;
-
-        next();
-    };
-}
-
-function validateCopyQuery () {
-    return function validateCopyQueryMiddleware (req, res, next) {
-        const sql = (req.query && req.query.q) || (req.body && req.body.q);
-
-        if (!sql) {
-            return next(new Error("SQL is missing"));
-        }
-
-        if (!sql.toUpperCase().startsWith("COPY ")) {
-            return next(new Error("SQL must start with COPY"));
-        }
-
-        next();
     };
 }
 
