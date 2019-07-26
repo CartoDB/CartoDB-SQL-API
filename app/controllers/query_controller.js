@@ -25,7 +25,7 @@ const content = require('../middlewares/content');
 
 function QueryController(metadataBackend, userDatabaseService, statsdClient, userLimitsService) {
     this.metadataBackend = metadataBackend;
-    this.statsdClient = statsdClient;
+    this.stats = statsdClient;
     this.userDatabaseService = userDatabaseService;
     this.userLimitsService = userLimitsService;
 }
@@ -55,7 +55,7 @@ QueryController.prototype.route = function (app) {
             lastModified(),
             formatter(),
             content(),
-            this.handleQuery.bind(this),
+            handleQuery({ stats: this.stats }),
             errorMiddleware()
         ];
     };
@@ -64,73 +64,71 @@ QueryController.prototype.route = function (app) {
     app.all(`${base_url}/sql.:f`, queryMiddlewares());
 };
 
-// jshint maxcomplexity:21
-QueryController.prototype.handleQuery = function (req, res, next) {
-    var self = this;
+function handleQuery ({ stats } = {}) {
+    return function handleQueryMiddleware (req, res, next) {
+        const { user: username, userDbParams: dbopts, userLimits } = res.locals;
+        const { orderBy, sortOrder, limit, offset } = res.locals.params;
+        const { sql, skipfields, decimalPrecision, filename, callback } = res.locals.params;
 
-    const { user: username, userDbParams: dbopts, userLimits } = res.locals;
-    const { orderBy, sortOrder, limit, offset } = res.locals.params;
-    const { sql, skipfields, decimalPrecision, filename, callback } = res.locals.params;
+        let { formatter } = req;
 
-    let { formatter } = req;
+        try {
+            if (req.profiler) {
+                req.profiler.done('init');
+            }
 
-    try {
-        if (req.profiler) {
-            req.profiler.done('init');
-        }
-
-        const opts = {
-            username: username,
-            dbopts: dbopts,
-            sink: res,
-            gn: 'the_geom', // TODO: read from configuration FILE,
-            dp: decimalPrecision,
-            skipfields: skipfields,
-            sql: new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query(),
-            filename: filename,
-            bufferedRows: global.settings.bufferedRows,
-            callback: callback,
-            timeout: userLimits.timeout
-        };
-
-        if (req.profiler) {
-            opts.profiler = req.profiler;
-            opts.beforeSink = function () {
-                req.profiler.done('beforeSink');
-                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+            const opts = {
+                username: username,
+                dbopts: dbopts,
+                sink: res,
+                gn: 'the_geom', // TODO: read from configuration FILE,
+                dp: decimalPrecision,
+                skipfields: skipfields,
+                sql: new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query(),
+                filename: filename,
+                bufferedRows: global.settings.bufferedRows,
+                callback: callback,
+                timeout: userLimits.timeout
             };
-        }
 
-        if (dbopts.host) {
-            res.header('X-Served-By-DB-Host', dbopts.host);
-        }
-
-        formatter.sendResponse(opts, (err) => {
-            formatter = null;
-
-            if (err) {
-                next(err);
+            if (req.profiler) {
+                opts.profiler = req.profiler;
+                opts.beforeSink = function () {
+                    req.profiler.done('beforeSink');
+                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+                };
             }
 
-            if ( req.profiler ) {
-                req.profiler.sendStats();
+            if (dbopts.host) {
+                res.header('X-Served-By-DB-Host', dbopts.host);
             }
-            if (this.statsdClient) {
-                if ( err ) {
-                    this.statsdClient.increment('sqlapi.query.error');
-                } else {
-                    this.statsdClient.increment('sqlapi.query.success');
+
+            formatter.sendResponse(opts, (err) => {
+                formatter = null;
+
+                if (err) {
+                    next(err);
                 }
+
+                if ( req.profiler ) {
+                    req.profiler.sendStats();
+                }
+                if (statsdClient) {
+                    if ( err ) {
+                        stats.increment('sqlapi.query.error');
+                    } else {
+                        stats.increment('sqlapi.query.success');
+                    }
+                }
+            });
+        } catch (err) {
+            next(err);
+
+            if (stats) {
+                stats.increment('sqlapi.query.error');
             }
-        });
-    } catch (err) {
-        next(err);
-
-        if (this.statsdClient) {
-            this.statsdClient.increment('sqlapi.query.error');
         }
-    }
-
+    };
 };
 
 module.exports = QueryController;
