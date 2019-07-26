@@ -1,7 +1,6 @@
 'use strict';
 
-var step = require('step');
-var PSQL = require('cartodb-psql');
+const PSQL = require('cartodb-psql');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
 const errorMiddleware = require('../middlewares/error');
@@ -72,6 +71,7 @@ QueryController.prototype.handleQuery = function (req, res, next) {
     const { user: username, userDbParams: dbopts, userLimits } = res.locals;
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
     const { sql, skipfields, decimalPrecision, filename, callback } = res.locals.params;
+
     let { formatter } = req;
 
     try {
@@ -79,62 +79,55 @@ QueryController.prototype.handleQuery = function (req, res, next) {
             req.profiler.done('init');
         }
 
-        // 1. Send formatted results back
-        // 2. Handle error
-        step(
-            function generateFormat(){
-                var opts = {
-                  username: username,
-                  dbopts: dbopts,
-                  sink: res,
-                  gn: 'the_geom', // TODO: read from configuration FILE,
-                  dp: decimalPrecision,
-                  skipfields: skipfields,
-                  sql: new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query(),
-                  filename: filename,
-                  bufferedRows: global.settings.bufferedRows,
-                  callback: callback,
-                  timeout: userLimits.timeout
-                };
+        const opts = {
+            username: username,
+            dbopts: dbopts,
+            sink: res,
+            gn: 'the_geom', // TODO: read from configuration FILE,
+            dp: decimalPrecision,
+            skipfields: skipfields,
+            sql: new PSQL.QueryWrapper(sql).orderBy(orderBy, sortOrder).window(limit, offset).query(),
+            filename: filename,
+            bufferedRows: global.settings.bufferedRows,
+            callback: callback,
+            timeout: userLimits.timeout
+        };
 
-                if (req.profiler) {
-                  opts.profiler = req.profiler;
-                  opts.beforeSink = function() {
-                    req.profiler.done('beforeSink');
-                    res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
-                  };
-                }
+        if (req.profiler) {
+            opts.profiler = req.profiler;
+            opts.beforeSink = function () {
+                req.profiler.done('beforeSink');
+                res.header('X-SQLAPI-Profiler', req.profiler.toJSONString());
+            };
+        }
 
-                if (dbopts.host) {
-                  res.header('X-Served-By-DB-Host', dbopts.host);
-                }
+        if (dbopts.host) {
+            res.header('X-Served-By-DB-Host', dbopts.host);
+        }
 
-                formatter.sendResponse(opts, this);
-            },
-            function errorHandle(err){
-                formatter = null;
+        formatter.sendResponse(opts, (err) => {
+            formatter = null;
 
-                if (err) {
-                    next(err);
-                }
+            if (err) {
+                next(err);
+            }
 
-                if ( req.profiler ) {
-                    req.profiler.sendStats();
-                }
-                if (self.statsd_client) {
-                  if ( err ) {
-                      self.statsd_client.increment('sqlapi.query.error');
-                  } else {
-                      self.statsd_client.increment('sqlapi.query.success');
-                  }
+            if ( req.profiler ) {
+                req.profiler.sendStats();
+            }
+            if (this.statsd_client) {
+                if ( err ) {
+                    this.statsd_client.increment('sqlapi.query.error');
+                } else {
+                    this.statsd_client.increment('sqlapi.query.success');
                 }
             }
-        );
+        });
     } catch (err) {
         next(err);
 
-        if (self.statsd_client) {
-            self.statsd_client.increment('sqlapi.query.error');
+        if (this.statsd_client) {
+            this.statsd_client.increment('sqlapi.query.error');
         }
     }
 
