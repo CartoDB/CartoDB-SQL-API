@@ -16,7 +16,7 @@ const timeoutLimitsMiddleware = require('../middlewares/timeout-limits');
 const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const parseQueryParams = require('../middlewares/query-params');
+const parameters = require('../middlewares/parameters');
 const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 
@@ -47,7 +47,7 @@ QueryController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend, forceToBeMaster),
             connectionParamsMiddleware(this.userDatabaseService),
             timeoutLimitsMiddleware(this.metadataBackend),
-            parseQueryParams({ strategy: 'query' }),
+            parameters({ strategy: 'query' }),
             logMiddleware(logMiddleware.TYPES.QUERY),
             cancelOnClientAbort(),
             this.handleQuery.bind(this),

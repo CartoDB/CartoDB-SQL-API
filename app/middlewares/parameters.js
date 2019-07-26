@@ -3,14 +3,14 @@
 const sanitizeFilename = require('../utils/filename_sanitizer');
 const formats = require('../models/formats');
 
-module.exports = function queryParams ({ strategy = 'query' } = {}) {
-    const getParams = getParamsFromStrategy(strategy);
+module.exports = function parameters ({ strategy = 'query' } = {}) {
+    const getParameters = getParametersFromStrategy(strategy);
 
-    return function queryParamsMiddleware (req, res, next) {
+    return function parametersMiddleware (req, res, next) {
         const input = Object.assign({}, req.query, req.body || {});
 
         try {
-            res.locals.params = getParams(input);
+            res.locals.params = getParameters(input);
             next();
         } catch (err) {
             next(err);
@@ -18,21 +18,21 @@ module.exports = function queryParams ({ strategy = 'query' } = {}) {
     };
 };
 
-function getParamsFromStrategy (strategy) {
+function getParametersFromStrategy (strategy) {
     let fn;
 
     switch (strategy) {
         case('query'):
-            fn = queryParamsStrategy;
+            fn = queryParametersStrategy;
             break;
         case('job'):
-            fn = jobParamsStrategy;
+            fn = jobParametersStrategy;
             break;
         case('copyfrom'):
-            fn = copyFromParamsStrategy;
+            fn = copyFromParametersStrategy;
             break;
         case('copyto'):
-            fn = copyToParamsStrategy;
+            fn = copyToParametersStrategy;
             break;
         default:
             throw new Error('Missig parameter strategy');
@@ -41,7 +41,7 @@ function getParamsFromStrategy (strategy) {
     return fn;
 }
 
-function queryParamsStrategy (input) {
+function queryParametersStrategy (input) {
     const params = {};
 
     params.sql = input.q;
@@ -68,7 +68,7 @@ function queryParamsStrategy (input) {
     return params;
 }
 
-function jobParamsStrategy (input) {
+function jobParametersStrategy (input) {
     const params = {};
 
     params.sql = input.query;
@@ -76,7 +76,7 @@ function jobParamsStrategy (input) {
     return params;
 }
 
-function copyFromParamsStrategy (input) {
+function copyFromParametersStrategy (input) {
     const params = {};
 
     params.sql = input.q;
@@ -92,7 +92,7 @@ function copyFromParamsStrategy (input) {
     return params;
 }
 
-function copyToParamsStrategy (input) {
+function copyToParametersStrategy (input) {
     const params = {};
 
     params.sql = input.q;

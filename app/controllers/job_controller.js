@@ -10,7 +10,7 @@ const connectionParamsMiddleware = require('../middlewares/connection-params');
 const errorMiddleware = require('../middlewares/error');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
-const parseQueryParams = require('../middlewares/query-params');
+const parameters = require('../middlewares/parameters');
 const logMiddleware = require('../middlewares/log');
 
 function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
@@ -44,7 +44,7 @@ JobController.prototype.route = function (app) {
         `${base_url}/sql/job`,
         bodyParserMiddleware(),
         checkBodyPayloadSize(),
-        parseQueryParams({ strategy: 'job' }),
+        parameters({ strategy: 'job' }),
         logMiddleware(logMiddleware.TYPES.JOB),
         jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
     );
