@@ -1,15 +1,11 @@
 'use strict';
 
-var _ = require('underscore');
 var step = require('step');
 var PSQL = require('cartodb-psql');
 const QueryTables = require('cartodb-query-tables');
 const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
-
-var formats = require('../models/formats');
-
-var sanitize_filename = require('../utils/filename_sanitizer');
+const formats = require('../models/formats');
 var getContentDisposition = require('../utils/content_disposition');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
@@ -21,6 +17,7 @@ const { initializeProfilerMiddleware } = require('../middlewares/profiler');
 const rateLimitsMiddleware = require('../middlewares/rate-limit');
 const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const handleQueryMiddleware = require('../middlewares/handle-query');
+const parseQueryParams = require('../middlewares/query-params');
 const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 
@@ -53,6 +50,7 @@ QueryController.prototype.route = function (app) {
             timeoutLimitsMiddleware(this.metadataBackend),
             handleQueryMiddleware(),
             logMiddleware(logMiddleware.TYPES.QUERY),
+            parseQueryParams(),
             cancelOnClientAbort(),
             this.handleQuery.bind(this),
             errorMiddleware()
@@ -66,61 +64,17 @@ QueryController.prototype.route = function (app) {
 // jshint maxcomplexity:21
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
-    // clone so don't modify req.params or req.body so oauth is not broken
-    var params = _.extend({}, req.query, req.body || {});
-    var limit = parseInt(params.rows_per_page);
-    var offset = parseInt(params.page);
-    var orderBy = params.order_by;
-    var sortOrder = params.sort_order;
-    var requestedFormat = params.format;
-    var format = _.isArray(requestedFormat) ? _.last(requestedFormat) : requestedFormat;
-    var requestedFilename = params.filename;
-    var filename = requestedFilename;
-    var requestedSkipfields = params.skipfields;
+
+    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
+    const { orderBy, sortOrder, limit, offset } = res.locals.params;
+    const { format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
 
     let { sql } = res.locals;
-    const { user: username, userDbParams: dbopts, authDbParams, userLimits, authorizationLevel } = res.locals;
-
-    var skipfields;
-    var dp = params.dp; // decimal point digits (defaults to 6)
-    var gn = "the_geom"; // TODO: read from configuration FILE
 
     try {
+        let formatter;
 
-        // sanitize and apply defaults to input
-        dp        = (dp       === "" || _.isUndefined(dp))       ? '6'  : dp;
-        format    = (format   === "" || _.isUndefined(format))   ? 'json' : format.toLowerCase();
-        filename  = (filename === "" || _.isUndefined(filename)) ? 'cartodb-query' : sanitize_filename(filename);
-        sql       = (sql      === "" || _.isUndefined(sql))      ? null : sql;
-        limit     = (!_.isNaN(limit))  ? limit : null;
-        offset    = (!_.isNaN(offset)) ? offset * limit : null;
-
-        // Accept both comma-separated string or array of comma-separated strings
-        if ( requestedSkipfields ) {
-          if ( _.isString(requestedSkipfields) ) {
-              skipfields = requestedSkipfields.split(',');
-          } else if ( _.isArray(requestedSkipfields) ) {
-            skipfields = [];
-            _.each(requestedSkipfields, function(ele) {
-              skipfields = skipfields.concat(ele.split(','));
-            });
-          }
-        } else {
-          skipfields = [];
-        }
-
-        //if ( -1 === supportedFormats.indexOf(format) )
-        if ( ! formats.hasOwnProperty(format) ) {
-            throw new Error("Invalid format: " + format);
-        }
-
-        if (!_.isString(sql)) {
-            throw new Error("You must indicate a sql query");
-        }
-
-        var formatter;
-
-        if ( req.profiler ) {
+        if (req.profiler) {
             req.profiler.done('init');
         }
 
@@ -164,8 +118,8 @@ QueryController.prototype.handleQuery = function (req, res, next) {
 
 
                 // configure headers for given format
-                var use_inline = !requestedFormat && !requestedFilename;
-                res.header("Content-Disposition", getContentDisposition(formatter, filename, use_inline));
+                var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
+                res.header("Content-Disposition", getContentDisposition(formatter, filename, useInline));
                 res.header("Content-Type", formatter.getContentType());
 
                 // set cache headers
@@ -208,17 +162,17 @@ QueryController.prototype.handleQuery = function (req, res, next) {
                   username: username,
                   dbopts: dbopts,
                   sink: res,
-                  gn: gn,
-                  dp: dp,
+                  gn: 'the_geom', // TODO: read from configuration FILE,
+                  dp: decimalPrecision,
                   skipfields: skipfields,
                   sql: sql,
                   filename: filename,
                   bufferedRows: global.settings.bufferedRows,
-                  callback: params.callback,
+                  callback: callback,
                   timeout: userLimits.timeout
                 };
 
-                if ( req.profiler ) {
+                if (req.profiler) {
                   opts.profiler = req.profiler;
                   opts.beforeSink = function() {
                     req.profiler.done('beforeSink');

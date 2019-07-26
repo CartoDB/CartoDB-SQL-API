@@ -3,6 +3,7 @@
 module.exports = function handleQuery(isBatchAPIQuery = false) {
     return function handleQueryMiddleware(req, res, next) {
         res.locals.sql = isBatchAPIQuery ? batchApiQuery(req) : notBatchApiQuery(req);
+
         return next();
     };
 };
