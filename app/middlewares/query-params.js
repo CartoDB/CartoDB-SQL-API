@@ -4,46 +4,60 @@ const sanitizeFilename = require('../utils/filename_sanitizer');
 const formats = require('../models/formats');
 
 module.exports = function queryParams ({ strategy = 'query' } = {}) {
-    let middleware;
+    const getParams = getParamsFromStrategy(strategy);
+
+    return function queryParamsMiddleware (req, res, next) {
+        const inputParams = Object.assign({}, req.query, req.body || {});
+
+        try {
+            res.locals.params = getParams(inputParams);
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+function getParamsFromStrategy (strategy) {
+    let fn;
 
     switch (strategy) {
         case('query'):
-            middleware = queryParamsMiddleware;
+            fn = queryParamsStrategy;
             break;
         case('job'):
-            middleware = jobParamsMiddleware;
+            fn = jobParamsStrategy;
             break;
         case('copyfrom'):
-            middleware = copyFromParamsMiddleware;
+            fn = copyFromParamsStrategy;
             break;
         case('copyto'):
-            middleware = copyToParamsMiddleware;
+            fn = copyToParamsStrategy;
             break;
         default:
-            throw new Error('Missig parameter strategy middleware');
+            throw new Error('Missig parameter strategy');
     }
 
-    return middleware;
-};
+    return fn;
+}
 
-function queryParamsMiddleware (req, res, next) {
-    const inputParams = Object.assign({}, req.query, req.body || {});
+function queryParamsStrategy (inputParams) {
     const params = {};
 
     params.sql = inputParams.q;
 
     if (typeof params.sql !== 'string') {
-        return next(new Error('You must indicate a sql query'));
+        throw new Error('You must indicate a sql query');
+    }
+
+    params.format = parseFormat(inputParams.format);
+
+    if (!formats.hasOwnProperty(params.format) ) {
+        throw new Error(`Invalid format: ${params.format}`);
     }
 
     params.orderBy = inputParams.order_by;
     params.sortOrder = inputParams.sort_order;
-    params.format = parseFormat(inputParams.format);
-
-    if (!formats.hasOwnProperty(params.format) ) {
-        return next(new Error(`Invalid format: ${params.format}`));
-    }
-
     params.skipfields = parseSkipFiles(inputParams.skipfields);
     params.decimalPrecision = inputParams.dp ? inputParams.dp : '6';
     params.filename = parseQueryFilename(inputParams.filename);
@@ -51,60 +65,49 @@ function queryParamsMiddleware (req, res, next) {
     params.offset = parseOffset(inputParams.page, params.limit);
     params.callback = inputParams.callback;
 
-    res.locals.params = params;
-
-    next();
+    return params;
 }
 
-function jobParamsMiddleware (req, res, next) {
-    const inputParams = Object.assign({}, req.query, req.body || {});
+function jobParamsStrategy (inputParams) {
     const params = {};
 
     params.sql = inputParams.query;
 
-    res.locals.params = params;
-
-    return next();
+    return params;
 }
 
-function copyFromParamsMiddleware (req, res, next) {
-    const inputParams = Object.assign({}, req.query, req.body || {});
+function copyFromParamsStrategy (inputParams) {
     const params = {};
 
     params.sql = inputParams.q;
 
     if (typeof params.sql !== 'string') {
-        return next(new Error('SQL is missing'));
+        throw new Error('SQL is missing');
     }
 
-    if (!params.sql .toUpperCase().startsWith('COPY ')) {
-        return next(new Error('SQL must start with COPY'));
+    if (!params.sql.toUpperCase().startsWith('COPY ')) {
+        throw new Error('SQL must start with COPY');
     }
 
-    res.locals.params = params;
-
-    next();
+    return params;
 }
 
-function copyToParamsMiddleware (req, res, next) {
-    const inputParams = Object.assign({}, req.query, req.body || {});
+function copyToParamsStrategy (inputParams) {
     const params = {};
 
     params.sql = inputParams.q;
 
     if (typeof params.sql !== 'string') {
-        return next(new Error('SQL is missing'));
+        throw new Error('SQL is missing');
     }
 
     if (!params.sql .toUpperCase().startsWith('COPY ')) {
-        return next(new Error('SQL must start with COPY'));
+        throw new Error('SQL must start with COPY');
     }
 
     params.filename = inputParams.filename ? inputParams.filename : 'carto-sql-copyto.dmp';
 
-    res.locals.params = params;
-
-    next();
+    return params;
 }
 
 function parseQueryFilename (inputFilename) {
