@@ -2,7 +2,6 @@
 
 var step = require('step');
 var PSQL = require('cartodb-psql');
-const pgEntitiesAccessValidator = require('../services/pg-entities-access-validator');
 var queryMayWrite = require('../utils/query_may_write');
 const formats = require('../models/formats');
 var getContentDisposition = require('../utils/content_disposition');
@@ -19,6 +18,7 @@ const parameters = require('../middlewares/parameters');
 const logMiddleware = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 const affectedTables = require('../middlewares/affected-tables');
+const accessValidator = require('../middlewares/access-validator');
 
 const ONE_YEAR_IN_SECONDS = 31536000; // ttl in cache provider
 const FIVE_MINUTES_IN_SECONDS = 60 * 5; // ttl in cache provider
@@ -51,6 +51,7 @@ QueryController.prototype.route = function (app) {
             logMiddleware(logMiddleware.TYPES.QUERY),
             cancelOnClientAbort(),
             affectedTables(),
+            accessValidator(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -68,7 +69,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         user: username,
         userDbParams: dbopts,
         userLimits,
-        authorizationLevel,
         affectedTables
     } = res.locals;
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
@@ -87,15 +87,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         step(
             function setHeaders() {
                 var mayWrite = queryMayWrite(sql);
-                if ( req.profiler ) {
-                    req.profiler.done('queryExplain');
-                }
-
-                if(!pgEntitiesAccessValidator.validate(affectedTables, authorizationLevel)) {
-                    const syntaxError = new SyntaxError("system tables are forbidden");
-                    syntaxError.http_status = 403;
-                    throw(syntaxError);
-                }
 
                 var FormatClass = formats[format];
                 formatter = new FormatClass();

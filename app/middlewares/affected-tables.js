@@ -19,6 +19,10 @@ module.exports = function affectedTables () {
 
             res.locals.affectedTables = affectedTables;
 
+            if (req.profiler) {
+                req.profiler.done('queryExplain');
+            }
+
             return next();
         });
 
