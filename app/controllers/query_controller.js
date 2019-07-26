@@ -2,7 +2,6 @@
 
 var step = require('step');
 var PSQL = require('cartodb-psql');
-const formats = require('../models/formats');
 var getContentDisposition = require('../utils/content_disposition');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 const userMiddleware = require('../middlewares/user');
@@ -23,6 +22,7 @@ const cacheControl = require('../middlewares/cache-control');
 const cacheChannel = require('../middlewares/cache-channel');
 const surrogateKey = require('../middlewares/surrogate-key');
 const lastModified = require('../middlewares/last-modified');
+const formatter = require('../middlewares/formatter');
 
 function QueryController(metadataBackend, userDatabaseService, statsd_client, userLimitsService) {
     this.metadataBackend = metadataBackend;
@@ -54,6 +54,7 @@ QueryController.prototype.route = function (app) {
             cacheChannel(),
             surrogateKey(),
             lastModified(),
+            formatter(),
             this.handleQuery.bind(this),
             errorMiddleware()
         ];
@@ -67,19 +68,12 @@ QueryController.prototype.route = function (app) {
 QueryController.prototype.handleQuery = function (req, res, next) {
     var self = this;
 
-    const {
-        user: username,
-        userDbParams: dbopts,
-        userLimits,
-        affectedTables,
-        mayWrite
-    } = res.locals;
+    const { user: username, userDbParams: dbopts, userLimits } = res.locals;
     const { orderBy, sortOrder, limit, offset } = res.locals.params;
-    const { sql, format, skipfields, decimalPrecision, filename, callback } = res.locals.params;
+    const { sql, skipfields, decimalPrecision, filename, callback } = res.locals.params;
+    let { formatter } = req;
 
     try {
-        let formatter;
-
         if (req.profiler) {
             req.profiler.done('init');
         }
@@ -89,9 +83,6 @@ QueryController.prototype.handleQuery = function (req, res, next) {
         // 3. Handle error
         step(
             function setHeaders() {
-                var FormatClass = formats[format];
-                formatter = new FormatClass();
-                req.formatter = formatter;
 
                 // configure headers for given format
                 var useInline = (!req.query.format && !req.body.format && !req.query.filename && !req.body.filename);
