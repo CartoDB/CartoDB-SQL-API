@@ -7,7 +7,7 @@ const rateLimits = require('../middlewares/rate-limit');
 const authorization = require('../middlewares/authorization');
 const connectionParams = require('../middlewares/connection-params');
 const timeoutLimits = require('../middlewares/timeout-limits');
-const parameters = require('../middlewares/parameters');
+const params = require('../middlewares/params');
 const log = require('../middlewares/log');
 const cancelOnClientAbort = require('../middlewares/cancel-on-client-abort');
 const affectedTables = require('../middlewares/affected-tables');
@@ -45,7 +45,7 @@ module.exports = class QueryController {
                 authorization(this.metadataBackend, forceToBeMaster),
                 connectionParams(this.userDatabaseService),
                 timeoutLimits(this.metadataBackend),
-                parameters({ strategy: 'query' }),
+                params({ strategy: 'query' }),
                 log(log.TYPES.QUERY),
                 cancelOnClientAbort(),
                 affectedTables(),

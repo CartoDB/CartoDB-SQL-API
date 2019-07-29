@@ -14,7 +14,7 @@ const StreamCopyMetrics = require('../services/stream_copy_metrics');
 const Throttler = require('../services/throttler-stream');
 const zlib = require('zlib');
 const { PassThrough } = require('stream');
-const parameters = require('../middlewares/parameters');
+const params = require('../middlewares/params');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 
 function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
@@ -35,7 +35,7 @@ CopyController.prototype.route = function (app) {
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
             dbQuotaMiddleware(),
-            parameters({ strategy: 'copyfrom' }),
+            params({ strategy: 'copyfrom' }),
             handleCopyFrom(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
@@ -50,7 +50,7 @@ CopyController.prototype.route = function (app) {
             rateLimitsMiddleware(this.userLimitsService, endpointGroup),
             authorizationMiddleware(this.metadataBackend),
             connectionParamsMiddleware(this.userDatabaseService),
-            parameters({ strategy: 'copyto' }),
+            params({ strategy: 'copyto' }),
             handleCopyTo(this.logger),
             errorHandler(this.logger),
             errorMiddleware()
