@@ -7,7 +7,7 @@ module.exports = function params ({ strategy = 'query' } = {}) {
     const getParams = getParamsFromStrategy(strategy);
 
     return function paramsMiddleware (req, res, next) {
-        const input = Object.assign({}, req.query, req.body || {});
+        const input = Object.assign({}, req.query, req.body);
 
         try {
             res.locals.params = getParams(input);
