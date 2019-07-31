@@ -18,6 +18,7 @@ Announcements:
 * Retrieve the exact PG field type information in JSON format responses.
 * Middlewarify client abort query checker.
 * Middlewarify query controller.
+* Set a hard limit on the size of the X-SQLAPI-Log header.
 
 ## 3.0.0
 Released 2019-02-22
