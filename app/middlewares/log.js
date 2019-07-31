@@ -4,9 +4,9 @@ const { stringifyForLogs } = require('../utils/logs');
 
 const MAX_SQL_LENGTH = (global.settings.logQueries && global.settings.maxQueriesLogLength) || 1024;
 
-// This is used to set a hard limit in the header size
-// While Node accepts headers of up to 8192 character, but different libraries impose other limits
-// This might break the JSON structure of the log
+// This is used to set a hard limit to the header size
+// While Node accepts headers of up to 8192 character, different libraries impose other limits
+// This might break the JSON structure of the log, but avoids responses being dropped by varnish
 const HEADER_HARD_LIMIT = 4096;
 
 const TYPES = {
