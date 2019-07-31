@@ -55,12 +55,42 @@ describe('Log middleware', function() {
                     }
                 );
             });
+
+            it(`${method} Respects max header size with long queries`, function (done) {
+                let longQuery = "Select '";
+                for (let i = 0; i < 7000; i++) {
+                    longQuery += "a";
+                }
+                longQuery += "' as foo";
+                assert.response(server,
+                    {
+                        method,
+                        url: '/api/v1/sql?' + qs.stringify({
+                            q: longQuery,
+                            api_key: API_KEY
+                        }),
+                        headers: {
+                            host: 'vizzuality.cartodb.com'
+                        }
+                    },
+                    { statusCode: 200 },
+                    function(err, res) {
+                        assert.ok(!err);
+
+                        assert.ok(res.headers['x-sqlapi-log']);
+                        assert.ok(res.headers['x-sqlapi-log'].length < 5000);
+
+                        return done();
+                    }
+                );
+            });
         });
     });
 
     describe('batch api queries', function() {
         before(function() {
             this.batchTestClient = new BatchTestClient();
+            assert.ok(this.batchTestClient);
         });
 
         after(function(done) {
@@ -87,6 +117,24 @@ describe('Log middleware', function() {
             });
         });
 
+        it(`Respects max header size with long queries`, function (done) {
+            let longQuery = "Select '";
+            for (let i = 0; i < 7000; i++) {
+                longQuery += "a";
+            }
+            longQuery += "' as foo";
+
+            const payload = { query: QUERY };
+            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+                assert.ok(!err);
+
+                assert.ok(res.headers['x-sqlapi-log']);
+                assert.ok(res.headers['x-sqlapi-log'].length < 5000);
+
+                return done();
+            });
+        });
+
         it('multiquery job with two queries', function (done) {
             const payload = { query: [QUERY, QUERY] };
             this.batchTestClient.createJob(payload, function(err, jobResult, res) {
@@ -102,6 +150,46 @@ describe('Log middleware', function() {
                         }
                     }
                 });
+
+                return done();
+            });
+        });
+
+        it(`Respects max header size with long multiqueries`, function (done) {
+            let longQuery = "Select '";
+            for (let i = 0; i < 100; i++) {
+                longQuery += "a";
+            }
+            longQuery += "' as foo";
+
+            const queries = [longQuery];
+            for (let i = 0; i < 70; i++) {
+                queries.push(longQuery);
+            }
+
+            const payload = { query: queries };
+            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+                assert.ok(!err);
+
+                assert.ok(res.headers['x-sqlapi-log']);
+                assert.ok(res.headers['x-sqlapi-log'].length < 5000);
+
+                return done();
+            });
+        });
+
+        it(`Respects max header size with lots of multiqueries`, function (done) {
+            const queries = [];
+            for (let i = 0; i < 1000; i++) {
+                queries.push('Select 1');
+            }
+
+            const payload = { query: queries };
+            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+                assert.ok(!err);
+
+                assert.ok(res.headers['x-sqlapi-log']);
+                assert.ok(res.headers['x-sqlapi-log'].length < 5000);
 
                 return done();
             });
