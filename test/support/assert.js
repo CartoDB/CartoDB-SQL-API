@@ -77,6 +77,7 @@ assert.response = function(server, req, res, callback) {
                             '     Got: [red]{' + response.body + '}')
                     );
                 }
+                
 
                 // Assert response status
                 if (typeof status === 'number') {

@@ -3,6 +3,12 @@
 const { stringifyForLogs } = require('../utils/logs');
 
 const MAX_SQL_LENGTH = (global.settings.logQueries && global.settings.maxQueriesLogLength) || 1024;
+
+// This is used to set a hard limit to the header size
+// While Node accepts headers of up to 8192 character, different libraries impose other limits
+// This might break the JSON structure of the log, but avoids responses being dropped by varnish
+const HEADER_HARD_LIMIT = 4096;
+
 const TYPES = {
     QUERY: 'query',
     JOB: 'job'
@@ -16,7 +22,7 @@ module.exports = function log(sqlType = TYPES.QUERY) {
             }
         };
 
-        res.set('X-SQLAPI-Log', stringifyForLogs(logObj));
+        res.set('X-SQLAPI-Log', stringifyForLogs(logObj).substring(0, HEADER_HARD_LIMIT));
 
         return next();
     };
@@ -38,9 +44,10 @@ function prepareSQL(sql, sqlType) {
     }
 
     if (Array.isArray(sql)) {
+        const lengthPerQuery = MAX_SQL_LENGTH / sql.length;
         return {
             type: sqlType,
-            sql: sql.map(q => ensureMaxQueryLength(q))
+            sql: sql.map(q => ensureMaxQueryLength(q, lengthPerQuery))
         };
     }
 
@@ -88,6 +95,6 @@ function prepareBatchFallbackQuery(sql) {
     return fallbackQuery;
 }
 
-function ensureMaxQueryLength(sql) {
-    return sql.substring(0, MAX_SQL_LENGTH);
+function ensureMaxQueryLength(sql, length = MAX_SQL_LENGTH) {
+    return sql.substring(0, length);
 }
