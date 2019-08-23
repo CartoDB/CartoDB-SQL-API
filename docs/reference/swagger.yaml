@@ -167,10 +167,13 @@ paths:
       x-code-samples:
         - lang: Curl
           source: |
-            curl -X POST -H "Content-Type: application/json" -d '{ \
-              "q": "SELECT count(*) FROM cities", \
-              "filename": "number_of_cities.json" \
-            }' "https://username.carto.com/api/v2/sql"
+            # body.json
+            {
+              "q": "SELECT count(*) FROM cities",
+              "filename": "number_of_cities.json"
+            }
+
+            curl -X POST -H "Content-Type: application/json" -d @body.json "https://username.carto.com/api/v2/sql"
 
   /sql/copyfrom:
     post:
@@ -313,9 +316,12 @@ paths:
       x-code-samples:
         - lang: Curl
           source: |
-            curl -X POST -H "Content-Type: application/json" -d '{ \
-              "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'", \
-            }' "https://username.carto.com/api/v2/sql/job"
+            # body.json
+            {
+              "query": "UPDATE nasdaq SET price = '$101.00' WHERE company = 'CARTO'",
+            }
+
+            curl -X POST -H "Content-Type: application/json" -d @body.json "https://username.carto.com/api/v2/sql/job"
 
   '/sql/job/{job_id}':
     parameters:
@@ -401,10 +407,13 @@ paths:
         - ApiKeyQueryParam: []
       x-code-samples:
         - lang: Curl
-          source: >
-            curl -X PUT -H "Content-Type: application/json" -d '{ \
-              "query": "UPDATE nasdaq SET price = '$999.00' WHERE company = 'CARTO'", \
-            }'
+          source: |
+            # body.json
+            {
+              "query": "UPDATE nasdaq SET price = '$999.00' WHERE company = 'CARTO'",
+            }
+
+            curl -X PUT -H "Content-Type: application/json" -d @body.json
             "https://username.carto.com/api/v2/sql/job/de305d54-75b4-431b-adb2-eb6b9e546014"
     delete:
       summary: Cancel a Job
