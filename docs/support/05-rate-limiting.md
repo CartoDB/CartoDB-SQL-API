@@ -70,7 +70,7 @@ Below, you can find the values of the rate limit by user account type and endpoi
 | GET /api/v2/sql/copyto  |3  |60  |3  |
 
 
-#### Professional plans
+#### Individual plans
 
 |Endpoint   |Request   |Time period  |Burst  |
 | :---         |          ---: |          ---: |          ---: |
