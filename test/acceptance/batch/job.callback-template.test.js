@@ -43,7 +43,8 @@ describe('Batch API callback templates', function () {
         };
 
         self.testClient.getResult(
-            'BEGIN;CREATE TABLE test_batch_errors (job_id text, error_message text);COMMIT', function (err) {
+            'BEGIN; DROP TABLE IF EXISTS test_batch_errors; ' +
+            'CREATE TABLE test_batch_errors (job_id text, error_message text); COMMIT', function (err) {
             if (err) {
                 return done(err);
             }
@@ -78,7 +79,7 @@ describe('Batch API callback templates', function () {
             "query": {
                 "query": [
                     {
-                        query: "create table batch_jobs (job_id text)"
+                        query: "drop table if exists batch_jobs; create table batch_jobs (job_id text)"
                     },
                     {
                         "query": "SELECT 1",
@@ -90,7 +91,7 @@ describe('Batch API callback templates', function () {
         var expectedQuery = {
             query: [
                 {
-                    query: "create table batch_jobs (job_id text)",
+                    query: "drop table if exists batch_jobs; create table batch_jobs (job_id text)",
                     status: 'done'
                 },
                 {

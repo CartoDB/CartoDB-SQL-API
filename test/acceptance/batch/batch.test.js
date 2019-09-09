@@ -40,7 +40,9 @@ describe('batch happy cases', function() {
     });
 
     it('should perform job with select into', function (done) {
-        var payload = jobPayload('select * into batch_test_table from (select * from private_table) as job');
+        var payload = jobPayload(`
+            DROP TABLE IF EXISTS batch_test_table;
+            SELECT * INTO batch_test_table FROM (SELECT * from private_table) AS job`);
         this.batchTestClient.createJob(payload, function(err, jobResult) {
             if (err) {
                 return done(err);

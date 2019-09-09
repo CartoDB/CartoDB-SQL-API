@@ -23,7 +23,7 @@ describe('special numeric (float) values', function() {
                 var next = this;
                 var opts = {
                     url: URL + querystring.stringify({
-                        q: 'create table numbers_test(val float)'
+                        q: 'drop table if exists numbers_test; create table numbers_test(val float)'
                     }),
                     headers: HEADERS,
                     method: METHOD
