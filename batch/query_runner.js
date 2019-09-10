@@ -24,32 +24,7 @@ QueryRunner.prototype.run = function (job_id, sql, user, timeout, dbparams, call
 };
 
 QueryRunner.prototype._run = function (dbparams, job_id, sql, timeout, callback) {
-    var self = this;
     var pg = new PSQL(dbparams);
-
-    pg.query('SET statement_timeout=' + timeout, function (err) {
-        if(err) {
-            return callback(err);
-        }
-
-        // mark query to allow to users cancel their queries
-        sql = '/* ' + job_id + ' */ ' + sql;
-
-        self.logger.debug('Running query [timeout=%d] %s', timeout, sql);
-        pg.eventedQuery(sql, function (err, query) {
-            if (err) {
-                return callback(err);
-            }
-
-            query.on('error', callback);
-
-            query.on('end', function (result) {
-                // only if result is present then query is done sucessfully otherwise an error has happened
-                // and it was handled by error listener
-                if (result) {
-                    callback(null, result);
-                }
-            });
-        });
-    });
+    this.logger.debug('Running query [timeout=%d] %s', timeout, sql);
+    pg.query(`/* ${job_id} */ ${sql}`, callback, false, timeout);
 };
