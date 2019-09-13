@@ -75,7 +75,7 @@ describe('copy-endpoints', function() {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.equal(!!response.time, true);
-                assert.strictEqual(response.total_rows, 6);
+                assert.strictEqual(response.total_rows, 2016);
                 done();
             });
         });
@@ -157,10 +157,8 @@ describe('copy-endpoints', function() {
                     method: 'GET'
                 },{}, function(err, res) {
                     assert.ifError(err);
-                    assert.strictEqual(
-                        res.body,
-                        '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
-                    );
+                    const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
+                    assert.ok(res.body.match(regex));
 
                     assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
                     assert.equal(res.headers['content-type'], 'application/octet-stream');
@@ -196,11 +194,8 @@ describe('copy-endpoints', function() {
                     method: 'POST'
                 }, {}, function(err, res) {
                     assert.ifError(err);
-
-                    assert.strictEqual(
-                        res.body,
-                        '11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\tJohn\t10\n'
-                    );
+                    const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
+                    assert.ok(res.body.match(regex));
 
                     assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
                     assert.equal(res.headers['content-type'], 'application/octet-stream');
@@ -275,9 +270,9 @@ describe('copy-endpoints', function() {
 
 
     describe('timeout', function() {
-        before('set a 10 ms timeout', function() {
+        before('set a 1 ms timeout', function() {
             this.previous_timeout = global.settings.copy_timeout;
-            global.settings.copy_timeout = 10;
+            global.settings.copy_timeout = 1;
         });
 
         after('restore previous timeout', function() {
@@ -519,7 +514,7 @@ describe('copy-endpoints', function() {
             }, function(err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
-                assert.strictEqual(response.total_rows, 6);
+                assert.strictEqual(response.total_rows, 2016);
                 done();
             });
         });
