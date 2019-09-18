@@ -5,7 +5,7 @@ require('../helper');
 var server = require('../../app/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
-var QueryTables = require('cartodb-query-tables').queryTables;
+var QueryTables = require('cartodb-query-tables');
 var _ = require('underscore');
 
 describe('Surrogate-Key header', function() {
@@ -32,7 +32,7 @@ describe('Surrogate-Key header', function() {
 
         var surrogateKeys = surrogateKey.split(" ");
 
-        var expectedSurrogateKeys = new QueryTables.QueryMetadata(expectedTables).key();
+        var expectedSurrogateKeys = new QueryTables.DatabaseTablesEntry(expectedTables).key();
 
         assert.equal(surrogateKeys.length, expectedSurrogateKeys.length);
 

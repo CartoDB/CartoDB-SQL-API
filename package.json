@@ -22,7 +22,7 @@
     "bintrees": "1.0.1",
     "bunyan": "1.8.1",
     "cartodb-psql": "0.14.0",
-    "cartodb-query-tables": "0.6.0",
+    "cartodb-query-tables": "^0.5.0",
     "cartodb-redis": "2.1.0",
     "debug": "^4.1.1",
     "express": "^4.16.4",
