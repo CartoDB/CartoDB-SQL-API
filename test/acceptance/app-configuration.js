@@ -16,8 +16,7 @@ const exposedHeaders = [
     'Carto-Rate-Limit-Limit',
     'Carto-Rate-Limit-Remaining',
     'Carto-Rate-Limit-Reset',
-    'Retry-After',
-    'X-Cache'
+    'Retry-After'
 ].join(', ');
 
 describe('app-configuration', function() {
