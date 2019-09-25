@@ -19,7 +19,7 @@ module.exports = function cors(extraHeaders = []) {
 
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Headers', headers.join(', '));
-        res.header('Access-Control-Expose-Headers', exposedHeaders.join(', '))
+        res.header('Access-Control-Expose-Headers', exposedHeaders.join(', '));
 
         next();
     };
