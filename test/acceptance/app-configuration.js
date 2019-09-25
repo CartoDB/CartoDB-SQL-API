@@ -9,11 +9,15 @@ const accessControlHeaders = [
     'X-Requested-With',
     'X-Prototype-Version',
     'X-CSRF-Token',
-    'Authorization',
+    'Authorization'
+].join(', ');
+
+const exposedHeaders = [
     'Carto-Rate-Limit-Limit',
     'Carto-Rate-Limit-Remaining',
     'Carto-Rate-Limit-Reset',
-    'Retry-After'
+    'Retry-After',
+    'X-Cache'
 ].join(', ');
 
 describe('app-configuration', function() {
@@ -73,6 +77,10 @@ describe('app-configuration', function() {
                 res.headers['access-control-allow-headers'],
                 accessControlHeaders
             );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
+            );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
         });
@@ -89,6 +97,10 @@ describe('app-configuration', function() {
             assert.equal(
                 res.headers['access-control-allow-headers'],
                 accessControlHeaders
+            );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
             );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
@@ -171,6 +183,10 @@ describe('app-configuration', function() {
             assert.equal(
                 res.headers['access-control-allow-headers'],
                 accessControlHeaders
+            );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
             );
             done();
         });
