@@ -22,6 +22,7 @@ Announcements:
 * Middlewarify query controller.
 * Set a hard limit on the size of the X-SQLAPI-Log header.
 * Update cartodb-psql to 0.14.0 and use the timeout parameter for pg.query.
+* Expose rate limit headers for CORS requests.
 
 ## 3.0.0
 Released 2019-02-22
