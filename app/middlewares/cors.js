@@ -7,6 +7,7 @@ module.exports = function cors(extraHeaders = []) {
             'X-Prototype-Version',
             'X-CSRF-Token',
             'Authorization',
+            'Content-type',
             ...extraHeaders
         ];
 
