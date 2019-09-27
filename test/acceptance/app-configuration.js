@@ -5,6 +5,19 @@ require('../helper');
 var server = require('../../app/server')();
 var assert = require('../support/assert');
 
+const accessControlHeaders = [
+    'X-Requested-With',
+    'X-Prototype-Version',
+    'X-CSRF-Token',
+    'Authorization'
+].join(', ');
+
+const exposedHeaders = [
+    'Carto-Rate-Limit-Limit',
+    'Carto-Rate-Limit-Remaining',
+    'Carto-Rate-Limit-Reset',
+    'Retry-After'
+].join(', ');
 
 describe('app-configuration', function() {
 
@@ -61,7 +74,11 @@ describe('app-configuration', function() {
         }, RESPONSE_OK, function(err, res) {
             assert.equal(
                 res.headers['access-control-allow-headers'],
-                'X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization'
+                accessControlHeaders
+            );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
             );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
@@ -78,7 +95,11 @@ describe('app-configuration', function() {
             assert.equal(res.body, '');
             assert.equal(
                 res.headers['access-control-allow-headers'],
-                'X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization'
+                accessControlHeaders
+            );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
             );
             assert.equal(res.headers['access-control-allow-origin'], '*');
             done();
@@ -160,7 +181,11 @@ describe('app-configuration', function() {
             assert.equal(res.headers['access-control-allow-origin'], '*');
             assert.equal(
                 res.headers['access-control-allow-headers'],
-                "X-Requested-With, X-Prototype-Version, X-CSRF-Token, Authorization"
+                accessControlHeaders
+            );
+            assert.equal(
+                res.headers['access-control-expose-headers'],
+                exposedHeaders
             );
             done();
         });
