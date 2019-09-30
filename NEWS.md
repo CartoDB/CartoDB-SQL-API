@@ -1,7 +1,7 @@
 # Changelog
 
 ## 4.0.0
-Released 2019-mm-dd
+Released 2019-09-30
 
 Breaking:
 * Remove in-memory table cache and `/cachestatus` endpoint.
