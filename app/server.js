@@ -17,7 +17,6 @@
 //
 
 var express = require('express');
-var Profiler = require('./stats/profiler-proxy');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 
@@ -75,15 +74,9 @@ function App(statsClient) {
         mkdirp.sync(global.settings.tmpDir);
     }
 
-    // Use step-profiler
     app.use(function bootstrap$prepareRequestResponse(req, res, next) {
         res.locals = res.locals || {};
 
-        var profile = global.settings.useProfiler;
-        req.profiler = new Profiler({
-            profile: profile,
-            statsd_client: statsClient
-        });
         next();
     });
 

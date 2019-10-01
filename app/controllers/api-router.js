@@ -20,9 +20,12 @@ const JobController = require('./job_controller');
 const cors = require('../middlewares/cors');
 const servedByHostHeader = require('../middlewares/served-by-host-header');
 const logger = require('../middlewares/logger');
+const profiler = require('../middlewares/profiler');
 
 module.exports = class ApiRouter {
     constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
+        this.statsClient = statsClient;
+
         const userLimitsServiceOptions = {
             limits: {
                 rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
@@ -66,6 +69,7 @@ module.exports = class ApiRouter {
         const apiRouter = router({ mergeParams: true });
 
         apiRouter.use(logger());
+        apiRouter.use(profiler({ statsClient: this.statsClient }));
         apiRouter.use(cors());
         apiRouter.use(servedByHostHeader());
 
