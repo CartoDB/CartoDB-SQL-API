@@ -26,8 +26,6 @@ var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
 const Logger = require('./services/logger');
 
-var cors = require('./middlewares/cors');
-
 const ApiRouter = require('./controllers/api-router');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
@@ -92,8 +90,6 @@ function App(statsClient) {
         };
         app.use(global.log4js.connectLogger(global.log4js.getLogger(), _.defaults(loggerOpts, {level:'info'})));
     }
-
-    app.use(cors());
 
     // Use step-profiler
     app.use(function bootstrap$prepareRequestResponse(req, res, next) {

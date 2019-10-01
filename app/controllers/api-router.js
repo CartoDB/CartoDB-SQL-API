@@ -17,6 +17,8 @@ const QueryController = require('./query_controller');
 const CopyController = require('./copy_controller');
 const JobController = require('./job_controller');
 
+const cors = require('../middlewares/cors');
+
 module.exports = class ApiRouter {
     constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
         const userLimitsServiceOptions = {
@@ -60,6 +62,8 @@ module.exports = class ApiRouter {
 
     route (app) {
         const apiRouter = router({ mergeParams: true });
+
+        apiRouter.use(cors());
 
         this.queryController.route(apiRouter);
         this.copyController.route(apiRouter);
