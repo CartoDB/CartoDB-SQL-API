@@ -17,7 +17,7 @@ process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 require('./utils/date_to_json');
 
 // jshint maxcomplexity:9
-module.exports = function serverFactory (statsClient) {
+module.exports = function createServer (statsClient) {
     const app = express();
     const redisPool = new RedisPool({
         name: 'sql-api',

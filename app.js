@@ -86,9 +86,9 @@ if (global.settings.statsd) {
 }
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 
-const serverFactory = require('./app/server');
+const createServer = require('./app/server');
 
-const server = serverFactory(statsClient);
+const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
