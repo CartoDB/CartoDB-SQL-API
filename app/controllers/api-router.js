@@ -19,7 +19,7 @@ const JobController = require('./job_controller');
 
 const cors = require('../middlewares/cors');
 const servedByHostHeader = require('../middlewares/served-by-host-header');
-
+const logger = require('../middlewares/logger');
 
 module.exports = class ApiRouter {
     constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
@@ -65,6 +65,7 @@ module.exports = class ApiRouter {
     route (app) {
         const apiRouter = router({ mergeParams: true });
 
+        apiRouter.use(logger());
         apiRouter.use(cors());
         apiRouter.use(servedByHostHeader());
 
