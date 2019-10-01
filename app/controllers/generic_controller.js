@@ -1,14 +1,7 @@
 'use strict';
 
-function GenericController() {
-}
-
-GenericController.prototype.route = function (app) {
-    app.options('*', this.handleRequest.bind(this));
+module.exports = class GenericController {
+    route (app) {
+        app.options('*', (req, res) => res.end());
+    }
 };
-
-GenericController.prototype.handleRequest = function(req, res) {
-    res.end();
-};
-
-module.exports = GenericController;
