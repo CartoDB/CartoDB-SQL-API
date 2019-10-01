@@ -62,21 +62,21 @@ module.exports = function serverFactory (statsClient) {
     app.dataIngestionLogger = dataIngestionLogger;
 
     // FIXME: health controller should be atached to the main entry point: "/"
-    // instead of "/api/v1/"
+    // instead of "/api/v1/" or "/user/:user/api/:version"
     const healthCheckController = new HealthCheckController({
-        routes: global.settings.routes
+        routes: global.settings.routes.api
     });
     healthCheckController.route(app);
 
     // FIXME: version controller should be atached to the main entry point: "/"
-    // instead of "/api/v1/"
+    // instead of "/api/:version" or "/user/:user/api/:version"
     const versionController = new VersionController({
-        routes: global.settings.routes
+        routes: global.settings.routes.api
     });
     versionController.route(app);
 
     const apiRouter = new ApiRouter({
-        routes: global.settings.routes,
+        routes: global.settings.routes.api,
         redisPool,
         metadataBackend,
         statsClient,

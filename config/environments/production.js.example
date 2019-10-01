@@ -2,21 +2,23 @@
 // Disable by using <=0 value.
 module.exports.gc_interval = 10000;
 module.exports.routes = {
-  paths: [
-    // In case the base_url has a :user param the username will be the one specified in the URL,
-    // otherwise it will fallback to extract the username from the host header.
-    '/api/:version',
-    '/user/:user/api/:version',
-  ],
-  // Attach middlewares at the begining of the req/res cycle
-  // to perform custom operations.
-  middlewares: [
-    function noop () {
-      return function noopMiddleware (req, res, next) {
-          next();
+  api: {
+    paths: [
+      // In case the base_url has a :user param the username will be the one specified in the URL,
+      // otherwise it will fallback to extract the username from the host header.
+      '/api/:version',
+      '/user/:user/api/:version',
+    ],
+    // Attach middlewares at the begining of the req/res cycle
+    // to perform custom operations.
+    middlewares: [
+      function noop () {
+        return function noopMiddleware (req, res, next) {
+            next();
+        }
       }
-    }
-  ]
+    ]
+  }
 };
 // If useProfiler is true every response will be served with an
 // X-SQLAPI-Profile header containing elapsed timing for various
