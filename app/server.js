@@ -3,15 +3,12 @@
 const express = require('express');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
-
 const RedisPool = require('redis-mpool');
 const cartodbRedis = require('cartodb-redis');
 const Logger = require('./services/logger');
-
 const ApiRouter = require('./controllers/api-router');
 const HealthCheckController = require('./controllers/health_check_controller');
 const VersionController = require('./controllers/version_controller');
-
 const batchFactory = require('../batch');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
@@ -20,7 +17,7 @@ process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 require('./utils/date_to_json');
 
 // jshint maxcomplexity:9
-function App(statsClient) {
+module.exports = function serverFactory (statsClient) {
     const app = express();
     const redisPool = new RedisPool({
         name: 'sql-api',
@@ -87,5 +84,3 @@ function App(statsClient) {
 
     return app;
 }
-
-module.exports = App;

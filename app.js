@@ -14,6 +14,7 @@
 var fs = require('fs');
 var path = require('path');
 const fqdn = require('@carto/fqdn-sync');
+const serverFactory = require('./app/server');
 
 var argv = require('yargs')
     .usage('Usage: $0 <environment> [options]')
@@ -92,7 +93,7 @@ if (global.settings.statsd) {
 }
 var statsClient = StatsClient.getInstance(global.settings.statsd);
 
-var server = require('./app/server')(statsClient);
+var server = serverFactory(statsClient);
 var listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
