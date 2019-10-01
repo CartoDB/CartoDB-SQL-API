@@ -17,47 +17,49 @@ const { PassThrough } = require('stream');
 const params = require('../middlewares/params');
 const bodyParserMiddleware = require('../middlewares/body-parser');
 
-function CopyController(metadataBackend, userDatabaseService, userLimitsService, logger) {
-    this.metadataBackend = metadataBackend;
-    this.userDatabaseService = userDatabaseService;
-    this.userLimitsService = userLimitsService;
-    this.logger = logger;
-}
+module.exports = class CopyController {
+    constructor (metadataBackend, userDatabaseService, userLimitsService, logger) {
+        this.metadataBackend = metadataBackend;
+        this.userDatabaseService = userDatabaseService;
+        this.userLimitsService = userLimitsService;
+        this.logger = logger;
+    }
 
-CopyController.prototype.route = function (apiRouter) {
-    const copyFromMiddlewares = endpointGroup => {
-        return [
-            initializeProfilerMiddleware('copyfrom'),
-            userMiddleware(this.metadataBackend),
-            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
-            authorizationMiddleware(this.metadataBackend),
-            connectionParamsMiddleware(this.userDatabaseService),
-            dbQuotaMiddleware(),
-            params({ strategy: 'copyfrom' }),
-            handleCopyFrom(this.logger),
-            errorHandler(this.logger),
-            errorMiddleware()
-        ];
-    };
+    route (apiRouter) {
+        const copyFromMiddlewares = endpointGroup => {
+            return [
+                initializeProfilerMiddleware('copyfrom'),
+                userMiddleware(this.metadataBackend),
+                rateLimitsMiddleware(this.userLimitsService, endpointGroup),
+                authorizationMiddleware(this.metadataBackend),
+                connectionParamsMiddleware(this.userDatabaseService),
+                dbQuotaMiddleware(),
+                params({ strategy: 'copyfrom' }),
+                handleCopyFrom(this.logger),
+                errorHandler(this.logger),
+                errorMiddleware()
+            ];
+        };
 
-    const copyToMiddlewares = endpointGroup => {
-        return [
-            bodyParserMiddleware(),
-            initializeProfilerMiddleware('copyto'),
-            userMiddleware(this.metadataBackend),
-            rateLimitsMiddleware(this.userLimitsService, endpointGroup),
-            authorizationMiddleware(this.metadataBackend),
-            connectionParamsMiddleware(this.userDatabaseService),
-            params({ strategy: 'copyto' }),
-            handleCopyTo(this.logger),
-            errorHandler(this.logger),
-            errorMiddleware()
-        ];
-    };
+        const copyToMiddlewares = endpointGroup => {
+            return [
+                bodyParserMiddleware(),
+                initializeProfilerMiddleware('copyto'),
+                userMiddleware(this.metadataBackend),
+                rateLimitsMiddleware(this.userLimitsService, endpointGroup),
+                authorizationMiddleware(this.metadataBackend),
+                connectionParamsMiddleware(this.userDatabaseService),
+                params({ strategy: 'copyto' }),
+                handleCopyTo(this.logger),
+                errorHandler(this.logger),
+                errorMiddleware()
+            ];
+        };
 
-    apiRouter.post('/sql/copyfrom', copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
-    apiRouter.get('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
-    apiRouter.post('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+        apiRouter.post('/sql/copyfrom', copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
+        apiRouter.get('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+        apiRouter.post('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+    }
 };
 
 function handleCopyTo (logger) {
@@ -178,5 +180,3 @@ function errorHandler (logger) {
         }
     };
 }
-
-module.exports = CopyController;
