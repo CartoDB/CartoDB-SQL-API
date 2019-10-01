@@ -13,51 +13,51 @@ const { RATE_LIMIT_ENDPOINTS_GROUPS } = rateLimitsMiddleware;
 const params = require('../middlewares/params');
 const logMiddleware = require('../middlewares/log');
 
-function JobController(metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
-    this.metadataBackend = metadataBackend;
-    this.userDatabaseService = userDatabaseService;
-    this.jobService = jobService;
-    this.statsdClient = statsdClient;
-    this.userLimitsService = userLimitsService;
-}
+module.exports = class JobController {
+    constructor (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
+        this.metadataBackend = metadataBackend;
+        this.userDatabaseService = userDatabaseService;
+        this.jobService = jobService;
+        this.statsdClient = statsdClient;
+        this.userLimitsService = userLimitsService;
+    }
 
-module.exports = JobController;
+    route (app) {
+        const { base_url } = global.settings;
+        const jobMiddlewares = composeJobMiddlewares(
+            this.metadataBackend,
+            this.userDatabaseService,
+            this.jobService,
+            this.statsdClient,
+            this.userLimitsService
+        );
 
-JobController.prototype.route = function (app) {
-    const { base_url } = global.settings;
-    const jobMiddlewares = composeJobMiddlewares(
-        this.metadataBackend,
-        this.userDatabaseService,
-        this.jobService,
-        this.statsdClient,
-        this.userLimitsService
-    );
-
-    app.get(
-        `${base_url}/jobs-wip`,
-        bodyParserMiddleware(),
-        listWorkInProgressJobs(this.jobService),
-        sendResponse(),
-        errorMiddleware()
-    );
-    app.post(
-        `${base_url}/sql/job`,
-        bodyParserMiddleware(),
-        checkBodyPayloadSize(),
-        params({ strategy: 'job' }),
-        logMiddleware(logMiddleware.TYPES.JOB),
-        jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
-    );
-    app.get(
-        `${base_url}/sql/job/:job_id`,
-        bodyParserMiddleware(),
-        jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
-    );
-    app.delete(
-        `${base_url}/sql/job/:job_id`,
-        bodyParserMiddleware(),
-        jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
-    );
+        app.get(
+            `${base_url}/jobs-wip`,
+            bodyParserMiddleware(),
+            listWorkInProgressJobs(this.jobService),
+            sendResponse(),
+            errorMiddleware()
+        );
+        app.post(
+            `${base_url}/sql/job`,
+            bodyParserMiddleware(),
+            checkBodyPayloadSize(),
+            params({ strategy: 'job' }),
+            logMiddleware(logMiddleware.TYPES.JOB),
+            jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
+        );
+        app.get(
+            `${base_url}/sql/job/:job_id`,
+            bodyParserMiddleware(),
+            jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
+        );
+        app.delete(
+            `${base_url}/sql/job/:job_id`,
+            bodyParserMiddleware(),
+            jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
+        );
+    }
 };
 
 function composeJobMiddlewares (metadataBackend, userDatabaseService, jobService, statsdClient, userLimitsService) {
