@@ -24,7 +24,8 @@ const cors = require('../middlewares/cors');
 const servedByHostHeader = require('../middlewares/served-by-host-header');
 
 module.exports = class ApiRouter {
-    constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
+    constructor ({ routes, redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
+        this.routes = routes;
         this.statsClient = statsClient;
 
         const userLimitsServiceOptions = {
@@ -68,6 +69,10 @@ module.exports = class ApiRouter {
 
     route (app) {
         const apiRouter = router({ mergeParams: true });
+        const paths = this.routes.paths || [];
+        const middlewares = this.routes.middlewares || [];
+
+        middlewares.forEach(middleware => apiRouter.use(middleware()));
 
         apiRouter.use(socketTimeout());
         apiRouter.use(logger());
@@ -79,6 +84,6 @@ module.exports = class ApiRouter {
         this.copyController.route(apiRouter);
         this.jobController.route(apiRouter);
 
-        app.use(`${global.settings.base_url}`, apiRouter);
+        paths.forEach(path => app.use(path, apiRouter));
     }
 };

@@ -3,12 +3,17 @@
 const HealthCheckBackend = require('../monitoring/health_check');
 
 module.exports = class HealthCheckController {
-    constructor () {
+    constructor ({ routes }) {
+        this.routes = routes;
         this.healthCheckBackend = new HealthCheckBackend(global.settings.disabled_file);
     }
 
     route (app) {
-        app.get(`${global.settings.base_url}/health`, healthCheck({ healthCheckBackend: this.healthCheckBackend }));
+        const paths = this.routes.paths || [];
+
+        paths.forEach(path => app.get(`${path}/health`, healthCheck({
+            healthCheckBackend: this.healthCheckBackend
+        })));
     }
 };
 

@@ -61,13 +61,27 @@ module.exports = function serverFactory (statsClient) {
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
 
-    const healthCheckController = new HealthCheckController();
+    // FIXME: health controller should be atached to the main entry point: "/"
+    // instead of "/api/v1/"
+    const healthCheckController = new HealthCheckController({
+        routes: global.settings.routes
+    });
     healthCheckController.route(app);
 
-    const versionController = new VersionController();
+    // FIXME: version controller should be atached to the main entry point: "/"
+    // instead of "/api/v1/"
+    const versionController = new VersionController({
+        routes: global.settings.routes
+    });
     versionController.route(app);
 
-    const apiRouter = new ApiRouter({ redisPool, metadataBackend, statsClient, dataIngestionLogger });
+    const apiRouter = new ApiRouter({
+        routes: global.settings.routes,
+        redisPool,
+        metadataBackend,
+        statsClient,
+        dataIngestionLogger
+    });
     apiRouter.route(app);
 
     const isBatchProcess = process.argv.indexOf('--no-batch') === -1;

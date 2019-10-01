@@ -5,8 +5,14 @@ const versions = {
 };
 
 module.exports = class VersionController {
+    constructor ({ routes }) {
+        this.routes = routes;
+    }
+
     route (app) {
-        app.get(`${global.settings.base_url}/version`, version());
+        const paths = this.routes.paths || [];
+
+        paths.forEach(path => app.get(`${path}/version`, version()));
     }
 };
 
