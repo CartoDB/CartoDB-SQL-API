@@ -17,10 +17,11 @@ const QueryController = require('./query_controller');
 const CopyController = require('./copy_controller');
 const JobController = require('./job_controller');
 
-const cors = require('../middlewares/cors');
-const servedByHostHeader = require('../middlewares/served-by-host-header');
+const socketTimeout = require('../middlewares/socket-timeout');
 const logger = require('../middlewares/logger');
 const profiler = require('../middlewares/profiler');
+const cors = require('../middlewares/cors');
+const servedByHostHeader = require('../middlewares/served-by-host-header');
 
 module.exports = class ApiRouter {
     constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
@@ -68,6 +69,7 @@ module.exports = class ApiRouter {
     route (app) {
         const apiRouter = router({ mergeParams: true });
 
+        apiRouter.use(socketTimeout());
         apiRouter.use(logger());
         apiRouter.use(profiler({ statsClient: this.statsClient }));
         apiRouter.use(cors());

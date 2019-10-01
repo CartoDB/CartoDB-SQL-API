@@ -74,15 +74,6 @@ function App(statsClient) {
         mkdirp.sync(global.settings.tmpDir);
     }
 
-    // Set connection timeout
-    if (global.settings.hasOwnProperty('node_socket_timeout')) {
-        var timeout = parseInt(global.settings.node_socket_timeout);
-        app.use(function(req, res, next) {
-            req.connection.setTimeout(timeout);
-            next();
-        });
-    }
-
     app.enable('jsonp callback');
     app.set("trust proxy", true);
     app.disable('x-powered-by');
