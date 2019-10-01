@@ -4,7 +4,7 @@ module.exports.gc_interval = 10000;
 module.exports.routes = {
   api: {
     paths: [
-      // In case the base_url has a :user param the username will be the one specified in the URL,
+      // In case the path has a :user param the username will be the one specified in the URL,
       // otherwise it will fallback to extract the username from the host header.
       '/api/:version',
       '/user/:user/api/:version',
