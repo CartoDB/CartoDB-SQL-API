@@ -21,6 +21,7 @@ const argv = require('yargs')
 
 const environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
 const configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
+
 if (!fs.existsSync(configurationFile)) {
     console.error('Configuration file "%s" does not exist', configurationFile);
     process.exit(1);
@@ -48,7 +49,7 @@ const log4jsConfig = {
     replaceConsole: true
 };
 
-if ( global.settings.log_filename ) {
+if (global.settings.log_filename) {
     const logFilename = path.resolve(global.settings.log_filename);
     const logDirectory = path.dirname(logFilename);
     if (!fs.existsSync(logDirectory)) {
@@ -64,6 +65,7 @@ if ( global.settings.log_filename ) {
         { type: "console", layout: { type:'basic' } }
     );
 }
+
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
