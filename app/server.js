@@ -24,22 +24,12 @@ var mkdirp = require('mkdirp');
 
 var RedisPool = require('redis-mpool');
 var cartodbRedis = require('cartodb-redis');
-var UserDatabaseService = require('./services/user_database_service');
-var UserLimitsService = require('./services/user_limits');
-var BatchLogger = require('../batch/batch-logger');
-var JobPublisher = require('../batch/pubsub/job-publisher');
-var JobQueue = require('../batch/job_queue');
-var JobBackend = require('../batch/job_backend');
-var JobCanceller = require('../batch/job_canceller');
-var JobService = require('../batch/job_service');
 const Logger = require('./services/logger');
 
 var cors = require('./middlewares/cors');
 
+const ApiRouter = require('./controllers/api-router');
 var GenericController = require('./controllers/generic_controller');
-var QueryController = require('./controllers/query_controller');
-var CopyController = require('./controllers/copy_controller');
-var JobController = require('./controllers/job_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
 
@@ -88,7 +78,7 @@ function App(statsClient) {
         mkdirp.sync(global.settings.tmpDir);
     }
 
-    if ( global.log4js ) {
+    if (global.log4js) {
         var loggerOpts = {
             buffer: true,
             // log4js provides a tokens solution as expess but in does not provide the request/response in the callback.
@@ -123,12 +113,12 @@ function App(statsClient) {
     });
 
     // Set connection timeout
-    if ( global.settings.hasOwnProperty('node_socket_timeout') ) {
-      var timeout = parseInt(global.settings.node_socket_timeout);
-      app.use(function(req, res, next) {
-        req.connection.setTimeout(timeout);
-        next();
-      });
+    if (global.settings.hasOwnProperty('node_socket_timeout')) {
+        var timeout = parseInt(global.settings.node_socket_timeout);
+        app.use(function(req, res, next) {
+            req.connection.setTimeout(timeout);
+            next();
+        });
     }
 
     app.enable('jsonp callback');
@@ -136,54 +126,11 @@ function App(statsClient) {
     app.disable('x-powered-by');
     app.disable('etag');
 
-    // basic routing
-
-    var userDatabaseService = new UserDatabaseService(metadataBackend);
-
-    const userLimitsServiceOptions = {
-        limits: {
-            rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
-        }
-    };
-    const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
-
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
 
-    var logger = new BatchLogger(global.settings.batch_log_filename, 'batch-queries');
-    var jobPublisher = new JobPublisher(redisPool);
-    var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
-    var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
-    var jobCanceller = new JobCanceller();
-    var jobService = new JobService(jobBackend, jobCanceller, logger);
-
     var genericController = new GenericController();
     genericController.route(app);
-
-    var queryController = new QueryController(
-        metadataBackend,
-        userDatabaseService,
-        statsClient,
-        userLimitsService
-    );
-    queryController.route(app);
-
-    var copyController = new CopyController(
-        metadataBackend,
-        userDatabaseService,
-        userLimitsService,
-        dataIngestionLogger
-    );
-    copyController.route(app);
-
-    var jobController = new JobController(
-        metadataBackend,
-        userDatabaseService,
-        jobService,
-        statsClient,
-        userLimitsService
-    );
-    jobController.route(app);
 
     var healthCheckController = new HealthCheckController();
     healthCheckController.route(app);
@@ -191,13 +138,18 @@ function App(statsClient) {
     var versionController = new VersionController();
     versionController.route(app);
 
+    const apiRouter = new ApiRouter({ redisPool, metadataBackend, statsClient, dataIngestionLogger });
+    apiRouter.route(app);
+
     var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
         var batchName = global.settings.api_hostname || 'batch';
+
         app.batch = batchFactory(
             metadataBackend, redisPool, batchName, statsClient, global.settings.batch_log_filename
         );
+
         app.batch.start();
     }
 

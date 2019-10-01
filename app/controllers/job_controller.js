@@ -22,8 +22,7 @@ module.exports = class JobController {
         this.userLimitsService = userLimitsService;
     }
 
-    route (app) {
-        const { base_url } = global.settings;
+    route (apiRouter) {
         const jobMiddlewares = composeJobMiddlewares(
             this.metadataBackend,
             this.userDatabaseService,
@@ -32,28 +31,31 @@ module.exports = class JobController {
             this.userLimitsService
         );
 
-        app.get(
-            `${base_url}/jobs-wip`,
+        apiRouter.get(
+            '/jobs-wip',
             bodyParserMiddleware(),
             listWorkInProgressJobs(this.jobService),
             sendResponse(),
             errorMiddleware()
         );
-        app.post(
-            `${base_url}/sql/job`,
+
+        apiRouter.post(
+            '/sql/job',
             bodyParserMiddleware(),
             checkBodyPayloadSize(),
             params({ strategy: 'job' }),
             logMiddleware(logMiddleware.TYPES.JOB),
             jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
         );
-        app.get(
-            `${base_url}/sql/job/:job_id`,
+
+        apiRouter.get(
+            '/sql/job/:job_id',
             bodyParserMiddleware(),
             jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
         );
-        app.delete(
-            `${base_url}/sql/job/:job_id`,
+
+        apiRouter.delete(
+            '/sql/job/:job_id',
             bodyParserMiddleware(),
             jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
         );

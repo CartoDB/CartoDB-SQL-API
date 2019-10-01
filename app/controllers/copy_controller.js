@@ -24,9 +24,7 @@ function CopyController(metadataBackend, userDatabaseService, userLimitsService,
     this.logger = logger;
 }
 
-CopyController.prototype.route = function (app) {
-    const { base_url } = global.settings;
-
+CopyController.prototype.route = function (apiRouter) {
     const copyFromMiddlewares = endpointGroup => {
         return [
             initializeProfilerMiddleware('copyfrom'),
@@ -57,9 +55,9 @@ CopyController.prototype.route = function (app) {
         ];
     };
 
-    app.post(`${base_url}/sql/copyfrom`, copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
-    app.get(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
-    app.post(`${base_url}/sql/copyto`, copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+    apiRouter.post('/sql/copyfrom', copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
+    apiRouter.get('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+    apiRouter.post('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
 };
 
 function handleCopyTo (logger) {
