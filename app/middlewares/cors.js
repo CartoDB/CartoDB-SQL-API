@@ -21,6 +21,10 @@ module.exports = function cors(extraHeaders = []) {
         res.header('Access-Control-Allow-Headers', headers.join(', '));
         res.header('Access-Control-Expose-Headers', exposedHeaders.join(', '));
 
+        if (req.method === 'OPTIONS') {
+            return res.send();
+        }
+
         next();
     };
 };

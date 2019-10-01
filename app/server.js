@@ -29,7 +29,6 @@ const Logger = require('./services/logger');
 var cors = require('./middlewares/cors');
 
 const ApiRouter = require('./controllers/api-router');
-var GenericController = require('./controllers/generic_controller');
 var HealthCheckController = require('./controllers/health_check_controller');
 var VersionController = require('./controllers/version_controller');
 
@@ -128,9 +127,6 @@ function App(statsClient) {
 
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
-
-    var genericController = new GenericController();
-    genericController.route(app);
 
     var healthCheckController = new HealthCheckController();
     healthCheckController.route(app);
