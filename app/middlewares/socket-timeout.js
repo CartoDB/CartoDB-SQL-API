@@ -14,5 +14,5 @@ module.exports = function socketTimeout () {
         req.connection.setTimeout(timeout);
 
         next();
-    }
-}
+    };
+};
