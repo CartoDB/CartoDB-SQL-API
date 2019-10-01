@@ -70,6 +70,7 @@ function App(statsClient) {
         global.settings.ratelimits
     );
 
+    // TODO: it's here becouse of testing purposes, try to move to top level
     global.settings.tmpDir = global.settings.tmpDir || '/tmp';
     if (!fs.existsSync(global.settings.tmpDir)) {
         mkdirp.sync(global.settings.tmpDir);
