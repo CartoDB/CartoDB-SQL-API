@@ -18,6 +18,8 @@ const CopyController = require('./copy_controller');
 const JobController = require('./job_controller');
 
 const cors = require('../middlewares/cors');
+const servedByHostHeader = require('../middlewares/served-by-host-header');
+
 
 module.exports = class ApiRouter {
     constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
@@ -64,6 +66,7 @@ module.exports = class ApiRouter {
         const apiRouter = router({ mergeParams: true });
 
         apiRouter.use(cors());
+        apiRouter.use(servedByHostHeader());
 
         this.queryController.route(apiRouter);
         this.copyController.route(apiRouter);

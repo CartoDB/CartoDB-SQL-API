@@ -95,10 +95,6 @@ function App(statsClient) {
     app.use(function bootstrap$prepareRequestResponse(req, res, next) {
         res.locals = res.locals || {};
 
-        if (global.settings.api_hostname) {
-            res.header('X-Served-By-Host', global.settings.api_hostname);
-        }
-
         var profile = global.settings.useProfiler;
         req.profiler = new Profiler({
             profile: profile,
