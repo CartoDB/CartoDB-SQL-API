@@ -1,34 +1,18 @@
 'use strict';
 
-// CartoDB SQL API
-//
-// all requests expect the following URL args:
-// - `sql` {String} SQL to execute
-//
-// for private (read/write) queries:
-// - OAuth. Must have proper OAuth 1.1 headers. For OAuth 1.1 spec see Google
-//
-// eg. /api/v1/?sql=SELECT 1 as one (with a load of OAuth headers or URL arguments)
-//
-// for public (read only) queries:
-// - sql only, provided the subdomain exists in CartoDB and the table's sharing options are public
-//
-// eg. vizzuality.cartodb.com/api/v1/?sql=SELECT * from my_table
-//
+const express = require('express');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
 
-var express = require('express');
-var fs = require('fs');
-var mkdirp = require('mkdirp');
-
-var RedisPool = require('redis-mpool');
-var cartodbRedis = require('cartodb-redis');
+const RedisPool = require('redis-mpool');
+const cartodbRedis = require('cartodb-redis');
 const Logger = require('./services/logger');
 
 const ApiRouter = require('./controllers/api-router');
-var HealthCheckController = require('./controllers/health_check_controller');
-var VersionController = require('./controllers/version_controller');
+const HealthCheckController = require('./controllers/health_check_controller');
+const VersionController = require('./controllers/version_controller');
 
-var batchFactory = require('../batch');
+const batchFactory = require('../batch');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
@@ -37,10 +21,8 @@ require('./utils/date_to_json');
 
 // jshint maxcomplexity:9
 function App(statsClient) {
-
-    var app = express();
-
-    var redisPool = new RedisPool({
+    const app = express();
+    const redisPool = new RedisPool({
         name: 'sql-api',
         host: global.settings.redis_host,
         port: global.settings.redis_port,
@@ -48,7 +30,7 @@ function App(statsClient) {
         idleTimeoutMillis: global.settings.redisIdleTimeoutMillis,
         reapIntervalMillis: global.settings.redisReapIntervalMillis
     });
-    var metadataBackend = cartodbRedis({ pool: redisPool });
+    const metadataBackend = cartodbRedis({ pool: redisPool });
 
     // Set default configuration
     global.settings.db_pubuser = global.settings.db_pubuser || "publicuser";
@@ -82,19 +64,19 @@ function App(statsClient) {
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
 
-    var healthCheckController = new HealthCheckController();
+    const healthCheckController = new HealthCheckController();
     healthCheckController.route(app);
 
-    var versionController = new VersionController();
+    const versionController = new VersionController();
     versionController.route(app);
 
     const apiRouter = new ApiRouter({ redisPool, metadataBackend, statsClient, dataIngestionLogger });
     apiRouter.route(app);
 
-    var isBatchProcess = process.argv.indexOf('--no-batch') === -1;
+    const isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 
     if (global.settings.environment !== 'test' && isBatchProcess) {
-        var batchName = global.settings.api_hostname || 'batch';
+        const batchName = global.settings.api_hostname || 'batch';
 
         app.batch = batchFactory(
             metadataBackend, redisPool, batchName, statsClient, global.settings.batch_log_filename
