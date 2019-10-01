@@ -2,15 +2,6 @@
 
 'use strict';
 
-/*
-* SQL API loader
-* ===============
-*
-* node app [environment]
-*
-* environments: [development, test, production]
-*
-*/
 const fs = require('fs');
 const path = require('path');
 const fqdn = require('@carto/fqdn-sync');
