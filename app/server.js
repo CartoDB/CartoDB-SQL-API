@@ -83,4 +83,4 @@ module.exports = function serverFactory (statsClient) {
     }
 
     return app;
-}
+};
