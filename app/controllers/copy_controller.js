@@ -25,7 +25,7 @@ module.exports = class CopyController {
         this.logger = logger;
     }
 
-    route (apiRouter) {
+    route (sqlRouter) {
         const copyFromMiddlewares = endpointGroup => {
             return [
                 initializeProfilerMiddleware('copyfrom'),
@@ -56,9 +56,9 @@ module.exports = class CopyController {
             ];
         };
 
-        apiRouter.post('/sql/copyfrom', copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
-        apiRouter.get('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
-        apiRouter.post('/sql/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+        sqlRouter.post('/copyfrom', copyFromMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_FROM));
+        sqlRouter.get('/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
+        sqlRouter.post('/copyto', copyToMiddlewares(RATE_LIMIT_ENDPOINTS_GROUPS.COPY_TO));
     }
 };
 

@@ -7,8 +7,6 @@ const RedisPool = require('redis-mpool');
 const cartodbRedis = require('cartodb-redis');
 const Logger = require('./services/logger');
 const ApiRouter = require('./controllers/api-router');
-const HealthCheckController = require('./controllers/health_check_controller');
-const VersionController = require('./controllers/version_controller');
 const batchFactory = require('../batch');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
@@ -61,28 +59,13 @@ module.exports = function createServer (statsClient) {
     const dataIngestionLogger = new Logger(global.settings.dataIngestionLogPath, 'data-ingestion');
     app.dataIngestionLogger = dataIngestionLogger;
 
-    // FIXME: health controller should be atached to the main entry point: "/"
-    // instead of "/api/v1/" or "/user/:user/api/:version"
-    const healthCheckController = new HealthCheckController({
-        routes: global.settings.routes.api
-    });
-    healthCheckController.route(app);
-
-    // FIXME: version controller should be atached to the main entry point: "/"
-    // instead of "/api/:version" or "/user/:user/api/:version"
-    const versionController = new VersionController({
-        routes: global.settings.routes.api
-    });
-    versionController.route(app);
-
     const apiRouter = new ApiRouter({
-        routes: global.settings.routes,
         redisPool,
         metadataBackend,
         statsClient,
         dataIngestionLogger
     });
-    apiRouter.route(app);
+    apiRouter.route(app, global.settings.routes.api);
 
     const isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 

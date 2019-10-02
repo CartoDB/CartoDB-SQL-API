@@ -2,8 +2,11 @@
 
 const { Router: router } = require('express');
 
-const UserDatabaseService = require('../services/user_database_service');
-const UserLimitsService = require('../services/user_limits');
+const SqlRouter = require('./sql-router');
+
+const HealthCheckController = require('./health_check_controller');
+const VersionController = require('./version_controller');
+const JobsWipController = require('./jobs_wip_controller');
 
 const BatchLogger = require('../../batch/batch-logger');
 
@@ -13,44 +16,8 @@ const JobBackend = require('../../batch/job_backend');
 const JobCanceller = require('../../batch/job_canceller');
 const JobService = require('../../batch/job_service');
 
-const QueryController = require('./query_controller');
-const CopyController = require('./copy_controller');
-const JobController = require('./job_controller');
-
-const socketTimeout = require('../middlewares/socket-timeout');
-const logger = require('../middlewares/logger');
-const profiler = require('../middlewares/profiler');
-const cors = require('../middlewares/cors');
-const servedByHostHeader = require('../middlewares/served-by-host-header');
-
 module.exports = class ApiRouter {
-    constructor ({ routes, redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
-        this.routes = routes;
-        this.statsClient = statsClient;
-
-        const userLimitsServiceOptions = {
-            limits: {
-                rateLimitsEnabled: global.settings.ratelimits.rateLimitsEnabled
-            }
-        };
-
-        const userDatabaseService = new UserDatabaseService(metadataBackend);
-        const userLimitsService = new UserLimitsService(metadataBackend, userLimitsServiceOptions);
-
-        this.queryController = new QueryController(
-            metadataBackend,
-            userDatabaseService,
-            statsClient,
-            userLimitsService
-        );
-
-        this.copyController = new CopyController(
-            metadataBackend,
-            userDatabaseService,
-            userLimitsService,
-            dataIngestionLogger
-        );
-
+    constructor ({ redisPool, metadataBackend, statsClient, dataIngestionLogger }) {
         const logger = new BatchLogger(global.settings.batch_log_filename, 'batch-queries');
         const jobPublisher = new JobPublisher(redisPool);
         const jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
@@ -58,17 +25,20 @@ module.exports = class ApiRouter {
         const jobCanceller = new JobCanceller();
         const jobService = new JobService(jobBackend, jobCanceller, logger);
 
-        this.jobController = new JobController(
+        this.healthCheckController = new HealthCheckController();
+        this.versionController = new VersionController();
+        this.jobsWipController = new JobsWipController({ jobService });
+
+        this.sqlRouter = new SqlRouter({
             metadataBackend,
-            userDatabaseService,
-            jobService,
             statsClient,
-            userLimitsService
-        );
+            dataIngestionLogger,
+            jobService
+        });
     }
 
-    route (app) {
-        Object.values(this.routes).forEach(route => {
+    route (app, routes) {
+        routes.forEach(route => {
             const apiRouter = router({ mergeParams: true });
 
             const paths = route.paths;
@@ -76,15 +46,17 @@ module.exports = class ApiRouter {
 
             middlewares.forEach(middleware => apiRouter.use(middleware()));
 
-            apiRouter.use(socketTimeout());
-            apiRouter.use(logger());
-            apiRouter.use(profiler({ statsClient: this.statsClient }));
-            apiRouter.use(cors());
-            apiRouter.use(servedByHostHeader());
+            // FIXME: version controller should be atached to the main entry point: "/"
+            // instead of "/api/:version" or "/user/:user/api/:version"
+            this.healthCheckController.route(apiRouter);
 
-            this.queryController.route(apiRouter);
-            this.copyController.route(apiRouter);
-            this.jobController.route(apiRouter);
+            // FIXME: version controller should be atached to the main entry point: "/"
+            // instead of "/api/:version" or "/user/:user/api/:version"
+            this.versionController.route(apiRouter);
+
+            this.jobsWipController.route(apiRouter);
+
+            this.sqlRouter.route(apiRouter, route.sql);
 
             paths.forEach(path => app.use(path, apiRouter));
         });

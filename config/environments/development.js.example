@@ -2,7 +2,7 @@
 // Disable by using <=0 value.
 module.exports.gc_interval = 10000;
 module.exports.routes = {
-  api: {
+  api: [{
     paths: [
       // In case the path has a :user param the username will be the one specified in the URL,
       // otherwise it will fallback to extract the username from the host header.
@@ -17,8 +17,13 @@ module.exports.routes = {
             next();
         }
       }
-    ]
-  }
+    ],
+    sql: [{
+      paths: [
+        '/sql'
+      ]
+    }]
+  }]
 };
 // If useProfiler is true every response will be served with an
 // X-SQLAPI-Profile header containing elapsed timing for various

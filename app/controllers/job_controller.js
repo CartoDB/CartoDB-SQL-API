@@ -22,7 +22,7 @@ module.exports = class JobController {
         this.userLimitsService = userLimitsService;
     }
 
-    route (apiRouter) {
+    route (sqlRouter) {
         const jobMiddlewares = composeJobMiddlewares(
             this.metadataBackend,
             this.userDatabaseService,
@@ -31,34 +31,23 @@ module.exports = class JobController {
             this.userLimitsService
         );
 
-        apiRouter.get(
-            '/jobs-wip',
-            bodyParserMiddleware(),
-            listWorkInProgressJobs(this.jobService),
-            sendResponse(),
-            errorMiddleware()
-        );
-
-        apiRouter.post(
-            '/sql/job',
+        sqlRouter.post('/job', [
             bodyParserMiddleware(),
             checkBodyPayloadSize(),
             params({ strategy: 'job' }),
             logMiddleware(logMiddleware.TYPES.JOB),
             jobMiddlewares('create', createJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_CREATE)
-        );
+        ]);
 
-        apiRouter.get(
-            '/sql/job/:job_id',
+        sqlRouter.get('/job/:job_id', [
             bodyParserMiddleware(),
             jobMiddlewares('retrieve', getJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_GET)
-        );
+        ]);
 
-        apiRouter.delete(
-            '/sql/job/:job_id',
+        sqlRouter.delete('/job/:job_id', [
             bodyParserMiddleware(),
             jobMiddlewares('cancel', cancelJob, RATE_LIMIT_ENDPOINTS_GROUPS.JOB_DELETE)
-        );
+        ]);
     }
 };
 
@@ -154,21 +143,6 @@ function createJob (jobService) {
         });
     };
 }
-
-function listWorkInProgressJobs (jobService) {
-    return function listWorkInProgressJobsMiddleware (req, res, next) {
-        jobService.listWorkInProgressJobs((err, list) => {
-            if (err) {
-                return next(err);
-            }
-
-            res.body = list;
-
-            next();
-        });
-    };
-}
-
 
 function checkBodyPayloadSize () {
     return function checkBodyPayloadSizeMiddleware(req, res, next) {

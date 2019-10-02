@@ -32,7 +32,7 @@ module.exports = class QueryController {
         this.userLimitsService = userLimitsService;
     }
 
-    route (apiRouter) {
+    route (sqlRouter) {
         const forceToBeMaster = false;
 
         const queryMiddlewares = () => {
@@ -61,8 +61,8 @@ module.exports = class QueryController {
             ];
         };
 
-        apiRouter.all('/sql', queryMiddlewares());
-        apiRouter.all('/sql.:f', queryMiddlewares());
+        sqlRouter.all('/', queryMiddlewares());
+        sqlRouter.all('.:f', queryMiddlewares());
     }
 };
 
