@@ -76,7 +76,7 @@ module.exports = function createServer (statsClient) {
     versionController.route(app);
 
     const apiRouter = new ApiRouter({
-        routes: global.settings.routes.api,
+        routes: global.settings.routes,
         redisPool,
         metadataBackend,
         statsClient,

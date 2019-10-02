@@ -68,22 +68,25 @@ module.exports = class ApiRouter {
     }
 
     route (app) {
-        const apiRouter = router({ mergeParams: true });
-        const paths = this.routes.paths || [];
-        const middlewares = this.routes.middlewares || [];
+        Object.values(this.routes).forEach(route => {
+            const apiRouter = router({ mergeParams: true });
 
-        middlewares.forEach(middleware => apiRouter.use(middleware()));
+            const paths = route.paths;
+            const middlewares = route.middlewares || [];
 
-        apiRouter.use(socketTimeout());
-        apiRouter.use(logger());
-        apiRouter.use(profiler({ statsClient: this.statsClient }));
-        apiRouter.use(cors());
-        apiRouter.use(servedByHostHeader());
+            middlewares.forEach(middleware => apiRouter.use(middleware()));
 
-        this.queryController.route(apiRouter);
-        this.copyController.route(apiRouter);
-        this.jobController.route(apiRouter);
+            apiRouter.use(socketTimeout());
+            apiRouter.use(logger());
+            apiRouter.use(profiler({ statsClient: this.statsClient }));
+            apiRouter.use(cors());
+            apiRouter.use(servedByHostHeader());
 
-        paths.forEach(path => app.use(path, apiRouter));
+            this.queryController.route(apiRouter);
+            this.copyController.route(apiRouter);
+            this.jobController.route(apiRouter);
+
+            paths.forEach(path => app.use(path, apiRouter));
+        });
     }
 };
