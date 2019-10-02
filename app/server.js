@@ -8,6 +8,7 @@ const cartodbRedis = require('cartodb-redis');
 const Logger = require('./services/logger');
 const ApiRouter = require('./controllers/api-router');
 const batchFactory = require('../batch');
+const getServerOptions = require('./server-options');
 
 process.env.PGAPPNAME = process.env.PGAPPNAME || 'cartodb_sqlapi';
 
@@ -16,6 +17,7 @@ require('./utils/date_to_json');
 
 // jshint maxcomplexity:9
 module.exports = function createServer (statsClient) {
+    const options = getServerOptions();
     const app = express();
     const redisPool = new RedisPool({
         name: 'sql-api',
@@ -65,7 +67,7 @@ module.exports = function createServer (statsClient) {
         statsClient,
         dataIngestionLogger
     });
-    apiRouter.route(app, global.settings.routes.api);
+    apiRouter.route(app, options.routes.api);
 
     const isBatchProcess = process.argv.indexOf('--no-batch') === -1;
 

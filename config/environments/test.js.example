@@ -2,14 +2,17 @@
 // Disable by using <=0 value.
 module.exports.gc_interval = 10000;
 module.exports.routes = {
+  // Each entry corresponds with an express' router.
+  // You must define at least one path. However, middlewares are optional.
   api: [{
+    // Required: path where other "routers" or "controllers" will be attached to.
     paths: [
       // In case the path has a :user param the username will be the one specified in the URL,
       // otherwise it will fallback to extract the username from the host header.
       '/api/:version',
       '/user/:user/api/:version',
     ],
-    // Attach middlewares at the begining of the req/res cycle
+    // Optional: attach middlewares at the begining of the router
     // to perform custom operations.
     middlewares: [
       function noop () {
@@ -19,9 +22,12 @@ module.exports.routes = {
       }
     ],
     sql: [{
+      // Required
       paths: [
         '/sql'
-      ]
+      ],
+      // Optional
+      middlewares: []
     }]
   }]
 };
