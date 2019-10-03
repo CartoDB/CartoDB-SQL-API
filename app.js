@@ -77,7 +77,8 @@ if (!global.settings.routes) {
 
 const version = require("./package").version;
 
-const StatsClient = require('./app/stats/client');
+const StatsClient = require('./lib/stats/client');
+
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
@@ -86,7 +87,7 @@ if (global.settings.statsd) {
 }
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 
-const createServer = require('./app/server');
+const createServer = require('./lib/server');
 
 const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);

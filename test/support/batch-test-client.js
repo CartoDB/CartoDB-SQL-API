@@ -2,13 +2,13 @@
 
 require('../helper');
 var assert = require('assert');
-var appServer = require('../../app/server');
-var redisUtils = require('./redis_utils');
+var appServer = require('../../lib/server');
+var redisUtils = require('./redis-utils');
 var debug = require('debug')('batch-test-client');
 
-var JobStatus = require('../../batch/job_status');
+var JobStatus = require('../../lib/batch/job-status');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
-var batchFactory = require('../../batch/index');
+var batchFactory = require('../../lib/batch/index');
 
 function response(code) {
     return {
