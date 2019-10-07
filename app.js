@@ -69,15 +69,10 @@ if (global.settings.log_filename) {
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
-
-// kick off controller
-if ( ! global.settings.base_url ) {
-    global.settings.base_url = '/api/*';
-}
-
 const version = require("./package").version;
 
-const StatsClient = require('./app/stats/client');
+const StatsClient = require('./lib/stats/client');
+
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
@@ -86,9 +81,9 @@ if (global.settings.statsd) {
 }
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 
-const serverFactory = require('./app/server');
+const createServer = require('./lib/server');
 
-const server = serverFactory(statsClient);
+const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
