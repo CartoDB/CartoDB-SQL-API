@@ -69,15 +69,10 @@ if (global.settings.log_filename) {
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
-if (!global.settings.routes) {
-    console.error('Missing environment paramenter "routes". Please review your configuration file.');
-    console.error("Available environments: " + availableEnvironments.join(', '));
-    process.exit(1);
-}
-
 const version = require("./package").version;
 
-const StatsClient = require('./app/stats/client');
+const StatsClient = require('./lib/stats/client');
+
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
@@ -86,7 +81,7 @@ if (global.settings.statsd) {
 }
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 
-const createServer = require('./app/server');
+const createServer = require('./lib/server');
 
 const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
