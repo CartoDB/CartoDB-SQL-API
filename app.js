@@ -69,12 +69,6 @@ if (global.settings.log_filename) {
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
-if (!global.settings.routes) {
-    console.error('Missing environment paramenter "routes". Please review your configuration file.');
-    console.error("Available environments: " + availableEnvironments.join(', '));
-    process.exit(1);
-}
-
 const version = require("./package").version;
 
 const StatsClient = require('./lib/stats/client');
