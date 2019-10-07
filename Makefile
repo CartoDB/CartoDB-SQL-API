@@ -11,7 +11,7 @@ check:
 
 jshint:
 	@echo "***jshint***"
-	@./node_modules/.bin/jshint app/ batch/ test/ app.js
+	@./node_modules/.bin/jshint lib/ test/ app.js
 
 TEST_SUITE := $(shell find test/{unit,integration,acceptance} -name "*.js")
 TEST_SUITE_UNIT := $(shell find test/unit -name "*.js")

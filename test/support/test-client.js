@@ -2,8 +2,8 @@
 
 require('../helper');
 var assert = require('assert');
-var appServer = require('../../app/server');
-var redisUtils = require('./redis_utils');
+var appServer = require('../../lib/server');
+var redisUtils = require('./redis-utils');
 const step = require('step');
 const PSQL = require('cartodb-psql');
 const _ = require('underscore');

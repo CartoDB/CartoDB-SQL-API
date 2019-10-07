@@ -2,24 +2,15 @@
 
 'use strict';
 
-/*
-* SQL API loader
-* ===============
-*
-* node app [environment]
-*
-* environments: [development, test, production]
-*
-*/
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 const fqdn = require('@carto/fqdn-sync');
 
-var argv = require('yargs')
-    .usage('Usage: $0 <environment> [options]')
+const argv = require('yargs')
+    .usage('Usage: node $0 <environment> [options]')
     .help('h')
     .example(
-        '$0 production -c /etc/sql-api/config.js',
+        'node $0 production -c /etc/sql-api/config.js',
         'start server in production environment with /etc/sql-api/config.js as config file'
     )
     .alias('h', 'help')
@@ -28,18 +19,20 @@ var argv = require('yargs')
     .describe('c', 'Load configuration from path')
     .argv;
 
-var environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
-var configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
+const environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
+const configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
+
 if (!fs.existsSync(configurationFile)) {
     console.error('Configuration file "%s" does not exist', configurationFile);
     process.exit(1);
 }
 
 global.settings = require(configurationFile);
-var ENVIRONMENT = argv._[0] || process.env.NODE_ENV || global.settings.environment;
+
+const ENVIRONMENT = argv._[0] || process.env.NODE_ENV || global.settings.environment;
 process.env.NODE_ENV = ENVIRONMENT;
 
-var availableEnvironments = ['development', 'production', 'test', 'staging'];
+const availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 // sanity check arguments
 if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
@@ -51,14 +44,14 @@ if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
 global.settings.api_hostname = fqdn.hostname();
 
 global.log4js = require('log4js');
-var log4jsConfig = {
+const log4jsConfig = {
     appenders: [],
     replaceConsole: true
 };
 
-if ( global.settings.log_filename ) {
-    var logFilename = path.resolve(global.settings.log_filename);
-    var logDirectory = path.dirname(logFilename);
+if (global.settings.log_filename) {
+    const logFilename = path.resolve(global.settings.log_filename);
+    const logDirectory = path.dirname(logFilename);
     if (!fs.existsSync(logDirectory)) {
         console.error("Log filename directory does not exist: " + logDirectory);
         process.exit(1);
@@ -72,28 +65,26 @@ if ( global.settings.log_filename ) {
         { type: "console", layout: { type:'basic' } }
     );
 }
+
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
+const version = require("./package").version;
 
-// kick off controller
-if ( ! global.settings.base_url ) {
-    global.settings.base_url = '/api/*';
-}
+const StatsClient = require('./lib/stats/client');
 
-var version = require("./package").version;
-
-var StatsClient = require('./app/stats/client');
 if (global.settings.statsd) {
     // Perform keyword substitution in statsd
     if (global.settings.statsd.prefix) {
         global.settings.statsd.prefix = global.settings.statsd.prefix.replace(/:host/, fqdn.reverse());
     }
 }
-var statsClient = StatsClient.getInstance(global.settings.statsd);
+const statsClient = StatsClient.getInstance(global.settings.statsd);
 
-var server = require('./app/server')(statsClient);
-var listener = server.listen(global.settings.node_port, global.settings.node_host);
+const createServer = require('./lib/server');
+
+const server = createServer(statsClient);
+const listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function() {
     console.info("Using Node.js %s", process.version);
     console.info('Using configuration file "%s"', configurationFile);
@@ -181,9 +172,9 @@ function scheduleForcedExit ({ killTimeout }) {
 }
 
 function isGteMinVersion(version, minVersion) {
-    var versionMatch = /[a-z]?([0-9]*)/.exec(version);
+    const versionMatch = /[a-z]?([0-9]*)/.exec(version);
     if (versionMatch) {
-        var majorVersion = parseInt(versionMatch[1], 10);
+        const majorVersion = parseInt(versionMatch[1], 10);
         if (Number.isFinite(majorVersion)) {
             return majorVersion >= minVersion;
         }
@@ -234,7 +225,7 @@ setInterval(function cpuUsageMetrics () {
 }, 5000);
 
 if (global.gc && isGteMinVersion(process.version, 6)) {
-    var gcInterval = Number.isFinite(global.settings.gc_interval) ?
+    const gcInterval = Number.isFinite(global.settings.gc_interval) ?
         global.settings.gc_interval :
         10000;
 

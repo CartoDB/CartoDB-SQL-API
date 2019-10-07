@@ -14,7 +14,8 @@
   "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
   "contributors": [
     "Simon Tokumine <simon@vizzuality.com>",
-    "Sandro Santilli <strk@vizzuality.com>"
+    "Sandro Santilli <strk@vizzuality.com>",
+    "Daniel García Aubert <dgaubert@carto.com>"
   ],
   "dependencies": {
     "@carto/fqdn-sync": "0.2.2",

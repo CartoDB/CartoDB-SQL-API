@@ -1,9 +1,36 @@
 // Time in milliseconds to force GC cycle.
 // Disable by using <=0 value.
 module.exports.gc_interval = 10000;
-// In case the base_url has a :user param the username will be the one specified in the URL,
-// otherwise it will fallback to extract the username from the host header.
-module.exports.base_url     = '(?:/api/:version|/user/:user/api/:version)';
+module.exports.routes = {
+  // Each entry corresponds with an express' router.
+  // You must define at least one path. However, middlewares are optional.
+  api: [{
+    // Required: path where other "routers" or "controllers" will be attached to.
+    paths: [
+      // In case the path has a :user param the username will be the one specified in the URL,
+      // otherwise it will fallback to extract the username from the host header.
+      '/api/:version',
+      '/user/:user/api/:version',
+    ],
+    // Optional: attach middlewares at the begining of the router
+    // to perform custom operations.
+    middlewares: [
+      function noop () {
+        return function noopMiddleware (req, res, next) {
+            next();
+        }
+      }
+    ],
+    sql: [{
+      // Required
+      paths: [
+        '/sql'
+      ],
+      // Optional
+      middlewares: []
+    }]
+  }]
+};
 // If useProfiler is true every response will be served with an
 // X-SQLAPI-Profile header containing elapsed timing for various
 // steps taken for producing the response.
