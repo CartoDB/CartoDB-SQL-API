@@ -1,5 +1,5 @@
 config/environments/*.js
-logs/*.log
+logs
 pids/*.pid
 *.sock
 test/tmp/*
