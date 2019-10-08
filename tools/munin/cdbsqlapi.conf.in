@@ -1,5 +1,0 @@
-# Configuration file for munin plugin
-
-[cdbsqlapi]
-user root
-env.SQLAPI_ENVIRONMENT @PWD@/../../config/environments/production.js

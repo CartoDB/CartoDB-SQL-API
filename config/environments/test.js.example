@@ -59,7 +59,7 @@ module.exports.db_port      = '5432';
 module.exports.db_batch_port      = '5432';
 module.exports.finished_jobs_ttl_in_seconds = 2 * 3600; // 2 hours
 module.exports.batch_query_timeout = 5 * 1000; // 5 seconds in milliseconds
-module.exports.batch_log_filename = 'logs/batch-queries.log';
+//module.exports.batch_log_filename = 'logs/batch-queries.log';
 module.exports.copy_timeout = "'5h'";
 module.exports.copy_from_max_post_size = 2 * 1024 * 1024 * 1024 // 2 GB;
 module.exports.copy_from_max_post_size_pretty = '2 GB';
@@ -149,7 +149,7 @@ module.exports.ratelimits = {
 }
 
 module.exports.validatePGEntitiesAccess = false;
-module.exports.dataIngestionLogPath = 'logs/data-ingestion.log';
+//module.exports.dataIngestionLogPath = 'logs/data-ingestion.log';
 module.exports.logQueries = true;
 module.exports.maxQueriesLogLength = 1024;
 

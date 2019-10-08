@@ -5,6 +5,7 @@ Released 2019-mm-dd
 
 Breaking changes:
 - Removed "base_url" definition in configuration files. Added new property "routes". See [`cec1c60`](https://github.com/CartoDB/CartoDB-SQL-API/commit/cec1c609c04d134f45ee74a81f82c07a19bf11bd) for more details.
+- Remove development client and munin tool, both abandoned years ago.
 
 Announcements:
 
