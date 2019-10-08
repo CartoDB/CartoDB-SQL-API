@@ -6,7 +6,6 @@ test/tmp/*
 node_modules*
 .idea/*
 .vscode/
-tools/munin/cdbsqlapi.conf
 test/redis.pid
 test/test.log
 test/acceptance/oauth/venv/*
