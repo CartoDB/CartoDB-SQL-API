@@ -26,7 +26,7 @@ describe('cache headers', function () {
     it('should return a proper max-age when CDB_TableMetadata table includes the last updated time', function (done) {
         const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
         const noTtl = 0;
-        const fallbackTtl = global.settings.cache.fallbackTtl;
+        const fallbackTtl = global.settings.cache.fallbackTtl || 300;
         const ttl = global.settings.cache.ttl || ONE_YEAR_IN_SECONDS;
         const tableName = `wadus_table_${Date.now()}`;
 
@@ -55,7 +55,6 @@ describe('cache headers', function () {
                 method: 'GET'
             }, {},
             function(err, res) {
-                const fallbackTtl = global.settings.cache.fallbackTtl || 300;
                 const cacheControl = res.headers['cache-control'];
                 const [ , maxAge ] = cacheControl.split(',');
                 const [ , value ] = maxAge.split('=');
