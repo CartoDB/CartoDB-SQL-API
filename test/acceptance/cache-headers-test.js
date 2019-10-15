@@ -55,7 +55,12 @@ describe('cache headers', function () {
                 method: 'GET'
             }, {},
             function(err, res) {
-                assert.equal(res.headers['cache-control'], `no-cache,max-age=${fallbackTtl},must-revalidate,public`);
+                const fallbackTtl = global.settings.cache.fallbackTtl || 300;
+                const cacheControl = res.headers['cache-control'];
+                const [ , maxAge ] = cacheControl.split(',');
+                const [ , value ] = maxAge.split('=');
+
+                assert.ok(Number(value) <= fallbackTtl);
 
                 assert.response(server, {
                     url: `/api/v1/sql?${qs.encode({
