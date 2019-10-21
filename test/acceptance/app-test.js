@@ -246,7 +246,14 @@ it('TRUNCATE TABLE with GET and auth', function(done){
         assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
         // table should not get a cache channel as it won't get invalidated
         assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
-        assert.equal(res.headers['cache-control'], 'no-cache,max-age=300,must-revalidate,public');
+
+        const fallbackTtl = global.settings.cache.fallbackTtl || 300;
+        const cacheControl = res.headers['cache-control'];
+        const [ , maxAge ] = cacheControl.split(',');
+        const [ , value ] = maxAge.split('=');
+
+        assert.ok(Number(value) <= fallbackTtl);
+
         var pbody = JSON.parse(res.body);
         assert.equal(pbody.total_rows, 1);
         assert.equal(pbody.rows[0].count, 0);

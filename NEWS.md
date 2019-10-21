@@ -11,6 +11,7 @@ Announcements:
 
 - Added mechanism to inject custom middlewares through configuration.
 - Stop requiring unused config properties: "base_url".
+- Be able to set a coherent TTL in Cache-Control header to expire all resources belonging to a query simultaneously.
 
 ## 4.0.0
 Released 2019-09-30
