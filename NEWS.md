@@ -1,7 +1,7 @@
 # Changelog
 
 ## 5.0.0
-Released 2019-mm-dd
+Released 2019-11-13
 
 Breaking changes:
 - Removed "base_url" definition in configuration files. Added new property "routes". See [`cec1c60`](https://github.com/CartoDB/CartoDB-SQL-API/commit/cec1c609c04d134f45ee74a81f82c07a19bf11bd) for more details.
