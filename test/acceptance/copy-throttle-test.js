@@ -154,7 +154,7 @@ describe('COPY FROM throttle', function () {
             method: 'POST'
         };
 
-        request(options, (err, res, body) => {
+        request(options, (err, res) => {
             if (err) {
                 return done(err);
             }
