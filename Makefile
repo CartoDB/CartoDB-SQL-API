@@ -9,9 +9,9 @@ clean:
 check:
 	npm test
 
-jshint:
-	@echo "***jshint***"
-	@./node_modules/.bin/jshint lib/ test/ app.js
+eslint:
+	@echo "***eslint***"
+	@./node_modules/.bin/eslint lib/**/*.js test/**/*.js app.js
 
 TEST_SUITE := $(shell find test/{unit,integration,acceptance} -name "*.js")
 TEST_SUITE_UNIT := $(shell find test/unit -name "*.js")
@@ -39,7 +39,7 @@ test-batch:
 	@echo "***batch queries tests***"
 	@$(SHELL) test/run_tests.sh ${RUNTESTFLAGS} $(TEST_SUITE_BATCH)
 
-test-all: test jshint
+test-all: test eslint
 
 coverage:
 	@RUNTESTFLAGS=--with-coverage make test
