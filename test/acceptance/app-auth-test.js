@@ -5,17 +5,16 @@ require('../helper');
 var server = require('../../lib/server')();
 var assert = require('../support/assert');
 
-describe('app.auth', function() {
-
+describe('app.auth', function () {
     var scenarios = [
         {
             desc: 'no api key should fallback to default api key',
-            url: "/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4",
+            url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
             statusCode: 200
         },
         {
             desc: 'invalid api key should return 401',
-            url: "/api/v1/sql?api_key=THIS_API_KEY_NOT_EXIST&q=SELECT%20*%20FROM%20untitle_table_4",
+            url: '/api/v1/sql?api_key=THIS_API_KEY_NOT_EXIST&q=SELECT%20*%20FROM%20untitle_table_4',
             statusCode: 401
         },
         {
@@ -45,23 +44,22 @@ describe('app.auth', function() {
         }
     ];
 
-    scenarios.forEach(function(scenario) {
-        it(scenario.desc, function(done) {
+    scenarios.forEach(function (scenario) {
+        it(scenario.desc, function (done) {
             assert.response(server, {
-                    // view prepare_db.sh to find public table name and structure
-                    url: scenario.url,
-                    headers: {
-                        host: 'vizzuality.cartodb.com'
-                    },
-                    method: 'GET'
+                // view prepare_db.sh to find public table name and structure
+                url: scenario.url,
+                headers: {
+                    host: 'vizzuality.cartodb.com'
                 },
-                {},
-                function(err, res) {
-                    assert.equal(res.statusCode, scenario.statusCode, res.statusCode + ': ' + res.body);
-                    done();
-                }
+                method: 'GET'
+            },
+            {},
+            function (err, res) {
+                assert.equal(res.statusCode, scenario.statusCode, res.statusCode + ': ' + res.body);
+                done();
+            }
             );
         });
     });
-
 });

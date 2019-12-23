@@ -35,5 +35,4 @@ describe('batch API job publisher', function () {
         this.jobPublisher.publish(this.host);
         assert.ok(this.redis.publishIsCalledWithValidArgs);
     });
-
 });

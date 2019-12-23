@@ -188,7 +188,6 @@ describe('Auth API', function () {
             });
         });
 
-
         it('should fail while fetching information schema and using default API key', function (done) {
             this.testClient = new TestClient({ authorization: 'vizzuality:default_public' });
             const expectedResponse = {

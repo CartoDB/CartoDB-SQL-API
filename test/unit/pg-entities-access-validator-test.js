@@ -71,14 +71,12 @@ const fakeAffectedTablesTopologyKO = [
     }
 ];
 
-
-
 describe('pg entities access validator with validatePGEntitiesAccess enabled', function () {
-    before(function() {
+    before(function () {
         global.settings.validatePGEntitiesAccess = true;
     });
 
-    after(function() {
+    after(function () {
         global.settings.validatePGEntitiesAccess = false;
     });
 
@@ -125,7 +123,6 @@ describe('pg entities access validator with validatePGEntitiesAccess enabled', f
             false
         );
 
-
         authorizationLevel = 'regular';
         assert.strictEqual(
             pgEntitiesAccessValidator.validate({ tables: fakeAffectedTablesCarto }, authorizationLevel),
@@ -171,5 +168,4 @@ describe('pg entities access validator with validatePGEntitiesAccess enabled', f
         assert.strictEqual(pgEntitiesAccessValidator.softValidation(fakeAffectedTablesCartodbKO), true);
         assert.strictEqual(pgEntitiesAccessValidator.softValidation(fakeAffectedTablesPgcatalog), false);
     });
-
 });

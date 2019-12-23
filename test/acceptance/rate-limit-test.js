@@ -12,7 +12,7 @@ const app = require('../../lib/server');
 let server;
 
 let redisClient;
-let keysToDelete = [];
+const keysToDelete = [];
 const user = 'vizzuality';
 
 var request = {
@@ -25,8 +25,7 @@ var request = {
     method: 'GET'
 };
 
-
-function setLimit(count, period, burst) {
+function setLimit (count, period, burst) {
     redisClient.SELECT(8, err => {
         if (err) {
             return;
@@ -45,7 +44,7 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
         server,
         request,
         { status },
-        function(err, res) {
+        function (err, res) {
             assert.ifError(err);
             assert.equal(res.headers['carto-rate-limit-limit'], limit);
             assert.equal(res.headers['carto-rate-limit-remaining'], remaining);
@@ -55,11 +54,11 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
                 assert.equal(res.headers['retry-after'], retry);
             }
 
-            if(status === 429) {
+            if (status === 429) {
                 const expectedResponse = {
                     error: ["You are over platform\'s limits. Please contact us to know more details"],
-                    context: "limit",
-                    detail: "rate-limit"
+                    context: 'limit',
+                    detail: 'rate-limit'
                 };
 
                 assert.deepEqual(JSON.parse(res.body), expectedResponse);
@@ -72,8 +71,8 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
     );
 }
 
-describe('rate limit', function() {
-    before(function() {
+describe('rate limit', function () {
+    before(function () {
         global.settings.ratelimits.rateLimitsEnabled = true;
         global.settings.ratelimits.endpoints.query = true;
 
@@ -86,22 +85,21 @@ describe('rate limit', function() {
         setLimit(count, period, burst);
     });
 
-    after(function() {
+    after(function () {
         global.settings.ratelimits.rateLimitsEnabled = false;
         global.settings.ratelimits.endpoints.query = false;
 
-        keysToDelete.forEach( key => {
+        keysToDelete.forEach(key => {
             redisClient.del(key);
         });
     });
 
-    it("1 req/sec: 2 req/seg should be limited", function(done) {
+    it('1 req/sec: 2 req/seg should be limited', function (done) {
         assertRequest(200, 2, 1, 1);
-        setTimeout( () => assertRequest(200, 2, 0, 1, null), 250 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  500 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  750 );
-        setTimeout( () => assertRequest(429, 2, 0, 1, 1),  950 );
-        setTimeout( () => assertRequest(200, 2, 0, 1, null, done), 1050 );
+        setTimeout(() => assertRequest(200, 2, 0, 1, null), 250);
+        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 500);
+        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 750);
+        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 950);
+        setTimeout(() => assertRequest(200, 2, 0, 1, null, done), 1050);
     });
-
 });

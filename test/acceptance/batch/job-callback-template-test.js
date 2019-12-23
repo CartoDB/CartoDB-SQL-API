@@ -21,11 +21,11 @@ describe('Batch API callback templates', function () {
         ' and keep the original templated query but use the error message', function (done) {
         var self = this;
         var payload = {
-            "query": {
-                "query": [
+            query: {
+                query: [
                     {
-                        "query": "SELECT * FROM invalid_table",
-                        "onerror": "INSERT INTO test_batch_errors " +
+                        query: 'SELECT * FROM invalid_table',
+                        onerror: 'INSERT INTO test_batch_errors ' +
                         "values ('<%= job_id %>', '<%= error_message %>')"
                     }
                 ]
@@ -34,8 +34,8 @@ describe('Batch API callback templates', function () {
         var expectedQuery = {
             query: [
                 {
-                    "query": "SELECT * FROM invalid_table",
-                    "onerror": "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
+                    query: 'SELECT * FROM invalid_table',
+                    onerror: "INSERT INTO test_batch_errors values ('<%= job_id %>', '<%= error_message %>')",
                     status: 'failed',
                     fallback_status: 'done'
                 }
@@ -45,45 +45,45 @@ describe('Batch API callback templates', function () {
         self.testClient.getResult(
             'BEGIN; DROP TABLE IF EXISTS test_batch_errors; ' +
             'CREATE TABLE test_batch_errors (job_id text, error_message text); COMMIT', function (err) {
-            if (err) {
-                return done(err);
-            }
-
-            self.batchTestClient.createJob(payload, function(err, jobResult) {
                 if (err) {
                     return done(err);
                 }
 
-                jobResult.getStatus(JobStatus.FAILED, function (err, job) {
+                self.batchTestClient.createJob(payload, function (err, jobResult) {
                     if (err) {
                         return done(err);
                     }
-                    jobResult.validateExpectedResponse(expectedQuery);
-                    self.testClient.getResult('select * from test_batch_errors', function(err, rows) {
+
+                    jobResult.getStatus(JobStatus.FAILED, function (err, job) {
                         if (err) {
                             return done(err);
                         }
-                        assert.equal(rows[0].job_id, job.job_id);
-                        assert.equal(rows[0].error_message, 'relation "invalid_table" does not exist');
-                        self.testClient.getResult('drop table test_batch_errors', done);
+                        jobResult.validateExpectedResponse(expectedQuery);
+                        self.testClient.getResult('select * from test_batch_errors', function (err, rows) {
+                            if (err) {
+                                return done(err);
+                            }
+                            assert.equal(rows[0].job_id, job.job_id);
+                            assert.equal(rows[0].error_message, 'relation "invalid_table" does not exist');
+                            self.testClient.getResult('drop table test_batch_errors', done);
+                        });
                     });
                 });
             });
-        });
     });
 
     it('should use template for job_id onsuccess callback ' +
         'and keep the original templated query but use the job_id', function (done) {
         var self = this;
         var payload = {
-            "query": {
-                "query": [
+            query: {
+                query: [
                     {
-                        query: "drop table if exists batch_jobs; create table batch_jobs (job_id text)"
+                        query: 'drop table if exists batch_jobs; create table batch_jobs (job_id text)'
                     },
                     {
-                        "query": "SELECT 1",
-                        "onsuccess": "INSERT INTO batch_jobs values ('<%= job_id %>')"
+                        query: 'SELECT 1',
+                        onsuccess: "INSERT INTO batch_jobs values ('<%= job_id %>')"
                     }
                 ]
             }
@@ -91,11 +91,11 @@ describe('Batch API callback templates', function () {
         var expectedQuery = {
             query: [
                 {
-                    query: "drop table if exists batch_jobs; create table batch_jobs (job_id text)",
+                    query: 'drop table if exists batch_jobs; create table batch_jobs (job_id text)',
                     status: 'done'
                 },
                 {
-                    query: "SELECT 1",
+                    query: 'SELECT 1',
                     onsuccess: "INSERT INTO batch_jobs values ('<%= job_id %>')",
                     status: 'done',
                     fallback_status: 'done'
@@ -103,7 +103,7 @@ describe('Batch API callback templates', function () {
             ]
         };
 
-        self.batchTestClient.createJob(payload, function(err, jobResult) {
+        self.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -113,7 +113,7 @@ describe('Batch API callback templates', function () {
                 }
 
                 jobResult.validateExpectedResponse(expectedQuery);
-                self.testClient.getResult('select * from batch_jobs', function(err, rows) {
+                self.testClient.getResult('select * from batch_jobs', function (err, rows) {
                     if (err) {
                         return done(err);
                     }

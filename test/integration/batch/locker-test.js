@@ -6,7 +6,7 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis-utils');
 var Locker = require('../../../lib/batch/leader/locker');
 
-describe('locker', function() {
+describe('locker', function () {
     var host = 'localhost';
 
     var TTL = 500;
@@ -16,21 +16,21 @@ describe('locker', function() {
     it('should lock and unlock', function (done) {
         var lockerA = Locker.create('redis-distlock', config);
         var lockerB = Locker.create('redis-distlock', config);
-        lockerA.lock(host, function(err, lock) {
+        lockerA.lock(host, function (err, lock) {
             if (err) {
                 return done(err);
             }
             assert.ok(lock);
 
             // others can't lock on same host
-            lockerB.lock(host, function(err) {
+            lockerB.lock(host, function (err) {
                 assert.ok(err);
                 assert.equal(err.name, 'LockError');
 
-                lockerA.unlock(host, function(err) {
+                lockerA.unlock(host, function (err) {
                     assert.ok(!err);
                     // others can lock after unlock
-                    lockerB.lock(host, function(err, lock2) {
+                    lockerB.lock(host, function (err, lock2) {
                         assert.ok(!err);
                         assert.ok(lock2);
                         lockerB.unlock(host, done);
@@ -43,12 +43,12 @@ describe('locker', function() {
     it('should lock and keep locking until unlock', function (done) {
         var lockerA = Locker.create('redis-distlock', config);
         var lockerB = Locker.create('redis-distlock', config);
-        lockerA.lock(host, function(err, lock) {
+        lockerA.lock(host, function (err, lock) {
             if (err) {
                 return done(err);
             }
-            setTimeout(function() {
-                lockerB.lock(host, function(err) {
+            setTimeout(function () {
+                lockerB.lock(host, function (err) {
                     assert.ok(err);
 
                     assert.ok(lock);

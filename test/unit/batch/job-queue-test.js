@@ -7,13 +7,13 @@ describe('batch API job queue', function () {
     beforeEach(function () {
         this.metadataBackend = {
             redisCmd: function () {
-                var callback = arguments[arguments.length -1];
+                var callback = arguments[arguments.length - 1];
                 process.nextTick(function () {
                     callback(null, 'irrelevantJob');
                 });
             },
             redisMultiCmd: function () {
-                var callback = arguments[arguments.length -1];
+                var callback = arguments[arguments.length - 1];
                 process.nextTick(function () {
                     callback(null, 'irrelevantJob');
                 });

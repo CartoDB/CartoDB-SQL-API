@@ -4,25 +4,25 @@ var assert = module.exports = exports = require('assert');
 var request = require('request');
 var debug = require('debug')('assert-response');
 
-assert.response = function(server, req, res, callback) {
+assert.response = function (server, req, res, callback) {
     if (!callback) {
         callback = res;
         res = {};
     }
 
-    var port = 5555,
-        host = '127.0.0.1';
+    var port = 5555;
+    var host = '127.0.0.1';
 
     var listeningAttempts = 0;
     var listener;
-    function listen() {
+    function listen () {
         if (listeningAttempts > 25) {
             var message = 'Tried too many ports';
             debug(message);
             return callback(new Error(message));
         }
         listener = server.listen(port, host);
-        listener.on('error', function() {
+        listener.on('error', function () {
             port++;
             listeningAttempts++;
             listen();
@@ -35,7 +35,7 @@ assert.response = function(server, req, res, callback) {
     debug('Request definition', req);
 
     // jshint maxcomplexity:10
-    function onServerListening() {
+    function onServerListening () {
         debug('Server listening on port = %d', port);
         var status = res.status || res.statusCode;
         var requestParams = {
@@ -55,9 +55,9 @@ assert.response = function(server, req, res, callback) {
         }
 
         debug('Request params', requestParams);
-        request(requestParams, function assert$response$requestHandler(error, response, body) {
+        request(requestParams, function assert$response$requestHandler (error, response, body) {
             debug('Request response', error);
-            listener.close(function() {
+            listener.close(function () {
                 debug('Server closed');
                 if (error) {
                     return callback(error);
@@ -65,7 +65,7 @@ assert.response = function(server, req, res, callback) {
 
                 response = response || {};
                 response.body = response.body || body;
-                debug('Response status', response.statusCode)
+                debug('Response status', response.statusCode);
 
                 // Assert response body
                 if (res.body) {
@@ -77,7 +77,6 @@ assert.response = function(server, req, res, callback) {
                             '     Got: [red]{' + response.body + '}')
                     );
                 }
-                
 
                 // Assert response status
                 if (typeof status === 'number') {
@@ -93,10 +92,10 @@ assert.response = function(server, req, res, callback) {
                 if (res.headers) {
                     var keys = Object.keys(res.headers);
                     for (var i = 0, len = keys.length; i < len; ++i) {
-                        var name = keys[i],
-                            actual = response.headers[name.toLowerCase()],
-                            expected = res.headers[name],
-                            headerEql = expected instanceof RegExp ? expected.test(actual) : expected === actual;
+                        var name = keys[i];
+                        var actual = response.headers[name.toLowerCase()];
+                        var expected = res.headers[name];
+                        var headerEql = expected instanceof RegExp ? expected.test(actual) : expected === actual;
                         assert.ok(headerEql,
                             colorize('Invalid response header [bold]{' + name + '}.\n' +
                                 '     Expected: [green]{' + expected + '}\n' +
@@ -109,7 +108,6 @@ assert.response = function(server, req, res, callback) {
                 return callback(null, response);
             });
         });
-
     }
 };
 
@@ -120,9 +118,9 @@ assert.response = function(server, req, res, callback) {
  * @param {String} str
  * @return {String}
  */
-function colorize(str) {
+function colorize (str) {
     var colors = { bold: 1, red: 31, green: 32, yellow: 33 };
-    return str.replace(/\[(\w+)\]\{([^]*?)\}/g, function(_, color, str) {
+    return str.replace(/\[(\w+)\]\{([^]*?)\}/g, function (_, color, str) {
         return '\x1B[' + colors[color] + 'm' + str + '\x1B[0m';
     });
 }

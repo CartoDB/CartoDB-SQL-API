@@ -15,7 +15,7 @@ describe('PG field type information', function () {
         assert.response(
             server,
             {
-                url: `/api/v1/sql?${querystring.stringify({ q: 'select * from pgtypes_table'})}`,
+                url: `/api/v1/sql?${querystring.stringify({ q: 'select * from pgtypes_table' })}`,
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             },
@@ -161,6 +161,5 @@ describe('PG field type information', function () {
                 done();
             }
         );
-
     });
 });

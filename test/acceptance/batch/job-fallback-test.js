@@ -7,12 +7,11 @@ var JobStatus = require('../../../lib/batch/job-status');
 var BatchTestClient = require('../../support/batch-test-client');
 
 describe('Batch API fallback job', function () {
-
-    before(function() {
+    before(function () {
         this.batchTestClient = new BatchTestClient();
     });
 
-    after(function(done) {
+    after(function (done) {
         this.batchTestClient.drain(done);
     });
 
@@ -20,21 +19,21 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM untitle_table_4',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'done',
+                fallback_status: 'done'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -53,21 +52,21 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
-                    onerror: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM untitle_table_4',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 1'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "onerror": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "done",
-                "fallback_status": "skipped"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                onerror: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'done',
+                fallback_status: 'skipped'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -86,8 +85,8 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM nonexistent_table /* query should fail */",
-                    onerror: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 1'
                 }]
             }
         };
@@ -101,7 +100,7 @@ describe('Batch API fallback job', function () {
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -121,8 +120,8 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM nonexistent_table /* query should fail */",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }]
             }
         };
@@ -136,7 +135,7 @@ describe('Batch API fallback job', function () {
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -156,20 +155,20 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
+                    query: 'SELECT * FROM untitle_table_4'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                status: 'done'
             }],
-            "onsuccess": "SELECT * FROM untitle_table_4 limit 1"
+            onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -190,21 +189,21 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM nonexistent_table /* query should fail */",
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM nonexistent_table /* query should fail */",
-                "status": "failed",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+            query: [{
+                query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                status: 'failed',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }],
-            "onsuccess": "SELECT * FROM untitle_table_4 limit 1"
+            onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -225,21 +224,21 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM nonexistent_table /* query should fail */"
+                    query: 'SELECT * FROM nonexistent_table /* query should fail */'
                 }],
-                onerror: "SELECT * FROM untitle_table_4 limit 1"
+                onerror: 'SELECT * FROM untitle_table_4 limit 1'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM nonexistent_table /* query should fail */",
-                "status": "failed",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+            query: [{
+                query: 'SELECT * FROM nonexistent_table /* query should fail */',
+                status: 'failed',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }],
-            "onerror": "SELECT * FROM untitle_table_4 limit 1"
+            onerror: 'SELECT * FROM untitle_table_4 limit 1'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -260,20 +259,20 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
+                    query: 'SELECT * FROM untitle_table_4'
                 }],
-                onerror: "SELECT * FROM untitle_table_4 limit 1"
+                onerror: 'SELECT * FROM untitle_table_4 limit 1'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                status: 'done'
             }],
-            "onerror": "SELECT * FROM untitle_table_4 limit 1"
+            onerror: 'SELECT * FROM untitle_table_4 limit 1'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -294,23 +293,23 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM untitle_table_4',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'done',
+                fallback_status: 'done'
             }],
-            "onsuccess": "SELECT * FROM untitle_table_4 limit 2"
+            onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -331,29 +330,29 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM untitle_table_4',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 2",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                    query: 'SELECT * FROM untitle_table_4 limit 2',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 3'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'done',
+                fallback_status: 'done'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 2",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                "status": "done",
-                "fallback_status": "done"
+                query: 'SELECT * FROM untitle_table_4 limit 2',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 3',
+                status: 'done',
+                fallback_status: 'done'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -373,30 +372,30 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM nonexistent_table /* should fail */",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM nonexistent_table /* should fail */',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 2",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                    query: 'SELECT * FROM untitle_table_4 limit 2',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 3'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM nonexistent_table /* should fail */",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "failed",
-                "fallback_status": "skipped",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+            query: [{
+                query: 'SELECT * FROM nonexistent_table /* should fail */',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'failed',
+                fallback_status: 'skipped',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 2",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                "status": "skipped",
-                "fallback_status": "skipped"
+                query: 'SELECT * FROM untitle_table_4 limit 2',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 3',
+                status: 'skipped',
+                fallback_status: 'skipped'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -416,30 +415,30 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 2",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                    query: 'SELECT * FROM untitle_table_4 limit 2',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
                 }, {
-                    query: "SELECT * FROM nonexistent_table /* should fail */",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                    query: 'SELECT * FROM nonexistent_table /* should fail */',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 3'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4 limit 2",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 1",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4 limit 2',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1',
+                status: 'done',
+                fallback_status: 'done'
             }, {
-                "query": "SELECT * FROM nonexistent_table /* should fail */",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                "status": "failed",
-                "fallback_status": "skipped",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+                query: 'SELECT * FROM nonexistent_table /* should fail */',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 3',
+                status: 'failed',
+                fallback_status: 'skipped',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -459,11 +458,11 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1",
-                    onerror: "SELECT * FROM untitle_table_4 limit 2"
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 2'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 3",
-                    onerror: "SELECT * FROM untitle_table_4 limit 4"
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 4'
                 }]
             }
         };
@@ -481,7 +480,7 @@ describe('Batch API fallback job', function () {
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -501,8 +500,8 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1, /* should fail */",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                    query: 'SELECT * FROM untitle_table_4 limit 1, /* should fail */',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
                 }]
             }
         };
@@ -516,7 +515,7 @@ describe('Batch API fallback job', function () {
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -536,9 +535,9 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1, /* should fail */",
+                    query: 'SELECT * FROM untitle_table_4 limit 1, /* should fail */'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
             }
         };
         var expectedQuery = {
@@ -550,7 +549,7 @@ describe('Batch API fallback job', function () {
             onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -570,29 +569,29 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1",
-                    onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onsuccess: 'SELECT * FROM nonexistent_table /* should fail */'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 2",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                    query: 'SELECT * FROM untitle_table_4 limit 2',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 3'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4 limit 1",
-                "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                "status": "done",
-                "fallback_status": "failed",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+            query: [{
+                query: 'SELECT * FROM untitle_table_4 limit 1',
+                onsuccess: 'SELECT * FROM nonexistent_table /* should fail */',
+                status: 'done',
+                fallback_status: 'failed',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 2",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 3",
-                "status": "done",
-                "fallback_status": "done"
+                query: 'SELECT * FROM untitle_table_4 limit 2',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 3',
+                status: 'done',
+                fallback_status: 'done'
             }]
         };
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -612,30 +611,30 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 3",
-                    onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onsuccess: 'SELECT * FROM nonexistent_table /* should fail */'
                 }]
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4 limit 1",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4 limit 1',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 2',
+                status: 'done',
+                fallback_status: 'done'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 3",
-                "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                "status": "done",
-                "fallback_status": "failed",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+                query: 'SELECT * FROM untitle_table_4 limit 3',
+                onsuccess: 'SELECT * FROM nonexistent_table /* should fail */',
+                status: 'done',
+                fallback_status: 'failed',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -655,31 +654,31 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 3",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 4"
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 4'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 5'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4 limit 1",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4 limit 1',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 2',
+                status: 'done',
+                fallback_status: 'done'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 3",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 4",
-                "status": "done",
-                "fallback_status": "done"
+                query: 'SELECT * FROM untitle_table_4 limit 3',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 4',
+                status: 'done',
+                fallback_status: 'done'
             }],
-            onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+            onsuccess: 'SELECT * FROM untitle_table_4 limit 5'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -701,32 +700,32 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT * FROM untitle_table_4 limit 1",
-                    onsuccess: "SELECT * FROM untitle_table_4 limit 2"
+                    query: 'SELECT * FROM untitle_table_4 limit 1',
+                    onsuccess: 'SELECT * FROM untitle_table_4 limit 2'
                 }, {
-                    query: "SELECT * FROM untitle_table_4 limit 3",
-                    onsuccess: "SELECT * FROM nonexistent_table /* should fail */"
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onsuccess: 'SELECT * FROM nonexistent_table /* should fail */'
                 }],
-                onsuccess: "SELECT * FROM untitle_table_4 limit 5"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 5'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT * FROM untitle_table_4 limit 1",
-                "onsuccess": "SELECT * FROM untitle_table_4 limit 2",
-                "status": "done",
-                "fallback_status": "done"
+            query: [{
+                query: 'SELECT * FROM untitle_table_4 limit 1',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 2',
+                status: 'done',
+                fallback_status: 'done'
             }, {
-                "query": "SELECT * FROM untitle_table_4 limit 3",
-                "onsuccess": "SELECT * FROM nonexistent_table /* should fail */",
-                "status": "done",
-                "fallback_status": "failed",
-                "failed_reason": 'relation "nonexistent_table" does not exist'
+                query: 'SELECT * FROM untitle_table_4 limit 3',
+                onsuccess: 'SELECT * FROM nonexistent_table /* should fail */',
+                status: 'done',
+                fallback_status: 'failed',
+                failed_reason: 'relation "nonexistent_table" does not exist'
             }],
-            "onsuccess": "SELECT * FROM untitle_table_4 limit 5"
+            onsuccess: 'SELECT * FROM untitle_table_4 limit 5'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -745,15 +744,15 @@ describe('Batch API fallback job', function () {
 
     it('should fail first "onerror" and job "onerror" and skip the other ones', function (done) {
         var payload = {
-            "query": {
-                "query": [{
-                    "query": "SELECT * FROM atm_madrid limit 1, should fail",
-                    "onerror": "SELECT * FROM atm_madrid limit 2"
+            query: {
+                query: [{
+                    query: 'SELECT * FROM atm_madrid limit 1, should fail',
+                    onerror: 'SELECT * FROM atm_madrid limit 2'
                 }, {
-                    "query": "SELECT * FROM atm_madrid limit 3",
-                    "onerror": "SELECT * FROM atm_madrid limit 4"
+                    query: 'SELECT * FROM atm_madrid limit 3',
+                    onerror: 'SELECT * FROM atm_madrid limit 4'
                 }],
-                "onerror": "SELECT * FROM atm_madrid limit 5"
+                onerror: 'SELECT * FROM atm_madrid limit 5'
             }
         };
         var expectedQuery = {
@@ -772,7 +771,7 @@ describe('Batch API fallback job', function () {
             onerror: 'SELECT * FROM atm_madrid limit 5'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -791,38 +790,38 @@ describe('Batch API fallback job', function () {
 
     it('should run first "onerror" and job "onerror" and skip the other ones', function (done) {
         var payload = {
-            "query": {
-                "query": [{
-                    "query": "SELECT * FROM untitle_table_4 limit 1, should fail",
-                    "onerror": "SELECT * FROM untitle_table_4 limit 2"
+            query: {
+                query: [{
+                    query: 'SELECT * FROM untitle_table_4 limit 1, should fail',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 2'
                 }, {
-                    "query": "SELECT * FROM untitle_table_4 limit 3",
-                    "onerror": "SELECT * FROM untitle_table_4 limit 4"
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 4'
                 }],
-                "onerror": "SELECT * FROM untitle_table_4 limit 5"
+                onerror: 'SELECT * FROM untitle_table_4 limit 5'
             }
         };
 
         var expectedQuery = {
-            "query": [
-              {
-                "query": "SELECT * FROM untitle_table_4 limit 1, should fail",
-                "onerror": "SELECT * FROM untitle_table_4 limit 2",
-                "status": "failed",
-                "fallback_status": "done",
-                "failed_reason": "LIMIT #,# syntax is not supported"
-              },
-              {
-                "query": "SELECT * FROM untitle_table_4 limit 3",
-                "onerror": "SELECT * FROM untitle_table_4 limit 4",
-                "status": "skipped",
-                "fallback_status": "skipped"
-              }
+            query: [
+                {
+                    query: 'SELECT * FROM untitle_table_4 limit 1, should fail',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 2',
+                    status: 'failed',
+                    fallback_status: 'done',
+                    failed_reason: 'LIMIT #,# syntax is not supported'
+                },
+                {
+                    query: 'SELECT * FROM untitle_table_4 limit 3',
+                    onerror: 'SELECT * FROM untitle_table_4 limit 4',
+                    status: 'skipped',
+                    fallback_status: 'skipped'
+                }
             ],
-            "onerror": "SELECT * FROM untitle_table_4 limit 5"
+            onerror: 'SELECT * FROM untitle_table_4 limit 5'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -844,23 +843,23 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT pg_sleep(3)",
-                    onsuccess: "SELECT pg_sleep(0)"
+                    query: 'SELECT pg_sleep(3)',
+                    onsuccess: 'SELECT pg_sleep(0)'
                 }],
-                onsuccess: "SELECT pg_sleep(0)"
+                onsuccess: 'SELECT pg_sleep(0)'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT pg_sleep(3)",
-                "onsuccess": "SELECT pg_sleep(0)",
-                "status": "cancelled",
-                "fallback_status": "skipped"
+            query: [{
+                query: 'SELECT pg_sleep(3)',
+                onsuccess: 'SELECT pg_sleep(0)',
+                status: 'cancelled',
+                fallback_status: 'skipped'
             }],
-            "onsuccess": "SELECT pg_sleep(0)"
+            onsuccess: 'SELECT pg_sleep(0)'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -890,23 +889,23 @@ describe('Batch API fallback job', function () {
         var payload = {
             query: {
                 query: [{
-                    query: "SELECT pg_sleep(0)",
-                    onsuccess: "SELECT pg_sleep(3)"
+                    query: 'SELECT pg_sleep(0)',
+                    onsuccess: 'SELECT pg_sleep(3)'
                 }],
-                onsuccess: "SELECT pg_sleep(0)"
+                onsuccess: 'SELECT pg_sleep(0)'
             }
         };
         var expectedQuery = {
-            "query": [{
-                "query": "SELECT pg_sleep(0)",
-                "onsuccess": "SELECT pg_sleep(3)",
-                "status": "done",
-                "fallback_status": "cancelled"
+            query: [{
+                query: 'SELECT pg_sleep(0)',
+                onsuccess: 'SELECT pg_sleep(3)',
+                status: 'done',
+                fallback_status: 'cancelled'
             }],
-            "onsuccess": "SELECT pg_sleep(0)"
+            onsuccess: 'SELECT pg_sleep(0)'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }

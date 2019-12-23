@@ -6,11 +6,9 @@ var server = require('../../lib/server')();
 var assert = require('../support/assert');
 var qs = require('querystring');
 
-describe('regressions', function() {
-
-    it('issue #224: tables with . (dot) in name works and can be queried', function(done) {
-
-        function createRequest(sqlQuery) {
+describe('regressions', function () {
+    it('issue #224: tables with . (dot) in name works and can be queried', function (done) {
+        function createRequest (sqlQuery) {
             return {
                 url: '/api/v1/sql?' + qs.stringify({
                     q: sqlQuery,
@@ -28,13 +26,13 @@ describe('regressions', function() {
         };
 
         assert.response(server, createRequest('CREATE TABLE "foo.bar" (a int);'), responseOk,
-            function(err) {
+            function (err) {
                 if (err) {
                     return done(err);
                 }
 
                 assert.response(server, createRequest('INSERT INTO "foo.bar" (a) values (1), (2)'), responseOk,
-                    function(err, res) {
+                    function (err, res) {
                         if (err) {
                             return done(err);
                         }
@@ -42,7 +40,7 @@ describe('regressions', function() {
                         assert.equal(parsedBody.total_rows, 2);
 
                         assert.response(server, createRequest('SELECT * FROM "foo.bar"'), responseOk,
-                            function(err, res) {
+                            function (err, res) {
                                 if (err) {
                                     return done(err);
                                 }
@@ -62,5 +60,4 @@ describe('regressions', function() {
             }
         );
     });
-
 });

@@ -18,11 +18,10 @@ var JobService = require(BATCH_SOURCE + 'job-service');
 var JobRunner = require(BATCH_SOURCE + 'job-runner');
 var QueryRunner = require(BATCH_SOURCE + 'query-runner');
 
-
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var logger = new BatchLogger(null, 'batch-queries');
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 var userDatabaseMetadataService = new UserDatabaseMetadataService(metadataBackend);
 var jobCanceller = new JobCanceller();
@@ -41,14 +40,14 @@ var JOB = {
     dbname: 'cartodb_test_user_1_db',
     dbuser: 'test_cartodb_user_1',
     port: 5432,
-    pass: 'test_cartodb_user_1_pass',
+    pass: 'test_cartodb_user_1_pass'
 };
 
-describe('job runner', function() {
+describe('job runner', function () {
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient);
 
     after(function (done) {
-        redisUtils.clean('batch:*', function() {
+        redisUtils.clean('batch:*', function () {
             redisUtils.clean('limits:batch:*', done);
         });
     });
@@ -78,5 +77,4 @@ describe('job runner', function() {
             done();
         });
     });
-
 });

@@ -36,9 +36,9 @@ const availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 // sanity check arguments
 if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
-  console.error("node app.js [environment]");
-  console.error("Available environments: " + availableEnvironments.join(', '));
-  process.exit(1);
+    console.error('node app.js [environment]');
+    console.error('Available environments: ' + availableEnvironments.join(', '));
+    process.exit(1);
 }
 
 global.settings.api_hostname = fqdn.hostname();
@@ -53,23 +53,23 @@ if (global.settings.log_filename) {
     const logFilename = path.resolve(global.settings.log_filename);
     const logDirectory = path.dirname(logFilename);
     if (!fs.existsSync(logDirectory)) {
-        console.error("Log filename directory does not exist: " + logDirectory);
+        console.error('Log filename directory does not exist: ' + logDirectory);
         process.exit(1);
     }
-    console.log("Logs will be written to " + logFilename);
+    console.log('Logs will be written to ' + logFilename);
     log4jsConfig.appenders.push(
-        { type: "file", absolute: true, filename: logFilename }
+        { type: 'file', absolute: true, filename: logFilename }
     );
 } else {
     log4jsConfig.appenders.push(
-        { type: "console", layout: { type:'basic' } }
+        { type: 'console', layout: { type: 'basic' } }
     );
 }
 
 global.log4js.configure(log4jsConfig);
 global.logger = global.log4js.getLogger();
 
-const version = require("./package").version;
+const version = require('./package').version;
 
 const StatsClient = require('./lib/stats/client');
 
@@ -85,21 +85,21 @@ const createServer = require('./lib/server');
 
 const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
-listener.on('listening', function() {
-    console.info("Using Node.js %s", process.version);
+listener.on('listening', function () {
+    console.info('Using Node.js %s', process.version);
     console.info('Using configuration file "%s"', configurationFile);
     console.log(
-        "CartoDB SQL API %s listening on %s:%s PID=%d (%s)",
+        'CartoDB SQL API %s listening on %s:%s PID=%d (%s)',
         version, global.settings.node_host, global.settings.node_port, process.pid, ENVIRONMENT
     );
 });
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', function (err) {
     global.logger.error('Uncaught exception: ' + err.stack);
 });
 
-process.on('SIGHUP', function() {
-    global.log4js.clearAndShutdownAppenders(function() {
+process.on('SIGHUP', function () {
+    global.log4js.clearAndShutdownAppenders(function () {
         global.log4js.configure(log4jsConfig);
         global.logger = global.log4js.getLogger();
         console.log('Log files reloaded');
@@ -116,7 +116,7 @@ process.on('SIGHUP', function() {
 
 addHandlers({ killTimeout: 45000 });
 
-function addHandlers({ killTimeout }) {
+function addHandlers ({ killTimeout }) {
     // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
     // process.on('uncaughtException', exitProcess(listener, logger, killTimeout));
     process.on('unhandledRejection', exitProcess({ killTimeout }));
@@ -171,7 +171,7 @@ function scheduleForcedExit ({ killTimeout }) {
     killTimer.unref();
 }
 
-function isGteMinVersion(version, minVersion) {
+function isGteMinVersion (version, minVersion) {
     const versionMatch = /[a-z]?([0-9]*)/.exec(version);
     if (versionMatch) {
         const majorVersion = parseInt(versionMatch[1], 10);
@@ -183,7 +183,7 @@ function isGteMinVersion(version, minVersion) {
 }
 
 setInterval(function memoryUsageMetrics () {
-    let memoryUsage = process.memoryUsage();
+    const memoryUsage = process.memoryUsage();
 
     Object.keys(memoryUsage).forEach(property => {
         statsClient.gauge(`sqlapi.memory.${property}`, memoryUsage[property]);
@@ -225,12 +225,12 @@ setInterval(function cpuUsageMetrics () {
 }, 5000);
 
 if (global.gc && isGteMinVersion(process.version, 6)) {
-    const gcInterval = Number.isFinite(global.settings.gc_interval) ?
-        global.settings.gc_interval :
-        10000;
+    const gcInterval = Number.isFinite(global.settings.gc_interval)
+        ? global.settings.gc_interval
+        : 10000;
 
     if (gcInterval > 0) {
-        setInterval(function gcForcedCycle() {
+        setInterval(function gcForcedCycle () {
             global.gc();
         }, gcInterval);
     }
@@ -252,24 +252,24 @@ function getGCTypeValue (type) {
     let value;
 
     switch (type) {
-        case 1:
-            value = 'Scavenge';
-            break;
-        case 2:
-            value = 'MarkSweepCompact';
-            break;
-        case 4:
-            value = 'IncrementalMarking';
-            break;
-        case 8:
-            value = 'ProcessWeakCallbacks';
-            break;
-        case 15:
-            value = 'All';
-            break;
-        default:
-            value = 'Unkown';
-            break;
+    case 1:
+        value = 'Scavenge';
+        break;
+    case 2:
+        value = 'MarkSweepCompact';
+        break;
+    case 4:
+        value = 'IncrementalMarking';
+        break;
+    case 8:
+        value = 'ProcessWeakCallbacks';
+        break;
+    case 15:
+        value = 'All';
+        break;
+    default:
+        value = 'Unkown';
+        break;
     }
 
     return value;

@@ -105,7 +105,7 @@ describe('timeout', function () {
                     assert.deepEqual(res, {
                         error: [
                             'You are over platform\'s limits: SQL query timeout error.' +
-                            ' Refactor your query before running again or contact CARTO support for more details.',
+                            ' Refactor your query before running again or contact CARTO support for more details.'
                         ],
                         context: 'limit',
                         detail: 'datasource'
@@ -131,7 +131,7 @@ describe('timeout', function () {
                 desc: 'CSV',
                 format: 'csv',
                 contentType: 'application/x-www-form-urlencoded',
-                parser: querystring.stringify,
+                parser: querystring.stringify
                 // only: true,
                 // skip: true
             },
@@ -188,7 +188,7 @@ describe('timeout', function () {
                     assert.deepEqual(res, {
                         error: [
                             'You are over platform\'s limits: SQL query timeout error.' +
-                            ' Refactor your query before running again or contact CARTO support for more details.',
+                            ' Refactor your query before running again or contact CARTO support for more details.'
                         ],
                         context: 'limit',
                         detail: 'datasource'

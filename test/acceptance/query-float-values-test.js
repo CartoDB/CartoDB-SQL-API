@@ -7,7 +7,7 @@ var assert = require('../support/assert');
 var querystring = require('querystring');
 var step = require('step');
 
-describe('special numeric (float) values', function() {
+describe('special numeric (float) values', function () {
     var RESPONSE_OK = {
         statusCode: 200
     };

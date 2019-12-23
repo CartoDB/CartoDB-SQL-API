@@ -6,39 +6,38 @@ var assert = require('../../support/assert');
 var Scheduler = require('../../../lib/batch/scheduler/scheduler');
 var FixedCapacity = require('../../../lib/batch/scheduler/capacity/fixed');
 
-describe('scheduler', function() {
-
+describe('scheduler', function () {
     var USER_FINISHED = true;
 
     var USER_A = 'userA';
     var USER_B = 'userB';
     var USER_C = 'userC';
 
-    function TaskRunner(userTasks) {
+    function TaskRunner (userTasks) {
         this.results = [];
         this.userTasks = userTasks;
     }
 
-    TaskRunner.prototype.run = function(user, callback) {
+    TaskRunner.prototype.run = function (user, callback) {
         this.results.push(user);
         this.userTasks[user]--;
-        setTimeout(function() {
+        setTimeout(function () {
             return callback(null, this.userTasks[user] === 0);
         }.bind(this), 50);
     };
 
-    function ManualTaskRunner() {
+    function ManualTaskRunner () {
         this.userTasks = {};
     }
 
-    ManualTaskRunner.prototype.run = function(user, callback) {
+    ManualTaskRunner.prototype.run = function (user, callback) {
         if (!this.userTasks.hasOwnProperty(user)) {
             this.userTasks[user] = [];
         }
         this.userTasks[user].push(callback);
     };
 
-    ManualTaskRunner.prototype.dispatch = function(user, isDone) {
+    ManualTaskRunner.prototype.dispatch = function (user, isDone) {
         if (this.userTasks.hasOwnProperty(user)) {
             var cb = this.userTasks[user].shift();
             if (cb) {
@@ -47,12 +46,10 @@ describe('scheduler', function() {
         }
     };
 
-
     // simulate one by one or infinity capacity
     var capacities = [new FixedCapacity(1), new FixedCapacity(2), new FixedCapacity(Infinity)];
 
-    capacities.forEach(function(capacity) {
-
+    capacities.forEach(function (capacity) {
         it('regression #1', function (done) {
             var taskRunner = new TaskRunner({
                 userA: 2,
@@ -62,7 +59,7 @@ describe('scheduler', function() {
             scheduler.add(USER_A);
             scheduler.add(USER_B);
 
-            scheduler.on('done', function() {
+            scheduler.on('done', function () {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 4);
@@ -87,7 +84,7 @@ describe('scheduler', function() {
 
             var acquiredUsers = [];
 
-            scheduler.on('done', function() {
+            scheduler.on('done', function () {
                 debug('Users %j', acquiredUsers);
                 assert.equal(acquiredUsers[0], USER_A);
                 assert.equal(acquiredUsers[1], USER_B);
@@ -99,7 +96,7 @@ describe('scheduler', function() {
                 return done();
             });
 
-            scheduler.on('acquired', function(user) {
+            scheduler.on('acquired', function (user) {
                 debug('Acquired user %s', user);
                 acquiredUsers.push(user);
             });
@@ -128,7 +125,7 @@ describe('scheduler', function() {
             var scheduler = new Scheduler(capacity, taskRunner);
             scheduler.add(USER_A);
 
-            scheduler.on('done', function() {
+            scheduler.on('done', function () {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 1);
@@ -141,7 +138,6 @@ describe('scheduler', function() {
             scheduler.schedule();
         });
 
-
         it('should run tasks for different users', function (done) {
             var taskRunner = new TaskRunner({
                 userA: 1,
@@ -153,7 +149,7 @@ describe('scheduler', function() {
             scheduler.add(USER_B);
             scheduler.add(USER_C);
 
-            scheduler.on('done', function() {
+            scheduler.on('done', function () {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 3);
@@ -183,7 +179,7 @@ describe('scheduler', function() {
             scheduler.add(USER_B);
             scheduler.add(USER_C);
 
-            scheduler.on('done', function() {
+            scheduler.on('done', function () {
                 var results = taskRunner.results;
 
                 assert.equal(results.length, 6);

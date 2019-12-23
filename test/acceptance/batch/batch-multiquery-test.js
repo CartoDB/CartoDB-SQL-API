@@ -8,14 +8,14 @@ var JobStatus = require('../../../lib/batch/job-status');
 var assert = require('../../support/assert');
 var queue = require('queue-async');
 
-describe('batch multiquery', function() {
-    function jobPayload(query) {
+describe('batch multiquery', function () {
+    function jobPayload (query) {
         return {
             query: query
         };
     }
 
-    before(function() {
+    before(function () {
         this.batchTestClient = new BatchTestClient();
     });
 
@@ -30,7 +30,7 @@ describe('batch multiquery', function() {
         ];
 
         var payload = jobPayload(queries);
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -51,7 +51,7 @@ describe('batch multiquery', function() {
         ];
 
         var payload = jobPayload(queries);
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -73,7 +73,7 @@ describe('batch multiquery', function() {
         ];
 
         var payload = jobPayload(queries);
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -87,7 +87,6 @@ describe('batch multiquery', function() {
         });
     });
 
-
     it('should perform one multiquery job with three queries and fail on second one', function (done) {
         var queries = [
             'select pg_sleep(0)',
@@ -96,7 +95,7 @@ describe('batch multiquery', function() {
         ];
 
         var payload = jobPayload(queries);
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -126,9 +125,9 @@ describe('batch multiquery', function() {
 
         var jobsQueue = queue(1);
 
-        jobs.forEach(function(job) {
-            jobsQueue.defer(function(payload, done) {
-                self.batchTestClient.createJob(payload, function(err, jobResult) {
+        jobs.forEach(function (job) {
+            jobsQueue.defer(function (payload, done) {
+                self.batchTestClient.createJob(payload, function (err, jobResult) {
                     if (err) {
                         return done(err);
                     }
@@ -142,7 +141,7 @@ describe('batch multiquery', function() {
                 return done(err);
             }
 
-            jobsCreated.forEach(function(job) {
+            jobsCreated.forEach(function (job) {
                 assert.equal(job.status, JobStatus.DONE);
             });
 
@@ -167,9 +166,9 @@ describe('batch multiquery', function() {
         var expectedStatus = [JobStatus.FAILED, JobStatus.DONE];
         var jobsQueue = queue(1);
 
-        jobs.forEach(function(job) {
-            jobsQueue.defer(function(payload, done) {
-                self.batchTestClient.createJob(payload, function(err, jobResult) {
+        jobs.forEach(function (job) {
+            jobsQueue.defer(function (payload, done) {
+                self.batchTestClient.createJob(payload, function (err, jobResult) {
                     if (err) {
                         return done(err);
                     }
@@ -183,7 +182,7 @@ describe('batch multiquery', function() {
                 return done(err);
             }
 
-            var statuses = jobsCreated.map(function(job) {
+            var statuses = jobsCreated.map(function (job) {
                 return job.status;
             });
             assert.deepEqual(statuses, expectedStatus);
@@ -209,9 +208,9 @@ describe('batch multiquery', function() {
         var expectedStatus = [JobStatus.DONE, JobStatus.FAILED];
         var jobsQueue = queue(1);
 
-        jobs.forEach(function(job) {
-            jobsQueue.defer(function(payload, done) {
-                self.batchTestClient.createJob(payload, function(err, jobResult) {
+        jobs.forEach(function (job) {
+            jobsQueue.defer(function (payload, done) {
+                self.batchTestClient.createJob(payload, function (err, jobResult) {
                     if (err) {
                         return done(err);
                     }
@@ -225,7 +224,7 @@ describe('batch multiquery', function() {
                 return done(err);
             }
 
-            var statuses = jobsCreated.map(function(job) {
+            var statuses = jobsCreated.map(function (job) {
                 return job.status;
             });
             assert.deepEqual(statuses, expectedStatus);

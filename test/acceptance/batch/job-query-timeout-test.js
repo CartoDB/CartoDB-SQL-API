@@ -6,9 +6,8 @@ var assert = require('../../support/assert');
 var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../lib/batch/job-status');
 
-describe('job query timeout', function() {
-
-    before(function() {
+describe('job query timeout', function () {
+    before(function () {
         this.batchQueryTimeout = global.settings.batch_query_timeout;
         this.batchTestClient = new BatchTestClient();
     });
@@ -18,7 +17,7 @@ describe('job query timeout', function() {
         return this.batchTestClient.drain(done);
     });
 
-    function createTimeoutQuery(query, timeout) {
+    function createTimeoutQuery (query, timeout) {
         return {
             query: {
                 query: [
@@ -32,12 +31,12 @@ describe('job query timeout', function() {
     }
 
     it('should run query with higher user timeout', function (done) {
-        var jobRequest = createTimeoutQuery("select pg_sleep(0.1)", 200);
-        this.batchTestClient.createJob(jobRequest, function(err, jobResult) {
+        var jobRequest = createTimeoutQuery('select pg_sleep(0.1)', 200);
+        this.batchTestClient.createJob(jobRequest, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
-            jobResult.getStatus(function(err, job) {
+            jobResult.getStatus(function (err, job) {
                 if (err) {
                     return done(err);
                 }
@@ -48,12 +47,12 @@ describe('job query timeout', function() {
     });
 
     it('should fail to run query with lower user timeout', function (done) {
-        var jobRequest = createTimeoutQuery("select pg_sleep(0.1)", 50);
-        this.batchTestClient.createJob(jobRequest, function(err, jobResult) {
+        var jobRequest = createTimeoutQuery('select pg_sleep(0.1)', 50);
+        this.batchTestClient.createJob(jobRequest, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
-            jobResult.getStatus(function(err, job) {
+            jobResult.getStatus(function (err, job) {
                 if (err) {
                     return done(err);
                 }
@@ -65,12 +64,12 @@ describe('job query timeout', function() {
 
     it('should fail to run query with user timeout if it is higher than config', function (done) {
         global.settings.batch_query_timeout = 100;
-        var jobRequest = createTimeoutQuery("select pg_sleep(1)", 2000);
-        this.batchTestClient.createJob(jobRequest, function(err, jobResult) {
+        var jobRequest = createTimeoutQuery('select pg_sleep(1)', 2000);
+        this.batchTestClient.createJob(jobRequest, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
-            jobResult.getStatus(function(err, job) {
+            jobResult.getStatus(function (err, job) {
                 if (err) {
                     return done(err);
                 }
@@ -82,12 +81,12 @@ describe('job query timeout', function() {
 
     it('should fail to run query with user timeout if set to 0 (ignored timeout)', function (done) {
         global.settings.batch_query_timeout = 100;
-        var jobRequest = createTimeoutQuery("select pg_sleep(1)", 0);
-        this.batchTestClient.createJob(jobRequest, function(err, jobResult) {
+        var jobRequest = createTimeoutQuery('select pg_sleep(1)', 0);
+        this.batchTestClient.createJob(jobRequest, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
-            jobResult.getStatus(function(err, job) {
+            jobResult.getStatus(function (err, job) {
                 if (err) {
                     return done(err);
                 }

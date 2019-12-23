@@ -30,7 +30,7 @@ describe('custom middlewares', function () {
                 api: [{
                     paths: [
                         '/api/:version',
-                        '/user/:user/api/:version',
+                        '/user/:user/api/:version'
                     ],
                     middlewares: [
                         customMiddleware
@@ -189,13 +189,13 @@ describe('custom middlewares', function () {
                 api: [{
                     paths: [
                         '/api/:version',
-                        '/user/:user/api/:version',
+                        '/user/:user/api/:version'
                     ],
                     sql: [{
                         paths: [
                             '/sql'
                         ],
-                        middlewares: [ customMiddleware ]
+                        middlewares: [customMiddleware]
                     }]
                 }]
             };

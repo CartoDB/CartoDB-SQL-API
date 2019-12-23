@@ -17,7 +17,7 @@ var jobStatus = require(BATCH_SOURCE + 'job-status');
 var logger = new BatchLogger(null, 'batch-queries');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 
 var queue = require('queue-async');
 
@@ -30,11 +30,11 @@ var JOB = {
     host: HOST
 };
 
-function createWadusJob() {
+function createWadusJob () {
     return JobFactory.create(JSON.parse(JSON.stringify(JOB)));
 }
 
-describe('job backend', function() {
+describe('job backend', function () {
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
     after(function (done) {
@@ -192,12 +192,11 @@ describe('job backend', function() {
                 }
 
                 assert.ok(users.userA);
-                assert.deepEqual(users.userA, [ 'jobId1', 'jobId2' ]);
+                assert.deepEqual(users.userA, ['jobId1', 'jobId2']);
                 assert.ok(users.userB);
-                assert.deepEqual(users.userB, [ 'jobId3' ]);
+                assert.deepEqual(users.userB, ['jobId3']);
                 done();
             });
-
         });
     });
 

@@ -6,9 +6,7 @@ var server = require('../../lib/server')();
 var assert = require('../support/assert');
 var querystring = require('querystring');
 
-
-describe('system-queries', function() {
-
+describe('system-queries', function () {
     var systemQueriesSuitesToTest = [
         {
             desc: 'pg_ queries work with api_key and fail otherwise',
@@ -34,31 +32,30 @@ describe('system-queries', function() {
         }
     ];
 
-    systemQueriesSuitesToTest.forEach(function(suiteToTest) {
-        var apiKeyStatusErrorCode = !!suiteToTest.api_key_works ? 200 : 403;
+    systemQueriesSuitesToTest.forEach(function (suiteToTest) {
+        var apiKeyStatusErrorCode = suiteToTest.api_key_works ? 200 : 403;
         testSystemQueries(suiteToTest.desc + ' with api_key', suiteToTest.queries, apiKeyStatusErrorCode, '1234');
-        var noApiKeyStatusErrorCode = !!suiteToTest.no_api_key_works ? 200 : 403;
+        var noApiKeyStatusErrorCode = suiteToTest.no_api_key_works ? 200 : 403;
         testSystemQueries(suiteToTest.desc, suiteToTest.queries, noApiKeyStatusErrorCode);
     });
 
-    function testSystemQueries(description, queries, statusErrorCode, apiKey) {
-        queries.forEach(function(query) {
-            it('[' + description + ']  query: ' + query, function(done) {
-                var queryStringParams = {q: query};
-                if (!!apiKey) {
+    function testSystemQueries (description, queries, statusErrorCode, apiKey) {
+        queries.forEach(function (query) {
+            it('[' + description + ']  query: ' + query, function (done) {
+                var queryStringParams = { q: query };
+                if (apiKey) {
                     queryStringParams.api_key = apiKey;
                 }
                 var request = {
-                    headers: {host: 'vizzuality.cartodb.com'},
+                    headers: { host: 'vizzuality.cartodb.com' },
                     method: 'GET',
                     url: '/api/v1/sql?' + querystring.stringify(queryStringParams)
                 };
-                assert.response(server, request, function(err, response) {
+                assert.response(server, request, function (err, response) {
                     assert.equal(response.statusCode, statusErrorCode);
                     done();
                 });
             });
         });
     }
-
 });

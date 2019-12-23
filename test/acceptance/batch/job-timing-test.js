@@ -6,11 +6,11 @@ var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../lib/batch/job-status');
 
 describe('Batch API query timing', function () {
-    before(function() {
+    before(function () {
         this.batchTestClient = new BatchTestClient();
     });
 
-    after(function(done) {
+    after(function (done) {
         this.batchTestClient.drain(done);
     });
 
@@ -32,22 +32,22 @@ describe('Batch API query timing', function () {
         };
 
         var payload = {
-            "query": {
-                "query": [
+            query: {
+                query: [
                     {
-                        "query": "SELECT * FROM untitle_table_4 limit 1",
-                        "onerror": "SELECT * FROM untitle_table_4 limit 2"
+                        query: 'SELECT * FROM untitle_table_4 limit 1',
+                        onerror: 'SELECT * FROM untitle_table_4 limit 2'
                     },
                     {
-                        "query": "SELECT * FROM untitle_table_4 limit 3",
-                        "onerror": "SELECT * FROM untitle_table_4 limit 4"
+                        query: 'SELECT * FROM untitle_table_4 limit 3',
+                        onerror: 'SELECT * FROM untitle_table_4 limit 4'
                     }
                 ],
-                "onerror": "SELECT * FROM untitle_table_4 limit 5"
+                onerror: 'SELECT * FROM untitle_table_4 limit 5'
             }
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -62,7 +62,6 @@ describe('Batch API query timing', function () {
             });
         });
     });
-
 
     it('should report start and end time for each query also for failing queries' +
         'and expose started_at and ended_at for all queries with fallback mechanism (failed)', function (done) {
@@ -82,22 +81,22 @@ describe('Batch API query timing', function () {
         };
 
         var payload = {
-            "query": {
-                "query": [
+            query: {
+                query: [
                     {
-                        "query": "SELECT * FROM untitle_table_4 limit 1",
-                        "onerror": "SELECT * FROM untitle_table_4 limit 2"
+                        query: 'SELECT * FROM untitle_table_4 limit 1',
+                        onerror: 'SELECT * FROM untitle_table_4 limit 2'
                     },
                     {
-                        "query": "SELECT * FROM untitle_table_4 limit 3 failed",
-                        "onerror": "SELECT * FROM untitle_table_4 limit 4"
+                        query: 'SELECT * FROM untitle_table_4 limit 3 failed',
+                        onerror: 'SELECT * FROM untitle_table_4 limit 4'
                     }
                 ],
-                "onerror": "SELECT * FROM untitle_table_4 limit 5"
+                onerror: 'SELECT * FROM untitle_table_4 limit 5'
             }
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }

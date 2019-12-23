@@ -20,18 +20,17 @@ if (global.settings.statsd) {
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../lib/server')(statsClient);
 
-
 // Give it enough time to connect and issue the query
 // but not too much so as to disconnect in the middle of the query.
 const CLIENT_DISCONNECT_TIMEOUT = 100;
 const assertCanReuseCanceledConnection = function (done) {
     assert.response(server, {
         url: '/api/v1/sql?' + querystring.stringify({
-            q: 'SELECT count(*) FROM copy_endpoints_test',
+            q: 'SELECT count(*) FROM copy_endpoints_test'
         }),
         headers: { host: 'vizzuality.cartodb.com' },
         method: 'GET'
-    }, {}, function(err, res) {
+    }, {}, function (err, res) {
         assert.ifError(err);
         assert.ok(res.statusCode === 200);
         const result = JSON.parse(res.body);
@@ -40,19 +39,18 @@ const assertCanReuseCanceledConnection = function (done) {
     });
 };
 
-
-describe('copy-endpoints', function() {
-    before(function() {
+describe('copy-endpoints', function () {
+    before(function () {
         this.client = new Client({
             user: 'postgres',
             host: 'localhost',
             database: 'cartodb_test_user_1_db',
-            port: 5432,
+            port: 5432
         });
         this.client.connect();
     });
 
-    after(function() {
+    after(function () {
         this.client.end();
     });
 
@@ -62,16 +60,16 @@ describe('copy-endpoints', function() {
         });
     });
 
-    describe('general', function() {
-        it('should work with copyfrom endpoint', function(done){
+    describe('general', function () {
+        it('should work with copyfrom endpoint', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.equal(!!response.time, true);
@@ -80,82 +78,82 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should fail with copyfrom endpoint and unexisting table', function(done){
+        it('should fail with copyfrom endpoint and unexisting table', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:['relation \"unexisting_table\" does not exist']
+                        error: ['relation \"unexisting_table\" does not exist']
                     }
                 );
                 done();
             });
         });
 
-        it('should fail with copyfrom endpoint and without csv', function(done){
+        it('should fail with copyfrom endpoint and without csv', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:['No rows copied']
+                        error: ['No rows copied']
                     }
                 );
                 done();
             });
         });
 
-        it('should fail with copyfrom endpoint and without q', function(done){
+        it('should fail with copyfrom endpoint and without q', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom",
+                url: '/api/v1/sql/copyfrom',
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:["SQL is missing"]
+                        error: ['SQL is missing']
                     }
                 );
                 done();
             });
         });
 
-        it('should work with copyto endpoint', function(done){
+        it('should work with copyto endpoint', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err) {
+            }, {}, function (err) {
                 assert.ifError(err);
 
                 assert.response(server, {
-                    url: "/api/v1/sql/copyto?" + querystring.stringify({
+                    url: '/api/v1/sql/copyto?' + querystring.stringify({
                         q: 'COPY copy_endpoints_test TO STDOUT',
                         filename: '/tmp/output.dmp'
                     }),
-                    headers: {host: 'vizzuality.cartodb.com'},
+                    headers: { host: 'vizzuality.cartodb.com' },
                     method: 'GET'
-                },{}, function(err, res) {
+                }, {}, function (err, res) {
                     assert.ifError(err);
                     const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
                     assert.ok(res.body.match(regex));
@@ -168,9 +166,9 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should work with copyto endpoint and POST method', function(done){
+        it('should work with copyto endpoint and POST method', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
@@ -178,7 +176,7 @@ describe('copy-endpoints', function() {
                     host: 'vizzuality.cartodb.com'
                 },
                 method: 'POST'
-            }, {}, function(err) {
+            }, {}, function (err) {
                 assert.ifError(err);
 
                 assert.response(server, {
@@ -192,7 +190,7 @@ describe('copy-endpoints', function() {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
                     method: 'POST'
-                }, {}, function(err, res) {
+                }, {}, function (err, res) {
                     assert.ifError(err);
                     const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
                     assert.ok(res.body.match(regex));
@@ -205,28 +203,28 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should fail with copyto endpoint and without sql', function(done){
+        it('should fail with copyto endpoint and without sql', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                url: '/api/v1/sql/copyto?' + querystring.stringify({
                     filename: '/tmp/output.dmp'
                 }),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:["SQL is missing"]
+                        error: ['SQL is missing']
                     }
                 );
                 done();
             });
         });
 
-        it('should work with copyfrom and gzip', function(done){
+        it('should work with copyfrom and gzip', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv.gz'),
@@ -235,7 +233,7 @@ describe('copy-endpoints', function() {
                     'content-encoding': 'gzip'
                 },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.equal(!!response.time, true);
@@ -244,9 +242,9 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should return an error when gzip headers are not correct', function(done) {
+        it('should return an error when gzip headers are not correct', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
@@ -255,12 +253,12 @@ describe('copy-endpoints', function() {
                     'content-encoding': 'gzip'
                 },
                 method: 'POST'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(
                     JSON.parse(res.body),
                     {
-                        error:["Error while gunzipping: incorrect header check"]
+                        error: ['Error while gunzipping: incorrect header check']
                     }
                 );
                 done();
@@ -268,37 +266,36 @@ describe('copy-endpoints', function() {
         });
     });
 
-
-    describe('timeout', function() {
-        before('set a 1 ms timeout', function() {
+    describe('timeout', function () {
+        before('set a 1 ms timeout', function () {
             this.previous_timeout = global.settings.copy_timeout;
             global.settings.copy_timeout = 1;
         });
 
-        after('restore previous timeout', function() {
+        after('restore previous timeout', function () {
             global.settings.copy_timeout = this.previous_timeout;
         });
 
-        it('should fail with copyfrom and timeout', function(done) {
+        it('should fail with copyfrom and timeout', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             },
             {
                 status: 429,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             },
-            function(err, res) {
+            function (err, res) {
                 assert.ifError(err);
                 assert.deepEqual(JSON.parse(res.body), {
                     error: [
                         'You are over platform\'s limits: SQL query timeout error.' +
-                            ' Refactor your query before running again or contact CARTO support for more details.',
+                            ' Refactor your query before running again or contact CARTO support for more details.'
                     ],
                     context: 'limit',
                     detail: 'datasource'
@@ -307,21 +304,21 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('should fail with copyto and timeout', function(done){
+        it('should fail with copyto and timeout', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                url: '/api/v1/sql/copyto?' + querystring.stringify({
                     q: 'COPY populated_places_simple_reduced TO STDOUT',
                     filename: '/tmp/output.dmp'
                 }),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
-            },{}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 const error = {
                     error: ['You are over platform\'s limits: SQL query timeout error.' +
-                            ' Refactor your query before running again or contact CARTO support for more details.',],
-                    context:"limit",
-                    detail:"datasource"
+                            ' Refactor your query before running again or contact CARTO support for more details.'],
+                    context: 'limit',
+                    detail: 'datasource'
                 };
                 const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
                 assert.deepEqual(JSON.parse(expectedError), error);
@@ -330,29 +327,28 @@ describe('copy-endpoints', function() {
         });
     });
 
-
-    describe('db connections', function() {
-        before(function() {
+    describe('db connections', function () {
+        before(function () {
             this.db_pool_size = global.settings.db_pool_size;
             global.settings.db_pool_size = 1;
         });
 
-        after(function() {
+        after(function () {
             global.settings.db_pool_size = this.db_pool_size;
         });
 
-        it('copyfrom', function(done) {
-            function doCopyFrom() {
+        it('copyfrom', function (done) {
+            function doCopyFrom () {
                 return new Promise(resolve => {
                     assert.response(server, {
-                        url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                        url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                             q: `COPY copy_endpoints_test (id, name)
                                 FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                         }),
                         data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                        headers: {host: 'vizzuality.cartodb.com'},
+                        headers: { host: 'vizzuality.cartodb.com' },
                         method: 'POST'
-                    },{}, function(err, res) {
+                    }, {}, function (err, res) {
                         assert.ifError(err);
                         const response = JSON.parse(res.body);
                         assert.ok(response.time);
@@ -361,22 +357,22 @@ describe('copy-endpoints', function() {
                 });
             }
 
-            Promise.all([doCopyFrom(), doCopyFrom(), doCopyFrom()]).then(function() {
+            Promise.all([doCopyFrom(), doCopyFrom(), doCopyFrom()]).then(function () {
                 done();
             });
         });
 
-        it('copyto', function(done) {
-            function doCopyTo() {
+        it('copyto', function (done) {
+            function doCopyTo () {
                 return new Promise(resolve => {
                     assert.response(server, {
-                        url: "/api/v1/sql/copyto?" + querystring.stringify({
-                            q: `COPY (SELECT * FROM generate_series(1, 10000)) TO STDOUT`,
+                        url: '/api/v1/sql/copyto?' + querystring.stringify({
+                            q: 'COPY (SELECT * FROM generate_series(1, 10000)) TO STDOUT',
                             filename: '/tmp/output.dmp'
                         }),
-                        headers: {host: 'vizzuality.cartodb.com'},
+                        headers: { host: 'vizzuality.cartodb.com' },
                         method: 'GET'
-                    },{}, function(err, res) {
+                    }, {}, function (err, res) {
                         assert.ifError(err);
                         assert.ok(res.body);
                         resolve();
@@ -385,55 +381,54 @@ describe('copy-endpoints', function() {
             }
 
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
-            },{}, function(err) {
+            }, {}, function (err) {
                 assert.ifError(err);
 
-                Promise.all([doCopyTo(), doCopyTo(), doCopyTo()]).then(function() {
+                Promise.all([doCopyTo(), doCopyTo(), doCopyTo()]).then(function () {
                     done();
                 });
             });
         });
     });
 
-    describe('client disconnection', function() {
-        before(function() {
+    describe('client disconnection', function () {
+        before(function () {
             this.db_pool_size = global.settings.db_pool_size;
             global.settings.db_pool_size = 1;
         });
 
-        after(function() {
+        after(function () {
             global.settings.db_pool_size = this.db_pool_size;
         });
 
         const assertCanReuseConnection = function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
-                    q: 'SELECT 1',
+                    q: 'SELECT 1'
                 }),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
-            }, {}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.statusCode === 200);
                 done();
             });
         };
 
-        it('COPY TO returns the connection to the pool if the client disconnects', function(done) {
+        it('COPY TO returns the connection to the pool if the client disconnects', function (done) {
             const listener = server.listen(0, '127.0.0.1');
 
             listener.on('error', done);
             listener.on('listening', function onServerListening () {
-
                 const { address, port } = listener.address();
                 const query = querystring.stringify({
-                    q: `COPY (SELECT * FROM generate_series(1, 1000)) TO STDOUT`
+                    q: 'COPY (SELECT * FROM generate_series(1, 1000)) TO STDOUT'
                 });
 
                 const options = {
@@ -453,15 +448,14 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('COPY FROM returns the connection to the pool if the client disconnects', function(done) {
+        it('COPY FROM returns the connection to the pool if the client disconnects', function (done) {
             const listener = server.listen(0, '127.0.0.1');
 
             listener.on('error', done);
             listener.on('listening', function onServerListening () {
-
                 const { address, port } = listener.address();
                 const query = querystring.stringify({
-                    q: `COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
+                    q: 'COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER \',\', HEADER true)'
                 });
 
                 const options = {
@@ -479,39 +473,38 @@ describe('copy-endpoints', function() {
                 }, CLIENT_DISCONNECT_TIMEOUT);
             });
         });
-
     });
 
-    describe('COPY timeouts: they can take longer than statement_timeout', function() {
-        before('set a very small statement_timeout for regular queries', function(done) {
+    describe('COPY timeouts: they can take longer than statement_timeout', function () {
+        before('set a very small statement_timeout for regular queries', function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?q=set statement_timeout = 10',
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, done);
         });
 
-        after('restore normal statement_timeout for regular queries', function(done) {
+        after('restore normal statement_timeout for regular queries', function (done) {
             assert.response(server, {
                 url: '/api/v1/sql?q=set statement_timeout = 2000',
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, done);
         });
 
-        it('COPY FROM can take longer than regular statement_timeout', function(done) {
+        it('COPY FROM can take longer than regular statement_timeout', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
                 status: 200,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
-            }, function(err, res) {
+            }, function (err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.strictEqual(response.total_rows, 2016);
@@ -519,15 +512,15 @@ describe('copy-endpoints', function() {
             });
         });
 
-        it('COPY TO can take longer than regular statement_timeout', function(done) {
+        it('COPY TO can take longer than regular statement_timeout', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                url: '/api/v1/sql/copyto?' + querystring.stringify({
                     q: 'COPY copy_endpoints_test TO STDOUT',
                     filename: '/tmp/output.dmp'
                 }),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
-            }, {}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.statusCode === 200);
                 done();
@@ -535,8 +528,8 @@ describe('copy-endpoints', function() {
         });
     });
 
-    describe('dbQuotaMiddleware', function() {
-        before('Set the remaining quota to 1 byte', function(done) {
+    describe('dbQuotaMiddleware', function () {
+        before('Set the remaining quota to 1 byte', function (done) {
             // See the test/support/sql/quota_mock.sql
             this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
                               RETURNS bigint AS
@@ -551,7 +544,7 @@ describe('copy-endpoints', function() {
             global.settings.db_pool_size = 1;
         });
 
-        after('Restore the old quota', function(done) {
+        after('Restore the old quota', function (done) {
             // See the test/support/sql/quota_mock.sql
             this.client.query(`CREATE OR REPLACE FUNCTION CDB_UserDataSize(schema_name TEXT)
                               RETURNS bigint AS
@@ -565,35 +558,35 @@ describe('copy-endpoints', function() {
             global.settings.db_pool_size = this.db_pool_size;
         });
 
-        it('COPY FROM fails with an error if DB quota is exhausted', function(done) {
+        it('COPY FROM fails with an error if DB quota is exhausted', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
-            }, function(err, res) {
+            }, function (err, res) {
                 const response = JSON.parse(res.body);
-                assert.deepEqual(response, { error: ["DB Quota exceeded"] });
+                assert.deepEqual(response, { error: ['DB Quota exceeded'] });
 
                 setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });
         });
 
-        it('COPY TO is not affected by remaining DB quota', function(done) {
+        it('COPY TO is not affected by remaining DB quota', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyto?" + querystring.stringify({
+                url: '/api/v1/sql/copyto?' + querystring.stringify({
                     q: 'COPY copy_endpoints_test TO STDOUT',
                     filename: '/tmp/output.dmp'
                 }),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
-            }, {}, function(err, res) {
+            }, {}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.statusCode === 200);
                 done();
@@ -601,8 +594,8 @@ describe('copy-endpoints', function() {
         });
     });
 
-    describe('COPY FROM max POST size', function() {
-        before('Set a ridiculously small POST size limit', function() {
+    describe('COPY FROM max POST size', function () {
+        before('Set a ridiculously small POST size limit', function () {
             this.previous_max_post_size = global.settings.copy_from_max_post_size;
             this.previous_max_post_size_pretty = global.settings.copy_from_max_post_size_pretty;
             global.settings.copy_from_max_post_size = 10;
@@ -610,27 +603,27 @@ describe('copy-endpoints', function() {
             this.db_pool_size = global.settings.db_pool_size;
             global.settings.db_pool_size = 1;
         });
-        after('Restore the max POST size limit values', function() {
+        after('Restore the max POST size limit values', function () {
             global.settings.copy_from_max_post_size = this.previous_max_post_size;
             global.settings.copy_from_max_post_size_pretty = this.previous_max_post_size_pretty;
             global.settings.db_pool_size = this.db_pool_size;
         });
 
-        it('honors the max POST size limit', function(done) {
+        it('honors the max POST size limit', function (done) {
             assert.response(server, {
-                url: "/api/v1/sql/copyfrom?" + querystring.stringify({
+                url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
                 data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
-                headers: {host: 'vizzuality.cartodb.com'},
+                headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
-            }, function(err, res) {
+            }, function (err, res) {
                 const response = JSON.parse(res.body);
-                assert.deepEqual(response, { error: ["COPY FROM maximum POST size of 10 bytes exceeded"] });
+                assert.deepEqual(response, { error: ['COPY FROM maximum POST size of 10 bytes exceeded'] });
 
                 setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });

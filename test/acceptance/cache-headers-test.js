@@ -41,7 +41,7 @@ describe('cache headers', function () {
             method: 'GET'
         },
         {},
-        function(err, res) {
+        function (err, res) {
             assert.equal(res.headers['cache-control'], `no-cache,max-age=${noTtl},must-revalidate,public`);
 
             assert.response(server, {
@@ -54,10 +54,10 @@ describe('cache headers', function () {
                 },
                 method: 'GET'
             }, {},
-            function(err, res) {
+            function (err, res) {
                 const cacheControl = res.headers['cache-control'];
-                const [ , maxAge ] = cacheControl.split(',');
-                const [ , value ] = maxAge.split('=');
+                const [, maxAge] = cacheControl.split(',');
+                const [, value] = maxAge.split('=');
 
                 assert.ok(Number(value) <= fallbackTtl);
 
@@ -71,7 +71,7 @@ describe('cache headers', function () {
                     },
                     method: 'GET'
                 }, {},
-                function(err, res) {
+                function (err, res) {
                     assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
 
                     assert.response(server, {
@@ -84,7 +84,7 @@ describe('cache headers', function () {
                         },
                         method: 'GET'
                     }, {},
-                    function(err, res) {
+                    function (err, res) {
                         assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
                         done();
                     });
@@ -100,7 +100,7 @@ describe('cache headers', function () {
         assert.response(server, {
             url: `/api/v1/sql?${qs.encode({
                 api_key: '1234',
-                q: `select 1`
+                q: 'select 1'
             })}`,
             headers: {
                 host: 'vizzuality.cartodb.com'

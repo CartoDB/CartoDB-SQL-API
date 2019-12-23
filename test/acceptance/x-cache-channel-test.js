@@ -7,9 +7,8 @@ var assert = require('../support/assert');
 var querystring = require('querystring');
 var _ = require('underscore');
 
-describe('X-Cache-Channel header', function() {
-
-    function createGetRequest(sqlQuery) {
+describe('X-Cache-Channel header', function () {
+    function createGetRequest (sqlQuery) {
         var query = querystring.stringify({
             q: sqlQuery,
             api_key: 1234
@@ -27,7 +26,7 @@ describe('X-Cache-Channel header', function() {
         statusCode: 200
     };
 
-    function xCacheChannelHeaderHasTables(xCacheChannel, expectedTablesNames) {
+    function xCacheChannelHeaderHasTables (xCacheChannel, expectedTablesNames) {
         var databaseAndTables = xCacheChannel.split(':');
         var databaseName = databaseAndTables[0];
 
@@ -40,16 +39,16 @@ describe('X-Cache-Channel header', function() {
         assert.equal(tablesDiff.length, 0, 'X-Cache-Channel header missing tables: ' + tablesDiff.join(','));
     }
 
-    function tableNamesInCacheChannelHeader(expectedTableNames, done) {
-        return function(err, res) {
+    function tableNamesInCacheChannelHeader (expectedTableNames, done) {
+        return function (err, res) {
             xCacheChannelHeaderHasTables(res.headers['x-cache-channel'], expectedTableNames);
             done();
         };
     }
 
-    it('supports joins', function(done) {
-        var sql = "SELECT a.name as an, b.name as bn FROM untitle_table_4 a " +
-            "left join private_table b ON (a.cartodb_id = b.cartodb_id)";
+    it('supports joins', function (done) {
+        var sql = 'SELECT a.name as an, b.name as bn FROM untitle_table_4 a ' +
+            'left join private_table b ON (a.cartodb_id = b.cartodb_id)';
 
         assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
@@ -57,8 +56,8 @@ describe('X-Cache-Channel header', function() {
         ], done));
     });
 
-    it('supports multistatements', function(done) {
-        var sql = "SELECT * FROM untitle_table_4; SELECT * FROM private_table";
+    it('supports multistatements', function (done) {
+        var sql = 'SELECT * FROM untitle_table_4; SELECT * FROM private_table';
 
         assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
@@ -66,8 +65,8 @@ describe('X-Cache-Channel header', function() {
         ], done));
     });
 
-    it('supports explicit transactions', function(done) {
-        var sql =  "BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;";
+    it('supports explicit transactions', function (done) {
+        var sql = 'BEGIN; SELECT * FROM untitle_table_4; COMMIT; BEGIN; SELECT * FROM private_table; COMMIT;';
 
         assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.private_table',
@@ -75,38 +74,35 @@ describe('X-Cache-Channel header', function() {
         ], done));
     });
 
-    it('survives partial transactions', function(done) {
-        var sql = "BEGIN; SELECT * FROM untitle_table_4";
+    it('survives partial transactions', function (done) {
+        var sql = 'BEGIN; SELECT * FROM untitle_table_4';
 
         assert.response(server, createGetRequest(sql), RESPONSE_OK, tableNamesInCacheChannelHeader([
             'public.untitle_table_4'
         ], done));
     });
 
-    it('should not add header for functions', function(done) {
+    it('should not add header for functions', function (done) {
         var sql = "SELECT format('%s', 'wadus')";
-        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });
 
-    it('should not add header for CDB_QueryTables', function(done) {
+    it('should not add header for CDB_QueryTables', function (done) {
         var sql = "SELECT CDB_QueryTablesText('select * from untitle_table_4')";
-        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });
 
-    it('should not add header for non table results', function(done) {
+    it('should not add header for non table results', function (done) {
         var sql = "SELECT 'wadus'::text";
-        assert.response(server, createGetRequest(sql), RESPONSE_OK, function(err, res) {
+        assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
             assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });
-
-
-
 });

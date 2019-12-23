@@ -10,53 +10,53 @@ describe('query info', function () {
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)",
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT  CSV, DELIMITER ',', HEADER true)",
                 "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV , DELIMITER ',', HEADER true)",
-                "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV)",
-                "COPY copy_endpoints_test FROM STDIN WITH(FORMAT csv,HEADER true)"
+                'COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV)',
+                'COPY copy_endpoints_test FROM STDIN WITH(FORMAT csv,HEADER true)'
             ];
 
             validQueries.forEach(query => {
-                it(query, function() {
+                it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
                     assert.equal(result, 'CSV');
                 });
             });
         });
 
-        describe('text', function() {
+        describe('text', function () {
             const validQueries = [
-                "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT TEXT)",
-                "COPY copy_endpoints_test (id, name) FROM STDIN",
+                'COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT TEXT)',
+                'COPY copy_endpoints_test (id, name) FROM STDIN'
             ];
 
             validQueries.forEach(query => {
-                it(query, function() {
+                it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
                     assert.equal(result, 'TEXT');
                 });
             });
         });
 
-        describe('binary', function() {
+        describe('binary', function () {
             const validQueries = [
-                "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT BINARY)",
+                'COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT BINARY)'
             ];
 
             validQueries.forEach(query => {
-                it(query, function() {
+                it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
                     assert.equal(result, 'BINARY');
                 });
             });
         });
 
-        describe('should fail', function() {
+        describe('should fail', function () {
             const validQueries = [
-                "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT ERROR)",
-                "SELECT * from copy_endpoints_test"
+                'COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT ERROR)',
+                'SELECT * from copy_endpoints_test'
             ];
 
             validQueries.forEach(query => {
-                it(query, function() {
+                it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
                     assert.strictEqual(result, false);
                 });

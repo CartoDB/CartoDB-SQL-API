@@ -5,7 +5,7 @@ const errorHandlerFactory = require('../../lib/services/error-handler-factory');
 const ErrorHandler = require('../../lib/services/error-handler');
 const { codeToCondition } = require('../../lib/postgresql/error-codes');
 
-let rateLimitError = new Error(
+const rateLimitError = new Error(
     'You are over platform\'s limits. Please contact us to know more details'
 );
 rateLimitError.http_status = 429;
@@ -40,7 +40,7 @@ describe('error-handler-factory', function () {
         });
     });
 
-    it('timeout error', function() {
+    it('timeout error', function () {
         const error = new Error('statement timeout');
         const errorHandler = errorHandlerFactory(error);
         const expectedError = new ErrorHandler({
@@ -54,7 +54,7 @@ describe('error-handler-factory', function () {
         assert.deepEqual(errorHandler, expectedError);
     });
 
-    it('permission denied error', function() {
+    it('permission denied error', function () {
         const error = new Error('permission denied');
         const errorHandler = errorHandlerFactory(error);
         const expectedError = new ErrorHandler({

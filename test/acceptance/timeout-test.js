@@ -16,40 +16,37 @@
  */
 require('../helper');
 
-
 var assert = require('../support/assert');
 var step = require('step');
 
-describe('timeout', function() {
-
+describe('timeout', function () {
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/128
-it('after configured milliseconds', function(done){
-  var testTimeout = 10;
-//console.log("settings:"); console.dir(global.settings);
-  var timeoutBackup = global.settings.node_socket_timeout;
-  global.settings.node_socket_timeout = testTimeout;
-  var server = require('../../lib/server')();
-  step(
-    function sendLongQuery() {
-      assert.response(server, {
-          url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
-          method: 'GET',
-          headers: {host: 'vizzuality.localhost' }
-      },{}, this);
-    },
-    function checkResponse(err/*, res*/) {
-      assert.ok(err);
-      assert.ok(err.message.match(/hang up/), err);
-      return null;
-    },
-    function finish(err) {
-      global.settings.node_socket_timeout = timeoutBackup;
-      done(err);
-    }
-  );
-});
+    it('after configured milliseconds', function (done) {
+        var testTimeout = 10;
+        // console.log("settings:"); console.dir(global.settings);
+        var timeoutBackup = global.settings.node_socket_timeout;
+        global.settings.node_socket_timeout = testTimeout;
+        var server = require('../../lib/server')();
+        step(
+            function sendLongQuery () {
+                assert.response(server, {
+                    url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
+                    method: 'GET',
+                    headers: { host: 'vizzuality.localhost' }
+                }, {}, this);
+            },
+            function checkResponse (err/*, res */) {
+                assert.ok(err);
+                assert.ok(err.message.match(/hang up/), err);
+                return null;
+            },
+            function finish (err) {
+                global.settings.node_socket_timeout = timeoutBackup;
+                done(err);
+            }
+        );
+    });
 
-// TODO: check that the query is interrupted on timeout!
-//See #129
-
+    // TODO: check that the query is interrupted on timeout!
+    // See #129
 });

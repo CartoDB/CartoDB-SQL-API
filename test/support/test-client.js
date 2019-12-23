@@ -8,7 +8,7 @@ const step = require('step');
 const PSQL = require('cartodb-psql');
 const _ = require('underscore');
 
-function response(code) {
+function response (code) {
     return {
         status: code
     };
@@ -19,16 +19,14 @@ var RESPONSE = {
     CREATED: response(201)
 };
 
-
-function TestClient(config) {
+function TestClient (config) {
     this.config = config || {};
     this.server = appServer();
 }
 
 module.exports = TestClient;
 
-
-TestClient.prototype.getResult = function(query, override, callback) {
+TestClient.prototype.getResult = function (query, override, callback) {
     if (!callback) {
         callback = override;
         override = {};
@@ -66,7 +64,7 @@ TestClient.prototype.getResult = function(query, override, callback) {
     );
 };
 
-TestClient.prototype.getHost = function(override) {
+TestClient.prototype.getHost = function (override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
@@ -78,15 +76,15 @@ TestClient.prototype.getAuthorization = function (override) {
     }
 };
 
-TestClient.prototype.getContentType = function(override) {
+TestClient.prototype.getContentType = function (override) {
     return override['Content-Type'] || this.config['Content-Type'] || 'application/json';
 };
 
 TestClient.prototype.getParser = function (override) {
-    return override.parser || this.config.parser || JSON.stringify
-}
+    return override.parser || this.config.parser || JSON.stringify;
+};
 
-TestClient.prototype.getUrl = function(override) {
+TestClient.prototype.getUrl = function (override) {
     if (override.anonymous) {
         return '/api/v1/sql?';
     }
@@ -119,8 +117,8 @@ TestClient.prototype.setUserRenderTimeoutLimit = function (user, userTimeoutLimi
 
 TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit, callback) {
     const dbname = _.template(global.settings.db_base_name, { user_id: 1 });
-    const dbuser = _.template(global.settings.db_user, { user_id: 1 })
-    const pass = _.template(global.settings.db_user_pass, { user_id: 1 })
+    const dbuser = _.template(global.settings.db_user, { user_id: 1 });
+    const pass = _.template(global.settings.db_user_pass, { user_id: 1 });
     const publicuser = global.settings.db_pubuser;
 
     const psql = new PSQL({

@@ -19,7 +19,7 @@ var PSQL = require('cartodb-psql');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var logger = new BatchLogger(null, 'batch-queries');
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 var jobCanceller = new JobCanceller();
 
@@ -33,17 +33,17 @@ var JOB = {
     dbname: 'cartodb_test_user_1_db',
     dbuser: 'test_cartodb_user_1',
     port: 5432,
-    pass: 'test_cartodb_user_1_pass',
+    pass: 'test_cartodb_user_1_pass'
 
 };
 
-function createWadusDataJob() {
+function createWadusDataJob () {
     return JSON.parse(JSON.stringify(JOB));
 }
 
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
-function runQueryHelper(job, callback) {
+function runQueryHelper (job, callback) {
     var job_id = job.job_id;
     var sql = job.query;
 
@@ -59,7 +59,7 @@ function runQueryHelper(job, callback) {
             port: job.port,
             dbname: job.dbname,
             user: job.dbuser,
-            pass: job.pass,
+            pass: job.pass
         };
 
         var pg = new PSQL(dbConfiguration);
@@ -76,7 +76,7 @@ function runQueryHelper(job, callback) {
     });
 }
 
-describe('job service', function() {
+describe('job service', function () {
     var jobService = new JobService(jobBackend, jobCanceller);
 
     after(function (done) {
@@ -203,5 +203,4 @@ describe('job service', function() {
             done();
         });
     });
-
 });

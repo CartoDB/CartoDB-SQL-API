@@ -8,8 +8,8 @@ const request = require('request');
 const assert = require('assert');
 const { Readable } = require('stream');
 
-const createTableQuery = `CREATE TABLE copy_from_throttle AS (SELECT 0::text AS counter)`;
-const dropTableQuery = `DROP TABLE copy_from_throttle`;
+const createTableQuery = 'CREATE TABLE copy_from_throttle AS (SELECT 0::text AS counter)';
+const dropTableQuery = 'DROP TABLE copy_from_throttle';
 
 function * counterGenerator (timeout, max_count) {
     let counter = 0;
@@ -22,7 +22,7 @@ function * counterGenerator (timeout, max_count) {
 }
 
 class CounterStream extends Readable {
-    constructor(generator, ...args) {
+    constructor (generator, ...args) {
         super(...args);
         this.generator = generator;
     }
@@ -36,16 +36,15 @@ class CounterStream extends Readable {
 }
 
 describe('COPY FROM throttle', function () {
-    before(function() {
+    before(function () {
         this.copy_from_minimum_input_speed = global.settings.copy_from_minimum_input_speed;
         global.settings.copy_from_minimum_input_speed = 2;
 
         this.copy_from_maximum_slow_input_speed_interval = global.settings.copy_from_maximum_slow_input_speed_interval;
         global.settings.copy_from_maximum_slow_input_speed_interval = 1;
-
     });
 
-    after(function() {
+    after(function () {
         global.settings.copy_from_first_chunk_timeout = this.copy_from_first_chunk_timeout;
         global.settings.copy_from_maximum_slow_input_speed_interval = this.copy_from_maximum_slow_input_speed_interval;
     });
@@ -68,7 +67,7 @@ describe('COPY FROM throttle', function () {
     beforeEach(function (done) {
         const { host, port } = this;
 
-        const createTable = querystring.stringify({ q: createTableQuery, api_key: 1234});
+        const createTable = querystring.stringify({ q: createTableQuery, api_key: 1234 });
 
         const createTableOptions = {
             url: `http://${host}:${port}/api/v1/sql?${createTable}`,
@@ -133,7 +132,7 @@ describe('COPY FROM throttle', function () {
 
             assert.equal(res.statusCode, 400);
             body = JSON.parse(body);
-            assert.deepEqual(body, { error: ["Connection closed by server: input data too slow"] });
+            assert.deepEqual(body, { error: ['Connection closed by server: input data too slow'] });
 
             done();
         });

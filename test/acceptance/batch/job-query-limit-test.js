@@ -21,10 +21,10 @@ var server = require('../../../lib/server')();
 var assert = require('../../support/assert');
 var querystring = require('qs');
 
-function payload(query) {
-    return JSON.stringify({query: query});
+function payload (query) {
+    return JSON.stringify({ query: query });
 }
-function payloadSize(query) {
+function payloadSize (query) {
     return payload(query).length;
 }
 
@@ -32,9 +32,8 @@ var minPayloadSize = payloadSize('');
 var queryMaxSize = new Array(JobController.MAX_LIMIT_QUERY_SIZE_IN_BYTES - minPayloadSize + 1).join('a');
 var queryTooLong = queryMaxSize.concat('a');
 
-describe('job query limit', function() {
-
-    function expectedErrorMessage(query) {
+describe('job query limit', function () {
+    function expectedErrorMessage (query) {
         return JobController.getMaxSizeErrorMessage(payload(query));
     }
 
@@ -42,11 +41,10 @@ describe('job query limit', function() {
         redisUtils.clean('batch:*', done);
     });
 
-    it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done){
-
+    it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done) {
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
                 query: queryTooLong
@@ -60,11 +58,10 @@ describe('job query limit', function() {
         });
     });
 
-    it('POST /api/v2/sql/job with a valid query size should respond with 201 created', function (done){
-
+    it('POST /api/v2/sql/job with a valid query size should respond with 201 created', function (done) {
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
                 query: queryMaxSize
@@ -78,11 +75,11 @@ describe('job query limit', function() {
         });
     });
 
-    it('POST /api/v2/sql/job with a invalid query size should consider multiple queries', function (done){
+    it('POST /api/v2/sql/job with a invalid query size should consider multiple queries', function (done) {
         var queries = [queryTooLong, 'select 1'];
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
                 query: queries
@@ -96,19 +93,19 @@ describe('job query limit', function() {
         });
     });
 
-    it('POST /api/v2/sql/job with a invalid query size should consider fallback queries/callbacks', function (done){
+    it('POST /api/v2/sql/job with a invalid query size should consider fallback queries/callbacks', function (done) {
         var fallbackQueries = {
             query: [{
                 query: queryTooLong,
-                onsuccess: "SELECT * FROM untitle_table_4 limit 1"
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 1'
             }, {
-                query: "SELECT * FROM untitle_table_4 limit 2",
-                onsuccess: "SELECT * FROM untitle_table_4 limit 3"
+                query: 'SELECT * FROM untitle_table_4 limit 2',
+                onsuccess: 'SELECT * FROM untitle_table_4 limit 3'
             }]
         };
         assert.response(server, {
             url: '/api/v2/sql/job?api_key=1234',
-            headers: { 'host': 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST',
             data: querystring.stringify({
                 query: fallbackQueries
@@ -121,5 +118,4 @@ describe('job query limit', function() {
             done();
         });
     });
-
 });

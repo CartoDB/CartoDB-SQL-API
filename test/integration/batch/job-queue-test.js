@@ -18,7 +18,7 @@ describe('job queue', function () {
     var pool = redisUtils.getPool();
     var logger = new BatchLogger(null, 'batch-queries');
     var jobPublisher = new JobPublisher(pool);
-    var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
     var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller, logger);
@@ -37,7 +37,7 @@ describe('job queue', function () {
     it('should find queues for one user', function (done) {
         var self = this;
 
-        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
+        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function (err) {
             if (err) {
                 return done(err);
             }
@@ -54,11 +54,11 @@ describe('job queue', function () {
     it('should find queues for more than one user', function (done) {
         var self = this;
 
-        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
+        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function (err) {
             if (err) {
                 return done(err);
             }
-            self.jobQueue.enqueue(userB, 'wadus-wadus-wadus-wadus', function(err) {
+            self.jobQueue.enqueue(userB, 'wadus-wadus-wadus-wadus', function (err) {
                 if (err) {
                     return done(err);
                 }
@@ -75,7 +75,7 @@ describe('job queue', function () {
         });
     });
 
-    it('should find queues from jobs not using new Redis SETs for users', function(done) {
+    it('should find queues from jobs not using new Redis SETs for users', function (done) {
         var self = this;
         var redisArgs = [JobQueue.QUEUE.PREFIX + userA, 'wadus-id'];
         metadataBackend.redisCmd(JobQueue.QUEUE.DB, 'LPUSH', redisArgs, function (err) {
@@ -123,7 +123,6 @@ describe('job queue', function () {
 
                     redisUtils.clean('batch:*', done);
                 });
-
             });
         });
     });
@@ -173,7 +172,6 @@ describe('job queue', function () {
 
                         redisUtils.clean('batch:*', done);
                     });
-
                 });
             });
         });
