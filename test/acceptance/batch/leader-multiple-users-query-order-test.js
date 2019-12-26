@@ -82,6 +82,7 @@ describe('multiple batch clients and users, job query order', function () {
                                 return done(err);
                             }
                             jobResultB1.getStatus(function (err, jobB1) {
+                                assert.ifError(err);
                                 assert.strictEqual(jobA1.status, JobStatus.DONE);
                                 assert.strictEqual(jobA2.status, JobStatus.DONE);
                                 assert.strictEqual(jobB1.status, JobStatus.DONE);

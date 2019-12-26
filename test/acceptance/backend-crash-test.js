@@ -6,24 +6,24 @@ var assert = require('../support/assert');
 var step = require('step');
 var net = require('net');
 
-var sql_server_port = 5540;
-var sql_server = net.createServer(function (c) {
+var sqlServerPort = 5540;
+var sqlServer = net.createServer(function (c) {
     c.destroy();
-    sql_server.close(function () {
+    sqlServer.close(function () {
     });
 });
 
 describe('backend crash', function () {
     before(function (done) {
-        sql_server.listen(sql_server_port, done);
+        sqlServer.listen(sqlServerPort, done);
     });
 
     // See https://github.com/CartoDB/CartoDB-SQL-API/issues/135
     it('does not hang server', function (done) {
-        var db_host_backup = global.settings.db_host;
-        var db_port_backup = global.settings.db_port;
+        var dbHostBackup = global.settings.db_host;
+        var dbPortBackup = global.settings.db_port;
         global.settings.db_host = 'localhost';
-        global.settings.db_port = sql_server_port;
+        global.settings.db_port = sqlServerPort;
         var server = require('../../lib/server')();
         step(
             function sendQuery () {
@@ -59,17 +59,17 @@ describe('backend crash', function () {
                 return null;
             },
             function finish (err) {
-                global.settings.db_host = db_host_backup;
-                global.settings.db_port = db_port_backup;
+                global.settings.db_host = dbHostBackup;
+                global.settings.db_port = dbPortBackup;
                 done(err);
             }
         );
     });
 
     after(function (done) {
-        // be sure the sql_server is closed
-        if (sql_server.listening) {
-            return sql_server.close(done);
+        // be sure the sqlServer is closed
+        if (sqlServer.listening) {
+            return sqlServer.close(done);
         }
 
         done();

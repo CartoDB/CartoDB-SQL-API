@@ -6,6 +6,7 @@ const fs = require('fs');
 const querystring = require('querystring');
 const assert = require('../support/assert');
 const os = require('os');
+const path = require('path');
 const { Client } = require('pg');
 const request = require('request');
 
@@ -66,7 +67,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {}, function (err, res) {
@@ -83,7 +84,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY unexisting_table (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {}, function (err, res) {
@@ -91,7 +92,7 @@ describe('copy-endpoints', function () {
                 assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
-                        error: ['relation \"unexisting_table\" does not exist']
+                        error: ['relation "unexisting_table" does not exist']
                     }
                 );
                 done();
@@ -120,7 +121,7 @@ describe('copy-endpoints', function () {
         it('should fail with copyfrom endpoint and without q', function (done) {
             assert.response(server, {
                 url: '/api/v1/sql/copyfrom',
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {}, function (err, res) {
@@ -140,7 +141,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {}, function (err) {
@@ -171,7 +172,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: {
                     host: 'vizzuality.cartodb.com'
                 },
@@ -227,7 +228,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv.gz'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv.gz')),
                 headers: {
                     host: 'vizzuality.cartodb.com',
                     'content-encoding': 'gzip'
@@ -247,7 +248,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: {
                     host: 'vizzuality.cartodb.com',
                     'content-encoding': 'gzip'
@@ -282,7 +283,7 @@ describe('copy-endpoints', function () {
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             },
@@ -345,7 +346,7 @@ describe('copy-endpoints', function () {
                             q: `COPY copy_endpoints_test (id, name)
                                 FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                         }),
-                        data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                        data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                         headers: { host: 'vizzuality.cartodb.com' },
                         method: 'POST'
                     }, {}, function (err, res) {
@@ -384,7 +385,7 @@ describe('copy-endpoints', function () {
                 url: '/api/v1/sql/copyfrom?' + querystring.stringify({
                     q: "COPY copy_endpoints_test (id, name) FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)"
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {}, function (err) {
@@ -462,7 +463,7 @@ describe('copy-endpoints', function () {
                     url: `http://${address}:${port}/api/v1/sql/copyfrom?${query}`,
                     headers: { host: 'vizzuality.cartodb.com' },
                     method: 'POST',
-                    data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv')
+                    data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv'))
                 };
 
                 const req = request(options);
@@ -498,7 +499,7 @@ describe('copy-endpoints', function () {
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
@@ -564,13 +565,14 @@ describe('copy-endpoints', function () {
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             }, function (err, res) {
+                assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.deepStrictEqual(response, { error: ['DB Quota exceeded'] });
 
@@ -615,13 +617,14 @@ describe('copy-endpoints', function () {
                     q: `COPY copy_endpoints_test (id, name)
                     FROM STDIN WITH (FORMAT CSV, DELIMITER ',', HEADER true)`
                 }),
-                data: fs.createReadStream(__dirname + '/../support/csv/copy_test_table.csv'),
+                data: fs.createReadStream(path.join(__dirname, '/../support/csv/copy_test_table.csv')),
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'POST'
             }, {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             }, function (err, res) {
+                assert.ifError(err);
                 const response = JSON.parse(res.body);
                 assert.deepStrictEqual(response, { error: ['COPY FROM maximum POST size of 10 bytes exceeded'] });
 

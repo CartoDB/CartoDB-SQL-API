@@ -33,6 +33,7 @@ describe('Use cases', function () {
                 assert.strictEqual(job.status, JobStatus.DONE);
 
                 jobResult.tryCancel(function (err, body) {
+                    assert.ifError(err);
                     assert.strictEqual(body.error[0], 'Cannot set status from done to cancelled');
                     done();
                 });
@@ -65,6 +66,7 @@ describe('Use cases', function () {
                     assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
+                        assert.ifError(err);
                         assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
@@ -179,6 +181,7 @@ describe('Use cases', function () {
                     assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
+                        assert.ifError(err);
                         assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
