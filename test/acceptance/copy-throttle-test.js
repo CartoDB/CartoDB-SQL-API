@@ -80,7 +80,7 @@ describe('COPY FROM throttle', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });
@@ -130,9 +130,9 @@ describe('COPY FROM throttle', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 400);
+            assert.strictEqual(res.statusCode, 400);
             body = JSON.parse(body);
-            assert.deepEqual(body, { error: ['Connection closed by server: input data too slow'] });
+            assert.deepStrictEqual(body, { error: ['Connection closed by server: input data too slow'] });
 
             done();
         });
@@ -157,7 +157,7 @@ describe('COPY FROM throttle', function () {
             if (err) {
                 return done(err);
             }
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });

@@ -72,7 +72,7 @@ describe('copy-endpoints', function () {
             }, {}, function (err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
-                assert.equal(!!response.time, true);
+                assert.strictEqual(!!response.time, true);
                 assert.strictEqual(response.total_rows, 2016);
                 done();
             });
@@ -88,7 +88,7 @@ describe('copy-endpoints', function () {
                 method: 'POST'
             }, {}, function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(
+                assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
                         error: ['relation \"unexisting_table\" does not exist']
@@ -107,7 +107,7 @@ describe('copy-endpoints', function () {
                 method: 'POST'
             }, {}, function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(
+                assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
                         error: ['No rows copied']
@@ -125,7 +125,7 @@ describe('copy-endpoints', function () {
                 method: 'POST'
             }, {}, function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(
+                assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
                         error: ['SQL is missing']
@@ -158,8 +158,8 @@ describe('copy-endpoints', function () {
                     const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
                     assert.ok(res.body.match(regex));
 
-                    assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
-                    assert.equal(res.headers['content-type'], 'application/octet-stream');
+                    assert.strictEqual(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
+                    assert.strictEqual(res.headers['content-type'], 'application/octet-stream');
 
                     done();
                 });
@@ -195,8 +195,8 @@ describe('copy-endpoints', function () {
                     const regex = /11\tPaul\t10\n12\tPeter\t10\n13\tMatthew\t10\n14\t\\N\t10\n15\tJames\t10\n16\t*/g;
                     assert.ok(res.body.match(regex));
 
-                    assert.equal(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
-                    assert.equal(res.headers['content-type'], 'application/octet-stream');
+                    assert.strictEqual(res.headers['content-disposition'], 'attachment; filename=%2Ftmp%2Foutput.dmp');
+                    assert.strictEqual(res.headers['content-type'], 'application/octet-stream');
 
                     done();
                 });
@@ -212,7 +212,7 @@ describe('copy-endpoints', function () {
                 method: 'GET'
             }, {}, function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(
+                assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
                         error: ['SQL is missing']
@@ -236,7 +236,7 @@ describe('copy-endpoints', function () {
             }, {}, function (err, res) {
                 assert.ifError(err);
                 const response = JSON.parse(res.body);
-                assert.equal(!!response.time, true);
+                assert.strictEqual(!!response.time, true);
                 assert.strictEqual(response.total_rows, 6);
                 done();
             });
@@ -255,7 +255,7 @@ describe('copy-endpoints', function () {
                 method: 'POST'
             }, {}, function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(
+                assert.deepStrictEqual(
                     JSON.parse(res.body),
                     {
                         error: ['Error while gunzipping: incorrect header check']
@@ -292,7 +292,7 @@ describe('copy-endpoints', function () {
             },
             function (err, res) {
                 assert.ifError(err);
-                assert.deepEqual(JSON.parse(res.body), {
+                assert.deepStrictEqual(JSON.parse(res.body), {
                     error: [
                         'You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.'
@@ -321,7 +321,7 @@ describe('copy-endpoints', function () {
                     detail: 'datasource'
                 };
                 const expectedError = res.body.substring(res.body.length - JSON.stringify(error).length);
-                assert.deepEqual(JSON.parse(expectedError), error);
+                assert.deepStrictEqual(JSON.parse(expectedError), error);
                 done();
             });
         });
@@ -572,7 +572,7 @@ describe('copy-endpoints', function () {
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             }, function (err, res) {
                 const response = JSON.parse(res.body);
-                assert.deepEqual(response, { error: ['DB Quota exceeded'] });
+                assert.deepStrictEqual(response, { error: ['DB Quota exceeded'] });
 
                 setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });
@@ -623,7 +623,7 @@ describe('copy-endpoints', function () {
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             }, function (err, res) {
                 const response = JSON.parse(res.body);
-                assert.deepEqual(response, { error: ['COPY FROM maximum POST size of 10 bytes exceeded'] });
+                assert.deepStrictEqual(response, { error: ['COPY FROM maximum POST size of 10 bytes exceeded'] });
 
                 setTimeout(() => assertCanReuseCanceledConnection(done), CLIENT_DISCONNECT_TIMEOUT);
             });

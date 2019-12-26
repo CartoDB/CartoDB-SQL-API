@@ -102,7 +102,7 @@ describe('timeout', function () {
                 this.testClient.getResult(scenario.query, override, (err, res) => {
                     assert.ifError(err);
 
-                    assert.deepEqual(res, {
+                    assert.deepStrictEqual(res, {
                         error: [
                             'You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.'
@@ -185,7 +185,7 @@ describe('timeout', function () {
                 this.testClient.getResult(scenario.query, override, (err, res) => {
                     assert.ifError(err);
 
-                    assert.deepEqual(res, {
+                    assert.deepStrictEqual(res, {
                         error: [
                             'You are over platform\'s limits: SQL query timeout error.' +
                             ' Refactor your query before running again or contact CARTO support for more details.'

@@ -25,8 +25,8 @@ describe('job publisher', function () {
             client.subscribe(Channel.NAME);
 
             client.on('message', function (channel, host) {
-                assert.equal(host, HOST);
-                assert.equal(channel, Channel.NAME);
+                assert.strictEqual(host, HOST);
+                assert.strictEqual(channel, Channel.NAME);
                 client.unsubscribe(Channel.NAME);
                 done();
             });

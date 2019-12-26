@@ -66,14 +66,14 @@ describe('batch module', function () {
                     if (err) {
                         done(err);
                     }
-                    assert.equal(job.status, 'running');
+                    assert.strictEqual(job.status, 'running');
 
                     self.batch.drain(function () {
                         jobBackend.get(job.job_id, function (err, job) {
                             if (err) {
                                 done(err);
                             }
-                            assert.equal(job.status, 'pending');
+                            assert.strictEqual(job.status, 'pending');
                             done();
                         });
                     });

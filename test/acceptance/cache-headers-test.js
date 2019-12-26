@@ -18,7 +18,7 @@ describe('cache headers', function () {
         },
         {},
         function (err, res) {
-            assert.equal(res.headers.vary, 'Authorization');
+            assert.strictEqual(res.headers.vary, 'Authorization');
             done();
         });
     });
@@ -42,7 +42,7 @@ describe('cache headers', function () {
         },
         {},
         function (err, res) {
-            assert.equal(res.headers['cache-control'], `no-cache,max-age=${noTtl},must-revalidate,public`);
+            assert.strictEqual(res.headers['cache-control'], `no-cache,max-age=${noTtl},must-revalidate,public`);
 
             assert.response(server, {
                 url: `/api/v1/sql?${qs.encode({
@@ -72,7 +72,7 @@ describe('cache headers', function () {
                     method: 'GET'
                 }, {},
                 function (err, res) {
-                    assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
+                    assert.strictEqual(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
 
                     assert.response(server, {
                         url: `/api/v1/sql?${qs.encode({
@@ -85,7 +85,7 @@ describe('cache headers', function () {
                         method: 'GET'
                     }, {},
                     function (err, res) {
-                        assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
+                        assert.strictEqual(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
                         done();
                     });
                 });
@@ -109,7 +109,7 @@ describe('cache headers', function () {
         },
         {},
         function (err, res) {
-            assert.equal(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
+            assert.strictEqual(res.headers['cache-control'], `no-cache,max-age=${ttl},must-revalidate,public`);
             done();
         });
     });

@@ -35,7 +35,7 @@ describe('backend crash', function () {
             },
             function checkResponse (err, res) {
                 assert.ifError(err);
-                assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
+                assert.strictEqual(res.statusCode, 500, res.statusCode + ': ' + res.body);
                 var parsed = JSON.parse(res.body);
                 assert.ok(parsed.error);
                 var msg = parsed.error[0];
@@ -51,7 +51,7 @@ describe('backend crash', function () {
             },
             function checkResponse (err, res) {
                 assert.ifError(err);
-                assert.equal(res.statusCode, 500, res.statusCode + ': ' + res.body);
+                assert.strictEqual(res.statusCode, 500, res.statusCode + ': ' + res.body);
                 var parsed = JSON.parse(res.body);
                 assert.ok(parsed.error);
                 var msg = parsed.error[0];

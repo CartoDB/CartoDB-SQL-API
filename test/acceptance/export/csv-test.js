@@ -17,19 +17,19 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
+            assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.csv/gi.test(cd));
             var ct = res.headers['content-type'];
-            assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+            assert.strictEqual(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
 
             var rows = res.body.split(/\r\n/);
             var row0 = rows[0].split(',');
             var row1 = rows[1].split(',');
 
-            assert.equal(row0[2], 'created_at');
-            assert.equal(row1[2], '2011-09-21 14:02:21.314252');
+            assert.strictEqual(row0[2], 'created_at');
+            assert.strictEqual(row1[2], '2011-09-21 14:02:21.314252');
 
             done();
         });
@@ -57,12 +57,12 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.csv/gi.test(cd));
+            assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.csv/gi.test(cd));
             var ct = res.headers['content-type'];
-            assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+            assert.strictEqual(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
             done();
         });
     });
@@ -73,12 +73,12 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=mycsv.csv/gi.test(cd), cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=mycsv.csv/gi.test(cd), cd);
             var ct = res.headers['content-type'];
-            assert.equal(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
+            assert.strictEqual(true, /header=present/.test(ct), "CSV doesn't advertise header presence: " + ct);
             var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
             var checkFields = { name: true, cartodb_id: true, the_geom: true, the_geom_webmercator: true };
             Object.keys(checkFields).forEach(function (f) {
@@ -100,7 +100,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
             var checkFields = { name: true, cartodb_id: false, the_geom: true, the_geom_webmercator: true };
             Object.keys(checkFields).forEach(function (f) {
@@ -122,7 +122,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body.match(/cartodb_id,geom\r\n.?1.?,"SRID=4326;POINT(.*)"\r\n/));
             done();
         });
@@ -135,7 +135,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var obtained_lines = res.body.split('\r\n');
             assert.ok(obtained_lines.length <= 2, // may or may not have an header
                 // See http://trac.osgeo.org/gdal/ticket/5234
@@ -150,7 +150,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body.match(/cartodb_id,address\r\n.?1.?,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n/));
             done();
         });
@@ -196,7 +196,7 @@ describe('export.csv', function () {
         },
         function (err, res) {
             var headersPlusExtraLine = 2;
-            assert.equal(res.body.split('\n').length, limit + headersPlusExtraLine);
+            assert.strictEqual(res.body.split('\n').length, limit + headersPlusExtraLine);
             done();
         }
         );

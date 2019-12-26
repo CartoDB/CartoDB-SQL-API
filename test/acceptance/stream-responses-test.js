@@ -37,8 +37,8 @@ describe('stream-responses', function () {
                 okResponse,
                 function (err, res) {
                     var parsedBody = JSON.parse(res.body);
-                    assert.equal(parsedBody.rows.length, 2);
-                    assert.deepEqual(parsedBody.error, ['division by zero']);
+                    assert.strictEqual(parsedBody.rows.length, 2);
+                    assert.deepStrictEqual(parsedBody.error, ['division by zero']);
                     done();
                 }
             );
@@ -53,8 +53,8 @@ describe('stream-responses', function () {
                 okResponse,
                 function (err, res) {
                     var parsedBody = JSON.parse(res.body);
-                    assert.equal(parsedBody.features.length, 2);
-                    assert.deepEqual(parsedBody.error, ['division by zero']);
+                    assert.strictEqual(parsedBody.features.length, 2);
+                    assert.deepStrictEqual(parsedBody.error, ['division by zero']);
                     done();
                 }
             );

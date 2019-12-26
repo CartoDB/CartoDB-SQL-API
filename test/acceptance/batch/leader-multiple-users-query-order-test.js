@@ -82,9 +82,9 @@ describe('multiple batch clients and users, job query order', function () {
                                 return done(err);
                             }
                             jobResultB1.getStatus(function (err, jobB1) {
-                                assert.equal(jobA1.status, JobStatus.DONE);
-                                assert.equal(jobA2.status, JobStatus.DONE);
-                                assert.equal(jobB1.status, JobStatus.DONE);
+                                assert.strictEqual(jobA1.status, JobStatus.DONE);
+                                assert.strictEqual(jobA2.status, JobStatus.DONE);
+                                assert.strictEqual(jobB1.status, JobStatus.DONE);
 
                                 assert.ok(
                                     new Date(jobA1.updated_at).getTime() < new Date(jobA2.updated_at).getTime(),
@@ -104,14 +104,14 @@ describe('multiple batch clients and users, job query order', function () {
 
                                     // cartodb250user and vizzuality test users share database
                                     var expectedRows = [1, 2, 3].map(statusMapper);
-                                    assert.deepEqual(rows, expectedRows);
+                                    assert.deepStrictEqual(rows, expectedRows);
 
                                     var query = 'select * from ordered_inserts_bbbbb';
                                     self.testClient.getResult(query, override, function (err, rows) {
                                         assert.ok(!err);
 
                                         var expectedRows = [1].map(statusMapper);
-                                        assert.deepEqual(rows, expectedRows);
+                                        assert.deepStrictEqual(rows, expectedRows);
 
                                         done();
                                     });

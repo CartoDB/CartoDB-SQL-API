@@ -40,10 +40,10 @@ describe('job module', function () {
             status: 201
         }, function (err, res) {
             job = JSON.parse(res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.ok(job.job_id);
-            assert.equal(job.query, 'SELECT * FROM untitle_table_4');
-            assert.equal(job.user, 'vizzuality');
+            assert.strictEqual(job.query, 'SELECT * FROM untitle_table_4');
+            assert.strictEqual(job.user, 'vizzuality');
             done();
         });
     });
@@ -59,7 +59,7 @@ describe('job module', function () {
                 status: 400
             }, function (err, res) {
                 var error = JSON.parse(res.body);
-                assert.deepEqual(error, { error: ['You must indicate a valid SQL'] });
+                assert.deepStrictEqual(error, { error: ['You must indicate a valid SQL'] });
                 done();
             });
         });
@@ -76,7 +76,7 @@ describe('job module', function () {
             status: 400
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: ['You must indicate a valid SQL'] });
+            assert.deepStrictEqual(error, { error: ['You must indicate a valid SQL'] });
             done();
         });
     });
@@ -93,7 +93,7 @@ describe('job module', function () {
             status: 401
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: ['Unauthorized'] });
+            assert.deepStrictEqual(error, { error: ['Unauthorized'] });
             done();
         });
     });
@@ -110,7 +110,7 @@ describe('job module', function () {
             status: 404
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, {
+            assert.deepStrictEqual(error, {
                 error: [
                     'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'
@@ -129,9 +129,9 @@ describe('job module', function () {
             status: 200
         }, function (err, res) {
             var jobGot = JSON.parse(res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.equal(jobGot.query, 'SELECT * FROM untitle_table_4');
-            assert.equal(jobGot.user, 'vizzuality');
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.strictEqual(jobGot.query, 'SELECT * FROM untitle_table_4');
+            assert.strictEqual(jobGot.user, 'vizzuality');
             done();
         });
     });
@@ -145,7 +145,7 @@ describe('job module', function () {
             status: 401
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: ['Unauthorized'] });
+            assert.deepStrictEqual(error, { error: ['Unauthorized'] });
             done();
         });
     });
@@ -159,7 +159,7 @@ describe('job module', function () {
             status: 400
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, {
+            assert.deepStrictEqual(error, {
                 error: ['Job with id irrelevantJob not found']
             });
             done();
@@ -175,11 +175,11 @@ describe('job module', function () {
             status: 200
         }, function (err, res) {
             var jobCancelled = JSON.parse(res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.equal(jobCancelled.job_id, job.job_id);
-            assert.equal(jobCancelled.query, 'SELECT * FROM untitle_table_4');
-            assert.equal(jobCancelled.user, 'vizzuality');
-            assert.equal(jobCancelled.status, 'cancelled');
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.strictEqual(jobCancelled.job_id, job.job_id);
+            assert.strictEqual(jobCancelled.query, 'SELECT * FROM untitle_table_4');
+            assert.strictEqual(jobCancelled.user, 'vizzuality');
+            assert.strictEqual(jobCancelled.status, 'cancelled');
             done();
         });
     });
@@ -193,7 +193,7 @@ describe('job module', function () {
             status: 401
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, { error: ['Unauthorized'] });
+            assert.deepStrictEqual(error, { error: ['Unauthorized'] });
             done();
         });
     });
@@ -207,7 +207,7 @@ describe('job module', function () {
             status: 404
         }, function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error, {
+            assert.deepStrictEqual(error, {
                 error: [
                     'Sorry, we can\'t find CARTO user \'wrong-host\'. ' +
                     'Please check that you have entered the correct domain.'

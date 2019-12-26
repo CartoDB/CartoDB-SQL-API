@@ -23,7 +23,7 @@ describe('PG field type information', function () {
             function (err, res) {
                 const body = JSON.parse(res.body);
 
-                assert.deepEqual(body.fields, {
+                assert.deepStrictEqual(body.fields, {
                     geography_point_4326: {
                         type: 'geography', wkbtype: 'Point', dims: 2, srid: 4326
                     },

@@ -46,12 +46,12 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
         { status },
         function (err, res) {
             assert.ifError(err);
-            assert.equal(res.headers['carto-rate-limit-limit'], limit);
-            assert.equal(res.headers['carto-rate-limit-remaining'], remaining);
-            assert.equal(res.headers['carto-rate-limit-reset'], reset);
+            assert.strictEqual(res.headers['carto-rate-limit-limit'], limit);
+            assert.strictEqual(res.headers['carto-rate-limit-remaining'], remaining);
+            assert.strictEqual(res.headers['carto-rate-limit-reset'], reset);
 
             if (retry) {
-                assert.equal(res.headers['retry-after'], retry);
+                assert.strictEqual(res.headers['retry-after'], retry);
             }
 
             if (status === 429) {
@@ -61,7 +61,7 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
                     detail: 'rate-limit'
                 };
 
-                assert.deepEqual(JSON.parse(res.body), expectedResponse);
+                assert.deepStrictEqual(JSON.parse(res.body), expectedResponse);
             }
 
             if (done) {
@@ -95,11 +95,11 @@ describe('rate limit', function () {
     });
 
     it('1 req/sec: 2 req/seg should be limited', function (done) {
-        assertRequest(200, 2, 1, 1);
-        setTimeout(() => assertRequest(200, 2, 0, 1, null), 250);
-        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 500);
-        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 750);
-        setTimeout(() => assertRequest(429, 2, 0, 1, 1), 950);
-        setTimeout(() => assertRequest(200, 2, 0, 1, null, done), 1050);
+        assertRequest(200, '2', '1', '1');
+        setTimeout(() => assertRequest(200, '2', '0', '1', null), 250);
+        setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 500);
+        setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 750);
+        setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 950);
+        setTimeout(() => assertRequest(200, '2', '0', '1', null, done), 1050);
     });
 });

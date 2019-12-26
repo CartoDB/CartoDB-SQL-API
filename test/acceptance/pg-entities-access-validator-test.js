@@ -21,7 +21,7 @@ describe('PG entities access validator', function () {
     function assertQuery (query, testClient, done) {
         testClient.getResult(query, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'system tables are forbidden');
+            assert.deepStrictEqual(result.error, ['system tables are forbidden']);
             done();
         });
     }

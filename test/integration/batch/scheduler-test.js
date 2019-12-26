@@ -62,12 +62,12 @@ describe('scheduler', function () {
             scheduler.on('done', function () {
                 var results = taskRunner.results;
 
-                assert.equal(results.length, 4);
+                assert.strictEqual(results.length, 4);
 
-                assert.equal(results[0], USER_A);
-                assert.equal(results[1], USER_B);
-                assert.equal(results[2], USER_A);
-                assert.equal(results[3], USER_B);
+                assert.strictEqual(results[0], USER_A);
+                assert.strictEqual(results[1], USER_B);
+                assert.strictEqual(results[2], USER_A);
+                assert.strictEqual(results[3], USER_B);
 
                 return done();
             });
@@ -86,12 +86,12 @@ describe('scheduler', function () {
 
             scheduler.on('done', function () {
                 debug('Users %j', acquiredUsers);
-                assert.equal(acquiredUsers[0], USER_A);
-                assert.equal(acquiredUsers[1], USER_B);
-                assert.equal(acquiredUsers[2], USER_A);
-                assert.equal(acquiredUsers[3], USER_B);
+                assert.strictEqual(acquiredUsers[0], USER_A);
+                assert.strictEqual(acquiredUsers[1], USER_B);
+                assert.strictEqual(acquiredUsers[2], USER_A);
+                assert.strictEqual(acquiredUsers[3], USER_B);
 
-                assert.equal(acquiredUsers.length, 4);
+                assert.strictEqual(acquiredUsers.length, 4);
 
                 return done();
             });
@@ -128,9 +128,9 @@ describe('scheduler', function () {
             scheduler.on('done', function () {
                 var results = taskRunner.results;
 
-                assert.equal(results.length, 1);
+                assert.strictEqual(results.length, 1);
 
-                assert.equal(results[0], USER_A);
+                assert.strictEqual(results[0], USER_A);
 
                 return done();
             });
@@ -152,11 +152,11 @@ describe('scheduler', function () {
             scheduler.on('done', function () {
                 var results = taskRunner.results;
 
-                assert.equal(results.length, 3);
+                assert.strictEqual(results.length, 3);
 
-                assert.equal(results[0], USER_A);
-                assert.equal(results[1], USER_B);
-                assert.equal(results[2], USER_C);
+                assert.strictEqual(results[0], USER_A);
+                assert.strictEqual(results[1], USER_B);
+                assert.strictEqual(results[2], USER_C);
 
                 return done();
             });
@@ -182,14 +182,14 @@ describe('scheduler', function () {
             scheduler.on('done', function () {
                 var results = taskRunner.results;
 
-                assert.equal(results.length, 6);
+                assert.strictEqual(results.length, 6);
 
-                assert.equal(results[0], USER_A);
-                assert.equal(results[1], USER_B);
-                assert.equal(results[2], USER_C);
-                assert.equal(results[3], USER_A);
-                assert.equal(results[4], USER_B);
-                assert.equal(results[5], USER_A);
+                assert.strictEqual(results[0], USER_A);
+                assert.strictEqual(results[1], USER_B);
+                assert.strictEqual(results[2], USER_C);
+                assert.strictEqual(results[3], USER_A);
+                assert.strictEqual(results[4], USER_B);
+                assert.strictEqual(results[5], USER_A);
 
                 return done();
             });

@@ -25,7 +25,7 @@ describe('locker', function () {
             // others can't lock on same host
             lockerB.lock(host, function (err) {
                 assert.ok(err);
-                assert.equal(err.name, 'LockError');
+                assert.strictEqual(err.name, 'LockError');
 
                 lockerA.unlock(host, function (err) {
                     assert.ok(!err);

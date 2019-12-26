@@ -80,7 +80,7 @@ assert.response = function (server, req, res, callback) {
 
                 // Assert response status
                 if (typeof status === 'number') {
-                    assert.equal(response.statusCode, status,
+                    assert.strictEqual(response.statusCode, status,
                         colorize('[red]{Invalid response status code.}\n' +
                             '     Expected: [green]{' + status + '}\n' +
                             '     Got: [red]{' + response.statusCode + '}\n' +

@@ -70,8 +70,8 @@ describe('basic scheduling', function () {
                         if (err) {
                             return done(err);
                         }
-                        assert.equal(jobA1.status, JobStatus.DONE);
-                        assert.equal(jobA2.status, JobStatus.DONE);
+                        assert.strictEqual(jobA1.status, JobStatus.DONE);
+                        assert.strictEqual(jobA2.status, JobStatus.DONE);
 
                         assert.ok(
                             new Date(jobA1.updated_at).getTime() < new Date(jobA2.updated_at).getTime(),
@@ -86,7 +86,7 @@ describe('basic scheduling', function () {
 
                             // cartodb250user and vizzuality test users share database
                             var expectedRows = [1, 2, 3].map(statusMapper);
-                            assert.deepEqual(rows, expectedRows);
+                            assert.deepStrictEqual(rows, expectedRows);
 
                             return done();
                         });

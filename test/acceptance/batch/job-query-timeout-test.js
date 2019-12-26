@@ -40,7 +40,7 @@ describe('job query timeout', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 done();
             });
         });
@@ -56,7 +56,7 @@ describe('job query timeout', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 done();
             });
         });
@@ -73,7 +73,7 @@ describe('job query timeout', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 done();
             });
         });
@@ -90,7 +90,7 @@ describe('job query timeout', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 done();
             });
         });

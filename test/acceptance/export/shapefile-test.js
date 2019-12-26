@@ -20,10 +20,10 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -47,10 +47,10 @@ describe('export.shapefile', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
             done();
         });
     });
@@ -65,10 +65,10 @@ describe('export.shapefile', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
             assert.ok(res.body.length > 81920, 'SHP smaller than expected: ' + res.body.length);
             done();
         });
@@ -81,10 +81,10 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=myshape.zip/gi.test(cd));
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=myshape.zip/gi.test(cd));
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -107,11 +107,11 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var fname = 'b_______a';
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=b_______a.zip/gi.test(cd), 'Unexpected SHP filename: ' + cd);
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -134,9 +134,9 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -166,7 +166,7 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -193,9 +193,9 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             var parsedBody = JSON.parse(res.body);
             var error = parsedBody.error[0];
             var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
@@ -219,9 +219,9 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             var parsedBody = JSON.parse(res.body);
             var error = parsedBody.error[0];
             var expectedError = /Attempt to write non-point \(LINESTRING\) geometry to point shapefile/g;
@@ -243,7 +243,7 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -263,8 +263,8 @@ describe('export.shapefile', function () {
         var waiting = concurrency;
         function validate (err, res) {
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+            assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -310,9 +310,9 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /filename=cartodb-query.zip/gi.test(cd));
+            assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
             if (writeErr) {
@@ -371,7 +371,7 @@ describe('export.shapefile', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(collection.features.length, limit);
+                assert.strictEqual(collection.features.length, limit);
                 done();
             });
         }
@@ -391,10 +391,10 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 400, res.body);
+            assert.strictEqual(res.statusCode, 400, res.body);
             var parsedBody = JSON.parse(res.body);
             var respBodyPattern = new RegExp('Error executing zip command, {2}Error: spawn(.*)ENOENT', 'i');
-            assert.equal(respBodyPattern.test(parsedBody.error[0]), true);
+            assert.strictEqual(respBodyPattern.test(parsedBody.error[0]), true);
             done();
         });
     });

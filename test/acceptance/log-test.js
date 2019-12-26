@@ -42,7 +42,7 @@ describe('Log middleware', function () {
 
                         assert.ok(res.headers['x-sqlapi-log']);
                         const log = JSON.parse(res.headers['x-sqlapi-log']);
-                        assert.deepEqual(log, {
+                        assert.deepStrictEqual(log, {
                             request: {
                                 sql: {
                                     type: TYPES.QUERY,
@@ -104,7 +104,7 @@ describe('Log middleware', function () {
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
@@ -142,11 +142,14 @@ describe('Log middleware', function () {
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
-                            sql: [QUERY, QUERY]
+                            sql: {
+                                0: QUERY,
+                                1: QUERY
+                            }
                         }
                     }
                 });
@@ -212,11 +215,21 @@ describe('Log middleware', function () {
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
-                            sql: FALLBACK_QUERY
+                            sql: {
+                                onsuccess: QUERY,
+                                onerror: QUERY,
+                                query: {
+                                    0: {
+                                        query: QUERY,
+                                        onsuccess: QUERY,
+                                        onerror: QUERY
+                                    }
+                                }
+                            }
                         }
                     }
                 });
@@ -253,7 +266,7 @@ describe('Log middleware', function () {
 
                     assert.ok(res.headers['x-sqlapi-log']);
                     const log = JSON.parse(res.headers['x-sqlapi-log']);
-                    assert.deepEqual(log, {
+                    assert.deepStrictEqual(log, {
                         request: {
                             sql: null
                         }

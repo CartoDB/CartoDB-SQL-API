@@ -40,7 +40,7 @@ function countInsertedRows (host, port, callback) {
                 return callback(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
             const result = JSON.parse(body);
             callback(null, result);
         });
@@ -88,7 +88,7 @@ describe('Cancel "copy to" commands', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });
@@ -110,7 +110,7 @@ describe('Cancel "copy to" commands', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });
@@ -141,7 +141,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
@@ -169,7 +169,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
@@ -203,7 +203,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
@@ -231,7 +231,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });

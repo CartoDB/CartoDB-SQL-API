@@ -37,7 +37,7 @@ describe('health checks', function () {
 
                 var parsed = JSON.parse(res.body);
 
-                assert.equal(parsed.enabled, false);
+                assert.strictEqual(parsed.enabled, false);
                 assert.ok(parsed.ok);
 
                 done();

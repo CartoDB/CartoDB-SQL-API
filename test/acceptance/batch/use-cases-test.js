@@ -30,10 +30,10 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
 
                 jobResult.tryCancel(function (err, body) {
-                    assert.equal(body.error[0], 'Cannot set status from done to cancelled');
+                    assert.strictEqual(body.error[0], 'Cannot set status from done to cancelled');
                     done();
                 });
             });
@@ -55,17 +55,17 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
-                        assert.equal(body.error[0], 'Cannot set status from cancelled to cancelled');
+                        assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
                 });
@@ -98,21 +98,21 @@ describe('Use cases', function () {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.PENDING);
+                    assert.strictEqual(job.status, JobStatus.PENDING);
 
                     jobResult2.cancel(function (err, job) {
                         if (err) {
                             return done(err);
                         }
 
-                        assert.equal(job.status, JobStatus.CANCELLED);
+                        assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                         jobResult1.cancel(function (err, job) {
                             if (err) {
                                 return done(err);
                             }
 
-                            assert.equal(job.status, JobStatus.CANCELLED);
+                            assert.strictEqual(job.status, JobStatus.CANCELLED);
                             done();
                         });
                     });
@@ -136,14 +136,14 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
                     done();
                 });
             });
@@ -169,17 +169,17 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
-                        assert.equal(body.error[0], 'Cannot set status from cancelled to cancelled');
+                        assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
                 });

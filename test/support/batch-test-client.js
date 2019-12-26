@@ -277,7 +277,7 @@ JobResult.prototype.validateExpectedResponse = function (expected) {
         var expectedQuery = expected.query[index];
         assert.ok(expectedQuery);
         Object.keys(expectedQuery).forEach(function (expectedKey) {
-            assert.equal(
+            assert.strictEqual(
                 actualQuery[expectedKey],
                 expectedQuery[expectedKey],
                 'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
@@ -293,6 +293,6 @@ JobResult.prototype.validateExpectedResponse = function (expected) {
         });
     });
 
-    assert.equal(actual.onsuccess, expected.onsuccess);
-    assert.equal(actual.onerror, expected.onerror);
+    assert.strictEqual(actual.onsuccess, expected.onsuccess);
+    assert.strictEqual(actual.onerror, expected.onerror);
 };

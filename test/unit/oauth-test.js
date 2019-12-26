@@ -45,11 +45,11 @@ var metadataBackend = new MetadataDB({
 
 describe('oauth', function () {
     it('test database number', function () {
-        assert.equal(oAuth.oauth_database, 3);
+        assert.strictEqual(oAuth.oauth_database, 3);
     });
 
     it('test oauth database key', function () {
-        assert.equal(oAuth.oauth_user_key, 'rails:oauth_access_tokens:<%= oauth_access_key %>');
+        assert.strictEqual(oAuth.oauth_user_key, 'rails:oauth_access_tokens:<%= oauth_access_key %>');
     });
 
     it('test parse tokens from full headers does not raise exception', function () {
@@ -65,7 +65,7 @@ describe('oauth', function () {
     it('test headers take presedence over query parameters', function () {
         var req = { query: { oauth_signature_method: 'MY_HASH' }, headers: { authorization: full_oauth_header } };
         var tokens = oAuth.parseTokens(req);
-        assert.equal(tokens.oauth_signature_method, 'HMAC-SHA1');
+        assert.strictEqual(tokens.oauth_signature_method, 'HMAC-SHA1');
     });
 
     it('test can access oauth hash for a user based on access token (oauth_token)', function (done) {
@@ -73,7 +73,8 @@ describe('oauth', function () {
         var tokens = oAuth.parseTokens(req);
 
         oAuth.getOAuthHash(metadataBackend, tokens.oauth_token, function (err, data) {
-            assert.equal(tokens.oauth_consumer_key, data.consumer_key);
+            assert.ifError(err);
+            assert.strictEqual(tokens.oauth_consumer_key, data.consumer_key);
             done();
         });
     });
@@ -83,8 +84,8 @@ describe('oauth', function () {
         var tokens = oAuth.parseTokens(req);
 
         oAuth.getOAuthHash(metadataBackend, tokens.oauth_token, function (err, data) {
-            assert.ok(!err, err);
-            assert.deepEqual(data, {});
+            assert.ifError(err);
+            assert.deepStrictEqual(data, {});
             done();
         });
     });
@@ -100,8 +101,8 @@ describe('oauth', function () {
         };
 
         oAuth.verifyRequest(req, metadataBackend, function (err, data) {
-            assert.ok(!err, err);
-            assert.equal(data, 'master');
+            assert.ifError(err);
+            assert.strictEqual(data, 'master');
             done();
         });
     });
@@ -122,8 +123,8 @@ describe('oauth', function () {
 
         oAuth.verifyRequest(req, metadataBackend, function (err, data) {
             oAuth.getAllowedHosts = oAuthGetAllowedHostsFn;
-            assert.ok(!err, err);
-            assert.equal(data, 'master');
+            assert.ifError(err);
+            assert.strictEqual(data, 'master');
             done();
         });
     });
@@ -139,7 +140,7 @@ describe('oauth', function () {
         };
 
         oAuth.verifyRequest(req, metadataBackend, function (err, data) {
-            assert.equal(data, null);
+            assert.strictEqual(data, null);
             done();
         });
     });
@@ -155,7 +156,7 @@ describe('oauth', function () {
         };
 
         oAuth.verifyRequest(req, metadataBackend, function (err, data) {
-            assert.equal(data, null);
+            assert.strictEqual(data, null);
             done();
         });
     });
@@ -170,7 +171,7 @@ describe('oauth', function () {
     it('OAuthAuth reports it has no credentials', function (done) {
         var req = { query: {}, headers: {} };
         var oAuthAuth = new OAuthAuth(req);
-        assert.equal(oAuthAuth.hasCredentials(), false);
+        assert.strictEqual(oAuthAuth.hasCredentials(), false);
         done();
     });
 });

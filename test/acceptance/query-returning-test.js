@@ -29,12 +29,12 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 2);
-            assert.equal(out.rows.length, 0);
+            assert.strictEqual(out.total_rows, 2);
+            assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -54,12 +54,12 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 2);
-            assert.equal(out.rows.length, 0);
+            assert.strictEqual(out.total_rows, 2);
+            assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -79,12 +79,12 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 2);
-            assert.equal(out.rows.length, 0);
+            assert.strictEqual(out.total_rows, 2);
+            assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -104,11 +104,11 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 1);
-            assert.equal(out.rows.length, 1);
-            assert.equal(_.keys(out.rows[0]).length, 2);
-            assert.equal(out.rows[0].upper, 'TEST');
-            assert.equal(out.rows[0].reverse, 'tset');
+            assert.strictEqual(out.total_rows, 1);
+            assert.strictEqual(out.rows.length, 1);
+            assert.strictEqual(_.keys(out.rows[0]).length, 2);
+            assert.strictEqual(out.rows[0].upper, 'TEST');
+            assert.strictEqual(out.rows[0].reverse, 'tset');
             done();
         });
     });
@@ -128,11 +128,11 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 1);
-            assert.equal(out.rows.length, 1);
-            assert.equal(_.keys(out.rows[0]).length, 2);
-            assert.equal(out.rows[0].upper, 'TOST');
-            assert.equal(out.rows[0].reverse, 'tsot');
+            assert.strictEqual(out.total_rows, 1);
+            assert.strictEqual(out.rows.length, 1);
+            assert.strictEqual(_.keys(out.rows[0]).length, 2);
+            assert.strictEqual(out.rows[0].upper, 'TOST');
+            assert.strictEqual(out.rows[0].reverse, 'tsot');
             done();
         });
     });
@@ -152,10 +152,10 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 1);
-            assert.equal(out.rows.length, 1);
-            assert.equal(_.keys(out.rows[0]).length, 1);
-            assert.equal(out.rows[0].name, 'tost');
+            assert.strictEqual(out.total_rows, 1);
+            assert.strictEqual(out.rows.length, 1);
+            assert.strictEqual(_.keys(out.rows[0]).length, 1);
+            assert.strictEqual(out.rows[0].name, 'tost');
             done();
         });
     });

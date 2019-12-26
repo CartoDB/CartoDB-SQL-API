@@ -8,31 +8,31 @@ var ArrayBufferSer = require('../../../lib/models/bin-encoder');
 describe('ArrayBufferSer', function () {
     it('calculate size for basic types', function () {
         var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1, 2, 3, 4]);
-        assert.equal(4 * 2, b.getDataSize());
+        assert.strictEqual(4 * 2, b.getDataSize());
 
         b = new ArrayBufferSer(ArrayBufferSer.INT8, [1, 2, 3, 4]);
-        assert.equal(4, b.getDataSize());
+        assert.strictEqual(4, b.getDataSize());
 
         b = new ArrayBufferSer(ArrayBufferSer.INT32, [1, 2, 3, 4]);
-        assert.equal(4 * 4, b.getDataSize());
+        assert.strictEqual(4 * 4, b.getDataSize());
     });
 
     it('calculate size for arrays', function () {
         var b = new ArrayBufferSer(ArrayBufferSer.STRING, ['test', 'kease']);
-        assert.equal((b.headerSize + 4 + 5) * 2, b.getDataSize());
+        assert.strictEqual((b.headerSize + 4 + 5) * 2, b.getDataSize());
 
         var ba = new ArrayBufferSer(ArrayBufferSer.INT16, [1, 2, 3, 4]);
         var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1, 4]);
 
         b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc]);
-        assert.equal((b.headerSize + 4 + 2) * 2, b.getDataSize());
-        assert.equal(b.type, ArrayBufferSer.BUFFER);
+        assert.strictEqual((b.headerSize + 4 + 2) * 2, b.getDataSize());
+        assert.strictEqual(b.type, ArrayBufferSer.BUFFER);
     });
 
     function assert_buffer_equals (a, b) {
-        assert.equal(a.length, b.length);
+        assert.strictEqual(a.length, b.length);
         for (var i = 0; i < a.length; ++i) {
-            assert.equal(a[i], b[i], 'byte i ' + i + ' is different: ' + a[i] + ' != ' + b[i]);
+            assert.strictEqual(a[i], b[i], 'byte i ' + i + ' is different: ' + a[i] + ' != ' + b[i]);
         }
     }
 

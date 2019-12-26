@@ -25,9 +25,9 @@ describe('results-pagination', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
-            assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
+            assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
             var parsed = JSON.parse(res.body);
-            assert.equal(parsed.rows.length, 1);
+            assert.strictEqual(parsed.rows.length, 1);
             done();
         });
     });
@@ -83,11 +83,11 @@ describe('results-pagination', function () {
             }
             assert.response(server, req, RESPONSE_OK, function (err, res) {
                 var parsed = JSON.parse(res.body);
-                assert.equal(parsed.rows.length, nrows);
+                assert.strictEqual(parsed.rows.length, nrows);
                 for (var i = 0; i < nrows; ++i) {
                     var obt = parsed.rows[i].v;
                     var exp = page * nrows + i + 1;
-                    assert.equal(obt, exp, 'Value ' + i + ' in page ' + page + ' is ' + obt + ', expected ' + exp);
+                    assert.strictEqual(obt, exp, 'Value ' + i + ' in page ' + page + ' is ' + obt + ', expected ' + exp);
                 }
                 testNext();
             });
@@ -111,11 +111,11 @@ describe('results-pagination', function () {
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
             var parsed = JSON.parse(res.body);
-            assert.equal(parsed.rows.length, 3);
+            assert.strictEqual(parsed.rows.length, 3);
             for (var i = 0; i < nrows; ++i) {
                 var obt = parsed.rows[i].v;
                 var exp = page * nrows + i + 1;
-                assert.equal(obt, exp, 'Value ' + i + ' in page ' + page + ' is ' + obt + ', expected ' + exp);
+                assert.strictEqual(obt, exp, 'Value ' + i + ' in page ' + page + ' is ' + obt + ', expected ' + exp);
             }
             done();
         });
@@ -155,7 +155,7 @@ describe('results-pagination', function () {
             function check_res_drop_table (err, res) {
                 assert.ifError(err);
                 var out = JSON.parse(res.body);
-                assert.equal(out.total_rows, 1); // windowing works
+                assert.strictEqual(out.total_rows, 1); // windowing works
                 var next = this;
                 assert.response(server, {
                     url: '/api/v1/sql?' + querystring.stringify({

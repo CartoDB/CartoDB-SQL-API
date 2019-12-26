@@ -37,7 +37,7 @@ describe('regressions', function () {
                             return done(err);
                         }
                         var parsedBody = JSON.parse(res.body);
-                        assert.equal(parsedBody.total_rows, 2);
+                        assert.strictEqual(parsedBody.total_rows, 2);
 
                         assert.response(server, createRequest('SELECT * FROM "foo.bar"'), responseOk,
                             function (err, res) {
@@ -48,8 +48,8 @@ describe('regressions', function () {
                                 // table should not get a cache channel as it won't get invalidated
                                 assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
                                 var parsedBody = JSON.parse(res.body);
-                                assert.equal(parsedBody.total_rows, 2);
-                                assert.deepEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
+                                assert.strictEqual(parsedBody.total_rows, 2);
+                                assert.deepStrictEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
 
                                 // delete table
                                 assert.response(server, createRequest('DROP TABLE "foo.bar"'), responseOk, done);

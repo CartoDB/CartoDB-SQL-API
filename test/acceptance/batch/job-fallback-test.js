@@ -41,7 +41,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -74,7 +74,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -109,7 +109,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -144,7 +144,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -177,8 +177,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -212,8 +212,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
-                assert.equal(job.fallback_status, JobStatus.SKIPPED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.fallback_status, JobStatus.SKIPPED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -247,8 +247,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -281,8 +281,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
-                assert.equal(job.fallback_status, JobStatus.SKIPPED);
+                assert.strictEqual(job.status, JobStatus.DONE);
+                assert.strictEqual(job.fallback_status, JobStatus.SKIPPED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -318,8 +318,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -361,7 +361,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -404,7 +404,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -447,7 +447,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -489,7 +489,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -524,7 +524,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -558,7 +558,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -600,7 +600,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -643,7 +643,7 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -687,8 +687,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -734,8 +734,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -780,8 +780,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
-                assert.equal(job.fallback_status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.fallback_status, JobStatus.FAILED);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -830,8 +830,8 @@ describe('Batch API fallback job', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
-                assert.equal(job.fallback_status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.fallback_status, JobStatus.DONE);
                 jobResult.validateExpectedResponse(expectedQuery);
                 return done();
             });
@@ -869,15 +869,15 @@ describe('Batch API fallback job', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
-                    assert.equal(job.fallback_status, JobStatus.SKIPPED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.fallback_status, JobStatus.SKIPPED);
                     jobResult.validateExpectedResponse(expectedQuery);
                     return done();
                 });
@@ -915,15 +915,15 @@ describe('Batch API fallback job', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
-                    assert.equal(job.fallback_status, JobStatus.SKIPPED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.fallback_status, JobStatus.SKIPPED);
                     jobResult.validateExpectedResponse(expectedQuery);
                     return done();
                 });

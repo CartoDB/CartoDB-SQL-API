@@ -33,19 +33,19 @@ describe('transaction', function () {
     it('should NOT fail to second request after error in transaction', function (done) {
         sqlRequest(requestUrl(errorQuery), function (err, response, body) {
             assert.ok(!err);
-            assert.equal(response.statusCode, 400);
+            assert.strictEqual(response.statusCode, 400);
 
             var parsedBody = JSON.parse(body);
             assert.ok(parsedBody);
-            assert.deepEqual(parsedBody, { error: ['column "error" does not exist'] });
+            assert.deepStrictEqual(parsedBody, { error: ['column "error" does not exist'] });
 
             sqlRequest(requestUrl('select 1 as foo'), function (err, response, body) {
                 assert.ok(!err);
-                assert.equal(response.statusCode, 200);
+                assert.strictEqual(response.statusCode, 200);
 
                 var parsedBody = JSON.parse(body);
                 assert.ok(parsedBody);
-                assert.deepEqual(parsedBody.rows, [{ foo: 1 }]);
+                assert.deepStrictEqual(parsedBody.rows, [{ foo: 1 }]);
 
                 done();
             });

@@ -63,7 +63,7 @@ describe('job runner', function () {
                     return done(err);
                 }
 
-                assert.equal(job.data.status, jobStatus.DONE);
+                assert.strictEqual(job.data.status, jobStatus.DONE);
                 done();
             });
         });
@@ -72,8 +72,8 @@ describe('job runner', function () {
     it('.run() should return a job not found error', function (done) {
         jobRunner.run('wadus_job_id', function (err) {
             assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id wadus_job_id not found');
+            assert.strictEqual(err.name, 'NotFoundError');
+            assert.strictEqual(err.message, 'Job with id wadus_job_id not found');
             done();
         });
     });

@@ -63,7 +63,7 @@ describe('skipfields', function () {
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
             var parsedBody = JSON.parse(res.body);
-            assert.equal(_.keys(parsedBody.fields).length, 2);
+            assert.strictEqual(_.keys(parsedBody.fields).length, 2);
             assert.ok(parsedBody.fields.hasOwnProperty('a'));
             assert.ok(!parsedBody.fields.hasOwnProperty('b'));
             assert.ok(parsedBody.fields.hasOwnProperty('c'));
@@ -76,7 +76,7 @@ describe('skipfields', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var row0 = JSON.parse(res.body).rows[0];
             var checkfields = { name: 1, cartodb_id: 1, the_geom: 1, the_geom_webmercator: 1 };
             for (var f in checkfields) {

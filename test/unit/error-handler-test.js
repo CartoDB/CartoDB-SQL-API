@@ -52,7 +52,7 @@ describe('error-handler', function () {
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -78,7 +78,7 @@ describe('error-handler', function () {
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -107,7 +107,7 @@ describe('error-handler', function () {
 
         errorMiddleware()(error, req, res, function () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -131,7 +131,7 @@ describe('error-handler', function () {
 
         errorMiddleware()(error, req, res, function () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(expectedErrorHeader)
             );

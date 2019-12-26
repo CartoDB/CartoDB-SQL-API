@@ -22,8 +22,8 @@ describe('health checks', function () {
             callback(null, 'Maintenance');
         };
         healthCheck.check(function (err) {
-            assert.equal(err.message, 'Maintenance');
-            assert.equal(err.http_status, 503);
+            assert.strictEqual(err.message, 'Maintenance');
+            assert.strictEqual(err.http_status, 503);
             fs.readFile = readFileFn;
             done();
         });
@@ -37,7 +37,7 @@ describe('health checks', function () {
             callback(new Error('ENOENT'), null);
         };
         healthCheck.check(function (err) {
-            assert.equal(err, null);
+            assert.strictEqual(err, undefined);
             fs.readFile = readFileFn;
             done();
         });

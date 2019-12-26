@@ -7,7 +7,7 @@ var assert = require('../../support/assert');
 var querystring = require('querystring');
 var libxmljs = require('libxmljs');
 
-describe('export.kml', function () {
+describe.only('export.kml', function () {
 // Check if an attribute is in the KML output
     //
     // NOTE: "name" and "description" attributes are threated specially
@@ -107,10 +107,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             var row0 = res.body;
             var checkfields = { Name: 1, address: 1, cartodb_id: 1, the_geom: 0, the_geom_webmercator: 0 };
             Object.keys(checkfields).forEach(function (f) {
@@ -131,10 +132,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             done();
         });
     });
@@ -149,10 +151,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             assert.ok(res.body.length > 81920, 'KML smaller than expected: ' + res.body.length);
             done();
         });
@@ -164,10 +167,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             var row0 = res.body;
             var checkFields = { Name: 1, address: 0, cartodb_id: 0, the_geom: 0, the_geom_webmercator: 0 };
             Object.keys(checkFields).forEach(function (f) {
@@ -187,12 +191,13 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=kmltest.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             var name = extractFolderName(res.body);
-            assert.equal(name, 'kmltest');
+            assert.strictEqual(name, 'kmltest');
             done();
         });
     });
@@ -203,9 +208,10 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             done();
         });
     });
@@ -222,14 +228,14 @@ describe('export.kml', function () {
         var waiting = concurrency;
 
         function validate (err, res) {
-        // console.log("Response ended");
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body);
             var snippet = res.body.substr(0, 5);
-            assert.equal(snippet, '<?xml');
+            assert.strictEqual(snippet, '<?xml');
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'KML is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=multi.kml/gi.test(cd), 'Unexpected KML filename: ' + cd);
             if (!--waiting) {
                 done();
             }
@@ -242,7 +248,6 @@ describe('export.kml', function () {
         };
 
         for (var i = 0; i < concurrency; ++i) {
-        // console.log("Sending request");
             assert.response(server, request, { status: 200 }, validate);
         }
     });
@@ -254,7 +259,8 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
             var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
             '<kml xmlns="http://www.opengis.net/kml/2.2">' +
@@ -277,7 +283,8 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             // NOTE: GDAL-1.11+ added 'id="root_doc"' attribute to the output
             var pat = new RegExp('^<\\?xml version="1.0" encoding="utf-8" \\?>' +
             '<kml xmlns="http://www.opengis.net/kml/2.2">' +
@@ -300,10 +307,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var coords = extractCoordinates(res.body);
             assert(coords, 'No coordinates in ' + res.body);
-            assert.deepEqual(coords, [[33, 16]]);
+            assert.deepStrictEqual(coords, [['33', '16']]);
             done();
         });
     });
@@ -319,10 +327,11 @@ describe('export.kml', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var coords = extractCoordinates(res.body);
             assert(coords, 'No coordinates in ' + res.body);
-            assert.deepEqual(coords, [[33, 16]]);
+            assert.deepStrictEqual(coords, [['33', '16']]);
             done();
         });
     });
@@ -343,7 +352,8 @@ describe('export.kml', function () {
             status: 200
         },
         function (err, res) {
-            assert.equal(res.body.match(/<Placemark>/g).length, limit);
+            assert.ifError(err);
+            assert.strictEqual(res.body.match(/<Placemark>/g).length, limit);
             done();
         }
         );
@@ -363,7 +373,8 @@ describe('export.kml', function () {
             status: 200
         },
         function (err, res) {
-            assert.equal(res.body.match(/<Placemark>/g).length, limit);
+            assert.ifError(err);
+            assert.strictEqual(res.body.match(/<Placemark>/g).length, limit);
             done();
         }
         );
@@ -387,7 +398,8 @@ describe('export.kml', function () {
                 status: 200
             },
             function (err, res) {
-                assert.equal(res.body.match(/<Placemark>/g), null);
+                assert.ifError(err);
+                assert.strictEqual(res.body.match(/<Placemark>/g), null);
                 done();
             }
         );

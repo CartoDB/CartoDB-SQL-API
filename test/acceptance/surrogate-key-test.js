@@ -32,10 +32,10 @@ describe('Surrogate-Key header', function () {
 
         var expectedSurrogateKeys = new QueryTables.QueryMetadata(expectedTables).key();
 
-        assert.equal(surrogateKeys.length, expectedSurrogateKeys.length);
+        assert.strictEqual(surrogateKeys.length, expectedSurrogateKeys.length);
 
         var tablesDiff = _.difference(surrogateKeys, expectedSurrogateKeys);
-        assert.equal(tablesDiff.length, 0, 'Surrogate-Key missing tables: ' + tablesDiff.join(','));
+        assert.strictEqual(tablesDiff.length, 0, 'Surrogate-Key missing tables: ' + tablesDiff.join(','));
     }
 
     function tableNamesInSurrogateKeyHeader (expectedTableNames, done) {

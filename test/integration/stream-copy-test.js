@@ -15,7 +15,7 @@ describe('stream copy', function () {
         };
         const sql = 'COPY dummy_table FROM STDIN';
         const streamCopy = new StreamCopy(sql, userDbParams);
-        assert.equal(streamCopy.dbParams.port, global.settings.db_batch_port);
+        assert.strictEqual(streamCopy.dbParams.port, global.settings.db_batch_port);
         done();
     });
 });

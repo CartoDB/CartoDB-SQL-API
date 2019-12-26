@@ -15,7 +15,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient();
         this.testClient.getResult(publicSQL, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.length, 6);
+            assert.strictEqual(result.length, 6);
             done();
         });
     });
@@ -31,7 +31,7 @@ describe('Auth API', function () {
 
         this.testClient.getResult(publicSQL, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'Unauthorized');
+            assert.deepStrictEqual(result.error, ['Unauthorized']);
             done();
         });
     });
@@ -55,7 +55,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 1234 });
         this.testClient.getResult(publicSQL, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.length, 6);
+            assert.strictEqual(result.length, 6);
             done();
         });
     });
@@ -64,7 +64,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 1234 });
         this.testClient.getResult(privateSQL, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.length, 5);
+            assert.strictEqual(result.length, 5);
             done();
         });
     });
@@ -73,7 +73,7 @@ describe('Auth API', function () {
         this.testClient = new TestClient({ apiKey: 'regular1' });
         this.testClient.getResult(scopedSQL, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.length, 4);
+            assert.strictEqual(result.length, 4);
             done();
         });
     });
@@ -107,7 +107,7 @@ describe('Auth API', function () {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.DONE);
+                    assert.strictEqual(job.status, JobStatus.DONE);
 
                     done();
                 });
@@ -123,7 +123,7 @@ describe('Auth API', function () {
                 }
 
                 const body = JSON.parse(response.body);
-                assert.equal(body.error, 'permission denied');
+                assert.deepStrictEqual(body.error, ['permission denied']);
                 done();
             });
         });
@@ -137,7 +137,7 @@ describe('Auth API', function () {
                 }
 
                 const body = JSON.parse(response.body);
-                assert.equal(body.error, 'permission denied');
+                assert.deepStrictEqual(body.error, ['permission denied']);
                 done();
             });
         });
@@ -151,7 +151,7 @@ describe('Auth API', function () {
                 }
 
                 const body = JSON.parse(response.body);
-                assert.equal(body.error, 'permission denied');
+                assert.deepStrictEqual(body.error, ['permission denied']);
                 done();
             });
         });
@@ -167,7 +167,7 @@ describe('Auth API', function () {
 
             this.testClient.getResult(scopedSQL, { anonymous: true }, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.length, 4);
+                assert.strictEqual(result.length, 4);
                 done();
             });
         });
@@ -199,7 +199,7 @@ describe('Auth API', function () {
 
             this.testClient.getResult(systemSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.error, 'system tables are forbidden');
+                assert.deepStrictEqual(result.error, ['system tables are forbidden']);
                 done();
             });
         });
@@ -215,7 +215,7 @@ describe('Auth API', function () {
 
             this.testClient.getResult(scopedSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.error, 'permission denied');
+                assert.deepStrictEqual(result.error, ['permission denied']);
                 done();
             });
         });
@@ -232,7 +232,7 @@ describe('Auth API', function () {
 
             this.testClient.getResult(publicSQL, expectedResponse, (err, result) => {
                 assert.ifError(err);
-                assert.equal(result.error, 'Unauthorized');
+                assert.deepStrictEqual(result.error, ['Unauthorized']);
                 done();
             });
         });
@@ -247,7 +247,7 @@ describe('Auth API', function () {
                     }
 
                     const body = JSON.parse(response.body);
-                    assert.equal(body.error, 'permission denied');
+                    assert.deepStrictEqual(body.error, ['permission denied']);
                     done();
                 });
             });
@@ -261,7 +261,7 @@ describe('Auth API', function () {
                     }
 
                     const body = JSON.parse(response.body);
-                    assert.equal(body.error, 'permission denied');
+                    assert.deepStrictEqual(body.error, ['permission denied']);
                     done();
                 });
             });

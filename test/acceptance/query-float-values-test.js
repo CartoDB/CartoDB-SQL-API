@@ -61,10 +61,10 @@ describe('special numeric (float) values', function () {
                 assert.ifError(err);
                 var result = JSON.parse(res.body);
                 assert.ok(Array.isArray(result.rows));
-                assert.equal(result.rows[0].val, 'NaN');
-                assert.equal(result.rows[1].val, 'Infinity');
-                assert.equal(result.rows[2].val, '-Infinity');
-                assert.equal(result.rows[3].val, 1);
+                assert.strictEqual(result.rows[0].val, 'NaN');
+                assert.strictEqual(result.rows[1].val, 'Infinity');
+                assert.strictEqual(result.rows[2].val, '-Infinity');
+                assert.strictEqual(result.rows[3].val, 1);
                 done();
             }
         );

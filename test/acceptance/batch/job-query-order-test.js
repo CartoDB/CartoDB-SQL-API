@@ -42,8 +42,8 @@ describe('job query order', function () {
                         if (err) {
                             return done(err);
                         }
-                        assert.equal(job1.status, JobStatus.DONE);
-                        assert.equal(job2.status, JobStatus.DONE);
+                        assert.strictEqual(job1.status, JobStatus.DONE);
+                        assert.strictEqual(job2.status, JobStatus.DONE);
                         assert.ok(
                             new Date(job1.updated_at).getTime() < new Date(job2.updated_at).getTime(),
                             'job1 (' + job1.updated_at + ') should finish before job2 (' + job2.updated_at + ')'

@@ -30,7 +30,7 @@ describe('Handle query middleware', function () {
                         assert.ok(!err);
 
                         const response = JSON.parse(res.body);
-                        assert.deepEqual(response, { error: ['You must indicate a sql query'] });
+                        assert.deepStrictEqual(response, { error: ['You must indicate a sql query'] });
 
                         return done();
                     }
@@ -54,8 +54,8 @@ describe('Handle query middleware', function () {
                         assert.ok(!err);
 
                         const response = JSON.parse(res.body);
-                        assert.equal(response.rows.length, 1);
-                        assert.equal(response.rows[0].foo, 14);
+                        assert.strictEqual(response.rows.length, 1);
+                        assert.strictEqual(response.rows[0].foo, 14);
 
                         return done();
                     }
@@ -81,8 +81,8 @@ describe('Handle query middleware', function () {
                 jobResult.getStatus(function (err, job) {
                     assert.ok(!err);
 
-                    assert.equal(job.status, JobStatus.DONE);
-                    assert.equal(job.query, QUERY);
+                    assert.strictEqual(job.status, JobStatus.DONE);
+                    assert.strictEqual(job.query, QUERY);
 
                     return done();
                 });
@@ -97,8 +97,8 @@ describe('Handle query middleware', function () {
                 jobResult.getStatus(function (err, job) {
                     assert.ok(!err);
 
-                    assert.equal(job.status, JobStatus.DONE);
-                    assert.deepEqual(job.query, [
+                    assert.strictEqual(job.status, JobStatus.DONE);
+                    assert.deepStrictEqual(job.query, [
                         { query: QUERY, status: JobStatus.DONE },
                         { query: QUERY, status: JobStatus.DONE }
                     ]);

@@ -36,7 +36,7 @@ describe('error-handler-factory', function () {
                 name: codeToCondition[error.code] || error.name
             });
 
-            assert.deepEqual(errorHandler, expectedError);
+            assert.deepStrictEqual(errorHandler, expectedError);
         });
     });
 
@@ -51,7 +51,7 @@ describe('error-handler-factory', function () {
             http_status: 429
         });
 
-        assert.deepEqual(errorHandler, expectedError);
+        assert.deepStrictEqual(errorHandler, expectedError);
     });
 
     it('permission denied error', function () {
@@ -66,6 +66,6 @@ describe('error-handler-factory', function () {
             name: codeToCondition[error.code] || error.name
         });
 
-        assert.deepEqual(errorHandler, expectedError);
+        assert.deepStrictEqual(errorHandler, expectedError);
     });
 });

@@ -89,7 +89,7 @@ describe('job canceller', function () {
                 return done(err);
             }
 
-            assert.equal(job.data.job_id, jobCreated.job_id);
+            assert.strictEqual(job.data.job_id, jobCreated.job_id);
 
             runQueryHelper(job.data, function (err) {
                 if (err) {

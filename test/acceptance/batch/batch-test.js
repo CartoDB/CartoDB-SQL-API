@@ -32,7 +32,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 return done();
             });
         });
@@ -50,7 +50,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 return done();
             });
         });
@@ -66,7 +66,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 return done();
             });
         });
@@ -100,7 +100,7 @@ describe('batch happy cases', function () {
             }
 
             jobsCreated.forEach(function (job) {
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
             });
 
             return done();
@@ -135,7 +135,7 @@ describe('batch happy cases', function () {
             }
 
             jobsCreated.forEach(function (job) {
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
             });
 
             return done();
@@ -154,7 +154,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
                 return done();
             });
         });
@@ -172,7 +172,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 return done();
             });
         });
@@ -190,7 +190,7 @@ describe('batch happy cases', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 return done();
             });
         });

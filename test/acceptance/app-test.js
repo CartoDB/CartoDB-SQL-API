@@ -36,10 +36,10 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             // Check cache headers
-            assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
-            assert.equal(res.headers['cache-control'], expected_cache_control);
+            assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
+            assert.strictEqual(res.headers['cache-control'], expected_cache_control);
             done();
         });
     });
@@ -50,7 +50,7 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             done();
         });
     });
@@ -60,7 +60,7 @@ describe('app.test', function () {
             url: '/user/vizzuality/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             done();
         });
     });
@@ -72,10 +72,10 @@ describe('app.test', function () {
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, { }, function (err, res) {
-                assert.equal(res.statusCode, 200, res.body);
+                assert.strictEqual(res.statusCode, 200, res.body);
                 // Check cache headers
-                assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
-                assert.equal(res.headers['cache-control'], expected_cache_control);
+                assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
+                assert.strictEqual(res.headers['cache-control'], expected_cache_control);
                 done();
             });
         });
@@ -87,7 +87,7 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             done();
         });
     });
@@ -100,9 +100,9 @@ describe('app.test', function () {
             method: 'GET'
         }, {
         }, function (err, res) {
-            assert.equal(res.statusCode, 403, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 403, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             assert.ok(JSON.parse(res.body).error[0].match(/permission denied for .+? untitle_table_4/));
             done();
         });
@@ -115,9 +115,9 @@ describe('app.test', function () {
             method: 'GET'
         }, {
         }, function (err, res) {
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             assert.ok(JSON.parse(res.body).error[0].match(/must be owner of.+? untitle_table_4/));
             done();
         });
@@ -139,9 +139,9 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             assert.ok(JSON.parse(res.body).error[0].match(/must be owner of.+? untitle_table_4/));
             done();
         });
@@ -160,8 +160,8 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
-            assert.equal(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.private_table');
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.private_table');
             done();
         });
     });
@@ -175,11 +175,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -193,11 +193,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -212,10 +212,10 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             var parsedBody = JSON.parse(res.body);
-            assert.equal(parsedBody.total_rows, 1);
-            assert.deepEqual(parsedBody.rows[0], { b: 2.5 });
+            assert.strictEqual(parsedBody.total_rows, 1);
+            assert.deepStrictEqual(parsedBody.rows[0], { b: 2.5 });
             done();
         });
     });
@@ -229,11 +229,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             var pbody = JSON.parse(res.body);
-            assert.equal(pbody.rows.length, 0);
+            assert.strictEqual(pbody.rows.length, 0);
             assert.response(server, {
                 url: '/api/v1/sql?' + querystring.stringify({
                     q: 'SELECT count(*) FROM test_table',
@@ -242,7 +242,7 @@ describe('app.test', function () {
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, {}, function (err, res) {
-                assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+                assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
                 // table should not get a cache channel as it won't get invalidated
                 assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
 
@@ -254,8 +254,8 @@ describe('app.test', function () {
                 assert.ok(Number(value) <= fallbackTtl);
 
                 var pbody = JSON.parse(res.body);
-                assert.equal(pbody.total_rows, 1);
-                assert.equal(pbody.rows[0].count, 0);
+                assert.strictEqual(pbody.total_rows, 1);
+                assert.strictEqual(pbody.rows[0].count, 0);
                 done();
             });
         });
@@ -270,11 +270,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             var pbody = JSON.parse(res.body);
-            assert.equal(pbody.rows.length, 0);
+            assert.strictEqual(pbody.rows.length, 0);
             done();
         });
     });
@@ -288,11 +288,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -306,11 +306,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -324,11 +324,11 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
             assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.equal(res.headers['cache-control'], expected_rw_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
             done();
         });
     });
@@ -339,10 +339,10 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 400, res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
-            assert.deepEqual(JSON.parse(res.body), { error: ['Invalid format: unknown'] });
+            assert.strictEqual(res.statusCode, 400, res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
+            assert.deepStrictEqual(JSON.parse(res.body), { error: ['Invalid format: unknown'] });
             done();
         });
     });
@@ -353,12 +353,12 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var ct = res.headers['content-type'];
             assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
-            assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
+            assert.strictEqual(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
             done();
         });
     });
@@ -370,12 +370,12 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var ct = res.headers['content-type'];
             assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
-            assert.equal(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
+            assert.strictEqual(true, /^inline/.test(cd), 'Default format is not disposed inline: ' + cd);
+            assert.strictEqual(true, /filename=cartodb-query.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
             done();
         });
     });
@@ -386,12 +386,12 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var ct = res.headers['content-type'];
             assert.ok(/json/.test(ct), 'Default format is not JSON: ' + ct);
             var cd = res.headers['content-disposition'];
-            assert.equal(true, /^attachment/.test(cd), 'Format with filename is not disposed as attachment: ' + cd);
-            assert.equal(true, /filename=x.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
+            assert.strictEqual(true, /^attachment/.test(cd), 'Format with filename is not disposed as attachment: ' + cd);
+            assert.strictEqual(true, /filename=x.json/gi.test(cd), 'Unexpected JSON filename: ' + cd);
             done();
         });
     });
@@ -405,9 +405,9 @@ describe('app.test', function () {
             status: 400
         }, function (err, res) {
             var cd = res.headers['access-control-allow-origin'];
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
-            assert.equal(cd, '*');
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(cd, '*');
             done();
         });
     });
@@ -418,11 +418,11 @@ describe('app.test', function () {
             headers: { host: 'vizzualinot.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 404, res.statusCode + (res.statusCode !== 200 ? (': ' + res.body) : ''));
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 404, res.statusCode + (res.statusCode !== 200 ? (': ' + res.body) : ''));
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             var result = JSON.parse(res.body);
-            assert.equal(
+            assert.strictEqual(
                 result.error[0],
                 "Sorry, we can't find CARTO user 'vizzualinot'. Please check that you have entered the correct domain."
             );
@@ -440,12 +440,12 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             var result = JSON.parse(res.body);
             // NOTE: actual error message may be slighly different, possibly worth a regexp here
-            assert.equal(result.error[0], 'syntax error at or near "and"');
+            assert.strictEqual(result.error[0], 'syntax error at or near "and"');
             done();
         });
     });
@@ -460,16 +460,17 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
-            assert.equal(out.total_rows, 1);
-            assert.equal(out.rows.length, 1);
-            assert.ok(out.rows[0].hasOwnProperty('x'));
-            assert.equal(out.rows[0].x.length, 2);
-            assert.equal(out.rows[0].x[0], '8.7');
-            assert.equal(out.rows[0].x[1], '4.3');
-            assert.equal(res.headers.hasOwnProperty('x-cache-channel'), false);
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
+            assert.strictEqual(out.total_rows, 1);
+            assert.strictEqual(out.rows.length, 1);
+            assert.ok(Object.prototype.hasOwnProperty.call(out.rows[0], 'x'));
+            assert.strictEqual(out.rows[0].x.length, 2);
+            assert.strictEqual(out.rows[0].x[0], 8.7);
+            assert.strictEqual(out.rows[0].x[1], 4.3);
+            assert.strictEqual(Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'), false);
             done();
         });
     });
@@ -490,19 +491,19 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
-            assert.equal(_.keys(parsedBody.fields).length, 10);
-            assert.equal(parsedBody.fields.a.type, 'number');
-            assert.equal(parsedBody.fields.b.type, 'number');
-            assert.equal(parsedBody.fields.c.type, 'string');
-            assert.equal(parsedBody.fields.d.type, 'string');
-            assert.equal(parsedBody.fields.e.type, 'date');
-            assert.equal(parsedBody.fields.f.type, 'string');
-            assert.equal(parsedBody.fields.g.type, 'boolean');
-            assert.equal(parsedBody.fields.h.type, 'geometry');
-            assert.equal(parsedBody.fields.i.type, 'date');
-            assert.equal(parsedBody.fields.j.type, 'number');
+            assert.strictEqual(_.keys(parsedBody.fields).length, 10);
+            assert.strictEqual(parsedBody.fields.a.type, 'number');
+            assert.strictEqual(parsedBody.fields.b.type, 'number');
+            assert.strictEqual(parsedBody.fields.c.type, 'string');
+            assert.strictEqual(parsedBody.fields.d.type, 'string');
+            assert.strictEqual(parsedBody.fields.e.type, 'date');
+            assert.strictEqual(parsedBody.fields.f.type, 'string');
+            assert.strictEqual(parsedBody.fields.g.type, 'boolean');
+            assert.strictEqual(parsedBody.fields.h.type, 'geometry');
+            assert.strictEqual(parsedBody.fields.i.type, 'date');
+            assert.strictEqual(parsedBody.fields.j.type, 'number');
             done();
         });
     });
@@ -526,21 +527,21 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             var parsedBody = JSON.parse(res.body);
             var row = parsedBody.rows[0];
-            assert.equal(typeof (row.a), 'number');
-            assert.equal(typeof (row.b), 'number');
-            assert.equal(typeof (row.c), 'number');
-            assert.equal(typeof (row.d), 'number');
-            assert.equal(typeof (row.e), 'number');
-            assert.equal(typeof (row.f), 'number');
-            assert.equal(typeof (row._a[0]), 'number');
-            assert.equal(typeof (row._b[0]), 'number');
-            assert.equal(typeof (row._c[0]), 'number');
-            assert.equal(typeof (row._d[0]), 'number');
-            assert.equal(typeof (row._e[0]), 'number');
-            assert.equal(typeof (row._f[0]), 'number');
+            assert.strictEqual(typeof (row.a), 'number');
+            assert.strictEqual(typeof (row.b), 'number');
+            assert.strictEqual(typeof (row.c), 'number');
+            assert.strictEqual(typeof (row.d), 'number');
+            assert.strictEqual(typeof (row.e), 'number');
+            assert.strictEqual(typeof (row.f), 'number');
+            assert.strictEqual(typeof (row._a[0]), 'number');
+            assert.strictEqual(typeof (row._b[0]), 'number');
+            assert.strictEqual(typeof (row._c[0]), 'number');
+            assert.strictEqual(typeof (row._d[0]), 'number');
+            assert.strictEqual(typeof (row._e[0]), 'number');
+            assert.strictEqual(typeof (row._f[0]), 'number');
             done();
         });
     });
@@ -568,9 +569,9 @@ describe('app.test', function () {
                     method: 'GET'
                 }, { }, function (err, res) {
                     try {
-                        assert.equal(res.statusCode, 200, res.body);
+                        assert.strictEqual(res.statusCode, 200, res.body);
                         var parsedBody = JSON.parse(res.body);
-                        assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+                        assert.strictEqual(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
                         next();
                     } catch (err) {
                         next(err);
@@ -588,9 +589,9 @@ describe('app.test', function () {
                     method: 'GET'
                 }, { }, function (err, res) {
                     try {
-                        assert.equal(res.statusCode, 200, res.body);
+                        assert.strictEqual(res.statusCode, 200, res.body);
                         var parsedBody = JSON.parse(res.body);
-                        assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+                        assert.strictEqual(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
                         next();
                     } catch (err) {
                         next(err);
@@ -608,9 +609,9 @@ describe('app.test', function () {
                     method: 'GET'
                 }, { }, function (err, res) {
                     try {
-                        assert.equal(res.statusCode, 200, res.body);
+                        assert.strictEqual(res.statusCode, 200, res.body);
                         var parsedBody = JSON.parse(res.body);
-                        assert.equal(parsedBody.rows[0].d, '2000-01-01T01:00:00+0100');
+                        assert.strictEqual(parsedBody.rows[0].d, '2000-01-01T01:00:00+0100');
                         next();
                     } catch (err) {
                         next(err);
@@ -628,9 +629,9 @@ describe('app.test', function () {
                     method: 'GET'
                 }, { }, function (err, res) {
                     try {
-                        assert.equal(res.statusCode, 200, res.body);
+                        assert.strictEqual(res.statusCode, 200, res.body);
                         var parsedBody = JSON.parse(res.body);
-                        assert.equal(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
+                        assert.strictEqual(parsedBody.rows[0].d, '2000-01-01T00:00:00+0100');
                         next();
                     } catch (err) {
                         next(err);
@@ -672,8 +673,8 @@ describe('app.test', function () {
                     try {
                         var parsedBody = JSON.parse(res.body);
                         assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
-                        assert.equal(parsedBody.notices.length, 1);
-                        assert.equal(parsedBody.notices[0], 'hello notice');
+                        assert.strictEqual(parsedBody.notices.length, 1);
+                        assert.strictEqual(parsedBody.notices[0], 'hello notice');
                     } catch (e) {
                         return next(e);
                     }
@@ -693,8 +694,8 @@ describe('app.test', function () {
                     try {
                         var parsedBody = JSON.parse(res.body);
                         assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
-                        assert.equal(parsedBody.warnings.length, 1);
-                        assert.equal(parsedBody.warnings[0], 'hello warning');
+                        assert.strictEqual(parsedBody.warnings.length, 1);
+                        assert.strictEqual(parsedBody.warnings[0], 'hello warning');
                     } catch (e) {
                         return next(e);
                     }
@@ -715,11 +716,11 @@ describe('app.test', function () {
                     try {
                         var parsedBody = JSON.parse(res.body);
                         assert.ok(parsedBody.hasOwnProperty('warnings'), 'Missing warnings from result');
-                        assert.equal(parsedBody.warnings.length, 1);
-                        assert.equal(parsedBody.warnings[0], 'hello again warning');
+                        assert.strictEqual(parsedBody.warnings.length, 1);
+                        assert.strictEqual(parsedBody.warnings[0], 'hello again warning');
                         assert.ok(parsedBody.hasOwnProperty('notices'), 'Missing notices from result');
-                        assert.equal(parsedBody.notices.length, 1);
-                        assert.equal(parsedBody.notices[0], 'hello again notice');
+                        assert.strictEqual(parsedBody.notices.length, 1);
+                        assert.strictEqual(parsedBody.notices[0], 'hello again notice');
                     } catch (e) {
                         return next(e);
                     }
@@ -736,7 +737,7 @@ describe('app.test', function () {
                     method: 'GET'
                 }, RESPONSE_OK, function (err, res) {
                     try {
-                        assert.equal(res.statusCode, 200, res.body);
+                        assert.strictEqual(res.statusCode, 200, res.body);
                         JSON.parse(res.body);
                     } catch (e) {
                         err = new Error(err + ',' + e);
@@ -753,7 +754,7 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
-            assert.equal(res.statusCode, 200, res.body);
+            assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body.match(/foo\_jsonp\(.*\)/));
             done();
         });
@@ -765,7 +766,7 @@ describe('app.test', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-            assert.equal(res.statusCode, 200, res.statusCode + ': ' + res.body);
+            assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
             var didRunJsonCallback = false;
             // jshint ignore:start
             function foo_jsonp (body) {
@@ -793,7 +794,7 @@ describe('app.test', function () {
         },
         function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error.error, [
+            assert.deepStrictEqual(error.error, [
                 'You are over platform\'s limits: SQL query timeout error.' +
                     ' Refactor your query before running again or contact CARTO support for more details.'
             ]);
@@ -816,7 +817,7 @@ describe('app.test', function () {
         },
         function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error.error, [
+            assert.deepStrictEqual(error.error, [
                 'You are over platform\'s limits: SQL query timeout error.' +
                     ' Refactor your query before running again or contact CARTO support for more details.'
             ]);
@@ -839,7 +840,7 @@ describe('app.test', function () {
         },
         function (err, res) {
             var error = JSON.parse(res.body);
-            assert.deepEqual(error.error, [
+            assert.deepStrictEqual(error.error, [
                 'You are over platform\'s limits: SQL query timeout error.' +
                     ' Refactor your query before running again or contact CARTO support for more details.'
             ]);
@@ -874,11 +875,11 @@ describe('app.test', function () {
                 status: 400
             },
             function () {
-                assert.equal(hit, true);
+                assert.strictEqual(hit, true);
                 var parsedError = JSON.parse(consoleError);
                 assert.ok(parsedError.error.match(/^row too large.*/i), 'Expecting row size limit error');
-                assert.equal(parsedError.username, 'vizzuality');
-                assert.equal(parsedError.type, 'row_size_limit_exceeded');
+                assert.strictEqual(parsedError.username, 'vizzuality');
+                assert.strictEqual(parsedError.type, 'row_size_limit_exceeded');
 
                 global.settings.db_max_row_size = dbMaxRowSize;
                 console.error = consoleErrorFn;

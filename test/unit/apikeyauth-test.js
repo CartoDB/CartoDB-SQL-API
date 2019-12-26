@@ -66,7 +66,7 @@ describe.skip('has credentials', function () {
 
     function testCredentials (req, hasCredentials) {
         var apiKeyAuth = new ApikeyAuth(req);
-        assert.equal(apiKeyAuth.hasCredentials(), hasCredentials);
+        assert.strictEqual(apiKeyAuth.hasCredentials(), hasCredentials);
     }
 });
 
@@ -82,7 +82,7 @@ describe.skip('verifyCredentials', function () {
     function testVerifyCredentials (req, options, shouldBeValid, done) {
         var apiKeyAuth = new ApikeyAuth(req);
         apiKeyAuth.verifyCredentials(options, function (err, validCredentials) {
-            assert.equal(validCredentials, shouldBeValid);
+            assert.strictEqual(validCredentials, shouldBeValid);
             done();
         });
     }

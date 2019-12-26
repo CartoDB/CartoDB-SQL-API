@@ -17,7 +17,7 @@ describe('query info', function () {
             validQueries.forEach(query => {
                 it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
-                    assert.equal(result, 'CSV');
+                    assert.strictEqual(result, 'CSV');
                 });
             });
         });
@@ -31,7 +31,7 @@ describe('query info', function () {
             validQueries.forEach(query => {
                 it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
-                    assert.equal(result, 'TEXT');
+                    assert.strictEqual(result, 'TEXT');
                 });
             });
         });
@@ -44,7 +44,7 @@ describe('query info', function () {
             validQueries.forEach(query => {
                 it(query, function () {
                     const result = queryInfo.getFormatFromCopyQuery(query);
-                    assert.equal(result, 'BINARY');
+                    assert.strictEqual(result, 'BINARY');
                 });
             });
         });

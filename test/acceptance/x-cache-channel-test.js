@@ -30,13 +30,13 @@ describe('X-Cache-Channel header', function () {
         var databaseAndTables = xCacheChannel.split(':');
         var databaseName = databaseAndTables[0];
 
-        assert.equal(databaseName, 'cartodb_test_user_1_db');
+        assert.strictEqual(databaseName, 'cartodb_test_user_1_db');
 
         var headerTableNames = databaseAndTables[1].split(',');
-        assert.equal(headerTableNames.length, expectedTablesNames.length);
+        assert.strictEqual(headerTableNames.length, expectedTablesNames.length);
 
         var tablesDiff = _.difference(expectedTablesNames, headerTableNames);
-        assert.equal(tablesDiff.length, 0, 'X-Cache-Channel header missing tables: ' + tablesDiff.join(','));
+        assert.strictEqual(tablesDiff.length, 0, 'X-Cache-Channel header missing tables: ' + tablesDiff.join(','));
     }
 
     function tableNamesInCacheChannelHeader (expectedTableNames, done) {

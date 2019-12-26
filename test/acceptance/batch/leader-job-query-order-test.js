@@ -64,13 +64,13 @@ describe('multiple batch clients job query order', function () {
                         if (err) {
                             return done(err);
                         }
-                        assert.equal(job1.status, JobStatus.DONE);
-                        assert.equal(job2.status, JobStatus.DONE);
+                        assert.strictEqual(job1.status, JobStatus.DONE);
+                        assert.strictEqual(job2.status, JobStatus.DONE);
 
                         self.testClient.getResult('select * from ordered_inserts', function (err, rows) {
                             assert.ok(!err);
 
-                            assert.deepEqual(rows, [{ status: 1 }, { status: 2 }, { status: 3 }]);
+                            assert.deepStrictEqual(rows, [{ status: 1 }, { status: 2 }, { status: 3 }]);
                             assert.ok(
                                 new Date(job1.updated_at).getTime() < new Date(job2.updated_at).getTime(),
                                 'job1 (' + job1.updated_at + ') should finish before job2 (' + job2.updated_at + ')'

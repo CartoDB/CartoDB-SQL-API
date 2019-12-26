@@ -45,10 +45,10 @@ describe('copy-statements', function () {
             method: 'GET'
         }, {}, function (err, res) {
         // We expect a problem, actually
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
-            assert.deepEqual(JSON.parse(res.body), { error: ['COPY from stdin failed: No source stream defined'] });
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
+            assert.deepStrictEqual(JSON.parse(res.body), { error: ['COPY from stdin failed: No source stream defined'] });
             done();
         });
     });
@@ -63,9 +63,9 @@ describe('copy-statements', function () {
             method: 'GET'
         }, {}, function (err, res) {
         // We expect a problem, actually
-            assert.equal(res.statusCode, 400, res.statusCode + ': ' + res.body);
-            assert.deepEqual(res.headers['content-type'], 'application/json; charset=utf-8');
-            assert.deepEqual(res.headers['content-disposition'], 'inline');
+            assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
+            assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
+            assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             const error_exp = /must be superuser.* to COPY.* a file/;
             const hint_exp = /Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone./;
             assert.ok(JSON.parse(res.body).error[0].match(error_exp));

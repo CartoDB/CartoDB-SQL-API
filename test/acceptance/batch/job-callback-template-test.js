@@ -63,8 +63,8 @@ describe('Batch API callback templates', function () {
                             if (err) {
                                 return done(err);
                             }
-                            assert.equal(rows[0].job_id, job.job_id);
-                            assert.equal(rows[0].error_message, 'relation "invalid_table" does not exist');
+                            assert.strictEqual(rows[0].job_id, job.job_id);
+                            assert.strictEqual(rows[0].error_message, 'relation "invalid_table" does not exist');
                             self.testClient.getResult('drop table test_batch_errors', done);
                         });
                     });
@@ -117,7 +117,7 @@ describe('Batch API callback templates', function () {
                     if (err) {
                         return done(err);
                     }
-                    assert.equal(rows[0].job_id, job.job_id);
+                    assert.strictEqual(rows[0].job_id, job.job_id);
 
                     self.testClient.getResult('drop table batch_jobs', done);
                 });

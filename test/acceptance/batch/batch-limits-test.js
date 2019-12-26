@@ -41,7 +41,7 @@ describe('batch query statement_timeout limit', function () {
                 if (err) {
                     return done(err);
                 }
-                assert.equal(job.status, JobStatus.FAILED);
+                assert.strictEqual(job.status, JobStatus.FAILED);
                 assert.ok(job.failed_reason.match(/statement.*timeout/));
                 return done();
             });
