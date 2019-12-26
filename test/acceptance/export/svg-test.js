@@ -17,6 +17,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -38,6 +39,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
@@ -60,6 +62,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.ok(/filename=mysvg.svg/gi.test(cd), cd);
@@ -80,6 +83,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -102,6 +106,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.ok(/filename=cartodb-query.svg/gi.test(cd), cd);
@@ -115,6 +120,7 @@ describe('export.svg', function () {
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             }, {}, function (err, res) {
+                assert.ifError(err);
                 assert.strictEqual(res.statusCode, 200, res.body);
                 var cd = res.headers['content-disposition'];
                 assert.strictEqual(true, /^attachment/.test(cd), 'SVG is not disposed as attachment: ' + cd);
@@ -140,6 +146,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
@@ -160,6 +167,7 @@ describe('export.svg', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             assert.deepStrictEqual(JSON.parse(res.body), {
                 error: ['column "the_geom" does not exist']
@@ -185,6 +193,7 @@ describe('export.svg', function () {
                 status: 400
             },
             function (err, res) {
+                assert.ifError(err);
                 var parsedBody = JSON.parse(res.body);
                 assert.deepStrictEqual(Object.keys(parsedBody), ['error']);
                 assert.deepStrictEqual(parsedBody.error, ['division by zero']);

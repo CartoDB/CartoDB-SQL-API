@@ -31,14 +31,14 @@ describe('scheduler', function () {
     }
 
     ManualTaskRunner.prototype.run = function (user, callback) {
-        if (!this.userTasks.hasOwnProperty(user)) {
+        if (!Object.prototype.hasOwnProperty.call(this.userTasks, user)) {
             this.userTasks[user] = [];
         }
         this.userTasks[user].push(callback);
     };
 
     ManualTaskRunner.prototype.dispatch = function (user, isDone) {
-        if (this.userTasks.hasOwnProperty(user)) {
+        if (Object.prototype.hasOwnProperty.call(this.userTasks, user)) {
             var cb = this.userTasks[user].shift();
             if (cb) {
                 return cb(null, isDone);

@@ -13,6 +13,7 @@ describe('spatialite query', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             assert.strictEqual(res.headers['content-type'], 'application/x-sqlite3; charset=utf-8');
             var db = new sqlite.Database(':memory:', res.body);
@@ -30,6 +31,7 @@ describe('spatialite query', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.headers['content-type'], 'application/x-sqlite3; charset=utf-8');
             assert.notEqual(res.headers['content-disposition'].indexOf('manolo.sqlite'), -1);
             done();
@@ -42,6 +44,7 @@ describe('spatialite query', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             var db = new sqlite.Database(':memory:', res.body);
             var schemaQuery = "SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name";
             var qr = db.get(schemaQuery, function (err) {

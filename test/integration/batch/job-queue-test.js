@@ -12,7 +12,6 @@ var JobQueue = require('../../../lib/batch/job-queue');
 var JobBackend = require('../../../lib/batch/job-backend');
 var JobService = require('../../../lib/batch/job-service');
 var JobCanceller = require('../../../lib/batch/job-canceller');
-var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
 describe('job queue', function () {
     var pool = redisUtils.getPool();

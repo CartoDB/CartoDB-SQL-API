@@ -6,11 +6,11 @@ var server = require('../../../lib/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 
-// use dec_sep for internationalization
-var checkDecimals = function (x, dec_sep) {
+// use decSep for internationalization
+var checkDecimals = function (x, decSep) {
     var tmp = '' + x;
-    if (tmp.indexOf(dec_sep) > -1) {
-        return tmp.length - tmp.indexOf(dec_sep) - 1;
+    if (tmp.indexOf(decSep) > -1) {
+        return tmp.length - tmp.indexOf(decSep) - 1;
     } else {
         return 0;
     }
@@ -25,6 +25,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -40,6 +41,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -54,6 +56,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /filename=cartodb-query.geojson/gi.test(cd));
@@ -67,6 +70,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /filename=x.geojson/gi.test(cd), cd);
@@ -80,13 +84,14 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
-            var parsed_body = JSON.parse(res.body);
-            var row0 = parsed_body.features[0].properties;
+            var parsedBody = JSON.parse(res.body);
+            var row0 = parsedBody.features[0].properties;
             var checkfields = { name: 1, cartodb_id: 1, the_geom: 0, the_geom_webmercator: 0 };
             for (var f in checkfields) {
                 if (checkfields[f]) {
-                    assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+                    assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
                     assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
                 }
@@ -101,15 +106,16 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
-            var parsed_body = JSON.parse(res.body);
-            var row0 = parsed_body.features[0].properties;
+            var parsedBody = JSON.parse(res.body);
+            var row0 = parsedBody.features[0].properties;
             var checkfields = { name: 1, cartodb_id: 0, the_geom: 0, the_geom_webmercator: 0 };
             for (var f in checkfields) {
                 if (checkfields[f]) {
-                    assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+                    assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
-                    assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+                    assert.ok(!Object.prototype.hasOwnProperty.call(row0, f), "result includes '" + f + "'");
                 }
             }
             done();
@@ -126,6 +132,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var result = JSON.parse(res.body);
             assert.strictEqual(1, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
@@ -142,6 +149,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var result = JSON.parse(res.body);
             assert.strictEqual(6, checkDecimals(result.features[0].geometry.coordinates[0], '.'));
@@ -158,6 +166,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'GEOJSON is not disposed as attachment: ' + cd);
@@ -185,6 +194,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 400, res.body);
             var geoJson = JSON.parse(res.body);
             assert.ok(geoJson.error);
@@ -203,6 +213,7 @@ describe('export.geojson', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var geoJson = JSON.parse(res.body);
             var expectedGeoJson = { type: 'FeatureCollection', features: [] };

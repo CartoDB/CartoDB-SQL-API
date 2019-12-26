@@ -29,7 +29,7 @@ var HOST = 'localhost';
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
 function runQueryHelper (job, callback) {
-    var job_id = job.job_id;
+    var jobId = job.job_id;
     var sql = job.query;
 
     job.status = jobStatus.RUNNING;
@@ -49,7 +49,7 @@ function runQueryHelper (job, callback) {
 
         const pg = new PSQL(dbConfiguration);
 
-        sql = '/* ' + job_id + ' */ ' + sql;
+        sql = '/* ' + jobId + ' */ ' + sql;
 
         pg.eventedQuery(sql, function (err, query) {
             if (err) {

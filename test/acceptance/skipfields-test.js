@@ -19,13 +19,14 @@ describe('skipfields', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var row0 = JSON.parse(res.body).rows[0];
             var checkfields = { name: 1, cartodb_id: 0, the_geom: 1, the_geom_webmercator: 0 };
             for (var f in checkfields) {
                 if (checkfields[f]) {
-                    assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+                    assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
-                    assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+                    assert.ok(!Object.prototype.hasOwnProperty.call(row0, f), "result includes '" + f + "'");
                 }
             }
             done();
@@ -39,13 +40,14 @@ describe('skipfields', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var row0 = JSON.parse(res.body).rows[0];
             var checkfields = { name: 1, cartodb_id: 0, the_geom: 1, the_geom_webmercator: 0 };
             for (var f in checkfields) {
                 if (checkfields[f]) {
-                    assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+                    assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
-                    assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+                    assert.ok(!Object.prototype.hasOwnProperty.call(row0, f), "result includes '" + f + "'");
                 }
             }
             done();
@@ -62,11 +64,12 @@ describe('skipfields', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var parsedBody = JSON.parse(res.body);
             assert.strictEqual(_.keys(parsedBody.fields).length, 2);
-            assert.ok(parsedBody.fields.hasOwnProperty('a'));
-            assert.ok(!parsedBody.fields.hasOwnProperty('b'));
-            assert.ok(parsedBody.fields.hasOwnProperty('c'));
+            assert.ok(Object.prototype.hasOwnProperty.call(parsedBody.fields, 'a'));
+            assert.ok(!Object.prototype.hasOwnProperty.call(parsedBody.fields, 'b'));
+            assert.ok(Object.prototype.hasOwnProperty.call(parsedBody.fields, 'c'));
             done();
         });
     });
@@ -76,14 +79,15 @@ describe('skipfields', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var row0 = JSON.parse(res.body).rows[0];
             var checkfields = { name: 1, cartodb_id: 1, the_geom: 1, the_geom_webmercator: 1 };
             for (var f in checkfields) {
                 if (checkfields[f]) {
-                    assert.ok(row0.hasOwnProperty(f), "result does not include '" + f + "'");
+                    assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
-                    assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+                    assert.ok(!Object.prototype.hasOwnProperty.call(row0, f), "result includes '" + f + "'");
                 }
             }
             done();

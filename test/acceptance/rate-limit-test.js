@@ -56,7 +56,7 @@ function assertRequest (status, limit, remaining, reset, retry, done = null) {
 
             if (status === 429) {
                 const expectedResponse = {
-                    error: ["You are over platform\'s limits. Please contact us to know more details"],
+                    error: ['You are over platform\'s limits. Please contact us to know more details'],
                     context: 'limit',
                     detail: 'rate-limit'
                 };

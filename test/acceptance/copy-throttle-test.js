@@ -11,12 +11,15 @@ const { Readable } = require('stream');
 const createTableQuery = 'CREATE TABLE copy_from_throttle AS (SELECT 0::text AS counter)';
 const dropTableQuery = 'DROP TABLE copy_from_throttle';
 
-function * counterGenerator (timeout, max_count) {
+function * counterGenerator (timeout, maxCount) {
     let counter = 0;
 
-    while (!max_count || counter <= max_count) {
-        yield new Promise(resolve => setTimeout(() => resolve(`${counter++}`), timeout)); // jshint ignore:line
+    if (!maxCount) {
+        while (counter <= maxCount) {
+            yield new Promise(resolve => setTimeout(() => resolve(`${counter++}`), timeout));
+        }
     }
+
     // generate also a delayed final marker (null) to simplify handling into a stream.
     yield new Promise(resolve => setTimeout(() => resolve(null), timeout));
 }

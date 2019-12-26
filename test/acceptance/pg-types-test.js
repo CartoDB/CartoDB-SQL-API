@@ -21,6 +21,7 @@ describe('PG field type information', function () {
             },
             okResponse,
             function (err, res) {
+                assert.ifError(err);
                 const body = JSON.parse(res.body);
 
                 assert.deepStrictEqual(body.fields, {

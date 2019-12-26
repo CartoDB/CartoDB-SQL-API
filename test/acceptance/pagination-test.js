@@ -25,6 +25,7 @@ describe('results-pagination', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
             var parsed = JSON.parse(res.body);
             assert.strictEqual(parsed.rows.length, 1);
@@ -60,15 +61,15 @@ describe('results-pagination', function () {
             var prcur = pr[testing++];
             var page = prcur[0];
             var nrows = prcur[1];
-            var data_obj = {
+            var dataObj = {
                 q: sql,
                 rows_per_page: nrows,
                 page: page
             };
             if (authorized) {
-                data_obj.api_key = '1234';
+                dataObj.api_key = '1234';
             }
-            var data = querystring.stringify(data_obj);
+            var data = querystring.stringify(dataObj);
             var req = {
                 url: '/api/v1/sql',
                 headers: { host: 'vizzuality.cartodb.com' }
@@ -82,6 +83,7 @@ describe('results-pagination', function () {
                 req.data = data;
             }
             assert.response(server, req, RESPONSE_OK, function (err, res) {
+                assert.ifError(err);
                 var parsed = JSON.parse(res.body);
                 assert.strictEqual(parsed.rows.length, nrows);
                 for (var i = 0; i < nrows; ++i) {
@@ -110,6 +112,7 @@ describe('results-pagination', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var parsed = JSON.parse(res.body);
             assert.strictEqual(parsed.rows.length, 3);
             for (var i = 0; i < nrows; ++i) {
@@ -123,48 +126,57 @@ describe('results-pagination', function () {
 
     // See http://github.com/CartoDB/CartoDB-SQL-API/issues/127
     it('SELECT INTO with paging', function (done) {
-        var esc_tabname = 'test ""select into""'; // escaped ident
+        var escTabname = 'test ""select into""'; // escaped ident
         step(
-            function select_into () {
+            function selectInto () {
                 var next = this;
                 assert.response(server, {
                     url: '/api/v1/sql?' + querystring.stringify({
-                        q: 'SELECT generate_series(1,10) InTO "' + esc_tabname + '"',
+                        q: 'SELECT generate_series(1,10) InTO "' + escTabname + '"',
                         rows_per_page: 1,
                         page: 1,
                         api_key: 1234
                     }),
                     headers: { host: 'vizzuality.cartodb.com' },
                     method: 'GET'
-                }, RESPONSE_OK, function (err, res) { next(null, res); });
+                }, RESPONSE_OK, function (err, res) {
+                    assert.ifError(err);
+                    next(null, res);
+                });
             },
-            function check_res_test_fake_into_1 (err) {
+            function checkResTestFakeInto1 (err) {
                 assert.ifError(err);
                 var next = this;
                 assert.response(server, {
                     url: '/api/v1/sql?' + querystring.stringify({
-                        q: 'SELECT \' INTO "c"\' FROM "' + esc_tabname + '"',
+                        q: 'SELECT \' INTO "c"\' FROM "' + escTabname + '"',
                         rows_per_page: 1,
                         page: 1,
                         api_key: 1234
                     }),
                     headers: { host: 'vizzuality.cartodb.com' },
                     method: 'GET'
-                }, RESPONSE_OK, function (err, res) { next(null, res); });
+                }, RESPONSE_OK, function (err, res) {
+                    assert.ifError(err);
+                    next(null, res);
+                });
             },
-            function check_res_drop_table (err, res) {
+            function checkResDropTable (err, res) {
                 assert.ifError(err);
                 var out = JSON.parse(res.body);
                 assert.strictEqual(out.total_rows, 1); // windowing works
                 var next = this;
                 assert.response(server, {
                     url: '/api/v1/sql?' + querystring.stringify({
-                        q: 'DROP TABLE "' + esc_tabname + '"',
+                        q: 'DROP TABLE "' + escTabname + '"',
                         api_key: 1234
                     }),
                     headers: { host: 'vizzuality.cartodb.com' },
                     method: 'GET'
-                }, RESPONSE_OK, function (err, res) { next(null, res); });
+                }, RESPONSE_OK, function (err, res) {
+                    assert.ifError(err);
+                    next(null, res);
+                });
             },
             done
         );

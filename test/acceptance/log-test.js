@@ -124,7 +124,7 @@ describe('Log middleware', function () {
             }
             longQuery += "' as foo";
 
-            const payload = { query: QUERY };
+            const payload = { query: longQuery };
             this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 

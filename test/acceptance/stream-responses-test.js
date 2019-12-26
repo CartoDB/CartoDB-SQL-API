@@ -36,6 +36,7 @@ describe('stream-responses', function () {
                 createFailingQueryRequest(),
                 okResponse,
                 function (err, res) {
+                    assert.ifError(err);
                     var parsedBody = JSON.parse(res.body);
                     assert.strictEqual(parsedBody.rows.length, 2);
                     assert.deepStrictEqual(parsedBody.error, ['division by zero']);
@@ -52,6 +53,7 @@ describe('stream-responses', function () {
                 createFailingQueryRequest('geojson'),
                 okResponse,
                 function (err, res) {
+                    assert.ifError(err);
                     var parsedBody = JSON.parse(res.body);
                     assert.strictEqual(parsedBody.features.length, 2);
                     assert.deepStrictEqual(parsedBody.error, ['division by zero']);

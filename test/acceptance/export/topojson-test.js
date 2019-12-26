@@ -36,6 +36,7 @@ describe('export.topojson', function () {
                 status: 200
             },
             function (err, res) {
+                assert.ifError(err);
                 var cd = res.headers['content-disposition'];
                 assert.strictEqual(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
                 assert.strictEqual(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -43,7 +44,7 @@ describe('export.topojson', function () {
                 assert.strictEqual(topojson.type, 'Topology');
 
                 // Check transform
-                assert.ok(topojson.hasOwnProperty('transform'));
+                assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'transform'));
                 var trans = topojson.transform;
                 assert.strictEqual(_.keys(trans).length, 2); // only scale and translate
                 assert.strictEqual(trans.scale.length, 2); // scalex, scaley
@@ -54,7 +55,7 @@ describe('export.topojson', function () {
                 assert.strictEqual(trans.translate[1], -5);
 
                 // Check objects
-                assert.ok(topojson.hasOwnProperty('objects'));
+                assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'objects'));
                 assert.strictEqual(_.keys(topojson.objects).length, 2);
 
                 var obj = topojson.objects[0];
@@ -94,7 +95,7 @@ describe('export.topojson', function () {
                 assert.strictEqual(props.name, 'D');
 
                 // Check arcs
-                assert.ok(topojson.hasOwnProperty('arcs'));
+                assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'arcs'));
                 assert.strictEqual(topojson.arcs.length, 3); // one shared, two non-shared
                 var arc = topojson.arcs[0]; // shared arc
                 assert.strictEqual(arc.length, 2); // shared arc has two vertices
@@ -141,6 +142,7 @@ describe('export.topojson', function () {
             status: 200
         },
         function (err, res) {
+            assert.ifError(err);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'TOPOJSON is not disposed as attachment: ' + cd);
             assert.strictEqual(true, /filename=cartodb-query.topojson/gi.test(cd));
@@ -148,7 +150,7 @@ describe('export.topojson', function () {
             assert.strictEqual(topojson.type, 'Topology');
 
             // Check transform
-            assert.ok(topojson.hasOwnProperty('transform'));
+            assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'transform'));
             var trans = topojson.transform;
             assert.strictEqual(_.keys(trans).length, 2); // only scale and translate
             assert.strictEqual(trans.scale.length, 2); // scalex, scaley
@@ -159,7 +161,7 @@ describe('export.topojson', function () {
             assert.strictEqual(trans.translate[1], 0);
 
             // Check objects
-            assert.ok(topojson.hasOwnProperty('objects'));
+            assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'objects'));
             assert.strictEqual(_.keys(topojson.objects).length, 1);
 
             var obj = topojson.objects[0];
@@ -180,7 +182,7 @@ describe('export.topojson', function () {
             assert.strictEqual(props.name, 'U');
 
             // Check arcs
-            assert.ok(topojson.hasOwnProperty('arcs'));
+            assert.ok(Object.prototype.hasOwnProperty.call(topojson, 'arcs'));
             assert.strictEqual(topojson.arcs.length, 1);
             var arc = topojson.arcs[0];
             assert.deepStrictEqual(arc, [[0, 0], [4999, 9999], [5000, -9999], [-9999, 0]]);
@@ -201,6 +203,7 @@ describe('export.topojson', function () {
                 status: 200
             },
             function (err, res) {
+                assert.ifError(err);
                 var parsedBody = JSON.parse(res.body);
                 assert.strictEqual(parsedBody.objects[0].properties.gid, 1, 'gid was expected property');
                 assert.ok(!parsedBody.objects[0].properties.name);
@@ -215,21 +218,22 @@ describe('export.topojson', function () {
             getRequest(
                 "SELECT 1 as gid, 'U' as name, 'POLYGON((-5 0,5 0,0 5,-5 0))'::geometry as the_geom",
                 {
-                    callback: 'foo_jsonp'
+                    callback: 'fooJsonp'
                 }
             ),
             {
                 status: 200
             },
             function (err, res) {
+                assert.ifError(err);
                 assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
                 var didRunJsonCallback = false;
-                // jshint ignore:start
-                function foo_jsonp (body) {
+                /* eslint-disable */
+                function fooJsonp (body) {
                     didRunJsonCallback = true;
                 }
                 eval(res.body);
-                // jshint ignore:end
+                /* eslint-enable */
                 assert.ok(didRunJsonCallback);
                 done();
             }
@@ -253,6 +257,7 @@ describe('export.topojson', function () {
                 status: 400
             },
             function (err, res) {
+                assert.ifError(err);
                 var parsedBody = JSON.parse(res.body);
                 assert.deepStrictEqual(Object.keys(parsedBody), ['error']);
                 assert.deepStrictEqual(parsedBody.error, ['division by zero']);

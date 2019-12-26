@@ -236,7 +236,7 @@ describe('custom middlewares', function () {
 
                 const parsed = JSON.parse(res.body);
 
-                assert.ok(parsed.hasOwnProperty('cartodb_sql_api'));
+                assert.ok(Object.prototype.hasOwnProperty.call(parsed, 'cartodb_sql_api'));
 
                 done();
             });

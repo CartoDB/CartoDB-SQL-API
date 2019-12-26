@@ -157,7 +157,7 @@ describe('query-returning', function () {
         }, RESPONSE_OK, function (err, res) {
             assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 1);
             assert.strictEqual(out.rows.length, 1);
             assert.strictEqual(_.keys(out.rows[0]).length, 1);

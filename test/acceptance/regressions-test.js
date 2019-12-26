@@ -46,7 +46,7 @@ describe('regressions', function () {
                                 }
 
                                 // table should not get a cache channel as it won't get invalidated
-                                assert.ok(!res.headers.hasOwnProperty('x-cache-channel'));
+                                assert.ok(!Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'));
                                 var parsedBody = JSON.parse(res.body);
                                 assert.strictEqual(parsedBody.total_rows, 2);
                                 assert.deepStrictEqual(parsedBody.rows, [{ a: 1 }, { a: 2 }]);
