@@ -41,7 +41,6 @@ describe('results-pagination', function () {
         var authorized = 0;
         var testing = 0;
         var method = 0;
-        // jshint maxcomplexity:7
         var testNext = function () {
             if (testing >= pr.length) {
                 if (method + 1 >= methods.length) {

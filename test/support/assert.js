@@ -34,7 +34,6 @@ assert.response = function (server, req, res, callback) {
 
     debug('Request definition', req);
 
-    // jshint maxcomplexity:10
     function onServerListening () {
         debug('Server listening on port = %d', port);
         var status = res.status || res.statusCode;

@@ -32,7 +32,7 @@ describe('error-handler-factory', function () {
                 context: error.context,
                 detail: error.detail,
                 hint: error.hint,
-                http_status: error.http_status,
+                httpStatus: error.http_status,
                 name: codeToCondition[error.code] || error.name
             });
 
@@ -48,7 +48,7 @@ describe('error-handler-factory', function () {
                 ' Refactor your query before running again or contact CARTO support for more details.',
             context: 'limit',
             detail: 'datasource',
-            http_status: 429
+            httpStatus: 429
         });
 
         assert.deepStrictEqual(errorHandler, expectedError);
@@ -62,7 +62,7 @@ describe('error-handler-factory', function () {
             context: error.context,
             detail: error.detail,
             hint: error.hint,
-            http_status: 403,
+            httpStatus: 403,
             name: codeToCondition[error.code] || error.name
         });
 
