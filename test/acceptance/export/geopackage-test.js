@@ -54,21 +54,23 @@ describe('geopackage query', function () {
                 db.serialize(function () {
                     var schemaQuery = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
                     var sqr = db.get(schemaQuery, function (err, row) {
+                        assert.ifError(err);
                         assert.strictEqual(err, null);
                         assert.strictEqual(row.name, tableName);
                     });
                     assert.notEqual(sqr, undefined);
 
-                    var gpkgQuery = 'SELECT tableName FROM gpkg_contents';
+                    var gpkgQuery = 'SELECT table_name FROM gpkg_contents';
                     var gqr = db.get(gpkgQuery, function (err, row) {
-                        assert.strictEqual(row.tableName, tableName);
+                        assert.ifError(err);
+                        assert.strictEqual(row.table_name, tableName);
                         assert.strictEqual(err, null);
                     });
                     assert.notEqual(gqr, undefined);
 
                     var dataQuery = 'SELECT * FROM ' + tableName + ' order by cartodb_id';
                     var dqr = db.get(dataQuery, function (err, row) {
-                        assert.strictEqual(err, null);
+                        assert.ifError(err);
                         assert.strictEqual(row.cartodb_id, 1);
                         assert.strictEqual(row.name, 'Hawai');
                         assert.strictEqual(row.fid, undefined);

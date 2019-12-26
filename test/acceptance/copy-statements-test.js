@@ -44,7 +44,8 @@ describe('copy-statements', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-        // We expect a problem, actually
+            assert.ifError(err);
+            // We expect a problem, actually
             assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
@@ -62,14 +63,15 @@ describe('copy-statements', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, {}, function (err, res) {
-        // We expect a problem, actually
+            assert.ifError(err);
+            // We expect a problem, actually
             assert.strictEqual(res.statusCode, 400, res.statusCode + ': ' + res.body);
             assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
-            const error_exp = /must be superuser.* to COPY.* a file/;
-            const hint_exp = /Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone./;
-            assert.ok(JSON.parse(res.body).error[0].match(error_exp));
-            assert.ok(JSON.parse(res.body).hint.match(hint_exp));
+            const errorExp = /must be superuser.* to COPY.* a file/;
+            const hintExp = /Anyone can COPY to stdout or from stdin. psql's \\copy command also works for anyone./;
+            assert.ok(JSON.parse(res.body).error[0].match(errorExp));
+            assert.ok(JSON.parse(res.body).hint.match(hintExp));
             done();
         });
     });

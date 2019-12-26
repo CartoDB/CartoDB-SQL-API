@@ -93,7 +93,7 @@ describe('export.geojson', function () {
                 if (checkfields[f]) {
                     assert.ok(Object.prototype.hasOwnProperty.call(row0, f), "result does not include '" + f + "'");
                 } else {
-                    assert.ok(!row0.hasOwnProperty(f), "result includes '" + f + "'");
+                    assert.ok(!Object.prototype.hasOwnProperty.call(row0, f), "result includes '" + f + "'");
                 }
             }
             done();

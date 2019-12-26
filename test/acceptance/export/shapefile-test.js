@@ -252,7 +252,7 @@ describe('export.shapefile', function () {
             encoding: 'binary',
             method: 'GET'
         }, { }, function (err, res) {
-            assert.ifError(err);v
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var tmpfile = '/tmp/myshape.zip';
             var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
@@ -272,7 +272,7 @@ describe('export.shapefile', function () {
         var concurrency = 1;
         var waiting = concurrency;
         function validate (err, res) {
-            assert.ifError(err);v
+            assert.ifError(err);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
             assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));

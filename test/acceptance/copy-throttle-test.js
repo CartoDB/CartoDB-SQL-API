@@ -14,11 +14,11 @@ const dropTableQuery = 'DROP TABLE copy_from_throttle';
 function * counterGenerator (timeout, maxCount) {
     let counter = 0;
 
-    if (!maxCount) {
-        while (counter <= maxCount) {
-            yield new Promise(resolve => setTimeout(() => resolve(`${counter++}`), timeout));
-        }
+    /* eslint-disable */
+    while (!maxCount || counter <= maxCount) {
+        yield new Promise(resolve => setTimeout(() => resolve(`${counter++}`), timeout));
     }
+    /* eslint-enable */
 
     // generate also a delayed final marker (null) to simplify handling into a stream.
     yield new Promise(resolve => setTimeout(() => resolve(null), timeout));

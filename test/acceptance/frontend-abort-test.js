@@ -53,10 +53,9 @@ describe('frontend abort', function () {
                 timeout = setTimeout(function () { next(null); }, 500);
             },
             function checkSqlServerData (err, data) {
-                assert.ifError(err);
                 clearTimeout(timeout);
+                assert.ok(err.message === 'ETIMEDOUT' || err.message === 'ESOCKETTIMEDOUT');
                 assert.ok(!data, 'SQL Server was contacted no matter client abort');
-                // TODO: intercept logs ?
                 return null;
             },
             function finish (err) {

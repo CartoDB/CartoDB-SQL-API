@@ -17,6 +17,7 @@ describe('export.arraybuffer', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             assert.strictEqual(res.headers['content-type'], 'application/octet-stream');
             done();
@@ -32,6 +33,7 @@ describe('export.arraybuffer', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 400, res.body);
             var result = JSON.parse(res.body);
             assert.strictEqual(result.error[0], 'geometry types are not supported');

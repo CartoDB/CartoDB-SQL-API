@@ -17,6 +17,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -45,6 +46,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.ok(res.body.length > 81920, 'CSV smaller than expected: ' + res.body.length);
             done();
         });
@@ -57,6 +59,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com', 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'POST'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -73,6 +76,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'CSV is not disposed as attachment: ' + cd);
@@ -100,6 +104,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             var row0 = res.body.substring(0, res.body.search(/[\n\r]/)).split(',');
             var checkFields = { name: true, cartodb_id: false, the_geom: true, the_geom_webmercator: true };
@@ -122,6 +127,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body.match(/cartodb_id,geom\r\n.?1.?,"SRID=4326;POINT(.*)"\r\n/));
             done();
@@ -135,11 +141,12 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
-            var obtained_lines = res.body.split('\r\n');
-            assert.ok(obtained_lines.length <= 2, // may or may not have an header
+            var obtainedLines = res.body.split('\r\n');
+            assert.ok(obtainedLines.length <= 2, // may or may not have an header
                 // See http://trac.osgeo.org/gdal/ticket/5234
-                'Too many lines in output (' + obtained_lines.length + '): ' + obtained_lines.join('\n'));
+                'Too many lines in output (' + obtainedLines.length + '): ' + obtainedLines.join('\n'));
             done();
         });
     });
@@ -150,6 +157,7 @@ describe('export.csv', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, { }, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.statusCode, 200, res.body);
             assert.ok(res.body.match(/cartodb_id,address\r\n.?1.?,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n/));
             done();
@@ -160,6 +168,7 @@ describe('export.csv', function () {
         var concurrency = 4;
         var waiting = concurrency;
         function validate (err, res) {
+            assert.ifError(err);
             assert.ok(res.body.match(/cartodb_id,address\r\n.?1.?,"Calle de Pérez Galdós 9, Madrid, Spain"\r\n/));
             if (!--waiting) {
                 done();
@@ -195,10 +204,10 @@ describe('export.csv', function () {
             status: 200
         },
         function (err, res) {
+            assert.ifError(err);
             var headersPlusExtraLine = 2;
             assert.strictEqual(res.body.split('\n').length, limit + headersPlusExtraLine);
             done();
-        }
-        );
+        });
     });
 });
