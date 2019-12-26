@@ -7,7 +7,7 @@ var assert = require('../../support/assert');
 var querystring = require('querystring');
 var libxmljs = require('libxmljs');
 
-describe.only('export.kml', function () {
+describe('export.kml', function () {
 // Check if an attribute is in the KML output
     //
     // NOTE: "name" and "description" attributes are threated specially

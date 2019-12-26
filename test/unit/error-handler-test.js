@@ -88,7 +88,7 @@ describe('error-handler', function () {
     });
 
     it('should escape chars that broke logs regex', function (done) {
-        const badString = 'error: ( ) = " \" \' * $ & |';
+        const badString = 'error: ( ) = " " \' * $ & |';
         const escapedString = 'error                     ';
 
         const error = new Error(badString);

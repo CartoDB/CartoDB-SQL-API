@@ -12,7 +12,7 @@ describe('query-returning', function () {
         statusCode: 200
     };
 
-    var expected_rw_cache_control = 'no-cache,max-age=0,must-revalidate,public';
+    var expectedRwCacheControl = 'no-cache,max-age=0,must-revalidate,public';
 
     // Check results from INSERT
     //
@@ -27,14 +27,15 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 2);
             assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-            assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res, 'x-cache-channel'));
+            assert.strictEqual(res.headers['cache-control'], expectedRwCacheControl);
             done();
         });
     });
@@ -52,14 +53,15 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 2);
             assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-            assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res, 'x-cache-channel'));
+            assert.strictEqual(res.headers['cache-control'], expectedRwCacheControl);
             done();
         });
     });
@@ -77,14 +79,15 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 2);
             assert.strictEqual(out.rows.length, 0);
             // Check cache headers
             // See https://github.com/Vizzuality/CartoDB-SQL-API/issues/43
-            assert.ok(!res.hasOwnProperty('x-cache-channel'));
-            assert.strictEqual(res.headers['cache-control'], expected_rw_cache_control);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res, 'x-cache-channel'));
+            assert.strictEqual(res.headers['cache-control'], expectedRwCacheControl);
             done();
         });
     });
@@ -102,8 +105,9 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 1);
             assert.strictEqual(out.rows.length, 1);
             assert.strictEqual(_.keys(out.rows[0]).length, 2);
@@ -126,8 +130,9 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
-            assert.ok(out.hasOwnProperty('time'));
+            assert.ok(Object.prototype.hasOwnProperty.call(out, 'time'));
             assert.strictEqual(out.total_rows, 1);
             assert.strictEqual(out.rows.length, 1);
             assert.strictEqual(_.keys(out.rows[0]).length, 2);
@@ -150,6 +155,7 @@ describe('query-returning', function () {
             headers: { host: 'vizzuality.localhost.lan:8080' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var out = JSON.parse(res.body);
             assert.ok(out.hasOwnProperty('time'));
             assert.strictEqual(out.total_rows, 1);
