@@ -72,7 +72,7 @@ TestClient.prototype.getAuthorization = function (override) {
     const auth = override.authorization || this.config.authorization;
 
     if (auth) {
-        return `Basic ${new Buffer(auth).toString('base64')}`;
+        return `Basic ${Buffer.from(auth).toString('base64')}`;
     }
 };
 
@@ -118,7 +118,6 @@ TestClient.prototype.setUserRenderTimeoutLimit = function (user, userTimeoutLimi
 TestClient.prototype.setUserDatabaseTimeoutLimit = function (user, timeoutLimit, callback) {
     const dbname = _.template(global.settings.db_base_name, { user_id: 1 });
     const dbuser = _.template(global.settings.db_user, { user_id: 1 });
-    const pass = _.template(global.settings.db_user_pass, { user_id: 1 });
     const publicuser = global.settings.db_pubuser;
 
     const psql = new PSQL({

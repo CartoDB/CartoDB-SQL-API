@@ -170,7 +170,7 @@ BatchTestClient.prototype.getAuthorization = function (override) {
     const auth = override.authorization || this.config.authorization;
 
     if (auth) {
-        return `Basic ${new Buffer(auth).toString('base64')}`;
+        return `Basic ${Buffer.from(auth).toString('base64')}`;
     }
 };
 
@@ -287,7 +287,7 @@ JobResult.prototype.validateExpectedResponse = function (expected) {
         });
         var propsToCheckDate = ['started_at', 'ended_at'];
         propsToCheckDate.forEach(function (propToCheckDate) {
-            if (actualQuery.hasOwnProperty(propToCheckDate)) {
+            if (Object.prototype.hasOwnProperty.call(actualQuery, propToCheckDate)) {
                 assert.ok(new Date(actualQuery[propToCheckDate]));
             }
         });

@@ -41,6 +41,7 @@ describe('X-Cache-Channel header', function () {
 
     function tableNamesInCacheChannelHeader (expectedTableNames, done) {
         return function (err, res) {
+            assert.ifError(err);
             xCacheChannelHeaderHasTables(res.headers['x-cache-channel'], expectedTableNames);
             done();
         };
@@ -85,7 +86,8 @@ describe('X-Cache-Channel header', function () {
     it('should not add header for functions', function (done) {
         var sql = "SELECT format('%s', 'wadus')";
         assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
-            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            assert.ifError(err);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });
@@ -93,7 +95,8 @@ describe('X-Cache-Channel header', function () {
     it('should not add header for CDB_QueryTables', function (done) {
         var sql = "SELECT CDB_QueryTablesText('select * from untitle_table_4')";
         assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
-            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            assert.ifError(err);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });
@@ -101,7 +104,8 @@ describe('X-Cache-Channel header', function () {
     it('should not add header for non table results', function (done) {
         var sql = "SELECT 'wadus'::text";
         assert.response(server, createGetRequest(sql), RESPONSE_OK, function (err, res) {
-            assert.ok(!res.headers.hasOwnProperty('x-cache-channel'), res.headers['x-cache-channel']);
+            assert.ifError(err);
+            assert.ok(!Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'), res.headers['x-cache-channel']);
             done();
         });
     });

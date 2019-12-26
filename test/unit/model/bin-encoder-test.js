@@ -29,7 +29,7 @@ describe('ArrayBufferSer', function () {
         assert.strictEqual(b.type, ArrayBufferSer.BUFFER);
     });
 
-    function assert_buffer_equals (a, b) {
+    function assertBufferEquals (a, b) {
         assert.strictEqual(a.length, b.length);
         for (var i = 0; i < a.length; ++i) {
             assert.strictEqual(a[i], b[i], 'byte i ' + i + ' is different: ' + a[i] + ' != ' + b[i]);
@@ -38,8 +38,8 @@ describe('ArrayBufferSer', function () {
 
     it('binary data is ok', function () {
         var b = new ArrayBufferSer(ArrayBufferSer.INT16, [1, 2, 3, 4]);
-        var bf = new Buffer([0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 8, 1, 0, 2, 0, 3, 0, 4, 0]);
-        assert_buffer_equals(bf, b.buffer);
+        var bf = Buffer.from([0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 8, 1, 0, 2, 0, 3, 0, 4, 0]);
+        assertBufferEquals(bf, b.buffer);
     });
 
     it('binary data is ok with arrays', function () {
@@ -47,18 +47,18 @@ describe('ArrayBufferSer', function () {
         var bc = new ArrayBufferSer(ArrayBufferSer.INT16, [1, 4]);
 
         var b = new ArrayBufferSer(ArrayBufferSer.BUFFER, [ba, bc]);
-        var bf = new Buffer([
+        var bf = Buffer.from([
             0, 0, 0, ArrayBufferSer.BUFFER, // type
             0, 0, 0, 28,
             0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 8, 1, 0, 2, 0, 3, 0, 4, 0,
             0, 0, 0, ArrayBufferSer.INT16, 0, 0, 0, 4, 1, 0, 4, 0]);
-        assert_buffer_equals(bf, b.buffer);
+        assertBufferEquals(bf, b.buffer);
     });
 
     it('binary data is ok with strings', function () {
         var s = 'test';
         var b = new ArrayBufferSer(ArrayBufferSer.STRING, [s]);
-        var bf = new Buffer([
+        var bf = Buffer.from([
             0, 0, 0, ArrayBufferSer.STRING, // type
             0, 0, 0, 16,
             0, 0, 0, ArrayBufferSer.UINT16,
@@ -68,6 +68,6 @@ describe('ArrayBufferSer', function () {
             s.charCodeAt(2), 0,
             s.charCodeAt(3), 0
         ]);
-        assert_buffer_equals(bf, b.buffer);
+        assertBufferEquals(bf, b.buffer);
     });
 });

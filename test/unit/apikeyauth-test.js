@@ -82,6 +82,7 @@ describe.skip('verifyCredentials', function () {
     function testVerifyCredentials (req, options, shouldBeValid, done) {
         var apiKeyAuth = new ApikeyAuth(req);
         apiKeyAuth.verifyCredentials(options, function (err, validCredentials) {
+            assert.ifError(err);
             assert.strictEqual(validCredentials, shouldBeValid);
             done();
         });

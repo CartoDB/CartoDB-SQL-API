@@ -52,6 +52,7 @@ describe('system-queries', function () {
                     url: '/api/v1/sql?' + querystring.stringify(queryStringParams)
                 };
                 assert.response(server, request, function (err, response) {
+                    assert.ifError(err);
                     assert.strictEqual(response.statusCode, statusErrorCode);
                     done();
                 });
