@@ -56,6 +56,7 @@ describe('app.auth', function () {
             },
             {},
             function (err, res) {
+                assert.ifError(err);
                 assert.strictEqual(res.statusCode, scenario.statusCode, res.statusCode + ': ' + res.body);
                 done();
             }

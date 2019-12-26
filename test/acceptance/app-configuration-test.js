@@ -24,18 +24,19 @@ describe('app-configuration', function () {
         statusCode: 200
     };
 
-    var expected_cache_control = 'no-cache,max-age=31536000,must-revalidate,public';
-    var expected_cache_control_persist = 'public,max-age=31536000';
+    var expectedCacheControl = 'no-cache,max-age=31536000,must-revalidate,public';
+    var expectedCacheControlPersist = 'public,max-age=31536000';
 
     it('GET /api/v1/version', function (done) {
         assert.response(server, {
             url: '/api/v1/version',
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             var parsed = JSON.parse(res.body);
-            var sqlapi_version = require(__dirname + '/../../package.json').version;
-            assert.ok(parsed.hasOwnProperty('cartodb_sql_api'), "No 'cartodb_sql_api' version in " + parsed);
-            assert.strictEqual(parsed.cartodb_sql_api, sqlapi_version);
+            var sqlapiversion = require('../../package.json').version;
+            assert.ok(Object.prototype.hasOwnProperty.call(parsed, 'cartodb_sql_api'), "No 'cartodb_sql_api' version in " + parsed);
+            assert.strictEqual(parsed.cartodb_sql_api, sqlapiversion);
             done();
         });
     });
@@ -48,6 +49,7 @@ describe('app-configuration', function () {
         }, {
             status: 400
         }, function (err, res) {
+            assert.ifError(err);
             assert.deepStrictEqual(res.headers['content-type'], 'application/json; charset=utf-8');
             assert.deepStrictEqual(res.headers['content-disposition'], 'inline');
             assert.deepStrictEqual(JSON.parse(res.body), { error: ['You must indicate a sql query'] });
@@ -71,6 +73,7 @@ describe('app-configuration', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(
                 res.headers['access-control-allow-headers'],
                 accessControlHeaders
@@ -91,6 +94,7 @@ describe('app-configuration', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'OPTIONS'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             assert.strictEqual(res.body, '');
             assert.strictEqual(
                 res.headers['access-control-allow-headers'],
@@ -112,11 +116,12 @@ describe('app-configuration', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             // Check cache headers
-            assert.ok(res.headers.hasOwnProperty('x-cache-channel'));
+            assert.ok(Object.prototype.hasOwnProperty.call(res.headers, 'x-cache-channel'));
             // See https://github.com/CartoDB/CartoDB-SQL-API/issues/105
             assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
-            assert.strictEqual(res.headers['cache-control'], expected_cache_control_persist);
+            assert.strictEqual(res.headers['cache-control'], expectedCacheControlPersist);
             done();
         });
     });
@@ -130,6 +135,7 @@ describe('app-configuration', function () {
             headers: { host: 'cartodb250user.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             global.settings.db_host = backupDBHost;
             try {
                 var parsed = JSON.parse(res.body);
@@ -151,6 +157,7 @@ describe('app-configuration', function () {
             headers: { host: 'cartodb250user.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             global.settings.db_user_pass = backupDBUserPass;
             try {
                 assert.strictEqual(res.statusCode, 200, res.statusCode + ': ' + res.body);
@@ -173,9 +180,10 @@ describe('app-configuration', function () {
             headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         }, RESPONSE_OK, function (err, res) {
+            assert.ifError(err);
             // Check cache headers
             assert.strictEqual(res.headers['x-cache-channel'], 'cartodb_test_user_1_db:public.untitle_table_4');
-            assert.strictEqual(res.headers['cache-control'], expected_cache_control);
+            assert.strictEqual(res.headers['cache-control'], expectedCacheControl);
             assert.strictEqual(res.headers['access-control-allow-origin'], '*');
             assert.strictEqual(
                 res.headers['access-control-allow-headers'],
