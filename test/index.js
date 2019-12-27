@@ -23,9 +23,7 @@ const TEST_PASSWORD = environment.db_user_pass.replace('<%= user_id %>', TEST_US
 const PUBLIC_USER = environment.db_pubuser;
 const PUBLIC_USER_PASSWORD = environment.db_pubuser_pass;
 const TEST_DB = environment.db_base_name.replace('<%= user_id %>', TEST_USER_ID);
-
 const PGHOST = environment.db_host;
-// const PGPORT = environment.db_port;
 
 async function startRedis () {
     await exec(`redis-server --port ${REDIS_PORT} --loadmodule ${REDIS_CELL_PATH} --logfile ${__dirname}/redis-server.log --daemonize yes`);
