@@ -54,10 +54,10 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "istanbul": "0.4.5",
     "libxmljs": "0.19.5",
     "mocha": "^5.2.0",
     "mockdate": "^2.0.2",
+    "nyc": "^15.0.0",
     "shapefile": "0.3.0",
     "sqlite3": "^4.0.6",
     "zipfile": "0.5.12"
@@ -71,6 +71,7 @@
     "test": "NODE_ENV=test TZ='Europe/Rome' mocha -t 5000 --exit --recursive test/acceptance test/integration test/unit",
     "posttest": "npm run test:teardown",
     "test:teardown": "NODE_ENV=test node test teardown",
+    "cover": "nyc --reporter=lcov npm test",
     "test:docker": "docker run -e \"NODEJS_VERSION=$NODE_VERSION\" -v `pwd`:/srv $DOCKER_IMAGE bash docker/scripts/test-setup.sh && docker ps --filter status=dead --filter status=exited -aq | xargs docker rm -v",
     "docker:bash": "docker run -it -v `pwd`:/srv $DOCKER_IMAGE bash"
   },
