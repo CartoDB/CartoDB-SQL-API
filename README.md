@@ -42,7 +42,7 @@ $ npm install
 
 ### Run
 
-Create the `./config/environments/<env>.js` file (there are `.example` files to start from).
+Create the `./config/environments/<env>.js` file (there are `.example` files to start from). Look at `./lib/server-options.js` for more on config.
 
 ```shell
 $ node app.js <env>
