@@ -65,11 +65,14 @@
   "scripts": {
     "lint:fix": "eslint --fix app.js \"lib/**/*.js\" \"test/**/*.js\"",
     "lint": "eslint app.js \"lib/**/*.js\" \"test/**/*.js\"",
-    "test": "make test-all",
-    "test:unit": "mocha test/unit/**/*.js --exit",
-    "test:unit:watch": "npm run test:unit -- -w",
-    "docker-test": "./docker-test.sh",
-    "docker-bash": "./docker-bash.sh"
+    "pretest:setup": "npm run lint",
+    "test:setup": "NODE_ENV=test node test setup",
+    "pretest": "npm run test:setup",
+    "test": "NODE_ENV=test TZ='Europe/Rome' mocha -t 5000 --exit --recursive test/acceptance test/integration test/unit",
+    "posttest": "npm run test:teardown",
+    "test:teardown": "NODE_ENV=test node test teardown",
+    "test:docker": "docker run -e \"NODEJS_VERSION=$NODE_VERSION\" -v `pwd`:/srv $DOCKER_IMAGE bash docker/scripts/test-setup.sh && docker ps --filter status=dead --filter status=exited -aq | xargs docker rm -v",
+    "docker:bash": "docker run -it -v `pwd`:/srv $DOCKER_IMAGE bash"
   },
   "engines": {
     "node": "^10.15.1",
