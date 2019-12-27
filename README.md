@@ -1,72 +1,111 @@
-SQL API for carto.com
-========================
+# CartoDB-SQL-API [![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.svg?branch=master)](https://travis-ci.org/CartoDB/CartoDB-SQL-API)
 
-[![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.png?branch=master)](https://travis-ci.org/CartoDB/CartoDB-SQL-API)
+The [`CARTO SQL API`](https://carto.com/developers/sql-api/). Provides a web service for running SQL queries and jobs against your account in CARTO:
 
-Provides a node.js based API for running SQL queries against CartoDB.
+* Run queries with fine-grained permissions through [`Auth API`](https://carto.com/developers/auth-api/).
+* Schedule jobs using [`Batch Queries`](https://carto.com/developers/sql-api/guides/batch-queries/).
 
-* Users are authenticated over OAuth or via an API KEY.
-* Authenticated requests to this API should always be made over SSL.
+## Build
 
+Requirements:
 
-## Requirements
-
-* Node 10.x
-* npm 6.x
-* PostgreSQL >= 10.0
-* PostGIS >= 2.4
-* CARTO Postgres Extension >= 0.24.1
-* Redis >= 4
+* [`Node 10.x (npm 6.x)`](https://nodejs.org/dist/latest-v10.x/)
+* [`PostgreSQL >= 10.0`](https://www.postgresql.org/download/)
+* [`PostGIS >= 2.4`](https://postgis.net/install/)
+* [`CARTO Postgres Extension >= 0.24.1`](https://github.com/CartoDB/cartodb-postgresql)
+* [`Redis >= 4`](https://redis.io/download)
 * GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
 * zip commandline tool.
-* C++11 (to build internal dependencies if needed)
+* `C++11` to build internal dependencies. When there's no pre-built binaries for your OS/architecture distribution.
 
+Optional:
 
-## Install dependencies
+* [`Varnish`](http://www.varnish-cache.org)
+* [`Statsd`](https://github.com/statsd/statsd)
 
-```sh
+### PostGIS setup
+
+A `template_postgis` database is expected. One can be set up with
+
+```shell
+$ createdb --owner postgres --template template0 template_postgis
+$ psql -d template_postgis -c 'CREATE EXTENSION postgis;'
+```
+
+### Install
+
+To fetch and build all node-based dependencies, run:
+
+```shell
 $ npm install
 ```
 
-## Usage
+### Run
 
+Create the `./config/environments/<env>.js` file (there are `.example` files to start from).
 
-Create and edit config/environments/<environment>.js from .js.example files.
-You may find the ./configure script useful to make an edited copy for you,
-see ```./configure --help``` for a list of supported switches.
-
-Make sure redis is running and knows about active cartodb user.
-
-Make sure your PostgreSQL server is running, is accessible on
-the host and port specified in the <environment> file, has
-a 'publicuser' role (or whatever you set ``db_pubuser`` configuration
-directive to) and trusts user authentication from localhost
-connections.
-
-```sh
-node app.js <environment>
+```shell
+$ node app.js <env>
 ```
 
-Supported <environment> values are development, test, production
+Where `<env>` is the name of a configuration file under `./config/environments/`.
 
-See doc/API.md for API documentation.
-For examples of use, see under test/.
+### Test
 
-
-## Tests
-
-Run with:
-
-```sh
+```shell
 $ npm test
 ```
 
-If any issue arise see test/README.md
+### Coverage
 
-Note that the environment should be set to ensure the default
-PostgreSQL user is superuser (PGUSER=postgres make check).
+```shell
+$ npm run cover
+```
 
-Contributing
----
+Open `./coverage/lcov-report/index.html`.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+### Docker support
+
+We provide docker images just for testing and continuous integration purposes:
+
+* [`nodejs-xenial-pg1121`](https://hub.docker.com/r/carto/nodejs-xenial-pg1121/tags)
+* [`nodejs-xenial-pg101`](https://hub.docker.com/r/carto/nodejs-xenial-pg101/tags)
+
+You can find instructions to install Docker, download, and update images [here](https://github.com/CartoDB/Windshaft-cartodb/blob/master/docker/reference.md).
+
+### Useful `npm` scripts
+
+Run test in a docker image with a specific Node.js version:
+
+```shell
+$ DOCKER_IMAGE=<docker-image-tag> NODE_VERSION=<nodejs-version> npm run test:docker
+```
+
+Where:
+
+* `<docker-image-tag>`: the tag of required docker image, e.g. `carto/nodejs-xenial-pg1121:latest`
+* `<nodejs-version>`: the Node.js version, e.g. `10.15.1`
+
+In case you need to debug:
+
+```shell
+$ DOCKER_IMAGE=<docker-image-tag> npm run docker:bash
+```
+
+## Documentation
+
+You can find an overview, guides, full reference, and support in [`CARTO's developer center`](https://carto.com/developers/sql-api/). The [docs directory](https://github.com/CartoDB/CartoDB-SQL-API/tree/master/docs) contains different documentation resources, from a higher level to more detailed ones.
+
+## Contributing
+
+* The issue tracker: [`Github`](https://github.com/CartoDB/CartoDB-SQL-API/issues).
+* We love Pull Requests from everyone, see [contributing to Open Source on GitHub](https://guides.github.com/activities/contributing-to-open-source/#contributing).
+* You'll need to sign a Contributor License Agreement (CLA) before submitting a Pull Request. [Learn more here](https://carto.com/contributions).
+
+## Versioning
+
+We follow [`SemVer`](http://semver.org/) for versioning. For available versions, see the [tags on this repository](https://github.com/CartoDB/CartoDB-SQL-API/tags).
+
+## License
+
+This project is licensed under the BSD 3-clause "New" or "Revised" License. See the [LICENSE](LICENSE) file for details.
