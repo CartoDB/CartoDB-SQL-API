@@ -1,22 +1,30 @@
 {
   "private": true,
-  "name": "cartodb_sql_api",
-  "description": "high speed SQL api for cartodb",
-  "keywords": [
-    "cartodb"
-  ],
+  "name": "cartodb-sql-api",
   "version": "5.0.1",
+  "description": "High speed SQL API for CARTO",
+  "keywords": [
+    "carto",
+    "sql",
+    "batch",
+    "import",
+    "export",
+    "geospatial"
+  ],
+  "url": "https://github.com/CartoDB/CartoDB-SQL-API",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
   },
-  "license": "BSD-3-Clause",
-  "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
+  "author": "CARTO (https://carto.com)",
   "contributors": [
     "Simon Tokumine <simon@vizzuality.com>",
     "Sandro Santilli <strk@vizzuality.com>",
+    "Raúl Ochoa <rochoa@carto.com>",
     "Daniel García Aubert <dgaubert@carto.com>"
   ],
+  "main": "app.js",
   "dependencies": {
     "@carto/fqdn-sync": "0.2.2",
     "basic-auth": "^2.0.0",
