@@ -5,7 +5,7 @@ const errorHandlerFactory = require('../../lib/services/error-handler-factory');
 const ErrorHandler = require('../../lib/services/error-handler');
 const { codeToCondition } = require('../../lib/postgresql/error-codes');
 
-let rateLimitError = new Error(
+const rateLimitError = new Error(
     'You are over platform\'s limits. Please contact us to know more details'
 );
 rateLimitError.http_status = 429;
@@ -32,15 +32,15 @@ describe('error-handler-factory', function () {
                 context: error.context,
                 detail: error.detail,
                 hint: error.hint,
-                http_status: error.http_status,
+                httpStatus: error.http_status,
                 name: codeToCondition[error.code] || error.name
             });
 
-            assert.deepEqual(errorHandler, expectedError);
+            assert.deepStrictEqual(errorHandler, expectedError);
         });
     });
 
-    it('timeout error', function() {
+    it('timeout error', function () {
         const error = new Error('statement timeout');
         const errorHandler = errorHandlerFactory(error);
         const expectedError = new ErrorHandler({
@@ -48,13 +48,13 @@ describe('error-handler-factory', function () {
                 ' Refactor your query before running again or contact CARTO support for more details.',
             context: 'limit',
             detail: 'datasource',
-            http_status: 429
+            httpStatus: 429
         });
 
-        assert.deepEqual(errorHandler, expectedError);
+        assert.deepStrictEqual(errorHandler, expectedError);
     });
 
-    it('permission denied error', function() {
+    it('permission denied error', function () {
         const error = new Error('permission denied');
         const errorHandler = errorHandlerFactory(error);
         const expectedError = new ErrorHandler({
@@ -62,10 +62,10 @@ describe('error-handler-factory', function () {
             context: error.context,
             detail: error.detail,
             hint: error.hint,
-            http_status: 403,
+            httpStatus: 403,
             name: codeToCondition[error.code] || error.name
         });
 
-        assert.deepEqual(errorHandler, expectedError);
+        assert.deepStrictEqual(errorHandler, expectedError);
     });
 });

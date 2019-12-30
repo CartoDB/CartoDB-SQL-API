@@ -8,13 +8,12 @@ var assert = require('../../support/assert');
 
 var redisUtils = require('../../support/redis-utils');
 
-
 var Channel = require(BATCH_SOURCE + 'pubsub/channel');
 var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
 
 var HOST = 'wadus';
 
-describe('job publisher', function() {
+describe('job publisher', function () {
     var jobPublisher = new JobPublisher(redisUtils.getPool());
 
     it('.publish() should publish in job channel', function (done) {
@@ -26,8 +25,8 @@ describe('job publisher', function() {
             client.subscribe(Channel.NAME);
 
             client.on('message', function (channel, host) {
-                assert.equal(host, HOST);
-                assert.equal(channel, Channel.NAME);
+                assert.strictEqual(host, HOST);
+                assert.strictEqual(channel, Channel.NAME);
                 client.unsubscribe(Channel.NAME);
                 done();
             });
@@ -35,5 +34,4 @@ describe('job publisher', function() {
             jobPublisher.publish(HOST);
         });
     });
-
 });

@@ -7,20 +7,20 @@ var JobStatus = require('../../../lib/batch/job-status');
 var BatchTestClient = require('../../support/batch-test-client');
 
 describe('Use cases', function () {
-    before(function() {
+    before(function () {
         this.batchTestClient = new BatchTestClient();
     });
 
-    after(function(done) {
+    after(function (done) {
         this.batchTestClient.drain(done);
     });
 
     it('cancel a done job should return an error', function (done) {
         var payload = {
-            query: "SELECT * FROM untitle_table_4"
+            query: 'SELECT * FROM untitle_table_4'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -30,10 +30,11 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.DONE);
+                assert.strictEqual(job.status, JobStatus.DONE);
 
                 jobResult.tryCancel(function (err, body) {
-                    assert.equal(body.error[0], "Cannot set status from done to cancelled");
+                    assert.ifError(err);
+                    assert.strictEqual(body.error[0], 'Cannot set status from done to cancelled');
                     done();
                 });
             });
@@ -42,10 +43,10 @@ describe('Use cases', function () {
 
     it('cancel a running job', function (done) {
         var payload = {
-            query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
+            query: 'SELECT * FROM untitle_table_4; select pg_sleep(3)'
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -55,17 +56,18 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
-                        assert.equal(body.error[0], "Cannot set status from cancelled to cancelled");
+                        assert.ifError(err);
+                        assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
                 });
@@ -76,19 +78,19 @@ describe('Use cases', function () {
     it('cancel a pending job', function (done) {
         var self = this;
         var payload1 = {
-            query: "SELECT * FROM untitle_table_4; select pg_sleep(3)"
+            query: 'SELECT * FROM untitle_table_4; select pg_sleep(3)'
         };
 
-        this.batchTestClient.createJob(payload1, function(err, jobResult1) {
+        this.batchTestClient.createJob(payload1, function (err, jobResult1) {
             if (err) {
                 return done(err);
             }
 
             var payload2 = {
-                query: "SELECT * FROM untitle_table_4"
+                query: 'SELECT * FROM untitle_table_4'
             };
 
-            self.batchTestClient.createJob(payload2, function(err, jobResult2) {
+            self.batchTestClient.createJob(payload2, function (err, jobResult2) {
                 if (err) {
                     return done(err);
                 }
@@ -98,24 +100,23 @@ describe('Use cases', function () {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.PENDING);
+                    assert.strictEqual(job.status, JobStatus.PENDING);
 
                     jobResult2.cancel(function (err, job) {
                         if (err) {
                             return done(err);
                         }
 
-                        assert.equal(job.status, JobStatus.CANCELLED);
+                        assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                         jobResult1.cancel(function (err, job) {
                             if (err) {
                                 return done(err);
                             }
 
-                            assert.equal(job.status, JobStatus.CANCELLED);
+                            assert.strictEqual(job.status, JobStatus.CANCELLED);
                             done();
                         });
-
                     });
                 });
             });
@@ -127,7 +128,7 @@ describe('Use cases', function () {
             query: "SELECT name FROM untitle_table_4 WHERE name = 'Hawai'; select pg_sleep(3)"
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -137,14 +138,14 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
                     done();
                 });
             });
@@ -154,13 +155,13 @@ describe('Use cases', function () {
     it('cancel a running multiquery job', function (done) {
         var payload = {
             query: [
-                "select pg_sleep(1)",
-                "select pg_sleep(1)",
-                "select pg_sleep(1)"
+                'select pg_sleep(1)',
+                'select pg_sleep(1)',
+                'select pg_sleep(1)'
             ]
         };
 
-        this.batchTestClient.createJob(payload, function(err, jobResult) {
+        this.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -170,17 +171,18 @@ describe('Use cases', function () {
                     return done(err);
                 }
 
-                assert.equal(job.status, JobStatus.RUNNING);
+                assert.strictEqual(job.status, JobStatus.RUNNING);
 
                 jobResult.cancel(function (err, job) {
                     if (err) {
                         return done(err);
                     }
 
-                    assert.equal(job.status, JobStatus.CANCELLED);
+                    assert.strictEqual(job.status, JobStatus.CANCELLED);
 
                     jobResult.tryCancel(function (err, body) {
-                        assert.equal(body.error[0], "Cannot set status from cancelled to cancelled");
+                        assert.ifError(err);
+                        assert.strictEqual(body.error[0], 'Cannot set status from cancelled to cancelled');
                         done();
                     });
                 });

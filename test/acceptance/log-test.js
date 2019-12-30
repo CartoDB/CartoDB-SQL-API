@@ -8,23 +8,23 @@ const qs = require('querystring');
 const BatchTestClient = require('../support/batch-test-client');
 const { TYPES } = require('../../lib/api/middlewares/log');
 
-const QUERY = `SELECT 14 as foo`;
+const QUERY = 'SELECT 14 as foo';
 const API_KEY = 1234;
 
 const logQueries = global.settings.logQueries;
 
-describe('Log middleware', function() {
-    before(function() {
+describe('Log middleware', function () {
+    before(function () {
         global.settings.logQueries = true;
     });
 
-    after(function() {
+    after(function () {
         global.settings.logQueries = logQueries;
     });
 
-    describe('regular queries endpoint', function() {
+    describe('regular queries endpoint', function () {
         ['GET', 'POST'].forEach(method => {
-            it(`${method} query`, function(done) {
+            it(`${method} query`, function (done) {
                 assert.response(server,
                     {
                         method,
@@ -37,12 +37,12 @@ describe('Log middleware', function() {
                         }
                     },
                     { statusCode: 200 },
-                    function(err, res) {
+                    function (err, res) {
                         assert.ok(!err);
 
                         assert.ok(res.headers['x-sqlapi-log']);
                         const log = JSON.parse(res.headers['x-sqlapi-log']);
-                        assert.deepEqual(log, {
+                        assert.deepStrictEqual(log, {
                             request: {
                                 sql: {
                                     type: TYPES.QUERY,
@@ -59,7 +59,7 @@ describe('Log middleware', function() {
             it(`${method} Respects max header size with long queries`, function (done) {
                 let longQuery = "Select '";
                 for (let i = 0; i < 7000; i++) {
-                    longQuery += "a";
+                    longQuery += 'a';
                 }
                 longQuery += "' as foo";
                 assert.response(server,
@@ -74,7 +74,7 @@ describe('Log middleware', function() {
                         }
                     },
                     { statusCode: 200 },
-                    function(err, res) {
+                    function (err, res) {
                         assert.ok(!err);
 
                         assert.ok(res.headers['x-sqlapi-log']);
@@ -87,24 +87,24 @@ describe('Log middleware', function() {
         });
     });
 
-    describe('batch api queries', function() {
-        before(function() {
+    describe('batch api queries', function () {
+        before(function () {
             this.batchTestClient = new BatchTestClient();
             assert.ok(this.batchTestClient);
         });
 
-        after(function(done) {
+        after(function (done) {
             this.batchTestClient.drain(done);
         });
 
         it('one query', function (done) {
             const payload = { query: QUERY };
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
@@ -117,15 +117,15 @@ describe('Log middleware', function() {
             });
         });
 
-        it(`Respects max header size with long queries`, function (done) {
+        it('Respects max header size with long queries', function (done) {
             let longQuery = "Select '";
             for (let i = 0; i < 7000; i++) {
-                longQuery += "a";
+                longQuery += 'a';
             }
             longQuery += "' as foo";
 
-            const payload = { query: QUERY };
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            const payload = { query: longQuery };
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
@@ -137,16 +137,19 @@ describe('Log middleware', function() {
 
         it('multiquery job with two queries', function (done) {
             const payload = { query: [QUERY, QUERY] };
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
-                            sql: [QUERY, QUERY]
+                            sql: {
+                                0: QUERY,
+                                1: QUERY
+                            }
                         }
                     }
                 });
@@ -155,10 +158,10 @@ describe('Log middleware', function() {
             });
         });
 
-        it(`Respects max header size with long multiqueries`, function (done) {
+        it('Respects max header size with long multiqueries', function (done) {
             let longQuery = "Select '";
             for (let i = 0; i < 100; i++) {
-                longQuery += "a";
+                longQuery += 'a';
             }
             longQuery += "' as foo";
 
@@ -168,7 +171,7 @@ describe('Log middleware', function() {
             }
 
             const payload = { query: queries };
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
@@ -178,14 +181,14 @@ describe('Log middleware', function() {
             });
         });
 
-        it(`Respects max header size with lots of multiqueries`, function (done) {
+        it('Respects max header size with lots of multiqueries', function (done) {
             const queries = [];
             for (let i = 0; i < 1000; i++) {
                 queries.push('Select 1');
             }
 
             const payload = { query: queries };
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
@@ -207,16 +210,26 @@ describe('Log middleware', function() {
             };
             const payload = { query: FALLBACK_QUERY };
 
-            this.batchTestClient.createJob(payload, function(err, jobResult, res) {
+            this.batchTestClient.createJob(payload, function (err, jobResult, res) {
                 assert.ok(!err);
 
                 assert.ok(res.headers['x-sqlapi-log']);
                 const log = JSON.parse(res.headers['x-sqlapi-log']);
-                assert.deepEqual(log, {
+                assert.deepStrictEqual(log, {
                     request: {
                         sql: {
                             type: TYPES.JOB,
-                            sql: FALLBACK_QUERY
+                            sql: {
+                                onsuccess: QUERY,
+                                onerror: QUERY,
+                                query: {
+                                    0: {
+                                        query: QUERY,
+                                        onsuccess: QUERY,
+                                        onerror: QUERY
+                                    }
+                                }
+                            }
                         }
                     }
                 });
@@ -226,16 +239,16 @@ describe('Log middleware', function() {
         });
     });
 
-    describe('disable queries log', function() {
-        before(function() {
+    describe('disable queries log', function () {
+        before(function () {
             global.settings.logQueries = false;
         });
 
-        after(function() {
+        after(function () {
             global.settings.logQueries = true;
         });
 
-        it(`GET query`, function(done) {
+        it('GET query', function (done) {
             assert.response(server,
                 {
                     method: 'GET',
@@ -248,12 +261,12 @@ describe('Log middleware', function() {
                     }
                 },
                 { statusCode: 200 },
-                function(err, res) {
+                function (err, res) {
                     assert.ok(!err);
 
                     assert.ok(res.headers['x-sqlapi-log']);
                     const log = JSON.parse(res.headers['x-sqlapi-log']);
-                    assert.deepEqual(log, {
+                    assert.deepStrictEqual(log, {
                         request: {
                             sql: null
                         }

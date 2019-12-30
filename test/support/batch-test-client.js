@@ -10,7 +10,7 @@ var JobStatus = require('../../lib/batch/job-status');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../lib/batch/index');
 
-function response(code) {
+function response (code) {
     return {
         status: code
     };
@@ -22,8 +22,7 @@ var RESPONSE = {
     BAD_REQUEST: response(400)
 };
 
-
-function BatchTestClient(config) {
+function BatchTestClient (config) {
     this.config = config || {};
     this.server = appServer();
 
@@ -32,9 +31,9 @@ function BatchTestClient(config) {
 
     this.pendingJobs = [];
     this.ready = false;
-    this.batch.on('ready', function() {
+    this.batch.on('ready', function () {
         this.ready = true;
-        this.pendingJobs.forEach(function(pendingJob) {
+        this.pendingJobs.forEach(function (pendingJob) {
             this.createJob(pendingJob.job, pendingJob.override, pendingJob.callback);
         }.bind(this));
     }.bind(this));
@@ -42,7 +41,7 @@ function BatchTestClient(config) {
 
 module.exports = BatchTestClient;
 
-BatchTestClient.prototype.isReady = function() {
+BatchTestClient.prototype.isReady = function () {
     return this.ready;
 };
 
@@ -50,7 +49,7 @@ BatchTestClient.prototype.getExpectedResponse = function (override) {
     return override.response || this.config.response || RESPONSE.CREATED;
 };
 
-BatchTestClient.prototype.createJob = function(job, override, callback) {
+BatchTestClient.prototype.createJob = function (job, override, callback) {
     if (!callback) {
         callback = override;
         override = {};
@@ -90,7 +89,7 @@ BatchTestClient.prototype.createJob = function(job, override, callback) {
     );
 };
 
-BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
+BatchTestClient.prototype.getJobStatus = function (jobId, override, callback) {
     assert.response(
         this.server,
         {
@@ -112,7 +111,7 @@ BatchTestClient.prototype.getJobStatus = function(jobId, override, callback) {
     );
 };
 
-BatchTestClient.prototype.getWorkInProgressJobs = function(override, callback) {
+BatchTestClient.prototype.getWorkInProgressJobs = function (override, callback) {
     if (!callback) {
         callback = override;
         override = {};
@@ -137,7 +136,7 @@ BatchTestClient.prototype.getWorkInProgressJobs = function(override, callback) {
     );
 };
 
-BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
+BatchTestClient.prototype.cancelJob = function (jobId, override, callback) {
     assert.response(
         this.server,
         {
@@ -157,13 +156,13 @@ BatchTestClient.prototype.cancelJob = function(jobId, override, callback) {
     );
 };
 
-BatchTestClient.prototype.drain = function(callback) {
-    this.batch.stop(function() {
+BatchTestClient.prototype.drain = function (callback) {
+    this.batch.stop(function () {
         return redisUtils.clean('batch:*', callback);
     });
 };
 
-BatchTestClient.prototype.getHost = function(override) {
+BatchTestClient.prototype.getHost = function (override) {
     return override.host || this.config.host || 'vizzuality.cartodb.com';
 };
 
@@ -171,11 +170,11 @@ BatchTestClient.prototype.getAuthorization = function (override) {
     const auth = override.authorization || this.config.authorization;
 
     if (auth) {
-        return `Basic ${new Buffer(auth).toString('base64')}`;
+        return `Basic ${Buffer.from(auth).toString('base64')}`;
     }
 };
 
-BatchTestClient.prototype.getUrl = function(override, jobId) {
+BatchTestClient.prototype.getUrl = function (override, jobId) {
     var urlParts = ['/api/v2/sql/job'];
     if (jobId) {
         urlParts.push(jobId);
@@ -183,20 +182,19 @@ BatchTestClient.prototype.getUrl = function(override, jobId) {
     return `${urlParts.join('/')}${override.anonymous ? '' : '?api_key=' + this.getApiKey(override)}`;
 };
 
-BatchTestClient.prototype.getApiKey = function(override) {
+BatchTestClient.prototype.getApiKey = function (override) {
     return override.apiKey || this.config.apiKey || '1234';
 };
 
-/****************** JobResult ******************/
+/** **************** JobResult ******************/
 
-
-function JobResult(job, batchTestClient, override) {
+function JobResult (job, batchTestClient, override) {
     this.job = job;
     this.batchTestClient = batchTestClient;
     this.override = override;
 }
 
-JobResult.prototype.getStatus = function(requiredStatus, callback) {
+JobResult.prototype.getStatus = function (requiredStatus, callback) {
     if (!callback) {
         callback = requiredStatus;
         requiredStatus = undefined;
@@ -230,7 +228,7 @@ JobResult.prototype.getStatus = function(requiredStatus, callback) {
     }, 100);
 };
 
-function hasRequiredStatus(job, requiredStatus) {
+function hasRequiredStatus (job, requiredStatus) {
     if (requiredStatus) {
         return job.status === requiredStatus;
     }
@@ -275,11 +273,11 @@ JobResult.prototype.tryCancel = function (callback) {
 JobResult.prototype.validateExpectedResponse = function (expected) {
     var actual = this.job.query;
 
-    actual.query.forEach(function(actualQuery, index) {
+    actual.query.forEach(function (actualQuery, index) {
         var expectedQuery = expected.query[index];
         assert.ok(expectedQuery);
-        Object.keys(expectedQuery).forEach(function(expectedKey) {
-            assert.equal(
+        Object.keys(expectedQuery).forEach(function (expectedKey) {
+            assert.strictEqual(
                 actualQuery[expectedKey],
                 expectedQuery[expectedKey],
                 'Expected value for key "' + expectedKey + '" does not match: ' + actualQuery[expectedKey] + ' ==' +
@@ -288,13 +286,13 @@ JobResult.prototype.validateExpectedResponse = function (expected) {
             );
         });
         var propsToCheckDate = ['started_at', 'ended_at'];
-        propsToCheckDate.forEach(function(propToCheckDate) {
-            if (actualQuery.hasOwnProperty(propToCheckDate)) {
+        propsToCheckDate.forEach(function (propToCheckDate) {
+            if (Object.prototype.hasOwnProperty.call(actualQuery, propToCheckDate)) {
                 assert.ok(new Date(actualQuery[propToCheckDate]));
             }
         });
     });
 
-    assert.equal(actual.onsuccess, expected.onsuccess);
-    assert.equal(actual.onerror, expected.onerror);
+    assert.strictEqual(actual.onsuccess, expected.onsuccess);
+    assert.strictEqual(actual.onerror, expected.onerror);
 };

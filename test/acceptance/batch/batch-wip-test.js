@@ -6,17 +6,16 @@ var assert = require('../../support/assert');
 var BatchTestClient = require('../../support/batch-test-client');
 var JobStatus = require('../../../lib/batch/job-status');
 
-describe('batch work in progress endpoint happy cases', function() {
-
-    before(function() {
+describe('batch work in progress endpoint happy cases', function () {
+    before(function () {
         this.batchTestClient = new BatchTestClient();
     });
 
-    after(function(done) {
+    after(function (done) {
         this.batchTestClient.drain(done);
     });
 
-    function jobPayload(query) {
+    function jobPayload (query) {
         return {
             query: query
         };
@@ -28,7 +27,7 @@ describe('batch work in progress endpoint happy cases', function() {
         var queries = ['select pg_sleep(3)'];
         var payload = jobPayload(queries);
 
-        self.batchTestClient.createJob(payload, function(err, jobResult) {
+        self.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }
@@ -67,7 +66,7 @@ describe('batch work in progress endpoint happy cases', function() {
         var queries = ['select pg_sleep(0)'];
         var payload = jobPayload(queries);
 
-        self.batchTestClient.createJob(payload, function(err, jobResult) {
+        self.batchTestClient.createJob(payload, function (err, jobResult) {
             if (err) {
                 return done(err);
             }

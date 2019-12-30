@@ -21,9 +21,9 @@ const copyQuery = `COPY (
 const createTableQuery = `CREATE TABLE copy_to_test AS
     (SELECT '2018-06-15 14:49:05.126415+00'::timestamp AS updated_at)`;
 
-const dropTableQuery = `DROP TABLE copy_to_test`;
+const dropTableQuery = 'DROP TABLE copy_to_test';
 
-const countQuery = `SELECT count(1) as count FROM copy_to_test`;
+const countQuery = 'SELECT count(1) as count FROM copy_to_test';
 
 function countInsertedRows (host, port, callback) {
     setTimeout(function () {
@@ -40,7 +40,7 @@ function countInsertedRows (host, port, callback) {
                 return callback(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
             const result = JSON.parse(body);
             callback(null, result);
         });
@@ -48,15 +48,14 @@ function countInsertedRows (host, port, callback) {
 }
 
 describe('Cancel "copy to" commands', function () {
-    before(function() {
+    before(function () {
         this.db_pool_size = global.settings.db_pool_size;
         global.settings.db_pool_size = 1;
     });
 
-    after(function() {
+    after(function () {
         global.settings.db_pool_size = this.db_pool_size;
     });
-
 
     beforeEach(function (done) {
         this.listener = server.listen(0, '127.0.0.1');
@@ -76,7 +75,7 @@ describe('Cancel "copy to" commands', function () {
     beforeEach(function (done) {
         const { host, port } = this;
 
-        const createTable = querystring.stringify({ q: createTableQuery, api_key: 1234});
+        const createTable = querystring.stringify({ q: createTableQuery, api_key: 1234 });
 
         const createTableOptions = {
             url: `http://${host}:${port}/api/v1/sql?${createTable}`,
@@ -89,7 +88,7 @@ describe('Cancel "copy to" commands', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });
@@ -111,7 +110,7 @@ describe('Cancel "copy to" commands', function () {
                 return done(err);
             }
 
-            assert.equal(res.statusCode, 200);
+            assert.strictEqual(res.statusCode, 200);
 
             done();
         });
@@ -142,7 +141,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
@@ -170,13 +169,12 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
         });
     });
-
 
     it('destroy on data', function (done) {
         const { host, port } = this;
@@ -205,7 +203,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });
@@ -233,7 +231,7 @@ describe('Cancel "copy to" commands', function () {
                     return done(err);
                 }
 
-                assert.equal(result.rows[0].count, 1);
+                assert.strictEqual(result.rows[0].count, 1);
 
                 done();
             });

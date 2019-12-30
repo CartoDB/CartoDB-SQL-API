@@ -17,7 +17,7 @@ var jobStatus = require(BATCH_SOURCE + 'job-status');
 var logger = new BatchLogger(null, 'batch-queries');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 
 var queue = require('queue-async');
 
@@ -30,11 +30,11 @@ var JOB = {
     host: HOST
 };
 
-function createWadusJob() {
+function createWadusJob () {
     return JobFactory.create(JSON.parse(JSON.stringify(JOB)));
 }
 
-describe('job backend', function() {
+describe('job backend', function () {
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
     after(function (done) {
@@ -50,7 +50,7 @@ describe('job backend', function() {
             }
 
             assert.ok(jobCreated.job_id);
-            assert.equal(jobCreated.status, jobStatus.PENDING);
+            assert.strictEqual(jobCreated.status, jobStatus.PENDING);
             done();
         });
     });
@@ -62,8 +62,8 @@ describe('job backend', function() {
 
         jobBackend.create(job.data, function (err) {
             assert.ok(err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id undefined not found');
+            assert.strictEqual(err.name, 'NotFoundError');
+            assert.strictEqual(err.message, 'Job with id undefined not found');
             done();
         });
     });
@@ -83,11 +83,11 @@ describe('job backend', function() {
                     return done(err);
                 }
 
-                assert.equal(job.job_id, jobCreated.job_id);
-                assert.equal(job.user, jobData.data.user);
-                assert.equal(job.query, jobData.data.query);
-                assert.equal(job.host, jobData.data.host);
-                assert.equal(job.status, jobStatus.PENDING);
+                assert.strictEqual(job.job_id, jobCreated.job_id);
+                assert.strictEqual(job.user, jobData.data.user);
+                assert.strictEqual(job.query, jobData.data.query);
+                assert.strictEqual(job.host, jobData.data.host);
+                assert.strictEqual(job.status, jobStatus.PENDING);
                 done();
             });
         });
@@ -110,7 +110,7 @@ describe('job backend', function() {
                     return done(err);
                 }
 
-                assert.equal(jobUpdated.query, 'select pg_sleep(1)');
+                assert.strictEqual(jobUpdated.query, 'select pg_sleep(1)');
                 done();
             });
         });
@@ -121,8 +121,8 @@ describe('job backend', function() {
 
         jobBackend.update(job.data, function (err) {
             assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id ' + job.data.job_id + ' not found');
+            assert.strictEqual(err.name, 'NotFoundError');
+            assert.strictEqual(err.message, 'Job with id ' + job.data.job_id + ' not found');
             done();
         });
     });
@@ -137,10 +137,10 @@ describe('job backend', function() {
 
             assert.ok(jobSaved.job_id);
 
-            assert.equal(jobSaved.user, job.data.user);
-            assert.equal(jobSaved.query, job.data.query);
-            assert.equal(jobSaved.host, job.data.host);
-            assert.equal(jobSaved.status, jobStatus.PENDING);
+            assert.strictEqual(jobSaved.user, job.data.user);
+            assert.strictEqual(jobSaved.query, job.data.query);
+            assert.strictEqual(jobSaved.host, job.data.host);
+            assert.strictEqual(jobSaved.status, jobStatus.PENDING);
             done();
         });
     });
@@ -167,7 +167,7 @@ describe('job backend', function() {
             if (err) {
                 return done(err);
             }
-            assert.deepEqual(results[2], ['wadus']);
+            assert.deepStrictEqual(results[2], ['wadus']);
             done();
         });
     });
@@ -192,12 +192,11 @@ describe('job backend', function() {
                 }
 
                 assert.ok(users.userA);
-                assert.deepEqual(users.userA, [ 'jobId1', 'jobId2' ]);
+                assert.deepStrictEqual(users.userA, ['jobId1', 'jobId2']);
                 assert.ok(users.userB);
-                assert.deepEqual(users.userB, [ 'jobId3' ]);
+                assert.deepStrictEqual(users.userB, ['jobId3']);
                 done();
             });
-
         });
     });
 

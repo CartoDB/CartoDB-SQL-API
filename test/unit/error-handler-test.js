@@ -34,10 +34,9 @@ const getErrorHeader = (context, detail, hint, message) => {
     };
 };
 
-describe('error-handler', function() {
+describe('error-handler', function () {
     it('should return a header with errors', function (done) {
-
-        let error = new Error('error test');
+        const error = new Error('error test');
         error.detail = 'test detail';
         error.hint = 'test hint';
         error.context = 'test context';
@@ -53,7 +52,7 @@ describe('error-handler', function() {
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -63,7 +62,7 @@ describe('error-handler', function() {
     });
 
     it('JSONP should return a header with error statuscode', function (done) {
-        let error = new Error('error test');
+        const error = new Error('error test');
         error.detail = 'test detail';
         error.hint = 'test hint';
         error.context = 'test context';
@@ -79,7 +78,7 @@ describe('error-handler', function() {
 
         errorMiddleware()(error, req, res, function next () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -89,10 +88,10 @@ describe('error-handler', function() {
     });
 
     it('should escape chars that broke logs regex', function (done) {
-        const badString = 'error: ( ) = " \" \' * $ & |';
+        const badString = 'error: ( ) = " " \' * $ & |';
         const escapedString = 'error                     ';
 
-        let error = new Error(badString);
+        const error = new Error(badString);
         error.detail = badString;
         error.hint = badString;
         error.context = badString;
@@ -108,7 +107,7 @@ describe('error-handler', function() {
 
         errorMiddleware()(error, req, res, function () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(errorHeader)
             );
@@ -121,18 +120,18 @@ describe('error-handler', function() {
         const veryLongString = 'Very long error message '.repeat(1000);
         const truncatedString = veryLongString.substring(0, 1024);
 
-        let error = new Error(veryLongString);
+        const error = new Error(veryLongString);
 
         const expectedErrorHeader = {
             statusCode: 400,
             message: truncatedString
-	};
+        };
 
         const res = getRes();
 
         errorMiddleware()(error, req, res, function () {
             assert.ok(res.headers['X-SQLAPI-Errors'].length > 0);
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 res.headers['X-SQLAPI-Errors'],
                 JSON.stringify(expectedErrorHeader)
             );

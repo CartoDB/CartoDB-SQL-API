@@ -7,7 +7,7 @@ var assert = require('../support/assert');
 var querystring = require('querystring');
 var step = require('step');
 
-describe('special numeric (float) values', function() {
+describe('special numeric (float) values', function () {
     var RESPONSE_OK = {
         statusCode: 200
     };
@@ -61,10 +61,10 @@ describe('special numeric (float) values', function() {
                 assert.ifError(err);
                 var result = JSON.parse(res.body);
                 assert.ok(Array.isArray(result.rows));
-                assert.equal(result.rows[0].val, 'NaN');
-                assert.equal(result.rows[1].val, 'Infinity');
-                assert.equal(result.rows[2].val, '-Infinity');
-                assert.equal(result.rows[3].val, 1);
+                assert.strictEqual(result.rows[0].val, 'NaN');
+                assert.strictEqual(result.rows[1].val, 'Infinity');
+                assert.strictEqual(result.rows[2].val, '-Infinity');
+                assert.strictEqual(result.rows[3].val, 1);
                 done();
             }
         );

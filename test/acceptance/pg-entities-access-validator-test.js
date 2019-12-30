@@ -18,44 +18,44 @@ describe('PG entities access validator', function () {
         }
     };
 
-    function assertQuery(query, testClient, done) {
+    function assertQuery (query, testClient, done) {
         testClient.getResult(query, expectedResponse, (err, result) => {
             assert.ifError(err);
-            assert.equal(result.error, 'system tables are forbidden');
+            assert.deepStrictEqual(result.error, ['system tables are forbidden']);
             done();
         });
     }
 
-    describe('validatePGEntitiesAccess enabled', function() {
-        before(function(){
+    describe('validatePGEntitiesAccess enabled', function () {
+        before(function () {
             global.settings.validatePGEntitiesAccess = true;
         });
 
         forbiddenQueries.forEach(query => {
-            it(`testClientApiKey: query: ${query}`, function(done) {
+            it(`testClientApiKey: query: ${query}`, function (done) {
                 assertQuery(query, testClientApiKey, done);
             });
 
-            it(`testClientAuthorized: query: ${query}`, function(done) {
+            it(`testClientAuthorized: query: ${query}`, function (done) {
                 assertQuery(query, testClientAuthorized, done);
             });
         });
     });
 
-    describe('validatePGEntitiesAccess disabled', function() {
-        before(function(){
+    describe('validatePGEntitiesAccess disabled', function () {
+        before(function () {
             global.settings.validatePGEntitiesAccess = false;
         });
 
         forbiddenQueries.forEach(query => {
-            it(`testClientApiKey: query: ${query}`, function(done) {
+            it(`testClientApiKey: query: ${query}`, function (done) {
                 testClientApiKey.getResult(query, err => {
                     assert.ifError(err);
                     done();
                 });
             });
 
-            it(`testClientAuthorized: query: ${query}`, function(done) {
+            it(`testClientAuthorized: query: ${query}`, function (done) {
                 testClientAuthorized.getResult(query, err => {
                     assert.ifError(err);
                     done();

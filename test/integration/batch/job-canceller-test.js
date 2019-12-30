@@ -19,7 +19,7 @@ var PSQL = require('cartodb-psql');
 var logger = new BatchLogger(null, 'batch-queries');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
 var USER = 'vizzuality';
@@ -28,8 +28,8 @@ var HOST = 'localhost';
 
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
-function runQueryHelper(job, callback) {
-    var job_id = job.job_id;
+function runQueryHelper (job, callback) {
+    var jobId = job.job_id;
     var sql = job.query;
 
     job.status = jobStatus.RUNNING;
@@ -44,12 +44,12 @@ function runQueryHelper(job, callback) {
             port: job.port,
             dbname: job.dbname,
             user: job.dbuser,
-            pass: job.pass,
+            pass: job.pass
         };
 
         const pg = new PSQL(dbConfiguration);
 
-        sql = '/* ' + job_id + ' */ ' + sql;
+        sql = '/* ' + jobId + ' */ ' + sql;
 
         pg.eventedQuery(sql, function (err, query) {
             if (err) {
@@ -61,7 +61,7 @@ function runQueryHelper(job, callback) {
     });
 }
 
-function createWadusJob(query) {
+function createWadusJob (query) {
     query = query || QUERY;
     return JobFactory.create(JSON.parse(JSON.stringify({
         user: USER,
@@ -70,11 +70,11 @@ function createWadusJob(query) {
         dbname: 'cartodb_test_user_1_db',
         dbuser: 'test_cartodb_user_1',
         port: 5432,
-        pass: 'test_cartodb_user_1_pass',
+        pass: 'test_cartodb_user_1_pass'
     })));
 }
 
-describe('job canceller', function() {
+describe('job canceller', function () {
     var jobCanceller = new JobCanceller();
 
     after(function (done) {
@@ -89,7 +89,7 @@ describe('job canceller', function() {
                 return done(err);
             }
 
-            assert.equal(job.data.job_id, jobCreated.job_id);
+            assert.strictEqual(job.data.job_id, jobCreated.job_id);
 
             runQueryHelper(job.data, function (err) {
                 if (err) {

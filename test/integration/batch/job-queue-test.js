@@ -12,13 +12,12 @@ var JobQueue = require('../../../lib/batch/job-queue');
 var JobBackend = require('../../../lib/batch/job-backend');
 var JobService = require('../../../lib/batch/job-service');
 var JobCanceller = require('../../../lib/batch/job-canceller');
-var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
 describe('job queue', function () {
     var pool = redisUtils.getPool();
     var logger = new BatchLogger(null, 'batch-queries');
     var jobPublisher = new JobPublisher(pool);
-    var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+    var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
     var jobCanceller = new JobCanceller();
     var jobService = new JobService(jobBackend, jobCanceller, logger);
@@ -37,15 +36,15 @@ describe('job queue', function () {
     it('should find queues for one user', function (done) {
         var self = this;
 
-        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
+        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function (err) {
             if (err) {
                 return done(err);
             }
 
             self.jobQueue.scanQueues(function (err, queues) {
                 assert.ifError(err);
-                assert.equal(queues.length, 1);
-                assert.equal(queues[0], userA);
+                assert.strictEqual(queues.length, 1);
+                assert.strictEqual(queues[0], userA);
                 return done();
             });
         });
@@ -54,18 +53,18 @@ describe('job queue', function () {
     it('should find queues for more than one user', function (done) {
         var self = this;
 
-        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function(err) {
+        this.jobQueue.enqueue(userA, 'wadus-wadus-wadus-wadus', function (err) {
             if (err) {
                 return done(err);
             }
-            self.jobQueue.enqueue(userB, 'wadus-wadus-wadus-wadus', function(err) {
+            self.jobQueue.enqueue(userB, 'wadus-wadus-wadus-wadus', function (err) {
                 if (err) {
                     return done(err);
                 }
 
                 self.jobQueue.scanQueues(function (err, queues) {
                     assert.ifError(err);
-                    assert.equal(queues.length, 2);
+                    assert.strictEqual(queues.length, 2);
                     assert.ok(queues[0] === userA || queues[0] === userB);
                     assert.ok(queues[1] === userA || queues[1] === userB);
 
@@ -75,16 +74,16 @@ describe('job queue', function () {
         });
     });
 
-    it('should find queues from jobs not using new Redis SETs for users', function(done) {
+    it('should find queues from jobs not using new Redis SETs for users', function (done) {
         var self = this;
         var redisArgs = [JobQueue.QUEUE.PREFIX + userA, 'wadus-id'];
         metadataBackend.redisCmd(JobQueue.QUEUE.DB, 'LPUSH', redisArgs, function (err) {
-            assert.ok(!err, err);
+            assert.ifError(err);
             self.jobQueue.scanQueues(function (err, queues) {
-                assert.ok(!err, err);
+                assert.ifError(err);
 
-                assert.equal(queues.length, 1);
-                assert.equal(queues[0], userA);
+                assert.strictEqual(queues.length, 1);
+                assert.strictEqual(queues[0], userA);
 
                 return done();
             });
@@ -110,7 +109,7 @@ describe('job queue', function () {
                     return done(err);
                 }
 
-                assert.equal(queuesFromScan.length, 1);
+                assert.strictEqual(queuesFromScan.length, 1);
                 assert.ok(queuesFromScan.indexOf(data.user) >= 0);
 
                 self.jobQueue.getQueues(function (err, queuesFromIndex) {
@@ -118,12 +117,11 @@ describe('job queue', function () {
                         done(err);
                     }
 
-                    assert.equal(queuesFromIndex.length, 1);
+                    assert.strictEqual(queuesFromIndex.length, 1);
                     assert.ok(queuesFromIndex.indexOf(data.user) >= 0);
 
                     redisUtils.clean('batch:*', done);
                 });
-
             });
         });
     });
@@ -158,7 +156,7 @@ describe('job queue', function () {
                         return done(err);
                     }
 
-                    assert.equal(queuesFromScan.length, 2);
+                    assert.strictEqual(queuesFromScan.length, 2);
                     assert.ok(queuesFromScan.indexOf(jobVizzuality.user) >= 0);
                     assert.ok(queuesFromScan.indexOf(jobWadus.user) >= 0);
 
@@ -167,13 +165,12 @@ describe('job queue', function () {
                             done(err);
                         }
 
-                        assert.equal(queuesFromIndex.length, 2);
+                        assert.strictEqual(queuesFromIndex.length, 2);
                         assert.ok(queuesFromIndex.indexOf(jobVizzuality.user) >= 0);
                         assert.ok(queuesFromIndex.indexOf(jobWadus.user) >= 0);
 
                         redisUtils.clean('batch:*', done);
                     });
-
                 });
             });
         });

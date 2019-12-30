@@ -15,7 +15,7 @@ describe('error handler', function () {
 
         assert.response(server, {
             url: '/api/v1/sql',
-            headers: {host: 'vizzuality.cartodb.com'},
+            headers: { host: 'vizzuality.cartodb.com' },
             method: 'GET'
         },
         {
@@ -25,7 +25,7 @@ describe('error handler', function () {
                 'X-SQLAPI-Errors': JSON.stringify(errorHeader)
             }
         },
-        function(err){
+        function (err) {
             assert.ifError(err);
             done();
         });

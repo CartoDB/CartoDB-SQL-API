@@ -7,8 +7,7 @@ var assert = require('../support/assert');
 var qs = require('querystring');
 var MockDate = require('mockdate');
 
-describe('last modified header', function() {
-
+describe('last modified header', function () {
     var scenarios = [
         {
             tables: ['untitle_table_4'],
@@ -32,10 +31,10 @@ describe('last modified header', function() {
         }
     ];
 
-    scenarios.forEach(function(scenario) {
-        it(scenario.desc, function(done) {
+    scenarios.forEach(function (scenario) {
+        it(scenario.desc, function (done) {
             var query = qs.stringify({
-                q: scenario.tables.map(function(table) {
+                q: scenario.tables.map(function (table) {
                     return 'select cartodb_id from ' + table;
                 }).join(' UNION ALL '),
                 api_key: 1234
@@ -51,21 +50,22 @@ describe('last modified header', function() {
                 {
                     statusCode: 200
                 },
-                function(err, res) {
-                    assert.equal(res.headers['last-modified'], scenario.expectedLastModified);
+                function (err, res) {
+                    assert.ifError(err);
+                    assert.strictEqual(res.headers['last-modified'], scenario.expectedLastModified);
                     done();
                 }
             );
         });
     });
 
-    it('should use Date.now() for tables not present in cdb_tablemetadata', function(done) {
+    it('should use Date.now() for tables not present in cdb_tablemetadata', function (done) {
         var query = qs.stringify({
             q: 'select cartodb_id from populated_places_simple_reduced limit 1',
             api_key: 1234
         });
         var fixedDateNow = Date.now();
-	MockDate.set(fixedDateNow);
+        MockDate.set(fixedDateNow);
         assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
@@ -77,21 +77,22 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(err, res) {
+            function (err, res) {
+                assert.ifError(err);
                 MockDate.reset();
-                assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
+                assert.strictEqual(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
             }
         );
     });
 
-    it('should use Date.now() for functions or results with no table associated', function(done) {
+    it('should use Date.now() for functions or results with no table associated', function (done) {
         var query = qs.stringify({
             q: 'select 1',
             api_key: 1234
         });
         var fixedDateNow = Date.now();
-	MockDate.set(fixedDateNow);
+        MockDate.set(fixedDateNow);
         assert.response(server,
             {
                 url: '/api/v1/sql?' + query,
@@ -103,12 +104,12 @@ describe('last modified header', function() {
             {
                 statusCode: 200
             },
-            function(err, res) {
+            function (err, res) {
+                assert.ifError(err);
                 MockDate.reset();
-                assert.equal(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
+                assert.strictEqual(res.headers['last-modified'], new Date(fixedDateNow).toUTCString());
                 done();
             }
         );
     });
-
 });

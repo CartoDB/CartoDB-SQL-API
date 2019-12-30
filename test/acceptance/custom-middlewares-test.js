@@ -30,7 +30,7 @@ describe('custom middlewares', function () {
                 api: [{
                     paths: [
                         '/api/:version',
-                        '/user/:user/api/:version',
+                        '/user/:user/api/:version'
                     ],
                     middlewares: [
                         customMiddleware
@@ -189,13 +189,13 @@ describe('custom middlewares', function () {
                 api: [{
                     paths: [
                         '/api/:version',
-                        '/user/:user/api/:version',
+                        '/user/:user/api/:version'
                     ],
                     sql: [{
                         paths: [
                             '/sql'
                         ],
-                        middlewares: [ customMiddleware ]
+                        middlewares: [customMiddleware]
                     }]
                 }]
             };
@@ -236,7 +236,7 @@ describe('custom middlewares', function () {
 
                 const parsed = JSON.parse(res.body);
 
-                assert.ok(parsed.hasOwnProperty('cartodb_sql_api'));
+                assert.ok(Object.prototype.hasOwnProperty.call(parsed, 'cartodb_sql_api'));
 
                 done();
             });

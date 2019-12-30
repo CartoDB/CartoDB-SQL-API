@@ -15,15 +15,16 @@ describe('PG field type information', function () {
         assert.response(
             server,
             {
-                url: `/api/v1/sql?${querystring.stringify({ q: 'select * from pgtypes_table'})}`,
+                url: `/api/v1/sql?${querystring.stringify({ q: 'select * from pgtypes_table' })}`,
                 headers: { host: 'vizzuality.cartodb.com' },
                 method: 'GET'
             },
             okResponse,
             function (err, res) {
+                assert.ifError(err);
                 const body = JSON.parse(res.body);
 
-                assert.deepEqual(body.fields, {
+                assert.deepStrictEqual(body.fields, {
                     geography_point_4326: {
                         type: 'geography', wkbtype: 'Point', dims: 2, srid: 4326
                     },
@@ -161,6 +162,5 @@ describe('PG field type information', function () {
                 done();
             }
         );
-
     });
 });

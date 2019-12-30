@@ -26,7 +26,7 @@ describe('batch API job subscriber', function () {
                 var isValidFirstArg = arguments[0] === Channel.NAME;
                 self.redis.unsubscribeIsCalledWithValidArgs = isValidFirstArg;
             },
-            scan: function(params, callback) {
+            scan: function (params, callback) {
                 return callback(null, ['0']);
             },
             removeAllListeners: function () {
@@ -35,13 +35,13 @@ describe('batch API job subscriber', function () {
             smembers: function (key, callback) {
                 callback(null, []);
             },
-            connected: true,
+            connected: true
         };
         this.pool = {
             acquire: function (db, cb) {
                 cb(null, self.redis);
             },
-            release: function(/*db, client*/) {
+            release: function (/* db, client */) {
 
             }
         };
@@ -67,5 +67,4 @@ describe('batch API job subscriber', function () {
         this.jobSubscriber.unsubscribe();
         assert.ok(this.redis.unsubscribeIsCalledWithValidArgs);
     });
-
 });

@@ -19,7 +19,7 @@ var PSQL = require('cartodb-psql');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var logger = new BatchLogger(null, 'batch-queries');
 var jobPublisher = new JobPublisher(redisUtils.getPool());
-var jobQueue =  new JobQueue(metadataBackend, jobPublisher, logger);
+var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 var jobCanceller = new JobCanceller();
 
@@ -33,18 +33,18 @@ var JOB = {
     dbname: 'cartodb_test_user_1_db',
     dbuser: 'test_cartodb_user_1',
     port: 5432,
-    pass: 'test_cartodb_user_1_pass',
+    pass: 'test_cartodb_user_1_pass'
 
 };
 
-function createWadusDataJob() {
+function createWadusDataJob () {
     return JSON.parse(JSON.stringify(JOB));
 }
 
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
-function runQueryHelper(job, callback) {
-    var job_id = job.job_id;
+function runQueryHelper (job, callback) {
+    var jobId = job.job_id;
     var sql = job.query;
 
     job.status = jobStatus.RUNNING;
@@ -59,12 +59,12 @@ function runQueryHelper(job, callback) {
             port: job.port,
             dbname: job.dbname,
             user: job.dbuser,
-            pass: job.pass,
+            pass: job.pass
         };
 
         var pg = new PSQL(dbConfiguration);
 
-        sql = '/* ' + job_id + ' */ ' + sql;
+        sql = '/* ' + jobId + ' */ ' + sql;
 
         pg.eventedQuery(sql, function (err, query) {
             if (err) {
@@ -76,7 +76,7 @@ function runQueryHelper(job, callback) {
     });
 }
 
-describe('job service', function() {
+describe('job service', function () {
     var jobService = new JobService(jobBackend, jobCanceller);
 
     after(function (done) {
@@ -94,7 +94,7 @@ describe('job service', function() {
                     return done(err);
                 }
 
-                assert.equal(job.data.job_id, jobCreated.data.job_id);
+                assert.strictEqual(job.data.job_id, jobCreated.data.job_id);
                 done();
             });
         });
@@ -103,7 +103,7 @@ describe('job service', function() {
     it('.get() should return a not found error', function (done) {
         jobService.get('wadus_job_id', function (err) {
             assert.ok(err);
-            assert.equal(err.message, 'Job with id wadus_job_id not found');
+            assert.strictEqual(err.message, 'Job with id wadus_job_id not found');
             done();
         });
     });
@@ -115,7 +115,7 @@ describe('job service', function() {
             }
 
             assert.ok(jobCreated.data.job_id);
-            assert.equal(jobCreated.data.status, jobStatus.PENDING);
+            assert.strictEqual(jobCreated.data.status, jobStatus.PENDING);
             done();
         });
     });
@@ -127,7 +127,7 @@ describe('job service', function() {
 
         jobService.create(job, function (err) {
             assert.ok(err);
-            assert.equal(err.message, 'You must indicate a valid SQL');
+            assert.strictEqual(err.message, 'You must indicate a valid SQL');
             done();
         });
     });
@@ -151,8 +151,8 @@ describe('job service', function() {
                         return done(err);
                     }
 
-                    assert.equal(jobCancelled.data.job_id, job.data.job_id);
-                    assert.equal(jobCancelled.data.status, jobStatus.CANCELLED);
+                    assert.strictEqual(jobCancelled.data.job_id, job.data.job_id);
+                    assert.strictEqual(jobCancelled.data.status, jobStatus.CANCELLED);
                     done();
                 });
             });
@@ -162,8 +162,8 @@ describe('job service', function() {
     it('.cancel() should return a job not found error', function (done) {
         jobService.cancel('wadus_job_id', function (err) {
             assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id wadus_job_id not found');
+            assert.strictEqual(err.name, 'NotFoundError');
+            assert.strictEqual(err.message, 'Job with id wadus_job_id not found');
             done();
         });
     });
@@ -187,8 +187,8 @@ describe('job service', function() {
                         return done(err);
                     }
 
-                    assert.equal(jobDrained.job_id, job.data.job_id);
-                    assert.equal(jobDrained.status, jobStatus.PENDING);
+                    assert.strictEqual(jobDrained.job_id, job.data.job_id);
+                    assert.strictEqual(jobDrained.status, jobStatus.PENDING);
                     done();
                 });
             });
@@ -198,10 +198,9 @@ describe('job service', function() {
     it('.drain() should return a job not found error', function (done) {
         jobService.drain('wadus_job_id', function (err) {
             assert.ok(err, err);
-            assert.equal(err.name, 'NotFoundError');
-            assert.equal(err.message, 'Job with id wadus_job_id not found');
+            assert.strictEqual(err.name, 'NotFoundError');
+            assert.strictEqual(err.message, 'Job with id wadus_job_id not found');
             done();
         });
     });
-
 });
