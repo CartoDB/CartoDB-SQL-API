@@ -17,7 +17,6 @@ Requirements:
 * [`CARTO Postgres Extension >= 0.24.1`](https://github.com/CartoDB/cartodb-postgresql)
 * [`Redis >= 4`](https://redis.io/download)
 * GDAL `1.11.0` (bin utils). See [installing GDAL](http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries)
-* zip commandline tool.
 * `C++11` to build internal dependencies. When there's no pre-built binaries for your OS/architecture distribution.
 
 Optional:
