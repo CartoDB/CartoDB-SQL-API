@@ -13,3 +13,4 @@ coverage/
 npm-debug.log
 log/*.log
 yarn.lock
+.nyc_output

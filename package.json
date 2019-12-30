@@ -1,22 +1,30 @@
 {
   "private": true,
-  "name": "cartodb_sql_api",
-  "description": "high speed SQL api for cartodb",
-  "keywords": [
-    "cartodb"
-  ],
+  "name": "cartodb-sql-api",
   "version": "5.0.1",
+  "description": "High speed SQL API for CARTO",
+  "keywords": [
+    "carto",
+    "sql",
+    "batch",
+    "import",
+    "export",
+    "geospatial"
+  ],
+  "url": "https://github.com/CartoDB/CartoDB-SQL-API",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "git://github.com/CartoDB/CartoDB-SQL-API.git"
   },
-  "license": "BSD-3-Clause",
-  "author": "Vizzuality <contact@vizzuality.com> (http://vizzuality.com)",
+  "author": "CARTO (https://carto.com)",
   "contributors": [
     "Simon Tokumine <simon@vizzuality.com>",
     "Sandro Santilli <strk@vizzuality.com>",
+    "Raúl Ochoa <rochoa@carto.com>",
     "Daniel García Aubert <dgaubert@carto.com>"
   ],
+  "main": "app.js",
   "dependencies": {
     "@carto/fqdn-sync": "0.2.2",
     "basic-auth": "^2.0.0",
@@ -54,10 +62,10 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "istanbul": "0.4.5",
     "libxmljs": "0.19.5",
     "mocha": "^5.2.0",
     "mockdate": "^2.0.2",
+    "nyc": "^15.0.0",
     "shapefile": "0.3.0",
     "sqlite3": "^4.0.6",
     "zipfile": "0.5.12"
@@ -65,11 +73,15 @@
   "scripts": {
     "lint:fix": "eslint --fix app.js \"lib/**/*.js\" \"test/**/*.js\"",
     "lint": "eslint app.js \"lib/**/*.js\" \"test/**/*.js\"",
-    "test": "make test-all",
-    "test:unit": "mocha test/unit/**/*.js --exit",
-    "test:unit:watch": "npm run test:unit -- -w",
-    "docker-test": "./docker-test.sh",
-    "docker-bash": "./docker-bash.sh"
+    "pretest:setup": "npm run lint",
+    "test:setup": "NODE_ENV=test node test setup",
+    "pretest": "npm run test:setup",
+    "test": "NODE_ENV=test TZ='Europe/Rome' mocha -t 5000 --exit --recursive test/acceptance test/integration test/unit",
+    "posttest": "npm run test:teardown",
+    "test:teardown": "NODE_ENV=test node test teardown",
+    "cover": "nyc --reporter=lcov npm test",
+    "test:docker": "docker run -e \"NODEJS_VERSION=$NODE_VERSION\" -v `pwd`:/srv $DOCKER_IMAGE bash docker/scripts/test-setup.sh && docker ps --filter status=dead --filter status=exited -aq | xargs docker rm -v",
+    "docker:bash": "docker run -it -v `pwd`:/srv $DOCKER_IMAGE bash"
   },
   "engines": {
     "node": "^10.15.1",
