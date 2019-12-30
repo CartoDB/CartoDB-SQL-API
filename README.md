@@ -1,11 +1,11 @@
 # CartoDB-SQL-API [![Build Status](https://travis-ci.org/CartoDB/CartoDB-SQL-API.svg?branch=master)](https://travis-ci.org/CartoDB/CartoDB-SQL-API)
 
-The [`CARTO SQL API`](https://carto.com/developers/sql-api/). Provides a web service for running SQL queries and jobs against your account in CARTO:
+The [`CARTO’s SQL API`](https://carto.com/developers/sql-api/) allows you to interact with your data inside CARTO, as if you were running SQL statements against a normal database.
 
 * Run queries with fine-grained permissions through [`Auth API`](https://carto.com/developers/auth-api/).
 * Export data in multiple geospatial formats (CVS, geopackage, KML, SHP, spatialite, geojson, topojson, etc).
 * Schedule jobs using [`Batch Queries`](https://carto.com/developers/sql-api/guides/batch-queries/).
-* [Copy queries](https://carto.com/developers/sql-api/guides/copy-queries/) allow you to use the [PostgreSQL copy command](https://www.postgresql.org/docs/10/static/sql-copy.html) for efficient streaming of data to and from CARTO.
+* [Copy queries](https://carto.com/developers/sql-api/guides/copy-queries/) allows you to use the [PostgreSQL copy command](https://www.postgresql.org/docs/10/static/sql-copy.html) for efficient streaming of data to and from CARTO.
 
 ## Build
 
