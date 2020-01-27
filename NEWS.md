@@ -1,10 +1,11 @@
 # Changelog
 
 ## 5.0.2
-Released 2019-mm-dd
+Released 2020-mm-dd
+
 
 ## 5.0.1
-Released 2019-01-27
+Released 2020-01-27
 
 - Removed `jshint` as linter in favour of `eslint` to check syntax, find problems, and enforce code style.
 - Stop using two different tools for package management, testing, and any other developer workflow.
