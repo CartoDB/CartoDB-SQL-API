@@ -9,7 +9,10 @@ const accessControlHeaders = [
     'X-Requested-With',
     'X-Prototype-Version',
     'X-CSRF-Token',
-    'Authorization'
+    'Authorization',
+    'Carto-Source-Lib',
+    'Carto-Source-Context',
+    'Carto-Source-Context-Id'
 ].join(', ');
 
 const exposedHeaders = [
