@@ -3,6 +3,8 @@
 ## 5.0.2
 Released 2020-mm-dd
 
+- Updated allowed list of custom headers with the ones for metrics
+
 
 ## 5.0.1
 Released 2020-01-27
