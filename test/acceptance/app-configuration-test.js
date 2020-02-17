@@ -11,7 +11,7 @@ const accessControlHeaders = [
     'X-CSRF-Token',
     'Authorization',
     'Carto-Event',
-    'Carto-Event-Origin',
+    'Carto-Event-Source',
     'Carto-Event-Group-Id'
 ].join(', ');
 
