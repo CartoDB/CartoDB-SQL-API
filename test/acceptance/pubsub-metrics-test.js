@@ -19,7 +19,7 @@ var request = {
     method: 'GET'
 };
 
-describe.only('pubsub metrics middleware', function () {
+describe('pubsub metrics middleware', function () {
     let server;
     let isDisabledStub;
     let sendStub;

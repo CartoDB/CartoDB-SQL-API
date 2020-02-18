@@ -16,7 +16,7 @@ const metadataBackend = new MetadataDB({
     reapIntervalMillis: global.settings.redisReapIntervalMillis
 });
 
-describe.only('pubsub metrics service', function () {
+describe('pubsub metrics service', function () {
     let isDisabledStub;
     let publishStub;
 
