@@ -159,6 +159,7 @@ module.exports.cache = {
 };
 
 module.exports.pubSubMetrics = {
+    enabled: false,
     project_id: '',
     credentials: '',
     topic: ''
