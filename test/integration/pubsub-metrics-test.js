@@ -105,6 +105,10 @@ describe('pubsub metrics middleware', function () {
         global.settings.pubSubMetrics.enabled = false;
     });
 
+    afterEach(function () {
+        fakeTopic.publish.resetHistory();
+    });
+
     it('should not send event if disabled', function (done) {
         global.settings.pubSubMetrics.enabled = false;
         server = app();
@@ -133,7 +137,7 @@ describe('pubsub metrics middleware', function () {
         });
     });
 
-    xit('should send event for query requests', function (done) {
+    it('should send event for query requests', function (done) {
         global.settings.pubSubMetrics.enabled = true;
         server = app();
 
@@ -184,7 +188,7 @@ describe('pubsub metrics middleware', function () {
         });
     });
 
-    xit('should send event when error', function (done) {
+    it('should send event when error', function (done) {
         global.settings.pubSubMetrics.enabled = true;
         server = app();
 
@@ -197,6 +201,7 @@ describe('pubsub metrics middleware', function () {
             }
 
             assert(fakeTopic.publish.calledOnceWith(Buffer.from('test-event'), eventAttributes));
+            assert(fakeTopic.publish.calledOnce);
             return done();
         });
     });
