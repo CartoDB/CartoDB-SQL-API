@@ -60,35 +60,35 @@ Below, you can find the values of the rate limit by user account type and endpoi
 
 #### Enterprise plans
 
-|Endpoint   |Request   |Time period  |Burst  |
-| :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |15  |1  |15  |
-| POST /api/v2/sql/job        |5  |1  |5  |
-| GET /api/v2/sql/job/{job_id}  |5  |1  |5  |
-| DELETE /api/v2/sql/job/{job_id}  |5  |1  |5  |
-| POST /api/v2/sql/copyfrom  |3  |60  |3  |
-| GET /api/v2/sql/copyto  |3  |60  |3  |
+| Endpoint                              | Request | Time period | Burst |
+|:--------------------------------------|--------:|------------:|------:|
+| GET /api/v2/sql <br> POST /api/v2/sql |      15 |           1 |    15 |
+| POST /api/v2/sql/job                  |       5 |           1 |     5 |
+| GET /api/v2/sql/job/{job_id}          |       5 |           1 |     5 |
+| DELETE /api/v2/sql/job/{job_id}       |       5 |           1 |     5 |
+| POST /api/v2/sql/copyfrom             |       3 |          60 |     3 |
+| GET /api/v2/sql/copyto                |       3 |          60 |     3 |
 
 
 #### Individual plans
 
-|Endpoint   |Request   |Time period  |Burst  |
-| :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |6  |1  |6  |
-| POST /api/v2/sql/job        |2  |1  |2  |
-| GET /api/v2/sql/job/{job_id}  |2  |1  |2  |
-| DELETE /api/v2/sql/job/{job_id}  |2  |1  |2  |
-| POST /api/v2/sql/copyfrom  |1  |60  |1  |
-| GET /api/v2/sql/copyto  |1  |60  |1  |
+| Endpoint                              | Request | Time period | Burst |
+|:--------------------------------------|--------:|------------:|------:|
+| GET /api/v2/sql <br> POST /api/v2/sql |       6 |           1 |     6 |
+| POST /api/v2/sql/job                  |       2 |           1 |     2 |
+| GET /api/v2/sql/job/{job_id}          |       2 |           1 |     2 |
+| DELETE /api/v2/sql/job/{job_id}       |       2 |           1 |     2 |
+| POST /api/v2/sql/copyfrom             |       1 |          60 |     1 |
+| GET /api/v2/sql/copyto                |       1 |          60 |     1 |
 
 
 #### Free plans
 
-|Endpoint   |Request   |Time period  |Burst  |
-| :---         |          ---: |          ---: |          ---: |
-| GET /api/v2/sql <br> POST /api/v2/sql |6  |1  |6  |
-| POST /api/v2/sql/job        |1  |1  |1  |
-| GET /api/v2/sql/job/{job_id}  |1  |1  |1  |
-| DELETE /api/v2/sql/job/{job_id}  |1  |1  |1  |
-| POST /api/v2/sql/copyfrom  |1  |60  |1  |
-| GET /api/v2/sql/copyto  |1  |60  |1  |
+| Endpoint                              | Request | Time period | Burst |
+|:--------------------------------------|--------:|------------:|------:|
+| GET /api/v2/sql <br> POST /api/v2/sql |       6 |           1 |     6 |
+| POST /api/v2/sql/job                  |       2 |           1 |     2 |
+| GET /api/v2/sql/job/{job_id}          |       2 |           1 |     2 |
+| DELETE /api/v2/sql/job/{job_id}       |       2 |           1 |     2 |
+| POST /api/v2/sql/copyfrom             |       1 |          60 |     1 |
+| GET /api/v2/sql/copyto                |       1 |          60 |     1 |
