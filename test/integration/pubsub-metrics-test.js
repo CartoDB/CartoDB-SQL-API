@@ -109,7 +109,7 @@ describe('pubsub metrics middleware', function () {
         fakeTopic.publish.resetHistory();
     });
 
-    it('should not send event if disabled', function (done) {
+    it('should not send event if not enabled', function (done) {
         global.settings.pubSubMetrics.enabled = false;
         server = app();
 

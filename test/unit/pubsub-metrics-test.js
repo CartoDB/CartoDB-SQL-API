@@ -26,7 +26,7 @@ const eventAttributes = {
 };
 
 describe('pubsub metrics service', function () {
-    it('should not send event not enabled', function () {
+    it('should not send event if not enabled', function () {
         const pubSubMetricsService = new PubSubMetricsService(fakePubSub, false);
 
         pubSubMetricsService.sendEvent('test-event', eventAttributes);
