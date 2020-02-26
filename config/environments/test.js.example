@@ -157,3 +157,10 @@ module.exports.cache = {
   ttl: 60 * 60 * 24 * 365, // one year in seconds
   fallbackTtl: 60 * 5 // five minutes in seconds
 };
+
+module.exports.pubSubMetrics = {
+    enabled: false,
+    project_id: '',
+    credentials: '',
+    topic: ''
+};
