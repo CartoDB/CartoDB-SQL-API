@@ -58,7 +58,7 @@ const nonMetricsHeadersRequest = {
     method: 'GET'
 };
 
-const tooLongField = 'If you are sending a text this long in a header you kind of deserve the worst, honestly. I mean ' +
+const tooLongField = '   If you are sending a text this long in a header you kind of deserve the worst, honestly. I mean ' +
     'this is not a header, it is almost a novel, and you do not see any Novel cookie here, right?';
 
 const badHeadersRequest = {
@@ -161,7 +161,7 @@ describe('pubsub metrics middleware', function () {
         const eventAttributes = buildEventAttributes(queryRequest.headers.host, statusCode);
 
         const maxLength = 100;
-        const eventName = tooLongField.substr(0, maxLength);
+        const eventName = tooLongField.trim().substr(0, maxLength);
 
         assert.response(server, badHeadersRequest, { status: statusCode }, function (err) {
             if (err) {
