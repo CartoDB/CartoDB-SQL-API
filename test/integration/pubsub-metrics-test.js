@@ -58,6 +58,22 @@ const nonMetricsHeadersRequest = {
     method: 'GET'
 };
 
+const tooLongField = 'If you are sending a text this long in a header you kind of deserve the worst, honestly. I mean ' +
+    'this is not a header, it is almost a novel, and you do not see any Novel cookie here, right?';
+
+const badHeadersRequest = {
+    url: '/api/v1/sql?' + qs.stringify({
+        q: 'SELECT * FROM untitle_table_4'
+    }),
+    headers: {
+        host: 'vizzuality.cartodb.com',
+        'Carto-Event': tooLongField,
+        'Carto-Event-Source': 'test',
+        'Carto-Event-Group-Id': 1
+    },
+    method: 'GET'
+};
+
 const badRequest = {
     url: '/api/v1/sql?',
     headers: {
@@ -133,6 +149,26 @@ describe('pubsub metrics middleware', function () {
             }
 
             assert(fakeTopic.publish.notCalled);
+            return done();
+        });
+    });
+
+    it('should normalized headers type and length', function (done) {
+        global.settings.pubSubMetrics.enabled = true;
+        server = app();
+
+        const statusCode = 200;
+        const eventAttributes = buildEventAttributes(queryRequest.headers.host, statusCode);
+
+        const maxLength = 100;
+        const eventName = tooLongField.substr(0, maxLength);
+
+        assert.response(server, badHeadersRequest, { status: statusCode }, function (err) {
+            if (err) {
+                return done(err);
+            }
+
+            assert(fakeTopic.publish.calledOnceWith(Buffer.from(eventName), eventAttributes));
             return done();
         });
     });
