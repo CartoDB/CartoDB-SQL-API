@@ -96,7 +96,7 @@ describe('rate limit', function () {
 
     it('1 req/sec: 2 req/seg should be limited', function (done) {
         assertRequest(200, '2', '1', '1');
-        setTimeout(() => assertRequest(200, '2', '0', '1', null), 250);
+        setTimeout(() => assertRequest(200, '2', '0', '1', '1'), 250);
         setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 500);
         setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 750);
         setTimeout(() => assertRequest(429, '2', '0', '1', '1'), 950);
