@@ -55,7 +55,6 @@ async function populateDatabase () {
     const filenames = [
         'test',
         'populated_places_simple_reduced',
-        'py_sleep',
         'quota_mock'
     ].map(filename => `${__dirname}/support/sql/${filename}.sql`);
 

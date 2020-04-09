@@ -860,30 +860,6 @@ describe('app.test', function () {
         });
     });
 
-    it('GET with slow python script exceeding statement timeout returns proper error message', function (done) {
-        assert.response(server, {
-            url: '/api/v1/sql?q=select%20py_sleep(2.1)',
-            headers: { host: 'vizzuality.cartodb.com' },
-            method: 'GET'
-        },
-        {
-            // status: 429,  ---> Both 200 and 429 are valid
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8'
-            }
-        },
-        function (err, res) {
-            assert.ifError(err);
-            var error = JSON.parse(res.body);
-            assert.deepStrictEqual(error.error, [
-                'You are over platform\'s limits: SQL query timeout error.' +
-                    ' Refactor your query before running again or contact CARTO support for more details.'
-            ]);
-
-            done();
-        });
-    });
-
     it('too large rows get into error log', function (done) {
         var dbMaxRowSize = global.settings.db_max_row_size;
         global.settings.db_max_row_size = 4;
