@@ -34,6 +34,7 @@
     "cartodb-psql": "0.14.0",
     "cartodb-query-tables": "^0.7.0",
     "cartodb-redis": "2.1.0",
+    "cors": "^2.8.5",
     "debug": "^4.1.1",
     "express": "^4.16.4",
     "gc-stats": "1.2.1",
