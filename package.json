@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "cartodb-sql-api",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "High speed SQL API for CARTO",
   "keywords": [
     "carto",
