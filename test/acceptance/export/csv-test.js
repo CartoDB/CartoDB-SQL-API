@@ -210,4 +210,23 @@ describe('export.csv', function () {
             done();
         });
     });
+
+    it('maintains output compatible with gdal 2.2', function (done) {
+        assert.response(server, {
+            url: '/api/v1/sql?' + querystring.stringify({
+                q: 'SELECT cartodb_id, natscale, adm0cap from populated_places_simple_reduced limit 1',
+                format: 'csv'
+            }),
+            headers: { host: 'vizzuality.cartodb.com' },
+            method: 'GET'
+        },
+        {
+            status: 200
+        },
+        function (err, res) {
+            assert.ifError(err);
+            assert.strictEqual(res.body.split('\r\n')[1], '1109,20,0');
+            done();
+        });
+    });
 });
