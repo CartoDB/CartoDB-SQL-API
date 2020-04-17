@@ -67,7 +67,7 @@ describe('cache headers', function () {
                 assert.response(server, {
                     url: `/api/v1/sql?${qs.encode({
                         api_key: '1234',
-                        q: `select CDB_TableMetadataTouch('${tableName}'::regclass)`
+                        q: `select cartodb.CDB_TableMetadataTouch('${tableName}'::regclass)`
                     })}`,
                     headers: {
                         host: 'vizzuality.cartodb.com'

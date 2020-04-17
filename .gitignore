@@ -7,6 +7,7 @@ node_modules*
 .idea/*
 .vscode/
 test/redis.pid
+test/redis-server.log
 test/test.log
 test/acceptance/oauth/venv/*
 coverage/
