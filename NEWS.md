@@ -4,6 +4,7 @@
 Released 2020-mm-dd
 
 - Updated allowed list of custom headers with the ones for metrics
+- Fix an ogr2ogr export issue when the temporal name is too big [`653`](https://github.com/CartoDB/CartoDB-SQL-API/issues/653).
 
 
 ## 5.0.1
