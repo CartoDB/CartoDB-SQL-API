@@ -31,6 +31,26 @@ describe('geopackage query', function () {
         });
     });
 
+    it('works with a long list of skipfields', function (done) {
+        const longUrl = baseUrl + `&skipfields=the_geom_webmercator,${'a'.repeat(300)}`;
+        assert.response(server, {
+            url: longUrl,
+            headers: { host: 'vizzuality.cartodb.com' },
+            method: 'GET'
+        }, { }, function (err, res) {
+            assert.ifError(err);
+            assert.strictEqual(res.statusCode, 200, res.body);
+            assert.strictEqual(res.headers['content-type'], 'application/x-sqlite3; charset=utf-8');
+            assert.notEqual(res.headers['content-disposition'].indexOf(tableName + '.gpkg'), -1);
+            var db = new sqlite.Database(':memory:', res.body);
+            var qr = db.get('PRAGMA database_list', function (err) {
+                assert.strictEqual(err, null);
+                done();
+            });
+            assert.notEqual(qr, undefined);
+        });
+    });
+
     it('gets database and geopackage schema', function (done) {
         assert.response(server, {
             url: baseUrl,
