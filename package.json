@@ -36,7 +36,7 @@
     "cartodb-redis": "^3.0.0",
     "debug": "^4.1.1",
     "express": "^4.16.4",
-    "gc-stats": "1.2.1",
+    "gc-stats": "^1.4.0",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
     "mkdirp": "0.5.1",
@@ -57,20 +57,20 @@
     "yargs": "~5.0.0"
   },
   "devDependencies": {
+    "adm-zip": "^0.4.14",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.19.1",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "libxmljs": "0.19.5",
+    "libxmljs": "^0.19.7",
     "mocha": "^5.2.0",
     "mockdate": "^2.0.2",
     "nyc": "^15.0.0",
     "shapefile": "0.3.0",
-    "sqlite3": "^4.0.6",
-    "zipfile": "0.5.12",
-    "sinon": "^9.0.0"
+    "sinon": "^9.0.0",
+    "sqlite3": "^4.2.0"
   },
   "scripts": {
     "lint:fix": "eslint --fix app.js \"lib/**/*.js\" \"test/**/*.js\"",
