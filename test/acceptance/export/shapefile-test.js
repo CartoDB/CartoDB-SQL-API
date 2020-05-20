@@ -6,13 +6,25 @@ var server = require('../../../lib/server')();
 var assert = require('../../support/assert');
 var querystring = require('querystring');
 var shapefile = require('shapefile');
-var _ = require('underscore');
-var zipfile = require('zipfile');
+const AdmZip = require('adm-zip');
 var fs = require('fs');
 
-describe('export.shapefile', function () {
-// SHP tests
+function assertZipfileContent (content, filename = 'cartodb-query') {
+    const tmpfile = '/tmp/myshape.zip';
+    const err = fs.writeFileSync(tmpfile, content, 'binary');
 
+    assert.ifError(err);
+
+    const names = new AdmZip(tmpfile).getEntries().map(entry => entry.name);
+    assert.ok(names.includes(`${filename}.shp`), `SHP zipfile does not contain .shp: ${names}`);
+    assert.ok(names.includes(`${filename}.shx`), `SHP zipfile does not contain .shx: ${names}`);
+    assert.ok(names.includes(`${filename}.dbf`), `SHP zipfile does not contain .dbf: ${names}`);
+    assert.ok(names.includes(`${filename}.prj`), `SHP zipfile does not contain .prj: ${names}`);
+
+    fs.unlinkSync(tmpfile);
+}
+
+describe('export.shapefile', function () {
     it('SHP format, unauthenticated', function (done) {
         assert.response(server, {
             url: '/api/v1/sql?q=SELECT%20*%20FROM%20untitle_table_4%20LIMIT%201&format=shp',
@@ -25,18 +37,7 @@ describe('export.shapefile', function () {
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
             assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
-            var tmpfile = '/tmp/myshape.zip';
-            var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
-            if (writeErr) {
-                return done(writeErr);
-            }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
-            // TODO: check DBF contents
-            fs.unlinkSync(tmpfile);
+            assertZipfileContent(res.body);
             done();
         });
     });
@@ -89,17 +90,7 @@ describe('export.shapefile', function () {
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
             assert.strictEqual(true, /filename=myshape.zip/gi.test(cd));
-            var tmpfile = '/tmp/myshape.zip';
-            var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
-            if (writeErr) {
-                return done(writeErr);
-            }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, 'myshape.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'myshape.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'myshape.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'myshape.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
-            fs.unlinkSync(tmpfile);
+            assertZipfileContent(res.body, 'myshape');
             done();
         });
     });
@@ -122,11 +113,11 @@ describe('export.shapefile', function () {
             if (writeErr) {
                 return done(writeErr);
             }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, fname + '.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, fname + '.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, fname + '.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, fname + '.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
+            const names = new AdmZip(tmpfile).getEntries().map(entry => entry.name);
+            assert.ok(names.includes(`${fname}.shp`), `SHP zipfile does not contain .shp: ${names}`);
+            assert.ok(names.includes(`${fname}.shx`), `SHP zipfile does not contain .shx: ${names}`);
+            assert.ok(names.includes(`${fname}.dbf`), `SHP zipfile does not contain .dbf: ${names}`);
+            assert.ok(names.includes(`${fname}.prj`), `SHP zipfile does not contain .prj: ${names}`);
             fs.unlinkSync(tmpfile);
             done();
         });
@@ -143,18 +134,7 @@ describe('export.shapefile', function () {
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
-            var tmpfile = '/tmp/myshape.zip';
-            var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
-            if (writeErr) {
-                return done(writeErr);
-            }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
-            // TODO: check contents of the DBF
-            fs.unlinkSync(tmpfile);
+            assertZipfileContent(res.body);
             done();
         });
     });
@@ -179,8 +159,7 @@ describe('export.shapefile', function () {
             if (writeErr) {
                 return done(writeErr);
             }
-            var zf = new zipfile.ZipFile(tmpfile);
-            var buffer = zf.readFileSync('myshape.dbf');
+            const buffer = new AdmZip(tmpfile).getEntry('myshape.dbf').getData();
             fs.unlinkSync(tmpfile);
             var strings = buffer.toString();
             assert.ok(/♥♦♣♠/.exec(strings), "Cannot find '♥♦♣♠' in here:\n" + strings);
@@ -259,8 +238,7 @@ describe('export.shapefile', function () {
             if (writeErr) {
                 return done(writeErr);
             }
-            var zf = new zipfile.ZipFile(tmpfile);
-            var buffer = zf.readFileSync('myshape.dbf');
+            const buffer = new AdmZip(tmpfile).getEntry('myshape.dbf').getData();
             fs.unlinkSync(tmpfile);
             var strings = buffer.toString();
             assert.ok(!/skipme/.exec(strings), "Could not skip 'skipme' field:\n" + strings);
@@ -276,18 +254,7 @@ describe('export.shapefile', function () {
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /^attachment/.test(cd), 'SHP is not disposed as attachment: ' + cd);
             assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
-            var tmpfile = '/tmp/myshape.zip';
-            var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
-            if (writeErr) {
-                return done(writeErr);
-            }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
-            // TODO: check DBF contents
-            fs.unlinkSync(tmpfile);
+            assertZipfileContent(res.body);
             if (!--waiting) {
                 done();
             }
@@ -325,18 +292,7 @@ describe('export.shapefile', function () {
             assert.strictEqual(res.statusCode, 200, res.body);
             var cd = res.headers['content-disposition'];
             assert.strictEqual(true, /filename=cartodb-query.zip/gi.test(cd));
-            var tmpfile = '/tmp/myshape.zip';
-            var writeErr = fs.writeFileSync(tmpfile, res.body, 'binary');
-            if (writeErr) {
-                return done(writeErr);
-            }
-            var zf = new zipfile.ZipFile(tmpfile);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shp'), 'SHP zipfile does not contain .shp: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.shx'), 'SHP zipfile does not contain .shx: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.dbf'), 'SHP zipfile does not contain .dbf: ' + zf.names);
-            assert.ok(_.contains(zf.names, 'cartodb-query.prj'), 'SHP zipfile does not contain .prj: ' + zf.names);
-            // TODO: check contents of the DBF
-            fs.unlinkSync(tmpfile);
+            assertZipfileContent(res.body);
             done();
         });
     });
@@ -370,14 +326,12 @@ describe('export.shapefile', function () {
                 return done(err);
             }
 
-            var zf = new zipfile.ZipFile(tmpShpPath);
-            zf.names.forEach(function (name) {
-                var buffer = zf.readFileSync(name);
-                var tmpDbfPath = '/tmp/' + name;
-                err = fs.writeFileSync(tmpDbfPath, buffer);
-                if (err) {
-                    return done(err);
-                }
+            const zf = new AdmZip(tmpShpPath);
+            zf.getEntries().forEach(entry => {
+                const buffer = entry.getData();
+                const tmpDbfPath = `/tmp/${entry.name}`;
+                const err = fs.writeFileSync(tmpDbfPath, buffer);
+                assert.ifError(err);
             });
             shapefile.read('/tmp/' + filename, function (err, collection) {
                 if (err) {

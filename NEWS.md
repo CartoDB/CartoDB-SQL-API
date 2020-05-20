@@ -1,8 +1,22 @@
 # Changelog
 
-## 5.0.2
+## 6.0.0
 Released 2020-mm-dd
 
+Breaking changes:
+- Drop support for Node.js < 12
+
+Announcements:
+- Support Node.js 12
+- Upgrade `cartodb-redis` to version [`3.0.0`](https://github.com/CartoDB/node-cartodb-redis/releases/tag/3.0.0)
+- Upgrades `redis-mpool` to version [`0.8.0`](https://github.com/CartoDB/node-redis-mpool/releases/tag/0.8.0)
+- Adapted pool acquires to the new version of cartodb-redis
+- Update `gc-stats` to version 1.4.0
+- Replace `zipfile` -> `adm-zip`
+- Adapted test to use adm-zip
+- Update `libxmljs` to version 0.19.7
+- Update `sqlite` to version 4.2.0
+- `pg-copy-from`: When the client closes the request, do not emit error as it closes the internal DB's connection stream and the Pool needs to keep it open to reuse the connection when free.
 - Updated allowed list of custom headers with the ones for metrics
 - Fix an ogr2ogr export issue when the temporal name is too big [`653`](https://github.com/CartoDB/CartoDB-SQL-API/issues/653).
 

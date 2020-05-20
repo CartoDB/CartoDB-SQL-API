@@ -38,11 +38,11 @@ describe('batch API job subscriber', function () {
             connected: true
         };
         this.pool = {
-            acquire: function (db, cb) {
-                cb(null, self.redis);
+            acquire: function () {
+                return Promise.resolve(self.redis);
             },
             release: function (/* db, client */) {
-
+                return Promise.resolve();
             }
         };
         this.queueSeeker = {
@@ -58,13 +58,17 @@ describe('batch API job subscriber', function () {
 
     it('.subscribe() should listen for incoming messages', function () {
         this.jobSubscriber.subscribe(this.onMessageListener);
-        assert.ok(this.redis.onIsCalledWithValidArgs);
-        assert.ok(this.redis.subscribeIsCalledWithValidArgs);
+        setImmediate(() => {
+            assert.ok(this.redis.onIsCalledWithValidArgs);
+            assert.ok(this.redis.subscribeIsCalledWithValidArgs);
+        });
     });
 
     it('.unsubscribe() should stop listening for incoming messages', function () {
         this.jobSubscriber.subscribe(this.onMessageListener);
         this.jobSubscriber.unsubscribe();
-        assert.ok(this.redis.unsubscribeIsCalledWithValidArgs);
+        setImmediate(() => {
+            assert.ok(this.redis.unsubscribeIsCalledWithValidArgs);
+        });
     });
 });

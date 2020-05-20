@@ -23,8 +23,8 @@ describe('batch API job publisher', function () {
             }
         };
         this.pool = {
-            acquire: function (db, cb) {
-                cb(null, self.redis);
+            acquire: function (db) {
+                return Promise.resolve(self.redis);
             }
         };
 
@@ -33,6 +33,8 @@ describe('batch API job publisher', function () {
 
     it('.publish() should publish new messages', function () {
         this.jobPublisher.publish(this.host);
-        assert.ok(this.redis.publishIsCalledWithValidArgs);
+        setImmediate(() => {
+            assert.ok(this.redis.publishIsCalledWithValidArgs);
+        });
     });
 });
