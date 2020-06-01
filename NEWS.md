@@ -16,10 +16,10 @@ Announcements:
 - Adapted test to use adm-zip
 - Update `libxmljs` to version 0.19.7
 - Update `sqlite` to version 4.2.0
-- `pg-copy-from`: When the client closes the request, do not emit error as it closes the internal DB's connection stream and the Pool needs to keep it open to reuse the connection when free.
+- `pg-copy-from`: When the client closes the request, do not emit error as it closes the internal DB's connection stream and the Pool needs to keep it open to reuse the connection when free
 - Updated allowed list of custom headers with the ones for metrics
-- Fix an ogr2ogr export issue when the temporal name is too big [`653`](https://github.com/CartoDB/CartoDB-SQL-API/issues/653).
-
+- Fix an ogr2ogr export issue when the temporal name is too big [`653`](https://github.com/CartoDB/CartoDB-SQL-API/issues/653)
+- Update dependencies to avoid security vulnerabilities
 
 ## 5.0.1
 Released 2020-01-27
@@ -35,7 +35,6 @@ Released 2020-01-27
   - Update old sections
   - Added missing sections.
 - Remove deprecated coverage tool istanbul, using nyc instead.
-
 
 ## 5.0.0
 Released 2019-11-13
