@@ -39,7 +39,6 @@
     "gc-stats": "^1.4.0",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
-    "mkdirp": "0.5.1",
     "multer": "~1.2.0",
     "node-statsd": "~0.0.7",
     "node-uuid": "^1.4.7",
