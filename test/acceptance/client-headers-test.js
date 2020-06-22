@@ -21,7 +21,7 @@ describe('SQL api metric headers', function () {
     it('should not get the client header if no client is provided', function (done) {
         this.testClient = new TestClient();
 
-        this.testClient.getResult(publicSQL,  (err, result, headers) => {
+        this.testClient.getResult(publicSQL, (err, result, headers) => {
             assert.ifError(err);
             assert.strictEqual(result.length, 6);
             assert.strictEqual(headers['carto-client'], undefined);
@@ -39,5 +39,4 @@ describe('SQL api metric headers', function () {
             done();
         });
     });
-
 });
