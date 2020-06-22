@@ -29,7 +29,7 @@ describe('SQL api metric headers', function () {
         });
     });
 
-    it('should not get the user id in the response header', function (done) {
+    it('should get the user id in the response header', function (done) {
         this.testClient = new TestClient();
 
         this.testClient.getResult(publicSQL, (err, result, headers) => {
