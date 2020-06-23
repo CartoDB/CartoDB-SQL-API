@@ -56,10 +56,10 @@ TestClient.prototype.getResult = function (query, override, callback) {
             var result = JSON.parse(res.body);
 
             if (res.statusCode > 299) {
-                return callback(null, result);
+                return callback(null, result, res.headers);
             }
 
-            return callback(null, result.rows || [], result);
+            return callback(null, result.rows, res.headers || [], result, res.headers);
         }
     );
 };
@@ -89,7 +89,11 @@ TestClient.prototype.getUrl = function (override) {
         return '/api/v1/sql?';
     }
 
-    return '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
+    let url = '/api/v2/sql?api_key=' + (override.apiKey || this.config.apiKey || '1234');
+    if (override.client) {
+        url = url + '&client=' + override.client;
+    }
+    return url;
 };
 
 TestClient.prototype.getExpectedResponse = function (override) {
