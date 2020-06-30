@@ -5,6 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 const fqdn = require('@carto/fqdn-sync');
+const serverOptions = require('./lib/server-options');
+const { logger } = serverOptions();
 
 const argv = require('yargs')
     .usage('Usage: node $0 <environment> [options]')
@@ -23,7 +25,7 @@ const environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
 const configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
 
 if (!fs.existsSync(configurationFile)) {
-    console.error('Configuration file "%s" does not exist', configurationFile);
+    logger.fatal(new Error(`Configuration file "${configurationFile}" does not exist`));
     process.exit(1);
 }
 
@@ -34,42 +36,12 @@ process.env.NODE_ENV = ENVIRONMENT;
 
 const availableEnvironments = ['development', 'production', 'test', 'staging'];
 
-// sanity check arguments
-if (availableEnvironments.indexOf(ENVIRONMENT) === -1) {
-    console.error('node app.js [environment]');
-    console.error('Available environments: ' + availableEnvironments.join(', '));
+if (!availableEnvironments.includes(ENVIRONMENT)) {
+    logger.fatal(new Error(`Invalid environment argument, valid ones: ${Object.keys(availableEnvironments).join(', ')}`));
     process.exit(1);
 }
 
 global.settings.api_hostname = fqdn.hostname();
-
-global.log4js = require('log4js');
-const log4jsConfig = {
-    appenders: [],
-    replaceConsole: true
-};
-
-if (global.settings.log_filename) {
-    const logFilename = path.resolve(global.settings.log_filename);
-    const logDirectory = path.dirname(logFilename);
-    if (!fs.existsSync(logDirectory)) {
-        console.error('Log filename directory does not exist: ' + logDirectory);
-        process.exit(1);
-    }
-    console.log('Logs will be written to ' + logFilename);
-    log4jsConfig.appenders.push(
-        { type: 'file', absolute: true, filename: logFilename }
-    );
-} else {
-    log4jsConfig.appenders.push(
-        { type: 'console', layout: { type: 'basic' } }
-    );
-}
-
-global.log4js.configure(log4jsConfig);
-global.logger = global.log4js.getLogger();
-
-const version = require('./package').version;
 
 const StatsClient = require('./lib/stats/client');
 
@@ -81,89 +53,64 @@ if (global.settings.statsd) {
 }
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 
+const { version, name } = require('./package');
 const createServer = require('./lib/server');
 
 const server = createServer(statsClient);
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function () {
-    console.info('Using Node.js %s', process.version);
-    console.info('Using configuration file "%s"', configurationFile);
-    console.log(
-        'CartoDB SQL API %s listening on %s:%s PID=%d (%s)',
-        version, global.settings.node_host, global.settings.node_port, process.pid, ENVIRONMENT
-    );
+    const { address, port } = listener.address();
+    logger.info({ 'Node.js': process.version, pid: process.pid, environment: process.env.NODE_ENV, [name]: version, address, port, config: configurationFile }, `${name} initialized successfully`);
 });
 
 process.on('uncaughtException', function (err) {
-    global.logger.error('Uncaught exception: ' + err.stack);
+    logger.error(err, 'Uncaught exception');
 });
 
-process.on('SIGHUP', function () {
-    global.log4js.clearAndShutdownAppenders(function () {
-        global.log4js.configure(log4jsConfig);
-        global.logger = global.log4js.getLogger();
-        console.log('Log files reloaded');
-    });
+const exitProcess = logger.finish((err, finalLogger, listener, signal, killTimeout) => {
+    scheduleForcedExit(killTimeout, finalLogger);
 
-    if (server.batch && server.batch.logger) {
-        server.batch.logger.reopenFileStreams();
+    finalLogger.info(`Process has received signal: ${signal}`);
+
+    let code = 0;
+
+    if (err) {
+        code = 1;
+        finalLogger.fatal(err);
     }
 
-    if (server.dataIngestionLogger) {
-        server.dataIngestionLogger.reopenFileStreams();
-    }
-});
+    finalLogger.info(`Process is going to exit with code: ${code}`);
+    listener.close(() => process.exit(code));
 
-addHandlers({ killTimeout: 45000 });
+    listener.close(() => {
+        server.batch.stop(() => {
+            server.batch.drain((err) => {
+                if (err) {
+                    finalLogger.error(err);
+                    return process.exit(1);
+                }
 
-function addHandlers ({ killTimeout }) {
-    // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
-    // process.on('uncaughtException', exitProcess(listener, logger, killTimeout));
-    process.on('unhandledRejection', exitProcess({ killTimeout }));
-    process.on('SIGINT', exitProcess({ killTimeout }));
-    process.on('SIGTERM', exitProcess({ killTimeout }));
-}
-
-function exitProcess ({ killTimeout }) {
-    return function exitProcessFn (signal) {
-        scheduleForcedExit({ killTimeout });
-
-        let code = 0;
-
-        if (!['SIGINT', 'SIGTERM'].includes(signal)) {
-            const err = signal instanceof Error ? signal : new Error(signal);
-            signal = undefined;
-            code = 1;
-
-            global.logger.fatal(err);
-        } else {
-            global.logger.info(`Process has received signal: ${signal}`);
-        }
-
-        listener.close(function () {
-            server.batch.stop(function () {
-                server.batch.drain(function (err) {
-                    if (err) {
-                        global.logger.error(err);
-                        return process.exit(1);
-                    }
-
-                    global.logger.info(`Process is going to exit with code: ${code}`);
-                    global.log4js.shutdown(function () {
-                        server.batch.logger.end(function () {
-                            process.exit(code);
-                        });
-                    });
-                });
+                process.exit(code);
             });
         });
-    };
+    });
+});
+
+function addHandlers (listener, killTimeout) {
+    // FIXME: minimize the number of 'uncaughtException' before uncomment the following line
+    // process.on('uncaughtException', (err) => exitProcess(err, listener, 'uncaughtException', killTimeout));
+    process.on('unhandledRejection', (err) => exitProcess(err, listener, 'unhandledRejection', killTimeout));
+    process.on('ENOMEM', (err) => exitProcess(err, listener, 'ENOMEM', killTimeout));
+    process.on('SIGINT', () => exitProcess(null, listener, 'SIGINT', killTimeout));
+    process.on('SIGTERM', () => exitProcess(null, listener, 'SIGINT', killTimeout));
 }
 
-function scheduleForcedExit ({ killTimeout }) {
+addHandlers(listener, 45000);
+
+function scheduleForcedExit (killTimeout, finalLogger) {
     // Schedule exit if there is still ongoing work to deal with
     const killTimer = setTimeout(() => {
-        global.logger.info('Process didn\'t close on time. Force exit');
+        finalLogger.info('Process didn\'t close on time. Force exit');
         process.exit(1);
     }, killTimeout);
 

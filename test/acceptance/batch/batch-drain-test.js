@@ -5,7 +5,7 @@ var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis-utils');
 var batchFactory = require('../../../lib/batch/index');
 
-var BatchLogger = require('../../../lib/batch/batch-logger');
+var Logger = require('../../../lib/utils/logger');
 var JobPublisher = require('../../../lib/batch/pubsub/job-publisher');
 var JobQueue = require('../../../lib/batch/job-queue');
 var JobBackend = require('../../../lib/batch/job-backend');
@@ -17,7 +17,7 @@ describe('batch module', function () {
     var dbInstance = 'localhost';
     var username = 'vizzuality';
     var pool = redisUtils.getPool();
-    var logger = new BatchLogger(null, 'batch-queries');
+    var logger = new Logger();
     var jobPublisher = new JobPublisher(pool);
     var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
@@ -25,7 +25,7 @@ describe('batch module', function () {
     var jobService = new JobService(jobBackend, jobCanceller, logger);
 
     before(function (done) {
-        this.batch = batchFactory(metadataBackend, pool);
+        this.batch = batchFactory(metadataBackend, pool, undefined, undefined, logger);
         this.batch.start();
         this.batch.on('ready', done);
     });

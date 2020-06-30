@@ -1,5 +1,27 @@
 # Changelog
 
+## 7.0.0
+Released 2020-mm-dd
+
+Breaking changes:
+- Log system revamp:
+  - Logs to stdout, disabled while testing
+  - Use header `X-Request-Id`, or create a new `uuid` when no present, to identyfy log entries
+  - Be able to set log level from env variable `LOG_LEVEL`, useful while testing: `LOG_LEVEL=info npm test`; even more human-readable: `LOG_LEVEL=info npm t | ./node_modules/.bin/pino-pretty`
+  - Be able to reduce the footprint in the final log file depending on the environment
+  - Use one logger for every service: Queries, Batch Queries (Jobs), and Data Ingestion (CopyTo/CopyFrom)
+  - Stop using headers such as: `X-SQL-API-Log`, `X-SQL-API-Profiler`, and `X-SQL-API-Errors` as a way to log info.
+  - Be able to tag requests with labels as an easier way to provide business metrics
+  - Metro: Add log-collector utility (`metro`), it will be moved to its own repository. Attaching it here fro development purposes. Try it with the following command `LOG_LEVEL=info npm t | node metro`
+  - Metro: Creates `metrics-collector.js` a stream to update Prometheus' counters and histograms and exposes them via Express' app (`:9145/metrics`). Use the ones defined in `grok_exporter`
+
+Announcements:
+- Profiler is always set. No need to check its existence anymore
+- Unify profiler usage for every endpoint
+
+Bug fixes:
+- Avoid hung requests while fetching user identifier
+
 ## 6.0.0
 Released 2020-06-05
 
