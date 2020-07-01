@@ -58,7 +58,7 @@ module.exports = function logCollector () {
                 }
 
                 if (accEntry.level > entry.level) {
-                    delete entry.level
+                    delete entry.level;
                 }
 
                 if (hasProperty(accEntry, 'error') && hasProperty(entry, 'error')) {
@@ -101,5 +101,5 @@ module.exports = function logCollector () {
 };
 
 function hasProperty (obj, prop) {
-    return Object.prototype.hasOwnProperty.call(obj, prop)
+    return Object.prototype.hasOwnProperty.call(obj, prop);
 }
