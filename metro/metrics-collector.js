@@ -109,7 +109,7 @@ module.exports = function metricsCollector () {
     });
 };
 
-const port = process.env.PORT || 9145;
+const port = process.env.PORT || 9144;
 
 http
     .createServer((req, res) => {
