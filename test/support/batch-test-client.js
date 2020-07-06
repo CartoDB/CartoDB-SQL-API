@@ -9,6 +9,7 @@ var debug = require('debug')('batch-test-client');
 var JobStatus = require('../../lib/batch/job-status');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 var batchFactory = require('../../lib/batch/index');
+var Logger = require('../../lib/utils/logger');
 
 function response (code) {
     return {
@@ -26,7 +27,8 @@ function BatchTestClient (config) {
     this.config = config || {};
     this.server = appServer();
 
-    this.batch = batchFactory(metadataBackend, redisUtils.getPool(), this.config.name);
+    const logger = new Logger();
+    this.batch = batchFactory(metadataBackend, redisUtils.getPool(), this.config.name, undefined, logger);
     this.batch.start();
 
     this.pendingJobs = [];

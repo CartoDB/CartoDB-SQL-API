@@ -7,7 +7,7 @@ var BATCH_SOURCE = '../../../lib/batch/';
 var assert = require('../../support/assert');
 var redisUtils = require('../../support/redis-utils');
 
-var BatchLogger = require(BATCH_SOURCE + 'batch-logger');
+var Logger = require('../../../lib/utils/logger');
 var JobQueue = require(BATCH_SOURCE + 'job-queue');
 var JobBackend = require(BATCH_SOURCE + 'job-backend');
 var JobPublisher = require(BATCH_SOURCE + 'pubsub/job-publisher');
@@ -17,7 +17,7 @@ var JobService = require(BATCH_SOURCE + 'job-service');
 var PSQL = require('cartodb-psql');
 
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
-var logger = new BatchLogger(null, 'batch-queries');
+var logger = new Logger();
 var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
