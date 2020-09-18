@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.0.2
+Released 2020-09-18
+
+- Respond with user-id and client in the headers
+
 ## 6.0.0
 Released 2020-06-05
 
