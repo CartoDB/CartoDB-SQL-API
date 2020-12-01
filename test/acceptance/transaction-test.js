@@ -9,7 +9,7 @@ const server = require('../../lib/server');
 
 describe('transaction', function () {
     before(function (done) {
-        this.listener = server.listen(0, '127.0.0.1');
+        this.listener = server().listen(0, '127.0.0.1');
         this.listener.on('error', done);
         this.listener.on('listening', () => {
             const { address, port } = this.listener.address();
