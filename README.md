@@ -64,19 +64,19 @@ $ npm test
 You can try to run the tests against the dependencies from the `dev-env`. To do so, you need to build the test docker image:
 
 ```shell
-$ docker-compose build
+$ docker-compose -f private/docker-compose.yml build
 ```
 
 Then you can run the tests like:
 
 ```shell
-$ docker-compose run sql-api-tests
+$ docker-compose -f private/docker-compose.yml  run sql-api-tests
 ```
 
 It will mount your code inside a volume. In case you want to play and run `npm test` or something else you can do:
 
 ```shell
-$ docker-compose run --entrypoint bash sql-api-tests
+$ docker-compose -f private/docker-compose.yml run --entrypoint bash sql-api-tests
 ```
 
 So you will have a bash shell inside the test container, with the code from your host.
