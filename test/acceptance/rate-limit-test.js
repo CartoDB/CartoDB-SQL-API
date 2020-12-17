@@ -77,7 +77,10 @@ describe('rate limit', function () {
         global.settings.ratelimits.endpoints.query = true;
 
         server = app();
-        redisClient = redis.createClient(global.settings.redis_port);
+        redisClient = redis.createClient({
+            port: global.settings.redis_port,
+            host: global.settings.redis_host
+        });
 
         const count = 1;
         const period = 1;

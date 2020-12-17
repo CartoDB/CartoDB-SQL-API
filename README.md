@@ -11,8 +11,8 @@ The [`CARTO’s SQL API`](https://carto.com/developers/sql-api/) allows you to i
 
 Requirements:
 
-* [`Node 10.x (npm 6.x)`](https://nodejs.org/dist/latest-v10.x/)
-* [`PostgreSQL >= 10.0`](https://www.postgresql.org/download/)
+* [`Node 12.x`](https://nodejs.org/dist/latest-v12.x/)
+* [`PostgreSQL >= 11.0`](https://www.postgresql.org/download/)
 * [`PostGIS >= 2.4`](https://postgis.net/install/)
 * [`CARTO Postgres Extension >= 0.24.1`](https://github.com/CartoDB/cartodb-postgresql)
 * [`Redis >= 4`](https://redis.io/download)
@@ -43,7 +43,11 @@ $ npm install
 
 ### Run
 
-Create the `./config/environments/<env>.js` file (there are `.example` files to start from). Look at `./lib/server-options.js` for more on config.
+You can inject the configuration through environment variables at run time. Check the file `./config/environments/config.js` to see the ones you have available.
+
+While the migration to the new environment based configuration, you can still use the old method of copying a config file. To enabled the one with environment variables you need to pass `CARTO_SQL_API_ENV_BASED_CONF=true`. You can use the docker image to run it.
+
+Old way:
 
 ```shell
 $ node app.js <env>
@@ -57,6 +61,28 @@ Where `<env>` is the name of a configuration file under `./config/environments/`
 $ npm test
 ```
 
+You can try to run the tests against the dependencies from the `dev-env`. To do so, you need to build the test docker image:
+
+```shell
+$ docker-compose build
+```
+
+Then you can run the tests like:
+
+```shell
+$ docker-compose run sql-api-tests
+```
+
+It will mount your code inside a volume. In case you want to play and run `npm test` or something else you can do:
+
+```shell
+$ docker-compose run --entrypoint bash sql-api-tests
+```
+
+So you will have a bash shell inside the test container, with the code from your host.
+
+⚠️ *WARNING* Some tests still fail inside the docker environment. Inside CI they don't yet use the `ci` folder to run the tests either. There is a failing test which prevents it.
+
 ### Coverage
 
 ```shell
@@ -64,34 +90,6 @@ $ npm run cover
 ```
 
 Open `./coverage/lcov-report/index.html`.
-
-### Docker support
-
-We provide docker images just for testing and continuous integration purposes:
-
-* [`nodejs-xenial-pg1121`](https://hub.docker.com/r/carto/nodejs-xenial-pg1121/tags)
-* [`nodejs-xenial-pg101`](https://hub.docker.com/r/carto/nodejs-xenial-pg101/tags)
-
-You can find instructions to install Docker, download, and update images [here](https://github.com/CartoDB/Windshaft-cartodb/blob/master/docker/reference.md).
-
-### Useful `npm` scripts
-
-Run test in a docker image with a specific Node.js version:
-
-```shell
-$ DOCKER_IMAGE=<docker-image-tag> NODE_VERSION=<nodejs-version> npm run test:docker
-```
-
-Where:
-
-* `<docker-image-tag>`: the tag of required docker image, e.g. `carto/nodejs-xenial-pg1121:latest`
-* `<nodejs-version>`: the Node.js version, e.g. `10.15.1`
-
-In case you need to debug:
-
-```shell
-$ DOCKER_IMAGE=<docker-image-tag> npm run docker:bash
-```
 
 ## Documentation
 

@@ -21,14 +21,17 @@ const argv = require('yargs')
     .describe('c', 'Load configuration from path')
     .argv;
 
-const environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
+let environmentArg = argv._[0] || process.env.NODE_ENV || 'development';
+if (process.env.CARTO_SQL_API_ENV_BASED_CONF) {
+    // we override the file with the one with env vars
+    environmentArg = 'config';
+}
 const configurationFile = path.resolve(argv.config || './config/environments/' + environmentArg + '.js');
 
 if (!fs.existsSync(configurationFile)) {
     logger.fatal(new Error(`Configuration file "${configurationFile}" does not exist`));
     process.exit(1);
 }
-
 global.settings = require(configurationFile);
 
 const ENVIRONMENT = argv._[0] || process.env.NODE_ENV || global.settings.environment;
@@ -37,7 +40,7 @@ process.env.NODE_ENV = ENVIRONMENT;
 const availableEnvironments = ['development', 'production', 'test', 'staging'];
 
 if (!availableEnvironments.includes(ENVIRONMENT)) {
-    logger.fatal(new Error(`Invalid environment argument, valid ones: ${Object.keys(availableEnvironments).join(', ')}`));
+    logger.fatal(new Error(`Invalid environment ${ENVIRONMENT} argument, valid ones: ${Object.values(availableEnvironments).join(', ')}`));
     process.exit(1);
 }
 
@@ -57,6 +60,7 @@ const { version, name } = require('./package');
 const createServer = require('./lib/server');
 
 const server = createServer(statsClient);
+
 const listener = server.listen(global.settings.node_port, global.settings.node_host);
 listener.on('listening', function () {
     const { address, port } = listener.address();
@@ -118,8 +122,9 @@ function scheduleForcedExit (killTimeout, finalLogger) {
     killTimer.unref();
 }
 
+const regex = /[a-z]?([0-9]*)/;
 function isGteMinVersion (version, minVersion) {
-    const versionMatch = /[a-z]?([0-9]*)/.exec(version);
+    const versionMatch = regex.exec(version);
     if (versionMatch) {
         const majorVersion = parseInt(versionMatch[1], 10);
         if (Number.isFinite(majorVersion)) {

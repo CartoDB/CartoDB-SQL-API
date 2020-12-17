@@ -6,20 +6,11 @@ var server = require('../../lib/server')();
 var assert = require('../support/assert');
 
 const accessControlHeaders = [
-    'X-Requested-With',
-    'X-Prototype-Version',
-    'X-CSRF-Token',
-    'Authorization',
-    'Carto-Event',
-    'Carto-Event-Source',
-    'Carto-Event-Group-Id'
+    '*'
 ].join(', ');
 
 const exposedHeaders = [
-    'Carto-Rate-Limit-Limit',
-    'Carto-Rate-Limit-Remaining',
-    'Carto-Rate-Limit-Reset',
-    'Retry-After'
+    '*'
 ].join(', ');
 
 describe('app-configuration', function () {

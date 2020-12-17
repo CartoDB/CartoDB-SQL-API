@@ -13,8 +13,11 @@ var JobService = require('../../../lib/batch/job-service');
 var JobCanceller = require('../../../lib/batch/job-canceller');
 var metadataBackend = require('cartodb-redis')({ pool: redisUtils.getPool() });
 
+const TEST_USER_ID = 1;
+const TEST_USER = global.settings.db_user.replace('<%= user_id %>', TEST_USER_ID);
+const TEST_DB = global.settings.db_base_name.replace('<%= user_id %>', TEST_USER_ID);
+
 describe('batch module', function () {
-    var dbInstance = 'localhost';
     var username = 'vizzuality';
     var pool = redisUtils.getPool();
     var logger = new Logger();
@@ -39,11 +42,11 @@ describe('batch module', function () {
         var data = {
             user: username,
             query: sql,
-            host: dbInstance,
-            dbname: 'cartodb_test_user_1_db',
-            dbuser: 'test_cartodb_user_1',
-            port: 5432,
-            pass: 'test_cartodb_user_1_pass'
+            host: global.settings.db_host,
+            dbname: TEST_DB,
+            dbuser: TEST_USER,
+            port: global.settings.db_batch_port,
+            pass: global.settings.db_user_pass
         };
 
         jobService.create(data, function (err, job) {

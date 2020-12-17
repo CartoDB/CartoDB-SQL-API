@@ -21,6 +21,10 @@ if (global.settings.statsd) {
 const statsClient = StatsClient.getInstance(global.settings.statsd);
 const server = require('../../lib/server')(statsClient);
 
+const TEST_USER_ID = 1;
+const TEST_USER = 'postgres';
+const TEST_DB = global.settings.db_base_name.replace('<%= user_id %>', TEST_USER_ID);
+
 // Give it enough time to connect and issue the query
 // but not too much so as to disconnect in the middle of the query.
 const CLIENT_DISCONNECT_TIMEOUT = 100;
@@ -43,10 +47,10 @@ const assertCanReuseCanceledConnection = function (done) {
 describe('copy-endpoints', function () {
     before(function () {
         this.client = new Client({
-            user: 'postgres',
-            host: 'localhost',
-            database: 'cartodb_test_user_1_db',
-            port: 5432
+            user: TEST_USER,
+            host: global.settings.db_host,
+            database: TEST_DB,
+            port: global.settings.db_batch_port
         });
         this.client.connect();
     });
