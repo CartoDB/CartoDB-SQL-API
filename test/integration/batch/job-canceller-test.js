@@ -22,9 +22,12 @@ var jobPublisher = new JobPublisher(redisUtils.getPool());
 var jobQueue = new JobQueue(metadataBackend, jobPublisher, logger);
 var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
+const TEST_USER_ID = 1;
+const TEST_USER = global.settings.db_user.replace('<%= user_id %>', TEST_USER_ID);
+const TEST_DB = global.settings.db_base_name.replace('<%= user_id %>', TEST_USER_ID);
+
 var USER = 'vizzuality';
 var QUERY = 'select pg_sleep(0)';
-var HOST = 'localhost';
 
 // sets job to running, run its query and returns inmediatly (don't wait for query finishes)
 // in order to test query cancelation/draining
@@ -66,11 +69,12 @@ function createWadusJob (query) {
     return JobFactory.create(JSON.parse(JSON.stringify({
         user: USER,
         query: query,
-        host: HOST,
-        dbname: 'cartodb_test_user_1_db',
-        dbuser: 'test_cartodb_user_1',
-        port: 5432,
-        pass: 'test_cartodb_user_1_pass'
+        host: global.settings.db_host,
+        dbname: TEST_DB,
+        dbuser: TEST_USER,
+        port: global.settings.db_batch_port,
+        pass: global.settings.db_user_pass
+
     })));
 }
 

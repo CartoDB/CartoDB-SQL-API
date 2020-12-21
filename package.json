@@ -71,6 +71,7 @@
     "libxmljs": "^0.19.7",
     "mocha": "^7.2.0",
     "mockdate": "^2.0.2",
+    "nodemon": "^2.0.6",
     "nyc": "^15.0.0",
     "pino-pretty": "^4.0.0",
     "shapefile": "0.3.0",
@@ -87,8 +88,7 @@
     "posttest": "npm run test:teardown",
     "test:teardown": "NODE_ENV=test node test teardown",
     "cover": "nyc --reporter=lcov npm test",
-    "test:docker": "docker run -e \"NODEJS_VERSION=$NODE_VERSION\" -v `pwd`:/srv $DOCKER_IMAGE bash docker/scripts/test-setup.sh && docker ps --filter status=dead --filter status=exited -aq | xargs docker rm -v",
-    "docker:bash": "docker run -it -v `pwd`:/srv $DOCKER_IMAGE bash"
+    "dev": "NODE_ENV=development nodemon app.js"
   },
   "engines": {
     "node": "^10.15.1",

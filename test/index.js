@@ -1,7 +1,7 @@
 'use strict';
 
 const util = require('util');
-const path = require('path');
+// const path = require('path');
 const exec = util.promisify(require('child_process').exec);
 
 if (!process.env.NODE_ENV) {
@@ -9,13 +9,15 @@ if (!process.env.NODE_ENV) {
     process.exit(1);
 }
 
-const environment = require(`../config/environments/${process.env.NODE_ENV}.js`);
+let configFileName = process.env.NODE_ENV;
+if (process.env.CARTO_SQL_API_ENV_BASED_CONF) {
+    // we override the file with the one with env vars
+    configFileName = 'config';
+}
+
+const environment = require(`../config/environments/${configFileName}.js`);
 const REDIS_PORT = environment.redis_port;
-const REDIS_CELL_PATH = path.resolve(
-    process.platform === 'darwin'
-        ? './test/support/libredis_cell.dylib'
-        : './test/support/libredis_cell.so'
-);
+const REDIS_HOST = environment.redis_host;
 
 const TEST_USER_ID = 1;
 const TEST_USER = environment.db_user.replace('<%= user_id %>', TEST_USER_ID);
@@ -24,29 +26,22 @@ const PUBLIC_USER = environment.db_pubuser;
 const PUBLIC_USER_PASSWORD = environment.db_pubuser_pass;
 const TEST_DB = environment.db_base_name.replace('<%= user_id %>', TEST_USER_ID);
 const PGHOST = environment.db_host;
-
-async function startRedis () {
-    await exec(`redis-server --port ${REDIS_PORT} --loadmodule ${REDIS_CELL_PATH} --logfile ${__dirname}/redis-server.log --daemonize yes`);
-}
-
-async function stopRedis () {
-    await exec(`redis-cli -p ${REDIS_PORT} shutdown`);
-}
+const PGPORT = environment.db_port;
 
 async function dropDatabase () {
-    await exec(`dropdb --if-exists ${TEST_DB}`, {
+    await exec(`dropdb -p "${PGPORT}" -h "${PGHOST}" --if-exists ${TEST_DB}`, {
         env: Object.assign({ PGUSER: 'postgres' }, process.env)
     });
 }
 
 async function createDatabase () {
-    await exec(`createdb -T template_postgis -EUTF8 "${TEST_DB}"`, {
+    await exec(`createdb -p "${PGPORT}" -h "${PGHOST}" -T template_postgis -EUTF8 "${TEST_DB}"`, {
         env: Object.assign({ PGUSER: 'postgres' }, process.env)
     });
 }
 
 async function createDatabaseExtension () {
-    await exec(`psql -c "CREATE EXTENSION IF NOT EXISTS cartodb CASCADE;" ${TEST_DB}`, {
+    await exec(`psql -p "${PGPORT}" -h "${PGHOST}" -c "CREATE EXTENSION IF NOT EXISTS cartodb CASCADE;" ${TEST_DB}`, {
         env: Object.assign({ PGUSER: 'postgres' }, process.env)
     });
 }
@@ -64,7 +59,7 @@ async function populateDatabase () {
         sed -e "s/:PUBLICPASS/${PUBLIC_USER_PASSWORD}/g" |
         sed -e "s/:TESTUSER/${TEST_USER}/g" |
         sed -e "s/:TESTPASS/${TEST_PASSWORD}/g" |
-        PGOPTIONS='--client-min-messages=WARNING' psql -q -v ON_ERROR_STOP=1 ${TEST_DB}
+        PGOPTIONS='--client-min-messages=WARNING' psql -h "${PGHOST}" -p "${PGPORT}" -q -v ON_ERROR_STOP=1 ${TEST_DB}
     `;
 
     await exec(populateDatabaseCmd, {
@@ -140,8 +135,8 @@ async function populateRedis () {
             time sometime
     `;
 
-    await exec(`echo "${commands}" | redis-cli -p ${REDIS_PORT} -n 5`);
-    await exec(`echo "${oauthCommands}" | redis-cli -p ${REDIS_PORT} -n 3`);
+    await exec(`echo "${commands}" | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 5`);
+    await exec(`echo "${oauthCommands}" | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -n 3`);
 }
 
 async function main (args) {
@@ -150,7 +145,6 @@ async function main (args) {
     try {
         switch (args[0]) {
         case 'setup':
-            await startRedis();
             await populateRedis();
             await dropDatabase();
             await createDatabase();
@@ -158,7 +152,6 @@ async function main (args) {
             await populateDatabase();
             break;
         case 'teardown':
-            await stopRedis();
             break;
         default:
             throw new Error('Missing "mode" argument. Valid ones: "setup" or "teardown"');

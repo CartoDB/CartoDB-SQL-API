@@ -1,0 +1,73 @@
+on: 
+  pull_request:
+    paths-ignore:
+      - 'LICENSE'
+      - 'README**'
+      - 'HOW_TO_RELEASE**'
+      - 'LOGGING**'
+
+env:
+  GCLOUD_VERSION: '306.0.0'
+  ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
+  NODE_VERSION: '12.18.3'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-18.04
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+        token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
+
+    - name: Setup gcloud authentication
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        version: ${{env.GCLOUD_VERSION}}
+        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
+
+    - name: Configure docker and pull images
+      run: |
+        gcloud auth configure-docker
+        docker pull gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
+        docker pull gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+    
+    - name: Run deps (Redis and Postgres)
+      run: |
+        docker run -d --name postgres -p 5432:5432 gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
+        docker run -d --name redis -p 6379:6379 gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{env.NODE_VERSION}}
+
+    - run: npm ci
+    
+    - name: install redis tools 
+      run: sudo apt-get -yqq  install redis-tools gdal-bin
+
+    - run: npm test
+      env:
+        CI: true
+        CARTO_SQL_API_ENV_BASED_CONF: true
+        CARTO_SQL_API_POSTGRES_HOST: localhost
+        CARTO_SQL_API_POSTGRES_PORT: 5432
+        CARTO_SQL_API_REDIS_HOST: localhost
+        CARTO_SQL_API_REDIS_PORT: 6379
+        CARTO_SQL_API_NODE_ENV: test
+        NODE_ENV: test
+
+    - name: Build image
+      run: |
+          echo ${GITHUB_SHA::7}
+          echo ${GITHUB_REF##*/}
+          docker build -f private/Dockerfile -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/}--${GITHUB_SHA::7} .
+          
+    - name: Upload image
+      run: |
+          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/}
+          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7}
+          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/}--${GITHUB_SHA::7}

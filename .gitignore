@@ -18,3 +18,4 @@ yarn.lock
 build_resources/
 .dockerignore
 Dockerfile
+docker_node_modules
