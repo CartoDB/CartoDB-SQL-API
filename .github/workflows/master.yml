@@ -27,7 +27,7 @@ jobs:
       run: |
           echo ${GITHUB_SHA::7}
           echo ${GITHUB_REF##*/}
-          docker build -f private/Dockerfile -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:latest -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} .
+          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:latest -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_REF##*/}--${GITHUB_SHA::7} .
           
     - name: Setup gcloud authentication
       uses: google-github-actions/setup-gcloud@master
