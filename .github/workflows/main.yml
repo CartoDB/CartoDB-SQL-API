@@ -61,6 +61,10 @@ jobs:
         CARTO_SQL_API_NODE_ENV: test
         NODE_ENV: test
 
+    - name: Stop deps (Redis and Postgres)
+      run: |
+        docker stop postgres redis
+
     # dev-env tests
     - uses: actions/checkout@v2
       with:
