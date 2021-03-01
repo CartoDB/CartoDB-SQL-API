@@ -64,7 +64,7 @@ jobs:
     # dev-env tests
     - uses: actions/checkout@v2
       with:
-        repository: 'docker-dev-env'
+        repository: 'cartodb/docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
     - name: Check docker-compose syntax
