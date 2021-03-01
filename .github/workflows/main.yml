@@ -37,8 +37,8 @@ jobs:
     
     - name: Run deps (Redis and Postgres)
       run: |
-        docker run -d --name postgres -p 5432:5432 gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
-        docker run -d --name redis -p 6379:6379 gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+        docker run --rm -d --name postgres -p 5432:5432 gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
+        docker run --rm -d --name redis -p 6379:6379 gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
 
     - name: Use Node.js
       uses: actions/setup-node@v1
@@ -78,6 +78,17 @@ jobs:
           sed -i 's@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":latest'@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":"${BRANCH_NAME}"'@' .env
           cat .env | grep 'IMAGE'
           docker-compose config
+
+    - name: Set up gcloud I
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
+        export_default_credentials: true
+        version: '297.0.1' # https://github.com/google-github-actions/setup-gcloud/issues/128
+
+    - name: Set up gcloud II
+      run: |
+          gcloud auth configure-docker
 
     - name: Basic environment init
       run: |
