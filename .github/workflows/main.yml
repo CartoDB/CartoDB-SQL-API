@@ -10,6 +10,7 @@ env:
   GCLOUD_VERSION: '306.0.0'
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
+  _DOCKER_IMAGE_TO_REPLACE: 'sql-api'
 
 jobs:
   build-and-test:
@@ -59,6 +60,35 @@ jobs:
         CARTO_SQL_API_REDIS_PORT: 6379
         CARTO_SQL_API_NODE_ENV: test
         NODE_ENV: test
+
+    # dev-env tests
+    - uses: actions/checkout@v2
+      with:
+        repository: 'docker-dev-env'
+        token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
+
+    - name: Check docker-compose syntax
+      run: |
+          set -ex
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          BRANCH_NAME=${BRANCH_NAME//\//-}
+          cp -r docker-dev-env/* . 
+          cp -f docker-dev-env/.env.sample .env
+          sed -i 's@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":latest'@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":"${BRANCH_NAME}"'@' .env
+          cat .env | grep 'IMAGE'
+          docker-compose config
+
+    - name: Basic environment init
+      run: |
+          ./scripts/init.sh
+
+    - name: Test networking
+      run: |
+          docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm test-networking
+
+    - name: Test DB seed
+      run: |
+          docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm test-db
 
     - name: Build image
       run: |
