@@ -67,7 +67,7 @@ jobs:
 
   dev-env-tests:
     runs-on: ubuntu-18.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: build-and-test
 
     steps:
