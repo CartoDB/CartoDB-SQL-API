@@ -88,6 +88,13 @@ jobs:
           cat .env | grep 'IMAGE'
           docker-compose config
 
+    - name: Build image
+      run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          BRANCH_NAME=${BRANCH_NAME//\//-}
+          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
+          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7} .
+          
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
@@ -111,13 +118,11 @@ jobs:
       run: |
           docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm test-db
 
-    - name: Build image
+    - name: Push image
       run: |
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
-          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7} .
-          
+      
           echo 'Pushing images to the registry...'
           docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}
           docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7}
