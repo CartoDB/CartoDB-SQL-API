@@ -71,6 +71,12 @@ jobs:
     needs: build-and-test
 
     steps:
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+        token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
+
     - uses: actions/checkout@v2
       with:
         repository: 'cartodb/docker-dev-env'
