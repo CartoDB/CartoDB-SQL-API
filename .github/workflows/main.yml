@@ -65,11 +65,12 @@ jobs:
       run: |
         docker stop postgres redis
 
-  run-dev-env-tests:
+  dev-env-tests:
     runs-on: ubuntu-18.04
     timeout-minutes: 10
     needs: build-and-test
 
+    steps:
     - uses: actions/checkout@v2
       with:
         repository: 'cartodb/docker-dev-env'
