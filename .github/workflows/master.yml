@@ -50,4 +50,3 @@ jobs:
           docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_SHA::7}
           docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_REF##*/}--${GITHUB_SHA::7}
           docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:latest
-    
