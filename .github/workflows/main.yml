@@ -127,7 +127,6 @@ jobs:
       run: |
           docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm test-db
 
-    - name: Build onprem image
     - name: Push image
       run: |
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
