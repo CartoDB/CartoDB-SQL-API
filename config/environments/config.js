@@ -17,13 +17,7 @@ module.exports.routes = {
     ],
     // Optional: attach middlewares at the begining of the router
     // to perform custom operations.
-    middlewares: [
-      function noop () {
-        return function noopMiddleware (req, res, next) {
-            next();
-        }
-      }
-    ],
+    middlewares: [],
     sql: [{
       // Required
       paths: [
@@ -195,4 +189,17 @@ if (process.env.NODE_ENV === 'test') {
         username: 'vizzuality',
         query: 'select 1'
     };
+}
+
+// load onprem licensing middleware
+if (process.env.CARTO_SQL_ONPREM_MIDDLEWARE) {
+  module.exports.routes.api[0].middlewares = require('/usr/src/app/onprem.js').middlewares
+} else {
+  module.exports.routes.api[0].middlewares = [
+      function noop () {
+          return function noopMiddleware (req, res, next) {
+              next();
+          }
+      }
+  ]
 }
