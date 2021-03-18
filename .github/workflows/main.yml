@@ -11,6 +11,7 @@ env:
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
   _DOCKER_IMAGE_TO_REPLACE: 'sql-api'
+  COMPOSE_PROJECT_NAME: 'carto'
 
 jobs:
   build-and-test:
@@ -119,17 +120,12 @@ jobs:
       run: |
           ./scripts/init.sh
 
-    - name: Add hosts to /etc/hosts
-      run: |
-          sudo echo "127.0.0.1 localhost.lan carto.localhost.lan" | sudo tee -a /etc/hosts
-
     - name: Run all tests
       run: |
-          source .env
           docker run --rm --name tavern-tester \
-            --env "CARTO_USER=${USER_USERNAME}"  \
+            --env CARTO_USER=carto  \
             --env CARTO_DOMAIN=localhost.lan \
-            --network host \
+            --network carto_default \
             --env-file \
             .env gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester \
             all dev
