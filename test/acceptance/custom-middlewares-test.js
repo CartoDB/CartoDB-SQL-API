@@ -16,12 +16,6 @@ describe('custom middlewares', function () {
         statusCode: 418
     };
 
-    const customMiddleware = function teapot () {
-        return function teapotMiddleware (req, res) {
-            res.status(418).send('I\'m a teapot');
-        };
-    };
-
     describe('wired in /api/v1/', function () {
         before(function () {
             this.backupRoutes = global.settings.routes;
@@ -32,9 +26,7 @@ describe('custom middlewares', function () {
                         '/api/:version',
                         '/user/:user/api/:version'
                     ],
-                    middlewares: [
-                        customMiddleware
-                    ],
+                    middlewares: '../../test/support/middlewares/teapot-headers.js,../../test/support/middlewares/teapot-response.js',
                     sql: [{
                         paths: [
                             '/sql'
@@ -59,6 +51,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -73,6 +67,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -87,6 +83,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -101,6 +99,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -122,6 +122,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -136,6 +138,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -156,6 +160,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -175,6 +181,8 @@ describe('custom middlewares', function () {
                     return done(err);
                 }
 
+                assert.strictEqual(res.headers['x-what-am-i'], 'I\'m a teapot');
+                assert.strictEqual(res.headers['x-again-what-am-i'], 'I\'m a teapot');
                 assert.strictEqual(res.body, 'I\'m a teapot');
                 done();
             });
@@ -195,7 +203,7 @@ describe('custom middlewares', function () {
                         paths: [
                             '/sql'
                         ],
-                        middlewares: [customMiddleware]
+                        middlewares: '../../../test/support/middlewares/teapot-response.js'
                     }]
                 }]
             };

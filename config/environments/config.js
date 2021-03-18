@@ -27,7 +27,7 @@ module.exports.routes = {
         '/sql'
       ],
       // Optional
-      middlewares: []
+      middlewares: process.env.CARTO_SQL_SQLROUTING_MIDDLEWARES || ''
     }]
   }]
 };
