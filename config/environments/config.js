@@ -17,7 +17,10 @@ module.exports.routes = {
     ],
     // Optional: attach middlewares at the begining of the router
     // to perform custom operations.
-    middlewares: [],
+    // This must be a **comma-separated string** with the list of paths to the middlewares. Pe:
+    //     CARTO_SQL_PREROUTING_MIDDLEWARES=/usr/src/lib/mw1.js,/usr/src/lib/mw2.js
+    // Note: The list order is kept when loading the middlewares!
+    middlewares: process.env.CARTO_SQL_PREROUTING_MIDDLEWARES || '',
     sql: [{
       // Required
       paths: [
@@ -189,17 +192,4 @@ if (process.env.NODE_ENV === 'test') {
         username: 'vizzuality',
         query: 'select 1'
     };
-}
-
-// load onprem licensing middleware
-if (process.env.CARTO_SQL_ONPREM_MIDDLEWARE) {
-  module.exports.routes.api[0].middlewares = require('/usr/src/app/onprem.js').middlewares
-} else {
-  module.exports.routes.api[0].middlewares = [
-      function noop () {
-          return function noopMiddleware (req, res, next) {
-              next();
-          }
-      }
-  ]
 }
