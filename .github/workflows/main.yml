@@ -125,9 +125,9 @@ jobs:
           docker run --rm --name tavern-tester \
             --env CARTO_USER=carto  \
             --env CARTO_DOMAIN=localhost.lan \
-            --network carto_default \
+            --network host \
             --env-file \
-            .env gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester \
+            .env gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
             all dev
 
     - name: Push image
