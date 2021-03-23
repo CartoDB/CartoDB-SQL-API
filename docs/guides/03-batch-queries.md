@@ -460,14 +460,12 @@ This is helpful when you want to save error messages into a table:
 curl -X POST -H "Content-Type: application/json" -d '{
   "query": {
     "query": [{
-      "query": "UPDATE wrong_table SET price = '$100.00' WHERE company = 'CARTO'"
-    }],
-    "onerror": "INSERT INTO errors_log (job_id, error_message, date) VALUES ('<%= job_id %>', '<%= error_message %>', NOW())"
+      "query": "UPDATE wrong_table SET price = '$100.00' WHERE company = 'CARTO'",
+      "onerror": "INSERT INTO errors_log (job_id, error_message, date) VALUES ('<%= job_id %>', '<%= error_message %>', NOW())"
+    }]
   }
 }' "https://{username}.carto.com/api/v2/sql/job"
 ```
-
-More templates are coming soon.
 
 ### Fetching Job Results
 
