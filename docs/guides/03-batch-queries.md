@@ -449,7 +449,7 @@ If a query of a job fails (and onerror fallbacks for that query and job are defi
 
 #### Templates
 
-Batch Queries provide a simple way to get the error message and the job identifier to be used in your fallbacks, by using the following templates:
+Batch Queries provide a simple way to get the error message and the job identifier to be used in your fallbacks defined at the query level, by using the following templates:
 
  - `<%= error_message %>`: will be replaced by the error message raised by the database.
  - `<%= job_id %>`: will be replaced by the job identifier that Batch Queries provides.
