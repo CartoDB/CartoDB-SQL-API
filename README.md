@@ -64,6 +64,7 @@ $ npm test
 You can try to run the tests against the dependencies from the `dev-env`. To do so, you need to build the test docker image:
 
 ```shell
+$ docker build -t sqlapi -f private/Dockerfile .
 $ docker-compose -f private/docker-compose.yml build
 ```
 
