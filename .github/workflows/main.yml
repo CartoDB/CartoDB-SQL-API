@@ -103,7 +103,7 @@ jobs:
           gcloud auth configure-docker
 
     - name: Download containers in background
-        run: |
+      run: |
           set -ex
           cp -f .env.sample .env
           docker-compose pull &
