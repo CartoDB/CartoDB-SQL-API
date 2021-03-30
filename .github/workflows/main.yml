@@ -115,7 +115,7 @@ jobs:
           set -ex
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
-          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
+          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${_DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
           cat .env | grep 'IMAGE'
 
     - name: Build image
