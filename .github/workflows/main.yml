@@ -10,7 +10,7 @@ env:
   GCLOUD_VERSION: '306.0.0'
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
-  _DOCKER_IMAGE_NAME: 'sql-api'
+  _DOCKER_IMAGE_NAME: 'gcr.io/cartodb-on-gcp-main-artifacts/sql-api'
   COMPOSE_PROJECT_NAME: 'carto'
 
 jobs:
@@ -115,7 +115,7 @@ jobs:
           set -ex
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
-          sed -i 's@'"${{env._DOCKER_IMAGE_NAME}}":latest'@'"${{env._DOCKER_IMAGE_NAME}}":"${GITHUB_SHA::7}"'@' .env
+          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
           cat .env | grep 'IMAGE'
 
     - name: Build image
@@ -142,7 +142,7 @@ jobs:
             --env "CARTO_DOMAIN=${CARTO_DOMAIN:-localhost.lan}" \
             --network host \
             --env-file .env \
-            gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
+            gcr.io/${ARTIFACTS_PROJECT_ID}/tavern-tester:latest \
             all dev
 
     - name: Push image
