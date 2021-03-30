@@ -101,7 +101,8 @@ jobs:
     - name: Set up gcloud II
       run: |
           gcloud auth configure-docker
-
+    
+    # Dev tests
     - name: Download containers in background
       working-directory: ./docker-dev-env
       run: |
@@ -113,8 +114,6 @@ jobs:
       working-directory: ./docker-dev-env
       run: |
           set -ex
-          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
-          BRANCH_NAME=${BRANCH_NAME//\//-}
           sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${_DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
           cat .env | grep 'IMAGE'
 
@@ -144,7 +143,64 @@ jobs:
             --env-file .env \
             gcr.io/${ARTIFACTS_PROJECT_ID}/tavern-tester:latest \
             all dev
+          echo $? >> dev_result
 
+    - name: Stop environment
+      working-directory: ./docker-dev-env
+      run: |
+          docker-compose down -v
+
+    # Onprem tests
+    - name: Prepare onprem files
+      working-directory: ./dockerize-onpremises
+      run: |
+          set -ex
+          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${_DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
+          cat .env | grep 'IMAGE'
+          sed -i 's/443:443/8443:443/g' docker-compose.yml
+
+    - name: Init onprem
+      working-directory: ./dockerize-onpremises
+      run: |
+          ./ci/init.sh
+    
+    - name: Install license
+      working-directory: ./dockerize-onpremises
+      run: |
+          mkdir -p license && cp -f ci/test_license/dockerize-onpremises-tests-license.lic license/carto.lic
+          ./script/license.sh
+     
+    - name: Run onprem tests
+      working-directory: ./dockerize-onpremises
+      run: |
+          source .env
+          source ci/.env.ci
+          docker run --rm --name tavern-tester-onprem \
+            --env "CARTO_USER=$${USER_USERNAME}"  \
+            --env "CARTO_DOMAIN=$${CARTO_DOMAIN}" \
+            --network "$${COMPOSE_PROJECT_NAME}_default" \
+            --env-file .env \
+            gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
+            all onprem
+          echo $? >> onprem_result
+
+    - name: Handle exit code
+      run: |
+         set -cx
+         if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
+          echo '[PASSED] All tests passed'
+          exit 0
+        elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
+          echo '[FAILED] Development environment tests failed'
+          exit 1
+        elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
+          echo '[FAILED] Onprem tests failed'
+          exit 1  
+        else
+          echo '[FAILED] All tests failed'
+          exit 1
+        fi
+    
     - name: Push image
       run: |
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
