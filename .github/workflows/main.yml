@@ -188,18 +188,18 @@ jobs:
       run: |
          set -cx
          if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
-          echo '[PASSED] All tests passed'
-          exit 0
-        elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
-          echo '[FAILED] Development environment tests failed'
-          exit 1
-        elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
-          echo '[FAILED] Onprem tests failed'
-          exit 1  
-        else
-          echo '[FAILED] All tests failed'
-          exit 1
-        fi
+           echo '[PASSED] All tests passed'
+           exit 0
+         elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
+           echo '[FAILED] Development environment tests failed'
+           exit 1
+         elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
+           echo '[FAILED] Onprem tests failed'
+           exit 1  
+         else
+           echo '[FAILED] All tests failed'
+           exit 1
+         fi
     
     - name: Push image
       run: |
