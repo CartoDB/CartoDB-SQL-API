@@ -74,7 +74,7 @@ jobs:
     steps:
 
     - name: Release space
-        run: |
+      run: |
           set -ex
           # Release space in background
           # With that, we release 34G of space but it takes 3'22 minutes
