@@ -73,6 +73,13 @@ jobs:
 
     steps:
 
+    - name: Release space
+        run: |
+          set -ex
+          # Release space in background
+          # With that, we release 34G of space but it takes 3'22 minutes
+          sudo rm -rf /usr/share/dotnet/ $ANDROID_SDK_ROOT &
+
     - uses: actions/checkout@v2
       with:
         submodules: true
