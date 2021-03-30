@@ -94,16 +94,6 @@ jobs:
           sed -i 's@'"${{env._DOCKER_IMAGE_NAME}}":latest'@'"${{env._DOCKER_IMAGE_NAME}}":"${GITHUB_SHA::7}"'@' .env
           cat .env | grep 'IMAGE'
 
-    - name: Build image
-      run: |
-          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
-          BRANCH_NAME=${BRANCH_NAME//\//-}
-          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}:latest -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7} .
-          
-          echo "Building sql-api-onprem image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
-          
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
@@ -114,6 +104,16 @@ jobs:
     - name: Set up gcloud II
       run: |
           gcloud auth configure-docker
+
+    - name: Build image
+      run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          BRANCH_NAME=${BRANCH_NAME//\//-}
+          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
+          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}:latest -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7} .
+          
+          echo "Building sql-api-onprem image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
+          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
 
     - name: Basic environment init
       working-directory: ./docker-dev-env
@@ -126,7 +126,7 @@ jobs:
           source .env
           docker run --rm --name tavern-tester \
             --env "CARTO_USER=${USER_USERNAME}" \
-            --env "CARTO_DOMAIN=${CARTO_DOMAIN}" \
+            --env "CARTO_DOMAIN=${CARTO_DOMAIN:-localhost.lan}" \
             --network host \
             --env-file .env \
             gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
