@@ -10,7 +10,7 @@ env:
   GCLOUD_VERSION: '306.0.0'
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
-  _DOCKER_IMAGE_TO_REPLACE: 'sql-api'
+  _DOCKER_IMAGE_NAME: 'sql-api'
   COMPOSE_PROJECT_NAME: 'carto'
 
 jobs:
@@ -33,13 +33,13 @@ jobs:
     - name: Configure docker and pull images
       run: |
         gcloud auth configure-docker
-        docker pull gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
-        docker pull gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+        docker pull gcr.io/${ARTIFACTS_PROJECT_ID}/postgres:latest
+        docker pull gcr.io/${ARTIFACTS_PROJECT_ID}/redis:latest
     
     - name: Run deps (Redis and Postgres)
       run: |
-        docker run --rm -d --name postgres -p 5432:5432 gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
-        docker run --rm -d --name redis -p 6379:6379 gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+        docker run --rm -d --name postgres -p 5432:5432 gcr.io/${ARTIFACTS_PROJECT_ID}/postgres:latest
+        docker run --rm -d --name redis -p 6379:6379 gcr.io/${ARTIFACTS_PROJECT_ID}/redis:latest
 
     - name: Use Node.js
       uses: actions/setup-node@v1
@@ -84,26 +84,25 @@ jobs:
         path: 'docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
-    - name: Check docker-compose syntax
+    - name: Prepare dev files
+      working-directory: ./docker-dev-env
       run: |
           set -ex
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
-          cp -r docker-dev-env/* . 
-          cp -f docker-dev-env/.env.sample .env
-          sed -i 's@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":latest'@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":"${BRANCH_NAME}"'@' .env
+          cp .env.sample .env
+          sed -i 's@'"${{env._DOCKER_IMAGE_NAME}}":latest'@'"${{env._DOCKER_IMAGE_NAME}}":"${GITHUB_SHA::7}"'@' .env
           cat .env | grep 'IMAGE'
-          docker-compose config
 
     - name: Build image
       run: |
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
           echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:latest -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7} .
+          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}:latest -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7} .
           
           echo "Building sql-api-onprem image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
+          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
           
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
@@ -117,17 +116,20 @@ jobs:
           gcloud auth configure-docker
 
     - name: Basic environment init
+      working-directory: ./docker-dev-env
       run: |
           ./scripts/init.sh
 
-    - name: Run all tests
+    - name: Run dev tests
+      working-directory: ./docker-dev-env
       run: |
+          source .env
           docker run --rm --name tavern-tester \
-            --env CARTO_USER=carto  \
-            --env CARTO_DOMAIN=localhost.lan \
+            --env "CARTO_USER=${USER_USERNAME}" \
+            --env "CARTO_DOMAIN=${CARTO_DOMAIN}" \
             --network host \
-            --env-file \
-            .env gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
+            --env-file .env \
+            gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
             all dev
 
     - name: Push image
@@ -136,12 +138,12 @@ jobs:
           BRANCH_NAME=${BRANCH_NAME//\//-}
       
           echo 'Pushing images to the registry...'
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}
+          docker push ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7}
 
           echo 'Pushing onprem images to the registry...'
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_SHA::7}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}--${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7}
 
