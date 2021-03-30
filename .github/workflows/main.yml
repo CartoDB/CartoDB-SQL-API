@@ -91,16 +91,6 @@ jobs:
         path: 'docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
-    - name: Prepare dev files
-      working-directory: ./docker-dev-env
-      run: |
-          set -ex
-          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
-          BRANCH_NAME=${BRANCH_NAME//\//-}
-          cp .env.sample .env
-          sed -i 's@'"${{env._DOCKER_IMAGE_NAME}}":latest'@'"${{env._DOCKER_IMAGE_NAME}}":"${GITHUB_SHA::7}"'@' .env
-          cat .env | grep 'IMAGE'
-
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
@@ -111,6 +101,21 @@ jobs:
     - name: Set up gcloud II
       run: |
           gcloud auth configure-docker
+
+    - name: Download containers in background
+        run: |
+          set -ex
+          cp -f .env.sample .env
+          docker-compose pull &
+
+    - name: Prepare dev files
+      working-directory: ./docker-dev-env
+      run: |
+          set -ex
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          BRANCH_NAME=${BRANCH_NAME//\//-}
+          sed -i 's@'"${{env._DOCKER_IMAGE_NAME}}":latest'@'"${{env._DOCKER_IMAGE_NAME}}":"${GITHUB_SHA::7}"'@' .env
+          cat .env | grep 'IMAGE'
 
     - name: Build image
       run: |
