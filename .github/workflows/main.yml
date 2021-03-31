@@ -13,7 +13,7 @@ env:
   _DOCKER_IMAGE_NAME: 'gcr.io/cartodb-on-gcp-main-artifacts/sql-api'
 
 jobs:
-  build-and-test:
+  unit-tests:
     runs-on: ubuntu-18.04
     timeout-minutes: 10
 
@@ -68,7 +68,7 @@ jobs:
   dev-and-onprem-tests:
     runs-on: ubuntu-18.04
     timeout-minutes: 20
-    needs: build-and-test
+    needs: unit-tests
     env:
       COMPOSE_PROJECT_NAME: carto
 
