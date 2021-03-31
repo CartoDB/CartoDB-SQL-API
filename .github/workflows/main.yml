@@ -193,7 +193,7 @@ jobs:
 
     - name: Handle exit code
       run: |
-         set -cx
+         set -x
          if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
            echo '[PASSED] All tests passed'
            exit 0
