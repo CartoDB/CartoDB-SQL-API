@@ -11,7 +11,6 @@ env:
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
   _DOCKER_IMAGE_NAME: 'gcr.io/cartodb-on-gcp-main-artifacts/sql-api'
-  COMPOSE_PROJECT_NAME: 'carto'
 
 jobs:
   build-and-test:
@@ -70,6 +69,8 @@ jobs:
     runs-on: ubuntu-18.04
     timeout-minutes: 15
     needs: build-and-test
+    env:
+      COMPOSE_PROJECT_NAME: carto
 
     steps:
 
@@ -182,9 +183,9 @@ jobs:
           source .env
           source ci/.env.ci
           docker run --rm --name tavern-tester-onprem \
-            --env "CARTO_USER=$${USER_USERNAME}"  \
-            --env "CARTO_DOMAIN=$${CARTO_DOMAIN}" \
-            --network "$${COMPOSE_PROJECT_NAME}_default" \
+            --env "CARTO_USER=${USER_USERNAME}"  \
+            --env "CARTO_DOMAIN=${CARTO_DOMAIN}" \
+            --network "${COMPOSE_PROJECT_NAME}_default" \
             --env-file .env \
             gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
             all onprem
