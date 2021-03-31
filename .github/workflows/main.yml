@@ -15,7 +15,7 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-18.04
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
     - uses: actions/checkout@v2
@@ -67,7 +67,7 @@ jobs:
 
   dev-env-tests:
     runs-on: ubuntu-18.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: build-and-test
     env:
       COMPOSE_PROJECT_NAME: carto
