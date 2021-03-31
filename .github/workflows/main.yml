@@ -151,6 +151,12 @@ jobs:
           docker-compose down -v
 
     # Onprem tests
+    - uses: actions/checkout@v2
+      with:
+        repository: 'cartodb/dockerize-onpremises'
+        path: 'dockerize-onpremises'
+        token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
+
     - name: Prepare onprem files
       working-directory: ./dockerize-onpremises
       run: |
