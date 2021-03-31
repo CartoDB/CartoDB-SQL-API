@@ -10,11 +10,10 @@ env:
   GCLOUD_VERSION: '306.0.0'
   ARTIFACTS_PROJECT_ID: cartodb-on-gcp-main-artifacts
   NODE_VERSION: '12.18.3'
-  _DOCKER_IMAGE_TO_REPLACE: 'sql-api'
-  COMPOSE_PROJECT_NAME: 'carto'
+  _DOCKER_IMAGE_NAME: 'gcr.io/cartodb-on-gcp-main-artifacts/sql-api'
 
 jobs:
-  build-and-test:
+  unit-tests:
     runs-on: ubuntu-18.04
     timeout-minutes: 10
 
@@ -33,13 +32,13 @@ jobs:
     - name: Configure docker and pull images
       run: |
         gcloud auth configure-docker
-        docker pull gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
-        docker pull gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+        docker pull gcr.io/${ARTIFACTS_PROJECT_ID}/postgres:latest
+        docker pull gcr.io/${ARTIFACTS_PROJECT_ID}/redis:latest
     
     - name: Run deps (Redis and Postgres)
       run: |
-        docker run --rm -d --name postgres -p 5432:5432 gcr.io/cartodb-on-gcp-main-artifacts/postgres:latest
-        docker run --rm -d --name redis -p 6379:6379 gcr.io/cartodb-on-gcp-main-artifacts/redis:latest
+        docker run --rm -d --name postgres -p 5432:5432 gcr.io/${ARTIFACTS_PROJECT_ID}/postgres:latest
+        docker run --rm -d --name redis -p 6379:6379 gcr.io/${ARTIFACTS_PROJECT_ID}/redis:latest
 
     - name: Use Node.js
       uses: actions/setup-node@v1
@@ -66,12 +65,21 @@ jobs:
       run: |
         docker stop postgres redis
 
-  dev-env-tests:
+  dev-and-onprem-tests:
     runs-on: ubuntu-18.04
-    timeout-minutes: 15
-    needs: build-and-test
+    timeout-minutes: 20
+    needs: unit-tests
+    env:
+      COMPOSE_PROJECT_NAME: carto
 
     steps:
+
+    - name: Release space
+      run: |
+          set -ex
+          # Release space in background
+          # With that, we release 34G of space but it takes 3'22 minutes
+          sudo rm -rf /usr/share/dotnet/ $ANDROID_SDK_ROOT &
 
     - uses: actions/checkout@v2
       with:
@@ -84,27 +92,6 @@ jobs:
         path: 'docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
-    - name: Check docker-compose syntax
-      run: |
-          set -ex
-          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
-          BRANCH_NAME=${BRANCH_NAME//\//-}
-          cp -r docker-dev-env/* . 
-          cp -f docker-dev-env/.env.sample .env
-          sed -i 's@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":latest'@'"${{env._DOCKER_IMAGE_TO_REPLACE}}":"${BRANCH_NAME}"'@' .env
-          cat .env | grep 'IMAGE'
-          docker-compose config
-
-    - name: Build image
-      run: |
-          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
-          BRANCH_NAME=${BRANCH_NAME//\//-}
-          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:latest -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7} .
-          
-          echo "Building sql-api-onprem image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
-          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_SHA::7} -t gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
-          
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
@@ -115,33 +102,124 @@ jobs:
     - name: Set up gcloud II
       run: |
           gcloud auth configure-docker
+    
+    # Dev tests
+    - name: Download containers in background
+      working-directory: ./docker-dev-env
+      run: |
+          set -ex
+          cp -f .env.sample .env
+          docker-compose pull &
+
+    - name: Prepare dev files
+      working-directory: ./docker-dev-env
+      run: |
+          set -ex
+          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${_DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
+          cat .env | grep 'IMAGE'
+
+    - name: Build image
+      run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          BRANCH_NAME=${BRANCH_NAME//\//-}
+          echo "Building sql-api image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
+          docker build -f private/Dockerfile --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}:latest -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7} .
+          
+          echo "Building sql-api-onprem image from branch: $BRANCH_NAME, commit: ${GITHUB_SHA::7}..."
+          docker build -f private/Dockerfile.onprem --label="org.opencontainers.image.created=$(date --rfc-3339=seconds)" --label=org.opencontainers.image.revision=${GITHUB_SHA} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME} -t ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7} -t ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7} .
 
     - name: Basic environment init
+      working-directory: ./docker-dev-env
       run: |
           ./scripts/init.sh
 
-    - name: Run all tests
+    - name: Run dev tests
+      working-directory: ./docker-dev-env
       run: |
+          source .env
           docker run --rm --name tavern-tester \
-            --env CARTO_USER=carto  \
-            --env CARTO_DOMAIN=localhost.lan \
+            --env "CARTO_USER=${USER_USERNAME}" \
+            --env "CARTO_DOMAIN=${CARTO_DOMAIN:-localhost.lan}" \
             --network host \
-            --env-file \
-            .env gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
+            --env-file .env \
+            gcr.io/${ARTIFACTS_PROJECT_ID}/tavern-tester:latest \
             all dev
+          echo $? >> dev_result
 
+    - name: Stop environment
+      working-directory: ./docker-dev-env
+      run: |
+          docker-compose down -v
+
+    # Onprem tests
+    - uses: actions/checkout@v2
+      with:
+        repository: 'cartodb/dockerize-onpremises'
+        path: 'dockerize-onpremises'
+        token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
+
+    - name: Prepare onprem files
+      working-directory: ./dockerize-onpremises
+      run: |
+          set -ex
+          sed -i 's@'"${_DOCKER_IMAGE_NAME}":latest'@'"${_DOCKER_IMAGE_NAME}":"${GITHUB_SHA::7}"'@' .env
+          cat .env | grep 'IMAGE'
+          sed -i 's/443:443/8443:443/g' docker-compose.yml
+
+    - name: Init onprem
+      working-directory: ./dockerize-onpremises
+      run: |
+          ./ci/init.sh
+    
+    - name: Install license
+      working-directory: ./dockerize-onpremises
+      run: |
+          mkdir -p license && cp -f ci/test_license/dockerize-onpremises-tests-license.lic license/carto.lic
+          ./script/license.sh
+     
+    - name: Run onprem tests
+      working-directory: ./dockerize-onpremises
+      run: |
+          source .env
+          source ci/.env.ci
+          docker run --rm --name tavern-tester-onprem \
+            --env "CARTO_USER=${USER_USERNAME}"  \
+            --env "CARTO_DOMAIN=${CARTO_DOMAIN}" \
+            --network "${COMPOSE_PROJECT_NAME}_default" \
+            --env-file .env \
+            gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
+            all onprem
+          echo $? >> onprem_result
+
+    - name: Handle exit code
+      run: |
+         set -x
+         if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
+           echo '[PASSED] All tests passed'
+           exit 0
+         elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
+           echo '[FAILED] Development environment tests failed'
+           exit 1
+         elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
+           echo '[FAILED] Onprem tests failed'
+           exit 1  
+         else
+           echo '[FAILED] All tests failed'
+           exit 1
+         fi
+    
     - name: Push image
       run: |
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           BRANCH_NAME=${BRANCH_NAME//\//-}
       
           echo 'Pushing images to the registry...'
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${GITHUB_SHA::7}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api:${BRANCH_NAME}--${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}
+          docker push ${_DOCKER_IMAGE_NAME}:${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}:${BRANCH_NAME}--${GITHUB_SHA::7}
 
           echo 'Pushing onprem images to the registry...'
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${GITHUB_SHA::7}
-          docker push gcr.io/$ARTIFACTS_PROJECT_ID/sql-api-onprem:${BRANCH_NAME}--${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${GITHUB_SHA::7}
+          docker push ${_DOCKER_IMAGE_NAME}-onprem:${BRANCH_NAME}--${GITHUB_SHA::7}
 
