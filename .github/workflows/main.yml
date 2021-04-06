@@ -143,8 +143,9 @@ jobs:
             --network host \
             --env-file .env \
             gcr.io/${ARTIFACTS_PROJECT_ID}/tavern-tester:latest \
-            all dev
+            all dev > dev_output 2>&1
           echo $? >> dev_result
+          cat dev_output
 
     - name: Stop environment
       working-directory: ./docker-dev-env
@@ -188,8 +189,9 @@ jobs:
             --network "${COMPOSE_PROJECT_NAME}_default" \
             --env-file .env \
             gcr.io/cartodb-on-gcp-main-artifacts/tavern-tester:latest \
-            all onprem
+            all onprem > onprem_output 2>&1
           echo $? >> onprem_result
+          cat onprem_output
 
     - name: Handle exit code
       run: |
@@ -199,12 +201,16 @@ jobs:
            exit 0
          elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
            echo '[FAILED] Development environment tests failed'
+           cat docker-dev-env/dev_output
            exit 1
          elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
            echo '[FAILED] Onprem tests failed'
+           cat dockerize-onpremises/onprem_output
            exit 1  
          else
            echo '[FAILED] All tests failed'
+           cat docker-dev-env/dev_output
+           cat dockerize-onpremises/onprem_output
            exit 1
          fi
     
