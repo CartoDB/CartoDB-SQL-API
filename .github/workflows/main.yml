@@ -157,12 +157,12 @@ jobs:
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: docker-dev-env/dev_output
-        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}/"
+        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}"
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: docker-dev-env/dev_docker_compose_logs
-        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}/"
+        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}"
 
     - name: Stop environment
       working-directory: ./docker-dev-env
@@ -220,32 +220,39 @@ jobs:
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: dockerize-onpremises/onprem_output
-        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}/"
+        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}"
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: dockerize-onpremises/onprem_docker_compose_logs
-        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}/"
+        destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ github.run_id }}"
 
     - name: Handle exit code
       run: |
-         set -x
          echo "[LOGS] Tests & compose logs are at https://console.cloud.google.com/storage/browser/${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}"
+         echo "::group::Dev tests output"
+         cat docker-dev-env/dev_output
+         echo "::endgroup::"
+         echo "::group::Dev compose logs output"
+         cat docker-dev-env/dev_docker_compose_logs
+         echo "::endgroup::"
+         echo "::group::Onprem tests output"
+         cat dockerize-onpremises/onprem_output
+         echo "::endgroup::"
+         echo "::group::Onprem compose logs output"
+         cat dockerize-onpremises/dev_docker_compose_logs
+         echo "::endgroup::"
          if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
            echo '[PASSED] All tests passed'
            exit 0
          elif [ "$(cat docker-dev-env/dev_result)" -ne 0 ];then
            echo '[FAILED] Development environment tests failed'
-           cat docker-dev-env/dev_output
            exit 1
          elif [ "$(cat dockerize-onpremises/onprem_result)" -ne 0 ];then
            echo '[FAILED] Onprem tests failed'
-           cat dockerize-onpremises/onprem_output
            exit 1  
          else
            echo '[FAILED] All tests failed'
-           cat docker-dev-env/dev_output
-           cat dockerize-onpremises/onprem_output
            exit 1
          fi
     
