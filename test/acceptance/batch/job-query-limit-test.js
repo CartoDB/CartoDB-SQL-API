@@ -38,7 +38,7 @@ describe('job query limit', function () {
     }
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('POST /api/v2/sql/job with a invalid query size  should respond with 400 query too long', function (done) {

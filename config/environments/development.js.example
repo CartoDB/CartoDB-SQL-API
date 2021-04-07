@@ -78,6 +78,8 @@ module.exports.batch_capacity_fixed_amount = 4;
 // It will use 1 as min.
 // If no template is provided it will default to 'fixed' strategy.
 module.exports.batch_capacity_http_url_template = 'http://<%= dbhost %>:9999/load';
+// Default database number in redis for batch queries
+module.exports.batch_db = 5;
 // Max database connections in the pool
 // Subsequent connections will wait for a free slot.
 // NOTE: not used by OGR-mediated accesses

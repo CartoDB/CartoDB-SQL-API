@@ -50,8 +50,8 @@ describe('job runner', function () {
     var jobRunner = new JobRunner(jobService, jobQueue, queryRunner, metadataBackend, statsdClient);
 
     after(function (done) {
-        redisUtils.clean('batch:*', function () {
-            redisUtils.clean('limits:batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', function () {
+            redisUtils.clean(global.settings.batch_db, 'limits:batch:*', done);
         });
     });
 

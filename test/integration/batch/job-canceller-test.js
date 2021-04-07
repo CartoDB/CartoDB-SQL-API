@@ -82,7 +82,7 @@ describe('job canceller', function () {
     var jobCanceller = new JobCanceller();
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('.cancel() should cancel a job', function (done) {
