@@ -157,12 +157,12 @@ jobs:
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: docker-dev-env/dev_docker_compose_logs
-        destination: ${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
+        destination: "${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: docker-dev-env/dev_docker_compose_logs
-        destination: ${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
+        destination: "${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/"
 
     - name: Stop environment
       working-directory: ./docker-dev-env
@@ -220,12 +220,12 @@ jobs:
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: dockerize-onpremises/onprem_docker_compose_logs
-        destination: ${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
+        destination: "${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
         path: dockerize-onpremises/onprem_docker_compose_logs
-        destination: ${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
+        destination: "${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/"
 
     - name: Handle exit code
       run: |
