@@ -156,7 +156,7 @@ jobs:
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
-        path: docker-dev-env/dev_docker_compose_logs
+        path: docker-dev-env/dev_output
         destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ env.GITHUB_RUN_ID }}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
@@ -219,7 +219,7 @@ jobs:
 
     - uses: google-github-actions/upload-cloud-storage@main
       with:
-        path: dockerize-onpremises/onprem_docker_compose_logs
+        path: dockerize-onpremises/onprem_output
         destination: "${{ env.GCS_BUCKET_NAME }}/test_logs_${{ env.GITHUB_RUN_ID }}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
