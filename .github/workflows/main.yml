@@ -240,7 +240,7 @@ jobs:
          cat dockerize-onpremises/onprem_output
          echo "::endgroup::"
          echo "::group::Onprem compose logs output"
-         cat dockerize-onpremises/dev_docker_compose_logs
+         cat dockerize-onpremises/onprem_docker_compose_logs
          echo "::endgroup::"
          if [ "$(cat docker-dev-env/dev_result)" -eq 0 ] && [ "$(cat dockerize-onpremises/onprem_result)" -eq 0 ];then
            echo '[PASSED] All tests passed'
