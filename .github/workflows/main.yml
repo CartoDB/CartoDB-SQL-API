@@ -155,15 +155,13 @@ jobs:
           echo "Logs will be available during 14 days at gs://${GCS_BUCKET_NAME}/test_logs_${BUILD_ID}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
-      working-directory: ./docker-dev-env
       with:
-        path: dev_docker_compose_logs
+        path: docker-dev-env/dev_docker_compose_logs
         destination: gs://${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
 
     - uses: google-github-actions/upload-cloud-storage@main
-      working-directory: ./docker-dev-env
       with:
-        path: dev_output
+        path: docker-dev-env/dev_docker_compose_logs
         destination: gs://${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
 
     - name: Stop environment
@@ -220,15 +218,13 @@ jobs:
           echo "Logs will be available during 14 days at gs://${GCS_BUCKET_NAME}/test_logs_${BUILD_ID}/"
 
     - uses: google-github-actions/upload-cloud-storage@main
-      working-directory: ./dockerize-onpremises
       with:
-        path: onprem_docker_compose_logs
+        path: dockerize-onpremises/onprem_docker_compose_logs
         destination: gs://${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
 
     - uses: google-github-actions/upload-cloud-storage@main
-      working-directory: ./dockerize-onpremises
       with:
-        path: onprem_output
+        path: dockerize-onpremises/onprem_docker_compose_logs
         destination: gs://${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/
 
     - name: Handle exit code
