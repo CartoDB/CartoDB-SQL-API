@@ -18,18 +18,17 @@ require('../helper');
 
 var assert = require('../support/assert');
 var step = require('step');
+var server = require('../../lib/server');
 
 describe('timeout', function () {
 // See https://github.com/CartoDB/CartoDB-SQL-API/issues/128
     it('after configured milliseconds', function (done) {
-        var testTimeout = 10;
-        // console.log("settings:"); console.dir(global.settings);
+        var testTimeout = 1;
         var timeoutBackup = global.settings.node_socket_timeout;
         global.settings.node_socket_timeout = testTimeout;
-        var server = require('../../lib/server')();
         step(
             function sendLongQuery () {
-                assert.response(server, {
+                assert.response(server(), {
                     url: '/api/v1/sql?q=SELECT+count(*)+FROM+generate_series(1,100000)',
                     method: 'GET',
                     headers: { host: 'vizzuality.localhost' }

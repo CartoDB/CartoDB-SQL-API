@@ -83,6 +83,8 @@ module.exports.batch_capacity_fixed_amount = 4;
 // It will use 1 as min.
 // If no template is provided it will default to 'fixed' strategy.
 module.exports.batch_capacity_http_url_template = 'http://<%= dbhost %>:9999/load';
+// Default database number in redis for batch queries
+module.exports.batch_db = 5;
 // Max database connections in the pool
 // Subsequent connections will wait for a free slot.i
 // NOTE: not used by OGR-mediated accesses
@@ -178,6 +180,7 @@ if (process.env.NODE_ENV === 'test') {
     module.exports.redisReapIntervalMillis = 1;
     module.exports.db_pubuser = 'testpublicuser';
     module.exports.batch_query_timeout = 5 * 1000; // 5 seconds in milliseconds
+    module.exports.batch_db = 6;
     module.exports.redisIdleTimeoutMillis = 1;
     module.exports.redisReapIntervalMillis = 1;
     module.exports.db_base_name = 'cartodb_test_user_<%= user_id %>_db';

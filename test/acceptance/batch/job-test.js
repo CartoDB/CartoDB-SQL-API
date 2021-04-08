@@ -25,7 +25,7 @@ describe('job module', function () {
     var job = {};
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('POST /api/v2/sql/job should respond with 200 and the created job', function (done) {

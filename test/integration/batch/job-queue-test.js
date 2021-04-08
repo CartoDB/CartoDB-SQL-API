@@ -30,7 +30,7 @@ describe('job queue', function () {
     });
 
     afterEach(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('should find queues for one user', function (done) {
@@ -120,7 +120,7 @@ describe('job queue', function () {
                     assert.strictEqual(queuesFromIndex.length, 1);
                     assert.ok(queuesFromIndex.indexOf(data.user) >= 0);
 
-                    redisUtils.clean('batch:*', done);
+                    redisUtils.clean(global.settings.batch_db, 'batch:*', done);
                 });
             });
         });
@@ -169,7 +169,7 @@ describe('job queue', function () {
                         assert.ok(queuesFromIndex.indexOf(jobVizzuality.user) >= 0);
                         assert.ok(queuesFromIndex.indexOf(jobWadus.user) >= 0);
 
-                        redisUtils.clean('batch:*', done);
+                        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
                     });
                 });
             });
