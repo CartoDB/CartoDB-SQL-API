@@ -11,8 +11,8 @@ var redisConfig = {
 };
 var metadataBackend = require('cartodb-redis')(redisConfig);
 
-module.exports.clean = function clean (pattern, callback) {
-    metadataBackend.redisCmd(5, 'KEYS', [pattern], function (err, keys) {
+module.exports.clean = function clean (db, pattern, callback) {
+    metadataBackend.redisCmd(db, 'KEYS', [pattern], function (err, keys) {
         if (err) {
             return callback(err);
         }
@@ -21,7 +21,7 @@ module.exports.clean = function clean (pattern, callback) {
             return callback();
         }
 
-        metadataBackend.redisCmd(5, 'DEL', keys, callback);
+        metadataBackend.redisCmd(db, 'DEL', keys, callback);
     });
 };
 

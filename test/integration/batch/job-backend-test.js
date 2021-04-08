@@ -38,7 +38,7 @@ describe('job backend', function () {
     var jobBackend = new JobBackend(metadataBackend, jobQueue, logger);
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('.create() should persist a job', function (done) {
@@ -159,7 +159,7 @@ describe('job backend', function () {
     it('.listWorkInProgressJobByUser() should retrieve WIP jobs of given user', function (done) {
         var testStepsQueue = queue(1);
 
-        testStepsQueue.defer(redisUtils.clean, 'batch:wip:user:*');
+        testStepsQueue.defer(redisUtils.clean, global.settings.batch_db, 'batch:wip:user:*');
         testStepsQueue.defer(jobBackend.addWorkInProgressJob.bind(jobBackend), 'vizzuality', 'wadus');
         testStepsQueue.defer(jobBackend.listWorkInProgressJobByUser.bind(jobBackend), 'vizzuality');
 

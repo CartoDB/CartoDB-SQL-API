@@ -10,7 +10,7 @@ and developers.
 
 Redis Hash: `batch:jobs:{UUID}`.
 
-Redis DB: 5.
+Redis DB: global.settings.batch_db || 5.
 
 It stores the job definition, the user, and some metadata like the final status, the failure reason, and so.
 
@@ -18,7 +18,7 @@ It stores the job definition, the user, and some metadata like the final status,
 
 Redis List: `batch:queue:{username}`.
 
-Redis DB: 5.
+Redis DB: global.settings.batch_db || 5.
 
 It stores a pending list of jobs per user. It points to a job definition with the `{UUID}`.
 

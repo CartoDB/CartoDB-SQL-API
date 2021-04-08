@@ -35,7 +35,7 @@ describe('batch module', function () {
 
     after(function (done) {
         this.batch.stop();
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     function createJob (sql, done) {

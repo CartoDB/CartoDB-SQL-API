@@ -82,7 +82,7 @@ describe('job service', function () {
     var jobService = new JobService(jobBackend, jobCanceller);
 
     after(function (done) {
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     it('.get() should return a job', function (done) {

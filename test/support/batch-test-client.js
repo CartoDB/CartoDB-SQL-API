@@ -160,7 +160,7 @@ BatchTestClient.prototype.cancelJob = function (jobId, override, callback) {
 
 BatchTestClient.prototype.drain = function (callback) {
     this.batch.stop(function () {
-        return redisUtils.clean('batch:*', callback);
+        return redisUtils.clean(global.settings.batch_db, 'batch:*', callback);
     });
 };
 

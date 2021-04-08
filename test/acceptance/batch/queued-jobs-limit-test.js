@@ -20,7 +20,7 @@ describe('max queued jobs', function () {
 
     after(function (done) {
         global.settings.batch_max_queued_jobs = this.batch_max_queued_jobs;
-        redisUtils.clean('batch:*', done);
+        redisUtils.clean(global.settings.batch_db, 'batch:*', done);
     });
 
     function createJob (server, status, callback) {

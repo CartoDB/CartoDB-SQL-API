@@ -14,12 +14,12 @@ describe('batch query statement_timeout limit', function () {
         this.batchTestClient = new BatchTestClient();
         this.batchQueryTimeout = global.settings.batch_query_timeout;
         global.settings.batch_query_timeout = 15000;
-        metadataBackend.redisCmd(5, 'HMSET', ['limits:batch:vizzuality', 'timeout', 100], done);
+        metadataBackend.redisCmd(global.settings.batch_db, 'HMSET', ['limits:batch:vizzuality', 'timeout', 100], done);
     });
     before(dbUtils.resetPgBouncerConnections);
     after(function (done) {
         global.settings.batch_query_timeout = this.batchQueryTimeout;
-        redisUtils.clean('limits:batch:*', function () {
+        redisUtils.clean(global.settings.batch_db, 'limits:batch:*', function () {
             this.batchTestClient.drain(done);
         }.bind(this));
     });
