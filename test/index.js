@@ -9,7 +9,7 @@ if (!process.env.NODE_ENV) {
     process.exit(1);
 }
 let configFileName = process.env.NODE_ENV;
-if (process.env.CARTO_WINDSHAFT_ENV_BASED_CONF) {
+if (process.env.CARTO_SQL_API_ENV_BASED_CONF) {
     // we override the file with the one with env vars
     configFileName = 'config';
 }
