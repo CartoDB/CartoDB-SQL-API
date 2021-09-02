@@ -50,6 +50,7 @@ module.exports.db_pubuser_pass   = 'public';
 module.exports.db_host = process.env.PGHOST || 'localhost';
 module.exports.db_port      = '5432';
 module.exports.db_batch_port      = '5432';
+module.exports.export_command_timeout = 5 * 60 * 1000; // 5 minutes in milliseconds
 module.exports.finished_jobs_ttl_in_seconds = 2 * 3600; // 2 hours
 module.exports.batch_query_timeout = 5 * 1000; // 5 seconds in milliseconds
 module.exports.copy_timeout = "'5h'";
