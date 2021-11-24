@@ -34,7 +34,7 @@
     "bunyan": "1.8.1",
     "cartodb-psql": "0.14.0",
     "cartodb-query-tables": "^0.7.0",
-    "cartodb-redis": "^3.0.0",
+    "cartodb-redis": "^3.0.1",
     "debug": "^4.1.1",
     "express": "^4.16.4",
     "gc-stats": "^1.4.0",
