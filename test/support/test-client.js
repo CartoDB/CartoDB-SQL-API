@@ -113,7 +113,8 @@ TestClient.prototype.setUserRenderTimeoutLimit = function (user, userTimeoutLimi
     const params = [
         userTimeoutLimitsKey,
         'render', userTimeoutLimit,
-        'render_public', userTimeoutLimit
+        'render_public', userTimeoutLimit,
+        'export', userTimeoutLimit
     ];
 
     redisUtils.configureUserMetadata('hmset', params, callback);
