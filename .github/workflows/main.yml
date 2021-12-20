@@ -101,7 +101,6 @@ jobs:
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
-        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
         export_default_credentials: true
         version: '297.0.1' # https://github.com/google-github-actions/setup-gcloud/issues/128
 
