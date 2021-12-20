@@ -23,11 +23,13 @@ jobs:
         submodules: true
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
+    - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
     - name: Setup gcloud authentication
       uses: google-github-actions/setup-gcloud@master
       with:
         version: ${{env.GCLOUD_VERSION}}
-        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
 
     - name: Configure docker and pull images
       run: |
@@ -93,6 +95,9 @@ jobs:
         path: 'docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
+    - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
