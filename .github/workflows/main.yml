@@ -23,11 +23,13 @@ jobs:
         submodules: true
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
+    - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
     - name: Setup gcloud authentication
       uses: google-github-actions/setup-gcloud@master
       with:
         version: ${{env.GCLOUD_VERSION}}
-        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
 
     - name: Configure docker and pull images
       run: |
@@ -93,16 +95,20 @@ jobs:
         path: 'docker-dev-env'
         token: ${{ secrets.CARTOFANTE_PERSONAL_TOKEN }}
 
+    - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
     - name: Set up gcloud I
       uses: google-github-actions/setup-gcloud@master
       with:
-        service_account_key: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
-        export_default_credentials: true
         version: '297.0.1' # https://github.com/google-github-actions/setup-gcloud/issues/128
 
     - name: Set up gcloud II
+      env:
+        SA_TO_USE: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
       run: |
-          gcloud auth configure-docker
+          # gcloud auth configure-docker
+          echo "${SA_TO_USE}" | base64 -d | docker login -u _json_key --password-stdin https://gcr.io
     
     # Dev tests
     - name: Download containers in background
@@ -137,6 +143,7 @@ jobs:
     - name: Run dev tests
       working-directory: ./docker-dev-env
       run: |
+          set -e
           source .env
           docker run --rm --name tavern-tester \
             --env "CARTO_USER=${USER_USERNAME}" \
@@ -186,17 +193,23 @@ jobs:
 
     - name: Init onprem
       working-directory: ./dockerize-onpremises
+      env:
+        COMPOSE_FILE: docker-compose.yml:ci/docker-compose.ci.yml
       run: |
           ./ci/init.sh
     
     - name: Install license
       working-directory: ./dockerize-onpremises
+      env:
+        COMPOSE_FILE: docker-compose.yml:ci/docker-compose.ci.yml
       run: |
           mkdir -p license && cp -f ci/test_license/dockerize-onpremises-tests-license.lic license/carto.lic
           ./script/license.sh
      
     - name: Run onprem tests
       working-directory: ./dockerize-onpremises
+      env:
+        COMPOSE_FILE: docker-compose.yml:ci/docker-compose.ci.yml
       run: |
           source .env
           source ci/.env.ci
@@ -213,6 +226,8 @@ jobs:
     
     - name: Export onprem compose logs
       working-directory: ./dockerize-onpremises
+      env:
+        COMPOSE_FILE: docker-compose.yml:ci/docker-compose.ci.yml
       run: |
           docker-compose -f docker-compose.yml -f ci/docker-compose.ci.yml logs --no-color > onprem_docker_compose_logs
           echo "Logs will be available during 14 days at gs://${GCS_BUCKET_NAME}/test_logs_${GITHUB_RUN_ID}/"
