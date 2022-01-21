@@ -5,15 +5,20 @@ require('../helper');
 var assert = require('../support/assert');
 var qs = require('querystring');
 var request = require('request');
+const server = require('../../lib/server');
 
 describe('transaction', function () {
-    var SERVER_PORT = 5554;
-
-    var server;
     before(function (done) {
-        server = require('../../lib/server')();
-        this.listener = server.listen(SERVER_PORT, '127.0.0.1');
-        this.listener.on('listening', done);
+        this.listener = server().listen(0, '127.0.0.1');
+        this.listener.on('error', done);
+        this.listener.on('listening', () => {
+            const { address, port } = this.listener.address();
+
+            this.host = address;
+            this.port = port;
+
+            done();
+        });
     });
 
     after(function (done) {
@@ -25,7 +30,7 @@ describe('transaction', function () {
     });
 
     function requestUrl (query) {
-        return 'http://127.0.0.1:' + SERVER_PORT + '/api/v1/sql?' + qs.stringify({ q: query });
+        return `http://${this.host}:${this.port}/api/v1/sql?${qs.stringify({ q: query })}`;
     }
 
     var errorQuery = 'BEGIN; PREPARE _pstm AS select error; EXECUTE _pstm; COMMIT;';
