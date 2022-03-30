@@ -34,7 +34,7 @@ jobs:
       with:
         credentials_json: ${{ secrets.ARTIFACTS_GCLOUD_ACCOUNT_BASE64 }}
     - name: Setup gcloud authentication
-      uses: google-github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@v0
       with:
         version: ${{env.GCLOUD_VERSION}}
 
