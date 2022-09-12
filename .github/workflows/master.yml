@@ -15,7 +15,7 @@ env:
 jobs:
   build-master:
     runs-on: ubuntu-18.04
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v2
