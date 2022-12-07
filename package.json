@@ -47,7 +47,7 @@
     "pg-copy-streams": "github:cartodb/node-pg-copy-streams#v2.x-carto",
     "pino": "^6.3.2",
     "prom-client": "^12.0.0",
-    "qs": "~6.2.1",
+    "qs": "~6.2.4",
     "queue-async": "~1.0.7",
     "redis-mpool": "^0.8.0",
     "redlock": "2.0.1",
