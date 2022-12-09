@@ -36,7 +36,7 @@
     "cartodb-query-tables": "^0.7.0",
     "cartodb-redis": "^3.0.0",
     "debug": "^4.1.1",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "gc-stats": "^1.4.0",
     "log4js": "cartodb/log4js-node#cdb",
     "lru-cache": "~2.5.0",
